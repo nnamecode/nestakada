@@ -1,0 +1,203 @@
+<div id="estakada-public">
+  <div class="viz-carousel" aria-label="Варианты публичного сайта Эстакада" data-previous-label="Назад" data-next-label="Дальше">
+    <section data-variant="Светлый" aria-label="Светлый сайт"><div class="pub-window pub-light" data-design="light"></div></section>
+    <section data-variant="Контрастный" aria-label="Контрастный сайт" hidden><div class="pub-window pub-dark" data-design="dark"></div></section>
+    <section data-variant="Каталог" aria-label="Сайт с каталогом услуг" hidden><div class="pub-window pub-catalog" data-design="catalog"></div></section>
+  </div>
+</div>
+<style>
+#estakada-public .pub-window{--p-bg:light-dark(#fbfaf7,#191815);--p-card:light-dark(#ffffff,#24211d);--p-text:light-dark(#302921,#f1e9df);--p-muted:light-dark(#6e6459,#c5b7a7);--p-line:light-dark(#e5ded3,#4a4035);--p-soft:light-dark(#f0ebe3,#302920);--p-orange:#f4ac40;--p-on:#302313;--p-heading:light-dark(#302921,#f6ecdf);color-scheme:light dark;background:var(--p-bg);color:var(--p-text);font:14px/1.55 "Segoe UI",Arial,sans-serif;border:1px solid var(--p-line);min-height:1450px;display:flex;flex-direction:column}
+#estakada-public .pub-window *{box-sizing:border-box}
+#estakada-public .pub-window :is(h1,h2,h3,p,figure){margin:0}
+#estakada-public .pub-window button,#estakada-public .pub-window a{font:inherit}
+#estakada-public .pub-window button{cursor:var(--cursor-interaction,pointer)}
+#estakada-public .pub-window a{color:inherit;text-decoration:none}
+#estakada-public .pub-wrap{padding:0 38px}
+#estakada-public .pub-topline{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap;padding:9px 38px;background:var(--p-soft);color:var(--p-muted);font-size:12px}
+#estakada-public .pub-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 38px;background:var(--p-card)}
+#estakada-public .pub-brand{display:flex;align-items:center;gap:12px;border:0;background:transparent;color:var(--p-text);padding:0;text-align:left}
+#estakada-public .pub-logo{width:110px;height:64px;object-fit:contain;background:#fff;padding:3px;border-radius:4px}
+#estakada-public .pub-brand span{font-size:12px;color:var(--p-muted)}
+#estakada-public .pub-phone{font-size:21px!important;font-weight:500;white-space:nowrap}
+#estakada-public .pub-head-contact{text-align:right}
+#estakada-public .pub-head-contact small{display:block;color:var(--p-muted);font-size:12px}
+#estakada-public .pub-menu-toggle{display:none;background:transparent;border:1px solid var(--p-line);color:var(--p-text);padding:8px;border-radius:6px}
+#estakada-public .pub-nav{display:flex;gap:25px;align-items:center;padding:12px 38px;border-block:1px solid var(--p-line);flex-wrap:wrap;background:var(--p-card);font-size:13px}
+#estakada-public .pub-nav a:first-child{font-weight:500}
+#estakada-public .pub-nav a:hover{color:var(--p-muted);text-decoration:underline;text-underline-offset:5px}
+#estakada-public .pub-main{flex:1}
+#estakada-public .pub-hero{display:grid;grid-template-columns:1.25fr 1fr;gap:36px;padding:46px 38px 38px}
+#estakada-public .pub-eyebrow{font-size:12px;color:var(--p-muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+#estakada-public .pub-hero h1{font-size:43px;font-weight:500;line-height:1.08;letter-spacing:-1.7px;color:var(--p-heading)}
+#estakada-public .pub-hero p{font-size:16px;margin-top:20px;max-width:470px;color:var(--p-muted)}
+#estakada-public .pub-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
+#estakada-public .pub-button{display:inline-flex;gap:8px;align-items:center;justify-content:center;padding:11px 17px;background:var(--p-card);border:1px solid var(--p-line);color:var(--p-text);border-radius:6px;font-size:13px!important;text-align:center}
+#estakada-public .pub-button.pub-primary{background:var(--p-orange);border-color:var(--p-orange);color:var(--p-on)}
+#estakada-public .pub-art{background:var(--p-soft);padding:24px;display:flex;flex-direction:column;justify-content:center;gap:9px;border-radius:6px}
+#estakada-public .pub-art span{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--p-line);padding:9px 0;font-size:22px;color:var(--p-text)}
+#estakada-public .pub-art span:last-child{border:0}
+#estakada-public .pub-art small{font-size:12px;color:var(--p-muted)}
+#estakada-public .pub-section{padding:28px 38px}
+#estakada-public .pub-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+#estakada-public .pub-section h2{font-size:26px;line-height:1.2;font-weight:500;letter-spacing:-.7px}
+#estakada-public .pub-section-head a{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--p-muted);text-decoration:underline;text-underline-offset:4px}
+#estakada-public .pub-service-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#estakada-public .pub-service{display:flex;flex-direction:column;align-items:flex-start;gap:14px;min-height:108px;padding:17px;background:var(--p-card);border:1px solid var(--p-line);border-radius:6px;text-align:left}
+#estakada-public .pub-service:hover{border-color:var(--p-orange)}
+#estakada-public .pub-service .pub-icon{width:30px;height:30px;display:grid;place-items:center;background:var(--p-soft);border-radius:5px;color:var(--p-text)}
+#estakada-public .pub-service strong{font-size:14px;font-weight:500}
+#estakada-public .pub-reasons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;border-block:1px solid var(--p-line);padding-block:20px}
+#estakada-public .pub-reasons div{display:flex;gap:9px;font-size:13px}
+#estakada-public .pub-reasons svg{flex-shrink:0;color:var(--p-muted);margin-top:3px}
+#estakada-public .pub-work{display:grid;grid-template-columns:220px 1fr;gap:26px;padding:20px;background:var(--p-soft);border-radius:6px;align-items:center}
+#estakada-public .pub-work img{width:100%;height:210px;object-fit:contain;background:var(--p-card)}
+#estakada-public .pub-work p{margin-top:12px;color:var(--p-muted)}
+#estakada-public .pub-contact-strip{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:22px;background:var(--p-orange);color:var(--p-on);border-radius:6px}
+#estakada-public .pub-contact-strip p{font-size:13px;margin-top:5px}
+#estakada-public .pub-contact-strip a{font-size:22px;font-weight:500;white-space:nowrap}
+#estakada-public .pub-footer{padding:25px 38px;background:var(--p-soft);margin-top:25px;color:var(--p-muted);font-size:12px}
+#estakada-public .pub-footer-links{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0}
+#estakada-public .pub-footer .pub-preview-label{font-size:11px;border-top:1px solid var(--p-line);padding-top:10px;margin-top:12px}
+#estakada-public .pub-breadcrumb{font-size:12px;color:var(--p-muted);margin-bottom:16px;overflow-wrap:anywhere}
+#estakada-public .pub-content h1{font-size:32px;font-weight:500;line-height:1.2;margin-bottom:20px}
+#estakada-public .pub-content p{margin:14px 0}
+#estakada-public .pub-content-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#estakada-public .pub-content-list a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px;border-bottom:1px solid var(--p-line);background:var(--p-card)}
+#estakada-public .pub-side-menu{display:none}
+#estakada-public .pub-dark{--p-bg:light-dark(#23201b,#171512);--p-card:light-dark(#2d2821,#211d18);--p-text:#f4eadc;--p-muted:#c7b8a3;--p-line:#514536;--p-soft:light-dark(#342b21,#2a231b);--p-heading:#fff2dc}
+#estakada-public .pub-dark .pub-topline{background:var(--p-orange);color:var(--p-on)}
+#estakada-public .pub-dark .pub-head{padding-block:14px}
+#estakada-public .pub-dark .pub-nav{background:var(--p-bg);gap:20px}
+#estakada-public .pub-dark .pub-hero{grid-template-columns:1.4fr 1fr;padding-top:50px;padding-bottom:45px;border-bottom:1px solid var(--p-line)}
+#estakada-public .pub-dark .pub-hero h1{font-size:49px;letter-spacing:-2px}
+#estakada-public .pub-dark .pub-art{background:var(--p-orange);color:var(--p-on);border-radius:0;padding:28px}
+#estakada-public .pub-dark .pub-art span{color:var(--p-on);border-color:#34271d40;font-size:26px}
+#estakada-public .pub-dark .pub-art small{color:#59442a}
+#estakada-public .pub-dark .pub-service{min-height:95px;border-radius:0;flex-direction:row;align-items:center}
+#estakada-public .pub-dark .pub-service-grid{grid-template-columns:1fr 1fr}
+#estakada-public .pub-catalog .pub-topline{background:var(--p-orange);color:var(--p-on)}
+#estakada-public .pub-catalog .pub-head{padding-block:12px}
+#estakada-public .pub-catalog .pub-hero{padding:24px 28px;display:block;background:var(--p-soft);border-left:4px solid var(--p-orange)}
+#estakada-public .pub-catalog .pub-hero h1{font-size:29px;letter-spacing:-.9px}
+#estakada-public .pub-catalog .pub-hero p{font-size:14px;margin-top:12px}
+#estakada-public .pub-catalog .pub-art{display:none}
+#estakada-public .pub-catalog .pub-home-layout{display:grid;grid-template-columns:195px minmax(0,1fr);gap:24px;padding:25px 28px}
+#estakada-public .pub-catalog .pub-side-menu{display:block;border-right:1px solid var(--p-line);padding-right:18px}
+#estakada-public .pub-side-menu h3{font-size:13px;font-weight:500;margin-bottom:10px}
+#estakada-public .pub-side-menu details{border-bottom:1px solid var(--p-line);font-size:12px;padding:10px 0}
+#estakada-public .pub-side-menu summary{cursor:var(--cursor-interaction,pointer)}
+#estakada-public .pub-side-menu a{display:block;padding:6px 0 0 10px;color:var(--p-muted)}
+#estakada-public .pub-catalog .pub-section{padding:20px 0}
+#estakada-public .pub-catalog .pub-service-grid{grid-template-columns:1fr 1fr}
+#estakada-public .pub-catalog .pub-service{min-height:65px;flex-direction:row;align-items:center;padding:10px}
+#estakada-public .pub-catalog .pub-work{grid-template-columns:125px 1fr;gap:18px;padding:14px}
+#estakada-public .pub-catalog .pub-work img{height:180px}
+#estakada-public .pub-catalog .pub-reasons{grid-template-columns:1fr;gap:9px}
+#estakada-public .pub-catalog .pub-contact-strip{align-items:flex-start;flex-direction:column;gap:8px;padding:16px}
+@media(max-width:800px){
+ #estakada-public .pub-wrap,#estakada-public .pub-section{padding-left:22px;padding-right:22px}
+ #estakada-public .pub-head{padding:14px 22px}
+ #estakada-public .pub-brand span{display:none}
+ #estakada-public .pub-hero{gap:20px;padding:30px 22px}
+ #estakada-public .pub-hero h1{font-size:34px}
+ #estakada-public .pub-dark .pub-hero h1{font-size:38px}
+ #estakada-public .pub-art span{font-size:18px}
+ #estakada-public .pub-reasons{grid-template-columns:1fr;gap:10px}
+ #estakada-public .pub-contact-strip{align-items:flex-start;flex-direction:column}
+ #estakada-public .pub-catalog .pub-home-layout{grid-template-columns:155px minmax(0,1fr);gap:18px;padding:20px}
+}
+@media(max-width:560px){
+ #estakada-public .pub-window{min-height:2100px}
+ #estakada-public .pub-topline{padding:8px 16px;font-size:11px;gap:3px}
+ #estakada-public .pub-topline span:last-child{display:none}
+ #estakada-public .pub-head{padding:12px 16px;gap:10px;flex-wrap:wrap}
+ #estakada-public .pub-logo{width:94px;height:55px}
+ #estakada-public .pub-head-contact{flex:1}
+ #estakada-public .pub-phone{font-size:16px!important}
+ #estakada-public .pub-head-contact small{font-size:11px}
+ #estakada-public .pub-menu-toggle{display:inline-flex}
+ #estakada-public .pub-nav{display:none;padding:12px 16px;gap:14px}
+ #estakada-public .pub-nav.pub-open{display:flex}
+ #estakada-public .pub-hero,#estakada-public .pub-dark .pub-hero{display:block;padding:25px 16px}
+ #estakada-public .pub-hero h1,#estakada-public .pub-dark .pub-hero h1{font-size:32px;letter-spacing:-1px}
+ #estakada-public .pub-hero p{font-size:14px;margin-top:14px}
+ #estakada-public .pub-art{margin-top:24px;padding:16px}
+ #estakada-public .pub-art span,#estakada-public .pub-dark .pub-art span{font-size:20px}
+ #estakada-public .pub-section{padding:22px 16px}
+ #estakada-public .pub-section h2{font-size:23px}
+ #estakada-public .pub-service-grid,#estakada-public .pub-dark .pub-service-grid{grid-template-columns:1fr}
+ #estakada-public .pub-service{flex-direction:row;align-items:center;min-height:65px;padding:13px}
+ #estakada-public .pub-work{grid-template-columns:1fr;padding:16px;gap:18px}
+ #estakada-public .pub-work img{height:210px}
+ #estakada-public .pub-contact-strip{padding:16px}
+ #estakada-public .pub-contact-strip a{font-size:20px}
+ #estakada-public .pub-footer{padding:22px 16px}
+ #estakada-public .pub-content h1{font-size:27px}
+ #estakada-public .pub-content-list{grid-template-columns:1fr}
+ #estakada-public .pub-catalog .pub-home-layout{display:block;padding:16px}
+ #estakada-public .pub-catalog .pub-side-menu{border:1px solid var(--p-line);padding:14px;margin-bottom:18px;border-radius:6px}
+ #estakada-public .pub-catalog .pub-side-menu details{padding:7px 0}
+ #estakada-public .pub-catalog .pub-hero{padding:20px 16px}
+ #estakada-public .pub-catalog .pub-service-grid{grid-template-columns:1fr}
+ #estakada-public .pub-catalog .pub-work{grid-template-columns:1fr}
+}
+</style>
+<style>
+#estakada-public .pub-window{min-height:1850px}
+@media(max-width:800px){#estakada-public .pub-window{min-height:2000px}}
+@media(max-width:560px){#estakada-public .pub-window{min-height:2700px}}
+</style>
+<script>
+(function(){
+  "use strict";
+  var root=document.getElementById("estakada-public");
+  var logo="__LOGO_DATA__",photo="__PHOTO_DATA__";
+  var groups=[
+    {name:"Кузовной ремонт",url:"/services/kuzovnoj-remont/",icon:"wrench"},
+    {name:"Плановое ТО",url:"/services/planovoe-to/",icon:"clipboard-check"},
+    {name:"Ремонт",url:"/services/remont/",icon:"settings"},
+    {name:"Диагностика",url:"/services/diagnostika/",icon:"scan-line"},
+    {name:"Другие услуги",url:"/services/drugie-uslugi/",icon:"car-front"},
+    {name:"Шиномонтаж",url:"/services/drugie-uslugi/shinomontazh/",icon:"circle-dot"},
+    {name:"Сход-развал",url:"/services/remont/sxod-razval",icon:"move-horizontal"}
+  ];
+  var bodyPages=[
+    {name:"Ремонт кузова",url:"/services/kuzovnoj-remont/remont-kuzova"},
+    {name:"Покраска автомобиля",url:"/services/kuzovnoj-remont/pokraska-avtomobilya"},
+    {name:"Восстановление геометрии кузова",url:"/services/kuzovnoj-remont/vosstanovlenie-geometrii-kuzova"},
+    {name:"Ремонт кузовных деталей автомобиля",url:"/services/kuzovnoj-remont/remont-kuzovnyix-detalej-avtomobilya"},
+    {name:"Ремонт после лобового удара",url:"/services/kuzovnoj-remont/remont-posle-lobovogo-udara"},
+    {name:"Полировка кузова",url:"/services/kuzovnoj-remont/polirovka-kuzova"}
+  ];
+  function esc(value){return String(value).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function icon(name){return '<i data-lucide="'+name+'" aria-hidden="true"></i>';}
+  function link(url,label,classes){return '<a href="'+url+'" data-page="'+url+'" class="cursor-interaction '+(classes||"")+'">'+label+'</a>';}
+  function header(s){
+    return '<div class="pub-topline"><span>Проспект 60-летия Октября, 15Б</span><span>Работаем с 9:00 до 21:00, без выходных</span></div><header class="pub-head"><button type="button" class="pub-brand cursor-interaction" data-home aria-label="На главную"><img class="pub-logo" src="'+logo+'" alt="Техцентр Эстакада"><span>Гарантия<br>и качество!</span></button><div class="pub-head-contact"><a href="tel:+74991102552" class="pub-phone">+7 (499) 110-25-52</a><small>9:00–21:00 · без выходных</small></div><button type="button" class="pub-menu-toggle cursor-interaction" data-menu aria-label="Меню" aria-expanded="'+s.menu+'">'+icon("menu")+'</button></header><nav class="pub-nav '+(s.menu?"pub-open":"")+'" aria-label="Меню сайта">'+link("/services/","Услуги и цены")+link("/partners","Партнёры")+link("/actions","Акции")+link("/reviews","Отзывы")+link("/gallery-of-works/","Галерея работ")+link("/contacts","Контакты")+'</nav>';
+  }
+  function footer(){return '<footer class="pub-footer"><div>Техцентр ЭСТАКАДА · Проспект 60-летия Октября, 15Б</div><div class="pub-footer-links">'+link("/about","О компании")+link("/articles/","Статьи")+link("/garantii","Гарантии")+link("/contacts","Контакты")+'</div><a href="tel:+74991102552">+7 (499) 110-25-52</a><div class="pub-preview-label">Предварительный макет · материалы из сохранённого сайта · формы не подключены</div></footer>';}
+  function hero(){return '<section class="pub-hero"><div><div class="pub-eyebrow">Автотехцентр</div><h1>ЭСТАКАДА</h1><p>Гарантия и качество!</p><div class="pub-actions">'+link("/services/","Услуги и цены "+icon("arrow-up-right"),"pub-button pub-primary")+link("/contacts","Схема проезда","pub-button")+'</div></div><div class="pub-art" aria-label="Направления работы"><small>Полный спектр услуг по ремонту автомобиля</small><span>Ремонт '+icon("wrench")+'</span><span>Диагностика '+icon("scan-line")+'</span><span>Плановое ТО '+icon("clipboard-check")+'</span></div></section>';}
+  function services(){return '<section class="pub-section"><div class="pub-section-head"><h2>Услуги и цены</h2>'+link("/services/","Все услуги "+icon("arrow-right"))+'</div><div class="pub-service-grid">'+groups.map(function(g){return link(g.url,'<span class="pub-icon">'+icon(g.icon)+'</span><strong>'+g.name+'</strong>',"pub-service");}).join("")+'</div></section>';}
+  function reasons(){return '<section class="pub-section"><div class="pub-reasons"><div>'+icon("clipboard-check")+'Все работы проводятся по заказ-наряду</div><div>'+icon("users")+'Опытные сотрудники</div><div>'+icon("settings")+'Производим работы любой сложности</div></div></section>';}
+  function works(){return '<section class="pub-section"><div class="pub-work"><img src="'+photo+'" alt="Автомобиль у техцентра Эстакада, фото из собственной галереи"><div><div class="pub-eyebrow">Фотографии техцентра</div><h2>Галерея работ</h2><p>Наш сервисный центр</p><div class="pub-actions">'+link("/gallery-of-works/","Смотреть фотографии "+icon("arrow-right"),"pub-button")+'</div></div></div></section>';}
+  function contacts(){return '<section class="pub-section"><div class="pub-contact-strip"><div><strong>Проспект 60-летия Октября, 15Б</strong><p>Работаем с 9:00 до 21:00, без выходных</p></div><a href="tel:+74991102552">+7 (499) 110-25-52</a></div></section>';}
+  function sidebar(){return '<aside class="pub-side-menu"><h3>Все услуги</h3>'+groups.map(function(g,i){return '<details '+(i===0?"open":"")+'><summary>'+esc(g.name)+'</summary>'+link(g.url,"Обзор раздела")+(i===0?bodyPages.map(function(p){return link(p.url,esc(p.name));}).join(""):"")+'</details>';}).join("")+'</aside>';}
+  function home(s){return s.design==="catalog"?'<div class="pub-home-layout">'+sidebar()+'<div>'+hero()+services()+reasons()+works()+contacts()+'</div></div>':hero()+services()+reasons()+works()+contacts();}
+  function inner(s){
+    var title=s.page==="/services/"?"Услуги и цены":s.page==="/contacts"?"Контакты":s.page==="/gallery-of-works/"?"Галерея работ":s.page==="/services/kuzovnoj-remont/"?"Кузовной ремонт":s.title||"Услуги";
+    var body="";
+    if(s.page==="/contacts"){body='<h1>Контакты</h1><p>Проспект 60-летия Октября, 15Б</p><p>Работаем с 9:00 до 21:00, без выходных</p><p><a class="pub-phone" href="tel:+74991102552">+7 (499) 110-25-52</a></p>'+link("/gallery-of-works/","Наш сервисный центр","pub-button");}
+    else if(s.page==="/gallery-of-works/"){body='<h1>Галерея работ</h1><div class="pub-work"><img src="'+photo+'" alt="Фото автомобиля у техцентра из собственной галереи"><div><h2>Наш сервисный центр</h2><p>Фото из сохранённой галереи</p></div></div>';}
+    else if(s.page==="/services/kuzovnoj-remont/"||s.page==="/services/"){body='<h1>'+title+'</h1><div class="pub-content-list">'+(s.page==="/services/"?groups:bodyPages).map(function(g){return link(g.url,esc(g.name)+" "+icon("arrow-up-right"));}).join("")+'</div>';}
+    else{body='<h1>'+esc(title)+'</h1><p>Автотехцентр ЭСТАКАДА - это широкий спектр услуг по ремонту автомобилей.</p><p class="pub-breadcrumb">Предварительная компоновка внутренней страницы. Полный текст будет взят из сохранённого материала без рерайта.</p>'+link("/services/","Услуги и цены","pub-button pub-primary");}
+    return '<section class="pub-section pub-content"><div class="pub-breadcrumb">'+link("/","Главная")+' / '+esc(title)+'<br>'+esc(s.page)+'</div>'+body+'</section>'+contacts();
+  }
+  var states=Array.from(root.querySelectorAll("[data-design]")).map(function(app){return {app:app,design:app.dataset.design,page:"/",title:"",menu:false};});
+  function render(s){s.app.innerHTML=header(s)+'<main class="pub-main">'+(s.page==="/"?home(s):inner(s))+'</main>'+footer();if(globalThis.lucide)lucide.createIcons({attrs:{width:16,height:16}});}
+  function persist(){if(!window.openai||!window.openai.setWidgetState)return;try{var promise=window.openai.setWidgetState({modelContent:{purpose:"Выбор направления публичного сайта",views:states.map(function(s){return {design:s.design,page:s.page};})},privateContent:{views:states.map(function(s){return {design:s.design,page:s.page,title:s.title,menu:s.menu};})}});if(promise&&promise.catch)promise.catch(function(){});}catch(e){}}
+  function restore(value){if(!value||!value.privateContent||!Array.isArray(value.privateContent.views))return;value.privateContent.views.forEach(function(v){var s=states.find(function(x){return x.design===v.design;});if(s&&typeof v.page==="string"&&v.page.charAt(0)==="/"){s.page=v.page;s.title=typeof v.title==="string"?v.title:"";s.menu=!!v.menu;}});}
+  if(window.openai)restore(window.openai.widgetState);
+  states.forEach(function(s){s.app.addEventListener("click",function(e){var home=e.target.closest("[data-home]"),menu=e.target.closest("[data-menu]"),a=e.target.closest("a[data-page]");if(home){s.page="/";s.menu=false;}else if(menu){s.menu=!s.menu;}else if(a){e.preventDefault();s.page=a.dataset.page;s.title=a.textContent.trim();s.menu=false;}else return;render(s);persist();});render(s);});
+  window.addEventListener("openai:set_globals",function(e){if(e.detail&&e.detail.globals&&e.detail.globals.widgetState){restore(e.detail.globals.widgetState);states.forEach(render);}});
+})();
+</script>

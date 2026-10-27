@@ -1,0 +1,48 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Local application data and artifacts
+*.sqlite3
+*.sqlite3-*
+media/
+staticfiles/
+backups/
+*.log
+logs/
+test-results/
+playwright-report/
+output/
+
+# Tools and OS
+node_modules/
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
+
+# Project scratch files
+work/
+
+# Local recordings and source video
+*.mp4
+*.mov
+*.avi
+*.mkv
+
+# Prepared admin preview embeds source media; commit its template instead
+docs/design/admin-workshop.html

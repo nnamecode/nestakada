@@ -1,0 +1,363 @@
+<div id="estakada-prototypes">
+  <div class="viz-carousel" aria-label="Варианты админки Эстакада" data-previous-label="Назад" data-next-label="Дальше">
+    <section data-variant="Порядок" aria-label="Порядок — привычная боковая навигация"><div class="ep-app ep-order" data-layout="order" aria-label="Дизайн Порядок"></div></section>
+    <section data-variant="Мастерская" aria-label="Мастерская — дерево и рабочая область" hidden><div class="ep-app ep-workshop" data-layout="workshop" aria-label="Дизайн Мастерская"></div></section>
+    <section data-variant="Фокус" aria-label="Фокус — редактор и история рядом" hidden><div class="ep-app ep-focus" data-layout="focus" aria-label="Дизайн Фокус"></div></section>
+  </div>
+</div>
+<style>
+#estakada-prototypes .ep-app{
+  --ep-bg:light-dark(#f4f6fa,#131820);--ep-panel:light-dark(#ffffff,#1c232d);--ep-ink:light-dark(#1b293b,#e8edf5);
+  --ep-muted:light-dark(#56677c,#acb9ca);--ep-line:light-dark(#dce3ed,#354153);--ep-soft:light-dark(#edf2f8,#293444);
+  --ep-accent:light-dark(#2452a0,#92b9ff);--ep-accent-bg:light-dark(#e9f0ff,#253e61);--ep-on:light-dark(#ffffff,#14253f);
+  --ep-good:light-dark(#21633f,#9ce0b4);--ep-good-bg:light-dark(#e8f5ec,#1c3a2b);--ep-bad:light-dark(#a42d36,#ffb1b6);--ep-bad-bg:light-dark(#fff0f0,#47272d);
+  --ep-radius:12px;--ep-pad:14px;
+  color-scheme:light dark;background:var(--ep-bg);color:var(--ep-ink);font-family:"Segoe UI",Arial,sans-serif;font-size:14px;line-height:1.5;
+  border:1px solid var(--ep-line);border-radius:var(--ep-radius);min-height:820px;position:relative;overflow:clip;
+}
+#estakada-prototypes .ep-app *{box-sizing:border-box}
+#estakada-prototypes .ep-app button,#estakada-prototypes .ep-app input,#estakada-prototypes .ep-app textarea,#estakada-prototypes .ep-app select{font:inherit}
+#estakada-prototypes .ep-app button{cursor:var(--cursor-interaction,pointer)}
+#estakada-prototypes .ep-app button:disabled{cursor:default;opacity:.5}
+#estakada-prototypes .ep-app h2,#estakada-prototypes .ep-app h3,#estakada-prototypes .ep-app p{margin:0}
+#estakada-prototypes .ep-app h2{font-size:24px;line-height:1.25;font-weight:500;letter-spacing:-.6px}
+#estakada-prototypes .ep-app h3{font-size:16px;font-weight:500}
+#estakada-prototypes .ep-app svg{flex-shrink:0}
+#estakada-prototypes .ep-app button,#estakada-prototypes .ep-app select,#estakada-prototypes .ep-app input,#estakada-prototypes .ep-app textarea{outline-offset:3px}
+#estakada-prototypes .ep-top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:18px 22px;background:var(--ep-panel);border-bottom:1px solid var(--ep-line)}
+#estakada-prototypes .ep-brand{display:flex;gap:12px;align-items:center;min-width:0}
+#estakada-prototypes .ep-logo{width:34px;height:34px;display:grid;place-items:center;background:var(--ep-accent);color:var(--ep-on);border-radius:9px;font-size:20px;font-weight:500}
+#estakada-prototypes .ep-brand strong{font-size:15px;font-weight:500;letter-spacing:1.2px}
+#estakada-prototypes .ep-small{font-size:12px;color:var(--ep-muted)}
+#estakada-prototypes .ep-role{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ep-muted)}
+#estakada-prototypes .ep-role select{background:var(--ep-panel);color:var(--ep-ink);border:1px solid var(--ep-line);border-radius:8px;padding:7px 9px;font-size:13px}
+#estakada-prototypes .ep-body{display:grid;grid-template-columns:186px minmax(0,1fr);min-height:730px}
+#estakada-prototypes .ep-nav{background:var(--ep-panel);border-right:1px solid var(--ep-line);padding:24px 12px;display:flex;flex-direction:column;gap:5px}
+#estakada-prototypes .ep-nav-label{font-size:11px;color:var(--ep-muted);letter-spacing:1px;text-transform:uppercase;padding:0 12px 8px}
+#estakada-prototypes .ep-nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border:0;background:transparent;color:var(--ep-muted);border-radius:8px;font-size:13px}
+#estakada-prototypes .ep-nav button.ep-active{background:var(--ep-accent-bg);color:var(--ep-accent);font-weight:500}
+#estakada-prototypes .ep-nav-spacer{flex:1;min-height:28px}
+#estakada-prototypes .ep-count{margin-left:auto;min-width:22px;padding:1px 6px;border-radius:20px;background:var(--ep-bad);color:var(--ep-on);font-size:11px;font-variant-numeric:tabular-nums;text-align:center}
+#estakada-prototypes .ep-main{min-width:0;padding:28px}
+#estakada-prototypes .ep-breadcrumb{color:var(--ep-muted);font-size:12px;margin-bottom:11px}
+#estakada-prototypes .ep-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+#estakada-prototypes .ep-heading p{margin-top:7px;color:var(--ep-muted);font-size:12px;overflow-wrap:anywhere}
+#estakada-prototypes .ep-published{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ep-good);white-space:nowrap}
+#estakada-prototypes .ep-dot{width:7px;height:7px;border-radius:100%;background:currentColor}
+#estakada-prototypes .ep-tabs{display:flex;gap:22px;border-bottom:1px solid var(--ep-line);margin-bottom:22px;flex-wrap:wrap}
+#estakada-prototypes .ep-tabs button{border:0;border-bottom:2px solid transparent;background:transparent;color:var(--ep-muted);padding:10px 0;font-size:13px}
+#estakada-prototypes .ep-tabs button.ep-active{color:var(--ep-accent);border-bottom-color:var(--ep-accent);font-weight:500}
+#estakada-prototypes .ep-surface{background:var(--ep-panel);border:1px solid var(--ep-line);border-radius:var(--ep-radius);padding:20px;min-width:0}
+#estakada-prototypes .ep-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+#estakada-prototypes .ep-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#estakada-prototypes .ep-button{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--ep-line);background:var(--ep-panel);color:var(--ep-ink);border-radius:8px;padding:8px 11px;font-size:12px;min-height:35px;text-decoration:none}
+#estakada-prototypes .ep-button.ep-primary{border-color:var(--ep-accent);background:var(--ep-accent);color:var(--ep-on)}
+#estakada-prototypes .ep-button.ep-danger{border-color:var(--ep-bad);color:var(--ep-bad)}
+#estakada-prototypes .ep-button.ep-danger-fill{border-color:var(--ep-bad);background:var(--ep-bad);color:var(--ep-on)}
+#estakada-prototypes .ep-button.ep-quiet{border-color:transparent;background:transparent}
+#estakada-prototypes .ep-stable{display:inline-flex;align-items:center;gap:5px;background:var(--ep-good-bg);color:var(--ep-good);border-radius:6px;padding:3px 7px;font-size:11px;font-weight:500;white-space:nowrap}
+#estakada-prototypes .ep-current{font-size:11px;color:var(--ep-accent);background:var(--ep-accent-bg);padding:2px 6px;border-radius:4px}
+#estakada-prototypes .ep-statuses{display:flex;gap:12px;flex-wrap:wrap;color:var(--ep-muted);font-size:12px;align-items:center}
+#estakada-prototypes .ep-table{width:100%;border-collapse:collapse;font-size:12px}
+#estakada-prototypes .ep-table th{text-align:left;font-weight:400;color:var(--ep-muted);padding:10px 8px;border-bottom:1px solid var(--ep-line);font-size:11px}
+#estakada-prototypes .ep-table td{padding:var(--ep-pad) 8px;border-bottom:1px solid var(--ep-line);vertical-align:middle}
+#estakada-prototypes .ep-table th:first-child,#estakada-prototypes .ep-table td:first-child{padding-left:0}
+#estakada-prototypes .ep-table th:last-child,#estakada-prototypes .ep-table td:last-child{text-align:right;padding-right:0}
+#estakada-prototypes .ep-version-title{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:500;margin-bottom:3px}
+#estakada-prototypes .ep-table .ep-sub{font-size:11px;color:var(--ep-muted);font-weight:400}
+#estakada-prototypes .ep-pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px;font-size:12px;color:var(--ep-muted)}
+#estakada-prototypes .ep-note{font-size:12px;color:var(--ep-muted);margin-top:17px;display:flex;gap:7px;align-items:flex-start}
+#estakada-prototypes .ep-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:20px;font-size:11px;color:var(--ep-muted)}
+#estakada-prototypes .ep-field{display:block;margin-bottom:16px}
+#estakada-prototypes .ep-field-label{display:block;font-size:12px;font-weight:500;margin-bottom:7px}
+#estakada-prototypes .ep-field input,#estakada-prototypes .ep-field textarea{display:block;width:100%;background:var(--ep-panel);color:var(--ep-ink);border:1px solid var(--ep-line);border-radius:8px;padding:11px 12px}
+#estakada-prototypes .ep-field textarea{min-height:210px;resize:vertical;line-height:1.7}
+#estakada-prototypes .ep-url{font-size:12px;color:var(--ep-muted);background:var(--ep-soft);border:1px solid var(--ep-line);border-radius:7px;padding:10px;overflow-wrap:anywhere}
+#estakada-prototypes .ep-message{font-size:12px;min-height:24px;margin:10px 0;color:var(--ep-good)}
+#estakada-prototypes .ep-message.ep-error{color:var(--ep-bad)}
+#estakada-prototypes .ep-tree{display:none}
+#estakada-prototypes .ep-context{display:none}
+#estakada-prototypes .ep-log-layout{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px}
+#estakada-prototypes .ep-categories{display:flex;flex-direction:column;gap:5px}
+#estakada-prototypes .ep-categories button{display:flex;gap:8px;align-items:center;justify-content:space-between;text-align:left;border:0;border-radius:7px;background:transparent;color:var(--ep-muted);font-size:12px;padding:10px}
+#estakada-prototypes .ep-categories button.ep-active{background:var(--ep-soft);color:var(--ep-ink)}
+#estakada-prototypes .ep-categories .ep-count{color:var(--ep-on)}
+#estakada-prototypes .ep-log-item{padding:15px 0;border-bottom:1px solid var(--ep-line)}
+#estakada-prototypes .ep-log-title{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;font-weight:500}
+#estakada-prototypes .ep-log-item p{margin-top:6px;font-size:12px;color:var(--ep-muted)}
+#estakada-prototypes .ep-times{margin-top:8px;font-size:11px;color:var(--ep-muted)}
+#estakada-prototypes .ep-severity{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--ep-bad)}
+#estakada-prototypes .ep-log-empty{padding:24px 0;color:var(--ep-muted);font-size:13px}
+#estakada-prototypes .ep-overlay{position:absolute;inset:0;z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:100px 24px 24px;background:light-dark(#1a294b55,#03070ec9)}
+#estakada-prototypes .ep-dialog{width:min(540px,100%);background:var(--ep-panel);color:var(--ep-ink);border:1px solid var(--ep-line);border-radius:var(--ep-radius);padding:24px;box-shadow:0 16px 70px light-dark(#1b2c5133,#00000088)}
+#estakada-prototypes .ep-dialog h3{font-size:20px;margin-bottom:8px}
+#estakada-prototypes .ep-dialog .ep-preview{white-space:pre-wrap;font-size:13px;line-height:1.8;margin:16px 0;padding:15px;border-radius:8px;background:var(--ep-soft)}
+#estakada-prototypes .ep-dialog p{font-size:13px;margin:12px 0}
+#estakada-prototypes .ep-dialog .ep-actions{justify-content:flex-end;margin-top:20px}
+#estakada-prototypes .ep-workshop{--ep-bg:light-dark(#f3f2ee,#1a1917);--ep-panel:light-dark(#fffefa,#24231f);--ep-line:light-dark(#dfded6,#47463e);--ep-ink:light-dark(#292f2c,#eeeee6);--ep-muted:light-dark(#606a63,#babeb1);--ep-soft:light-dark(#eeeee7,#34372f);--ep-accent:light-dark(#305e49,#a9d7bb);--ep-accent-bg:light-dark(#e4eee7,#2d4938);--ep-on:light-dark(#ffffff,#173626)}
+#estakada-prototypes .ep-workshop .ep-top{border-top:4px solid var(--ep-accent);padding-top:14px}
+#estakada-prototypes .ep-workshop .ep-body{display:block}
+#estakada-prototypes .ep-workshop .ep-nav{flex-direction:row;align-items:center;padding:0 22px;border-right:0;border-bottom:1px solid var(--ep-line);gap:18px;flex-wrap:wrap}
+#estakada-prototypes .ep-workshop .ep-nav button{width:auto;border-radius:0;padding:14px 0;border-bottom:2px solid transparent}
+#estakada-prototypes .ep-workshop .ep-nav button.ep-active{background:transparent;border-bottom-color:var(--ep-accent)}
+#estakada-prototypes .ep-workshop .ep-nav-label,#estakada-prototypes .ep-workshop .ep-nav-spacer,#estakada-prototypes .ep-workshop .ep-nav button[disabled]{display:none}
+#estakada-prototypes .ep-workshop .ep-main{padding:24px;display:grid;grid-template-columns:172px minmax(0,1fr);gap:24px}
+#estakada-prototypes .ep-workshop .ep-tree{display:block;border-right:1px solid var(--ep-line);padding-right:17px;min-width:0}
+#estakada-prototypes .ep-tree-heading{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ep-muted);margin-bottom:18px}
+#estakada-prototypes .ep-tree-item{font-size:12px;padding:8px 0;color:var(--ep-muted);display:flex;align-items:center;gap:8px}
+#estakada-prototypes .ep-tree-child{padding:8px 9px;margin:0 0 3px 12px;font-size:12px;border-radius:7px;color:var(--ep-muted)}
+#estakada-prototypes .ep-tree-child.ep-active{color:var(--ep-accent);background:var(--ep-accent-bg)}
+#estakada-prototypes .ep-workshop .ep-heading h2{font-size:22px}
+#estakada-prototypes .ep-workshop .ep-surface{padding:0;border:0;background:transparent}
+#estakada-prototypes .ep-workshop .ep-table td{padding-top:12px;padding-bottom:12px}
+#estakada-prototypes .ep-workshop .ep-version-title{display:block}
+#estakada-prototypes .ep-workshop .ep-log-layout{grid-template-columns:1fr}
+#estakada-prototypes .ep-workshop .ep-categories{flex-direction:row;flex-wrap:wrap}
+#estakada-prototypes .ep-focus{--ep-bg:light-dark(#f7f6fb,#181722);--ep-panel:light-dark(#ffffff,#242231);--ep-line:light-dark(#e0deec,#454055);--ep-ink:light-dark(#302c44,#eee9fa);--ep-muted:light-dark(#6a647f,#bbb1ce);--ep-soft:light-dark(#f0edf7,#332e43);--ep-accent:light-dark(#6c438e,#d1b0f0);--ep-accent-bg:light-dark(#f0e7fa,#443052);--ep-on:light-dark(#ffffff,#352044)}
+#estakada-prototypes .ep-focus .ep-body{grid-template-columns:64px minmax(0,1fr)}
+#estakada-prototypes .ep-focus .ep-nav{padding:22px 8px;align-items:center}
+#estakada-prototypes .ep-focus .ep-nav-label,#estakada-prototypes .ep-focus .ep-nav button span.ep-nav-text{display:none}
+#estakada-prototypes .ep-focus .ep-nav button{width:46px;min-height:44px;justify-content:center;padding:10px;position:relative}
+#estakada-prototypes .ep-focus .ep-nav .ep-count{position:absolute;top:0;right:-3px;min-width:17px;font-size:11px;padding:0 4px}
+#estakada-prototypes .ep-focus .ep-main{padding:28px;display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:24px}
+#estakada-prototypes .ep-focus .ep-context{display:block;align-self:start;background:var(--ep-panel);border:1px solid var(--ep-line);border-radius:var(--ep-radius);padding:16px;min-width:0}
+#estakada-prototypes .ep-context-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--ep-muted);margin-bottom:17px}
+#estakada-prototypes .ep-context-line{padding:0 0 18px 12px;border-left:2px solid var(--ep-line);font-size:12px;position:relative}
+#estakada-prototypes .ep-context-line:before{content:"";position:absolute;left:-5px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--ep-muted)}
+#estakada-prototypes .ep-context-line.ep-checked:before{background:var(--ep-good)}
+#estakada-prototypes .ep-context-line p{font-size:11px;color:var(--ep-muted);margin-top:4px}
+#estakada-prototypes .ep-focus .ep-surface{border:0;background:transparent;padding:0}
+#estakada-prototypes .ep-focus .ep-tabs{gap:16px}
+#estakada-prototypes .ep-focus .ep-table th:nth-child(2),#estakada-prototypes .ep-focus .ep-table td:nth-child(2){display:none}
+#estakada-prototypes .ep-focus .ep-heading h2{font-size:25px}
+#estakada-prototypes .ep-focus .ep-log-layout{grid-template-columns:1fr}
+#estakada-prototypes .ep-focus .ep-categories{flex-direction:row;flex-wrap:wrap}
+#estakada-prototypes .ep-app.ep-compact{--ep-pad:9px}
+@media(max-width:800px){
+ #estakada-prototypes .ep-body{grid-template-columns:148px minmax(0,1fr)}
+ #estakada-prototypes .ep-main{padding:20px}
+ #estakada-prototypes .ep-surface{padding:14px}
+ #estakada-prototypes .ep-focus .ep-main{grid-template-columns:minmax(0,1fr);padding:22px}
+ #estakada-prototypes .ep-focus .ep-context{display:none}
+ #estakada-prototypes .ep-workshop .ep-main{grid-template-columns:140px minmax(0,1fr);gap:18px;padding:20px}
+ #estakada-prototypes .ep-log-layout{grid-template-columns:1fr}
+ #estakada-prototypes .ep-categories{flex-direction:row;flex-wrap:wrap}
+ #estakada-prototypes .ep-table th:nth-child(2),#estakada-prototypes .ep-table td:nth-child(2){display:none}
+}
+@media(max-width:560px){
+ #estakada-prototypes .ep-app{min-height:1250px}
+ #estakada-prototypes .ep-top{padding:15px;gap:12px}
+ #estakada-prototypes .ep-role{width:100%;justify-content:space-between}
+ #estakada-prototypes .ep-body,#estakada-prototypes .ep-focus .ep-body{display:block}
+ #estakada-prototypes .ep-nav,#estakada-prototypes .ep-focus .ep-nav{padding:10px;flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--ep-line);gap:6px}
+ #estakada-prototypes .ep-nav-label,#estakada-prototypes .ep-nav-spacer,#estakada-prototypes .ep-nav button[disabled]{display:none}
+ #estakada-prototypes .ep-nav button,#estakada-prototypes .ep-focus .ep-nav button{width:auto;min-height:44px;padding:9px}
+ #estakada-prototypes .ep-focus .ep-nav button span.ep-nav-text{display:inline}
+ #estakada-prototypes .ep-focus .ep-nav .ep-count{position:static}
+ #estakada-prototypes .ep-main,#estakada-prototypes .ep-workshop .ep-main,#estakada-prototypes .ep-focus .ep-main{padding:20px 15px;display:block}
+ #estakada-prototypes .ep-workshop .ep-tree{display:none}
+ #estakada-prototypes .ep-heading h2{font-size:22px}
+ #estakada-prototypes .ep-tabs{gap:16px}
+ #estakada-prototypes .ep-table thead{display:none}
+ #estakada-prototypes .ep-table,#estakada-prototypes .ep-table tbody{display:block}
+ #estakada-prototypes .ep-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;border-bottom:1px solid var(--ep-line);padding:13px 0}
+ #estakada-prototypes .ep-table td{display:block;border:0;padding:0!important;min-width:0}
+ #estakada-prototypes .ep-table td:first-child{grid-column:1/-1}
+ #estakada-prototypes .ep-table td:last-child{align-self:end}
+ #estakada-prototypes .ep-table .ep-sub{font-size:12px}
+ #estakada-prototypes .ep-button{min-height:44px}
+ #estakada-prototypes .ep-field textarea{font-size:16px;min-height:240px}
+ #estakada-prototypes .ep-overlay{padding:65px 12px 18px}
+ #estakada-prototypes .ep-dialog{padding:18px}
+}
+</style>
+<script>
+(function(){
+  "use strict";
+  var root=document.getElementById("estakada-prototypes");
+  var layouts=["order","workshop","focus"];
+  var names={order:"Порядок",workshop:"Мастерская",focus:"Фокус"};
+  var sample="Покраска автомобиля\n\nПодбираем оттенок покрытия и выполняем окраску в подготовленной камере. Перед работой согласуем объём и стоимость.\n\nОкончательную стоимость мастер определяет после осмотра автомобиля.";
+  var older="Покраска автомобиля\n\nВыполняем локальную и полную покраску кузова. Цвет подбирается по образцу, детали проходят подготовку перед окрашиванием.\n\nСтоимость уточняется после осмотра.";
+  function escapeText(v){return String(v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function icon(name){return '<i data-lucide="'+name+'" aria-hidden="true"></i>';}
+  function button(action,label,extra){return '<button type="button" class="ep-button cursor-interaction '+(extra||"")+'" data-action="'+action+'">'+label+'</button>';}
+  function initialRecords(){
+    var list=[];
+    for(var i=18;i>=9;i--){
+      list.push({id:i,stable:false,current:i===18,author:i%3===0?"Иван":"Вы",time:i===18?"Сегодня, 15:40":(i>=15?"Сегодня, ":"Вчера, ")+(10+i%7)+":"+((i%6)*10).toString().padStart(2,"0"),comment:i===18?"Уточнено описание услуги":i%2===0?"Сохранение текста":"Правки страницы",text:i>=16?sample:older,kind:"Автоматическая"});
+    }
+    list.push({id:8,stable:true,current:false,author:"Вы",time:"25 окт., 18:20",comment:"Проверено перед обновлением",text:older,kind:"Контрольная"});
+    list.push({id:4,stable:true,current:false,author:"Иван",time:"23 окт., 12:15",comment:"Согласованный текст",text:older,kind:"Автоматическая"});
+    return list;
+  }
+  function initialLogs(){return [
+    {id:"security",name:"Безопасность",count:1274,title:"Серия неудачных входов",detail:"Повторяющиеся отказы при входе в админку",period:"14:20–14:35 · 1 274 события"},
+    {id:"actions",name:"Действия",count:5,title:"Иван сохранил текст страницы",detail:"Покраска автомобиля · создана версия #18",period:"Сегодня, 15:40"},
+    {id:"versions",name:"Версии",count:2,title:"Версия #8 отмечена Stable",detail:"Покраска автомобиля · действие владельца",period:"Сегодня, 14:05"},
+    {id:"errors",name:"Ошибки сайта",count:3,title:"Не удалось обработать изображение",detail:"Операция отклонена, исходный файл сохранён",period:"Сегодня, 13:52 · 3 повтора"},
+    {id:"updates",name:"Обновления",count:0,title:"Новых обновлений нет",detail:"",period:""}
+  ];}
+  var states=layouts.map(function(layout){return {layout:layout,app:root.querySelector('[data-layout="'+layout+'"]'),role:"owner",view:"versions",page:0,records:initialRecords(),logs:initialLogs(),category:"security",edited:sample,next:19,flash:"",error:false,modal:null,selected:null,compact:false,radius:12,deleted:false};});
+  function stats(s){return {ordinary:s.records.filter(function(x){return !x.stable;}).length,stable:s.records.filter(function(x){return x.stable;}).length};}
+  function current(s){return s.records.find(function(x){return x.current;});}
+  function prune(s){
+    var ordinary=s.records.filter(function(x){return !x.stable;}).sort(function(a,b){return a.id-b.id;});
+    while(ordinary.length>10){
+      var candidate=ordinary.find(function(x){return !x.current;});
+      if(!candidate)break;
+      s.records=s.records.filter(function(x){return x.id!==candidate.id;});
+      ordinary=ordinary.filter(function(x){return x.id!==candidate.id;});
+    }
+  }
+  function badge(n){return n>0?'<span class="ep-count">'+n.toLocaleString("ru-RU")+'</span>':"";}
+  function navigation(s){
+    var isLogs=s.view==="logs";
+    var total=s.logs.reduce(function(sum,x){return sum+x.count;},0);
+    var nav='<div class="ep-nav-label">Управление</div>'+
+      '<button type="button" class="cursor-interaction '+(!isLogs?"ep-active":"")+'" data-action="nav-pages" aria-label="Страницы">'+icon("files")+'<span class="ep-nav-text">Страницы</span></button>';
+    if(s.role==="owner"){
+      nav+='<button type="button" disabled aria-label="Медиа — другой экран">'+icon("images")+'<span class="ep-nav-text">Медиа</span></button>'+
+      '<button type="button" disabled aria-label="Сотрудники — другой экран">'+icon("users")+'<span class="ep-nav-text">Сотрудники</span></button>'+
+      '<button type="button" class="cursor-interaction '+(isLogs?"ep-active":"")+'" data-action="nav-logs" aria-label="Логи">'+icon("activity")+'<span class="ep-nav-text">Логи</span>'+badge(total)+'</button>';
+    }
+    nav+='<div class="ep-nav-spacer"></div>';
+    if(s.role==="owner")nav+='<button type="button" disabled aria-label="Настройки — другой экран">'+icon("settings")+'<span class="ep-nav-text">Настройки</span></button>';
+    return nav;
+  }
+  function tree(s){return '<aside class="ep-tree"><div class="ep-tree-heading">'+(s.role==="owner"?"Структура сайта":"Мои страницы")+'</div><div class="ep-tree-item">'+icon("chevron-down")+'Кузовной ремонт</div><div class="ep-tree-child">Ремонт кузова</div><div class="ep-tree-child ep-active">Покраска автомобиля</div><div class="ep-tree-child">Геометрия кузова</div><div class="ep-tree-child">Ремонт бамперов</div>'+(s.role==="owner"?'<div class="ep-tree-item">'+icon("chevron-right")+'Плановое ТО</div><div class="ep-tree-item">'+icon("chevron-right")+'Диагностика</div>':"")+'</aside>';}
+  function context(s){var c=current(s);return '<aside class="ep-context"><div class="ep-context-title">Лента страницы</div><div class="ep-context-line"><span>Последняя правка</span><p>'+(c?escapeText(c.author)+" · "+escapeText(c.time):"—")+'</p></div><div class="ep-context-line ep-checked"><span>Stable #8</span><p>Проверено владельцем</p></div><div class="ep-context-line ep-checked"><span>Stable #4</span><p>Согласованный текст</p></div><div class="ep-note">'+icon("lock-keyhole")+'История закрыта от посетителей</div></aside>';}
+  function tabs(s){
+    var out='<div class="ep-tabs" role="group" aria-label="Вкладки страницы">';
+    [["content","Содержимое"],["versions","Версии"]].concat(s.role==="owner"?[["settings","Настройки"]]:[]).forEach(function(t){
+      out+='<button type="button" class="cursor-interaction '+(s.view===t[0]?"ep-active":"")+'" data-action="tab" data-view="'+t[0]+'" aria-pressed="'+(s.view===t[0])+'">'+t[1]+'</button>';
+    });
+    return out+'</div>';
+  }
+  function versions(s){
+    var counts=stats(s),list=s.records.slice().sort(function(a,b){return Number(b.stable)-Number(a.stable)||b.id-a.id;}),start=s.page*5;
+    if(start>=list.length){s.page=0;start=0;}
+    var out='<div class="ep-surface"><div class="ep-toolbar"><div><h3>Сохранённые версии</h3><div class="ep-statuses"><span>Обычные: '+counts.ordinary+'/10</span><span>'+counts.stable+' Stable</span></div></div>'+(s.role==="owner"?button("manual",icon("plus")+"Контрольная версия"):'<span class="ep-small">Просмотр и восстановление</span>')+'</div>'+
+      '<table class="ep-table"><thead><tr><th>Версия</th><th>Автор</th><th>Статус</th><th>Действие</th></tr></thead><tbody>';
+    list.slice(start,start+5).forEach(function(v){
+      out+='<tr><td><div class="ep-version-title">#'+v.id+' · '+escapeText(v.time)+(v.current?'<span class="ep-current">На сайте</span>':"")+'</div><div class="ep-sub">'+escapeText(v.author)+' · '+escapeText(v.comment)+'</div></td><td>'+escapeText(v.author)+'<div class="ep-sub">'+escapeText(v.kind)+'</div></td><td>'+(v.stable?'<span class="ep-stable">'+icon("shield-check")+'Stable</span>':'<span class="ep-small">Обычная</span>')+'</td><td><button type="button" class="ep-button cursor-interaction" data-action="preview" data-id="'+v.id+'" aria-label="Открыть версию '+v.id+'">'+icon("eye")+'Открыть</button></td></tr>';
+    });
+    out+='</tbody></table><div class="ep-pager"><span>'+Math.min(start+1,list.length)+'–'+Math.min(start+5,list.length)+' из '+list.length+'</span><div class="ep-actions">'+button("prev",icon("chevron-left"),"ep-quiet")+'<span>'+(s.page+1)+' / '+Math.ceil(list.length/5)+'</span>'+button("next",icon("chevron-right"),"ep-quiet")+'</div></div><div class="ep-note">'+icon("shield-check")+'Stable сохраняются сверх лимита. Новое сохранение не меняет защищённую версию.</div></div>';
+    return out;
+  }
+  function editor(s){return '<div class="ep-surface"><label class="ep-field"><span class="ep-field-label">Текст страницы</span><textarea data-field="content" aria-label="Текст страницы">'+escapeText(s.edited)+'</textarea></label><div class="ep-toolbar"><span class="ep-small">'+(s.role==="owner"?"Действующая страница":"Разрешено редактировать только текст")+'</span>'+button("save",icon("check")+"Сохранить","ep-primary")+'</div><div class="ep-note">'+icon("history")+'Сохранение сразу обновляет текст на сайте и создаёт новую версию.</div></div>';}
+  function settings(s){return '<div class="ep-surface"><label class="ep-field"><span class="ep-field-label">Заголовок</span><input value="Покраска автомобиля" readonly></label><label class="ep-field"><span class="ep-field-label">Родительский раздел</span><input value="Кузовной ремонт" readonly></label><div class="ep-field"><span class="ep-field-label">Постоянный адрес</span><div class="ep-url">/services/kuzovnoj-remont/pokraska-avtomobilya</div></div><div class="ep-note">'+icon("link")+'Адрес сохраняется при восстановлении версии.</div><div class="ep-actions" style="margin-top:28px">'+button("delete",icon("trash-2")+"Удалить страницу","ep-danger")+'</div></div>';}
+  function logs(s){
+    var chosen=s.logs.find(function(x){return x.id===s.category;});
+    var out='<div class="ep-heading"><div><h2>Логи</h2><p>Отдельные категории. Новые события всегда заметны.</p></div></div><div class="ep-surface"><div class="ep-log-layout"><div class="ep-categories" role="group" aria-label="Категории логов">';
+    s.logs.forEach(function(x){out+='<button type="button" class="cursor-interaction '+(x.id===s.category?"ep-active":"")+'" data-action="category" data-category="'+x.id+'">'+escapeText(x.name)+badge(x.count)+'</button>';});
+    out+='</div><div><div class="ep-toolbar"><h3>'+escapeText(chosen.name)+'</h3>'+button("read","Отметить просмотренными","ep-quiet")+'</div>';
+    if(chosen.id==="updates"){out+='<div class="ep-log-empty">Новых обновлений нет</div>';}
+    else{out+='<div class="ep-log-item"><div class="ep-log-title"><span class="ep-severity"></span>'+escapeText(chosen.title)+'</div><p>'+escapeText(chosen.detail)+'</p><div class="ep-times">'+escapeText(chosen.period)+'</div><div class="ep-actions" style="margin-top:14px">'+button("log-detail","Подробности")+'</div></div>';}
+    out+='<div class="ep-note">'+icon("info")+'Просмотр события не удаляет запись и не означает, что проблема решена.</div></div></div></div>';return out;
+  }
+  function modal(s){
+    if(!s.modal)return "";
+    var v=s.records.find(function(x){return x.id===s.selected;});
+    var inner="";
+    if(s.modal==="preview"&&v){
+      inner='<h3>Версия #'+v.id+'</h3><div class="ep-small">'+escapeText(v.author)+' · '+escapeText(v.time)+'</div><div style="margin-top:10px">'+(v.stable?'<span class="ep-stable">'+icon("shield-check")+'Stable</span>':escapeText(v.comment))+'</div><div class="ep-preview">'+escapeText(v.text)+'</div><div class="ep-actions">'+button("close","Закрыть")+(s.role==="owner"&&!v.stable?button("stable",icon("shield-check")+"Пометить Stable"):"")+button("restore","Восстановить текст","ep-primary")+'</div>';
+    }else if(s.modal==="manual"){
+      inner='<h3>Контрольная версия</h3><p>Сохранить текущий вариант с понятным названием.</p><label class="ep-field"><span class="ep-field-label">Название или комментарий</span><input data-field="comment" value="Проверенный вариант"></label><div class="ep-actions">'+button("close","Отмена")+button("create-manual","Создать версию","ep-primary")+'</div>';
+    }else if(s.modal==="delete"){
+      var count=stats(s);
+      inner='<h3>Удалить страницу?</h3><p>«Покраска автомобиля»</p><div class="ep-url">/services/kuzovnoj-remont/pokraska-avtomobilya</div><p>Будут удалены все '+s.records.length+' версий, включая <strong style="font-weight:500">'+count.stable+' Stable</strong>.</p><p class="ep-small">Общие изображения других страниц останутся.</p><div class="ep-actions">'+button("close","Отмена")+button("confirm-delete","Удалить страницу и все версии","ep-danger-fill")+'</div>';
+    }else if(s.modal==="log"){
+      var log=s.logs.find(function(x){return x.id===s.category;});
+      inner='<h3>'+escapeText(log.title)+'</h3><p>'+escapeText(log.detail)+'</p><div class="ep-preview">'+escapeText(log.period)+'\nРезультат: событие записано\nКатегория: '+escapeText(log.name)+'\nПароли и секреты не сохраняются</div><div class="ep-actions">'+button("close","Закрыть")+'</div>';
+    }
+    return inner?'<div class="ep-overlay"><div class="ep-dialog" role="dialog" aria-modal="true" aria-label="Действие в макете">'+inner+'</div></div>':"";
+  }
+  function render(s){
+    s.app.style.setProperty("--ep-radius",s.radius+"px");s.app.classList.toggle("ep-compact",s.compact);
+    var isLogs=s.view==="logs",content="";
+    if(s.deleted&&!isLogs){content='<div class="ep-heading"><h2>Страница удалена</h2></div><div class="ep-surface"><p>Все её версии, включая Stable, удалены в этом макете.</p></div>';}
+    else if(isLogs){content=logs(s);}
+    else{
+      content='<div class="ep-breadcrumb">Содержимое / Кузовной ремонт</div><div class="ep-heading"><div><h2>Покраска автомобиля</h2><p>/services/kuzovnoj-remont/pokraska-avtomobilya</p></div><span class="ep-published"><span class="ep-dot"></span>На сайте</span></div>'+tabs(s)+(s.view==="content"?editor(s):s.view==="settings"?settings(s):versions(s));
+    }
+    s.app.innerHTML='<header class="ep-top"><div class="ep-brand"><div class="ep-logo">Э</div><div><strong>ЭСТАКАДА</strong><div class="ep-small">Управление сайтом</div></div></div><label class="ep-role">Проверить права<select data-field="role" aria-label="Роль в макете"><option value="owner" '+(s.role==="owner"?"selected":"")+'>Владелец · вы</option><option value="employee" '+(s.role==="employee"?"selected":"")+'>Сотрудник · Иван</option></select></label></header><div class="ep-body"><nav class="ep-nav" aria-label="Навигация админки">'+navigation(s)+'</nav><main class="ep-main">'+tree(s)+'<div style="min-width:0">'+content+'<div class="ep-message '+(s.error?"ep-error":"")+'" role="'+(s.error?"alert":"status")+'" aria-live="polite">'+escapeText(s.flash)+'</div><footer class="ep-footer"><span>Макет · демонстрационные данные</span><span>'+names[s.layout]+'</span></footer></div>'+context(s)+'</main></div>'+modal(s);
+    if(globalThis.lucide)lucide.createIcons({attrs:{width:16,height:16}});
+    var dialog=s.app.querySelector('[role="dialog"]');
+    if(dialog){var close=dialog.querySelector('button[data-action="close"]');if(close)close.focus({preventScroll:true});}
+  }
+  function addVersion(s,text,kind,comment,isCurrent){
+    if(isCurrent)s.records.forEach(function(x){x.current=false;});
+    s.records.push({id:s.next++,stable:false,current:isCurrent,author:s.role==="owner"?"Вы":"Иван",time:"Только что",comment:comment,text:text,kind:kind});
+    s.records.sort(function(a,b){return b.id-a.id;});prune(s);s.page=0;
+  }
+  function persist(){
+    if(!window.openai||!window.openai.setWidgetState)return;
+    var saved=states.map(function(s){return {layout:s.layout,role:s.role,view:s.view,page:s.page,stableIds:s.records.filter(function(v){return v.stable;}).map(function(v){return v.id;}),compact:s.compact,radius:s.radius};});
+    try{var promise=window.openai.setWidgetState({modelContent:{purpose:"Сравнение дизайнов админки Эстакада",variants:saved.map(function(s){return {name:names[s.layout],role:s.role,screen:s.view};})},privateContent:{variants:saved}});if(promise&&promise.catch)promise.catch(function(){});}catch(e){}
+  }
+  function applySaved(value){
+    if(!value||!value.privateContent||!Array.isArray(value.privateContent.variants))return;
+    value.privateContent.variants.forEach(function(v){
+      var s=states.find(function(x){return x.layout===v.layout;});if(!s)return;
+      s.role=v.role==="employee"?"employee":"owner";s.view=["content","versions","settings","logs"].indexOf(v.view)>=0?v.view:"versions";
+      if(s.role==="employee"&&["settings","logs"].indexOf(s.view)>=0)s.view="versions";
+      s.page=Number.isInteger(v.page)?Math.max(0,v.page):0;s.compact=!!v.compact;s.radius=Number.isFinite(v.radius)?Math.min(20,Math.max(4,v.radius)):12;
+      if(Array.isArray(v.stableIds))s.records.forEach(function(record){if(v.stableIds.indexOf(record.id)>=0)record.stable=true;});
+    });
+  }
+  if(window.openai)applySaved(window.openai.widgetState);
+  states.forEach(function(s){
+    s.app.addEventListener("input",function(e){if(e.target.dataset.field==="content")s.edited=e.target.value;});
+    s.app.addEventListener("change",function(e){
+      if(e.target.dataset.field!=="role")return;
+      s.role=e.target.value==="employee"?"employee":"owner";if(s.role==="employee"&&["logs","settings"].indexOf(s.view)>=0)s.view="versions";
+      s.modal=null;s.flash="";render(s);persist();
+    });
+    s.app.addEventListener("keydown",function(e){
+      if(e.key==="Escape"&&s.modal){s.modal=null;render(s);return;}
+      if(e.key==="Tab"&&s.modal){
+        var controls=Array.from(s.app.querySelectorAll('.ep-dialog button:not([disabled]),.ep-dialog input,.ep-dialog textarea,.ep-dialog select'));
+        if(controls.length&&e.shiftKey&&document.activeElement===controls[0]){e.preventDefault();controls[controls.length-1].focus();}
+        else if(controls.length&&!e.shiftKey&&document.activeElement===controls[controls.length-1]){e.preventDefault();controls[0].focus();}
+      }
+    });
+    s.app.addEventListener("click",function(e){
+      var b=e.target.closest("button[data-action]");if(!b||!s.app.contains(b)||b.disabled)return;
+      var action=b.dataset.action;s.flash="";s.error=false;
+      if(action==="tab"){s.view=b.dataset.view;if(s.role==="employee"&&s.view==="settings")s.view="versions";}
+      else if(action==="nav-pages")s.view="versions";
+      else if(action==="nav-logs"&&s.role==="owner")s.view="logs";
+      else if(action==="prev")s.page=Math.max(0,s.page-1);
+      else if(action==="next")s.page=Math.min(Math.ceil(s.records.length/5)-1,s.page+1);
+      else if(action==="preview"){s.selected=Number(b.dataset.id);s.modal="preview";}
+      else if(action==="close")s.modal=null;
+      else if(action==="stable"&&s.role==="owner"){
+        var v=s.records.find(function(x){return x.id===s.selected;});if(v){v.stable=true;s.flash="Версия #"+v.id+" отмечена Stable и защищена от очистки.";}s.modal=null;
+      }else if(action==="restore"){
+        var old=s.records.find(function(x){return x.id===s.selected;});if(old){s.edited=old.text;s.view="content";s.flash="Текст версии #"+old.id+" открыт для проверки. «Сохранить» применит его на сайте.";}s.modal=null;
+      }else if(action==="save"){
+        var input=s.app.querySelector('textarea[data-field="content"]');if(input)s.edited=input.value;
+        if(!s.edited.trim()){s.error=true;s.flash="Добавьте текст перед сохранением.";}
+        else{addVersion(s,s.edited,"Автоматическая","Сохранение текста",true);s.flash="Сохранено. Текст обновлён, создана версия #"+(s.next-1)+".";}
+      }else if(action==="manual"&&s.role==="owner")s.modal="manual";
+      else if(action==="create-manual"&&s.role==="owner"){
+        var comment=s.app.querySelector('[data-field="comment"]');var live=current(s);
+        if(live){addVersion(s,live.text,"Контрольная",comment?comment.value.trim()||"Контрольная версия":"Контрольная версия",false);s.flash="Создана контрольная версия #"+(s.next-1)+".";s.modal=null;}
+      }else if(action==="delete"&&s.role==="owner")s.modal="delete";
+      else if(action==="confirm-delete"&&s.role==="owner"){s.records=[];s.deleted=true;s.modal=null;s.flash="Удаление выполнено только в этом демонстрационном варианте.";}
+      else if(action==="category"&&s.role==="owner")s.category=b.dataset.category;
+      else if(action==="read"&&s.role==="owner"){var category=s.logs.find(function(x){return x.id===s.category;});category.count=0;s.flash="Категория отмечена просмотренной. Записи сохранены.";}
+      else if(action==="log-detail"&&s.role==="owner")s.modal="log";
+      render(s);persist();
+    });
+    render(s);
+    if(globalThis.Tweak){
+      var tweak=new Tweak({container:s.app,onChange:function(){render(s);persist();}});
+      tweak.addSlider(s,"radius",{label:"Скругления",min:4,max:20,step:1,unit:"px"});
+      tweak.addToggle(s,"compact",{label:"Компактные строки"});
+    }
+  });
+  window.addEventListener("openai:set_globals",function(e){if(e.detail&&e.detail.globals&&e.detail.globals.widgetState){applySaved(e.detail.globals.widgetState);states.forEach(render);}});
+})();
+</script>
