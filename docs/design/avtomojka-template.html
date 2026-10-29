@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Автомойка — внутренние страницы «Эстакады»</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--orange:#f47b20;--ink:#111;--soft:#efefed;--line:#d2d2ce;--white:#fff}
+    *{box-sizing:border-box;min-width:0}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:#fff;color:var(--ink);font:15px/1.7 "Inter","Segoe UI",Arial,sans-serif}
+    a{color:inherit;text-decoration:none}
+    img{display:block;max-width:100%}
+    mark{color:var(--orange);background:none}
+    .skip{position:absolute;left:20px;top:-70px;z-index:20;background:#fff;padding:12px 18px}
+    .skip:focus{top:0}
+    :focus-visible{outline:4px solid #2468d4;outline-offset:4px}
+
+    .header{min-height:76px;padding:7px 40px;display:flex;align-items:center;gap:18px;border-bottom:1px solid var(--line);background:#fff}
+    .brand img{width:94px;height:54px;object-fit:contain}
+    .nav{display:flex;align-items:center;gap:15px;font-size:10px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+    .nav a{padding:12px 0;border-bottom:3px solid transparent}
+    .nav a:hover{border-color:var(--orange)}
+    .menu{display:none;border:0;background:transparent;padding:8px}
+    .menu span{display:block;width:25px;height:2px;background:#111;margin:5px}
+    .menu b{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+    .contacts{margin-left:auto;display:flex;align-items:center;gap:5px}
+    .socials{display:flex;gap:5px}
+    .socials a{width:23px;height:23px;border-radius:5px;overflow:hidden}
+    .socials img{width:100%;height:100%;object-fit:cover}
+    .address,.phone{display:flex;flex-direction:column;padding-left:7px;border-left:1px solid #d6d6d2;line-height:1.2}
+    .address b,.phone strong{font-size:12px;white-space:nowrap}
+    .address span{font-size:9.5px;max-width:165px}
+    .phone strong{font-size:14px}.phone span{font-size:8px;white-space:nowrap}
+
+    .page{padding:52px 40px 58px}
+    .breadcrumbs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#6b6b67;font-size:12px;margin-bottom:18px}
+    .breadcrumbs a{text-decoration:underline;text-decoration-color:#bbb;text-underline-offset:4px}
+    .breadcrumbs span[aria-hidden="true"]{color:var(--orange);font-weight:800}
+    h1,h2,h3{font-family:"Oswald","Arial Narrow",Arial,sans-serif;text-transform:uppercase;letter-spacing:-.025em}
+    h1{font-size:50px;line-height:1.04;margin:0 0 30px}
+    .content-layout{display:block}
+    .article{font-size:15px;line-height:1.7}
+    .article>p{margin:0 0 18px}
+    .article h2{font-size:31px;line-height:1.12;margin:42px 0 18px}
+    .article h3{font-size:22px;line-height:1.2;margin:32px 0 12px}
+    .article-hero{position:relative;min-height:430px;margin-bottom:42px;overflow:hidden;background:#222}
+    .article-hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 58%}
+    .article-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.12),transparent 58%)}
+    .article-hero-copy{position:absolute;z-index:1;left:0;bottom:0;width:min(690px,62%);padding:24px 28px;background:rgba(255,255,255,.84);border-left:5px solid var(--orange);backdrop-filter:blur(5px)}
+    .article-hero-copy p{margin:0;font-size:15px;line-height:1.7}
+    .body-types{counter-reset:bodytype;list-style:none;padding:0;margin:24px 0 32px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .body-types li{counter-increment:bodytype;position:relative;background:var(--soft);padding:22px 22px 22px 72px;min-height:150px;border-top:5px solid var(--orange)}
+    .body-types li:before{content:counter(bodytype,decimal-leading-zero);position:absolute;left:20px;top:21px;font:600 28px/1 "Oswald",sans-serif;color:var(--orange)}
+    .stages{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:28px 0 8px}
+    .stage{background:var(--soft);padding:20px;min-height:178px;border-top:5px solid var(--orange)}
+    .stage b{display:block;font:600 21px/1.1 "Oswald",sans-serif;text-transform:uppercase;margin-bottom:12px}
+    .stage p{margin:0;font-size:13px;line-height:1.6}
+    .price-wrap{margin-top:44px}
+    .price-scroll{overflow-x:auto;border-top:3px solid #111}
+    table{width:100%;border-collapse:collapse;min-width:700px;font-size:13px;line-height:1.35}
+    th,td{text-align:left;padding:12px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{font-size:11px;text-transform:uppercase;background:#fff}
+    tbody tr:nth-child(odd){background:#efefed}
+    .subrow td{font-weight:800;background:#111!important;color:#fff;text-transform:uppercase}
+    .notes{display:grid;gap:10px;margin-top:20px}
+    .note{margin:0;padding:14px 16px;background:#fff4eb;border-left:4px solid var(--orange);font-size:13px;font-style:italic}
+    .closing{margin-top:28px;padding:24px;background:var(--soft)}
+    .closing p{margin:0}.closing p+p{margin-top:12px}
+
+    .works{padding:40px;background:#fff;border-top:1px solid var(--line)}
+    .kicker{font-size:11px;font-weight:800;letter-spacing:.13em;color:#666;text-transform:uppercase;margin:0 0 4px}
+    .works h2{font-size:40px;line-height:1.04;margin:0 0 18px}
+    .work-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+    .work-card{background:#e7e7e4;overflow:hidden;border-radius:7px}
+    .work-card>img{width:100%;height:112px;object-fit:cover}
+    .work-card>div{padding:11px;min-height:84px;position:relative}
+    .work-card span{font-size:9px;text-transform:uppercase;letter-spacing:.1em}
+    .work-card h3{font-size:16px;line-height:1.06;margin:6px 16px 0 0}
+    .work-card i{position:absolute;right:10px;bottom:9px;font:normal 17px/1 Arial}
+    .all-works{display:inline-flex;align-items:center;justify-content:space-between;gap:34px;margin-top:16px;background:var(--orange);padding:11px 15px;font-size:12px;font-weight:900;text-transform:uppercase}
+
+    .footer{min-height:72px;background:#e7e7e4;padding:10px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .footer-left{display:flex;align-items:center;gap:14px;white-space:nowrap}.footer .brand img{width:86px;height:auto}
+    .footer p,.legal{color:#555;font-size:10px}.footer p{margin:0}
+    .legal{display:flex;align-items:center;margin-left:auto;white-space:nowrap}.legal span{padding:0 14px;border-left:1px solid #c7c7c3}.legal span:first-child{border:0}.credit b{color:var(--orange);font-size:12px}
+
+    @media(max-width:1000px){
+      .header{padding-inline:24px}.nav{display:none}.menu{display:block}.contacts{margin-left:auto}.address{display:none}
+      .page,.works{padding-inline:24px}
+      .work-grid{grid-template-columns:repeat(3,1fr)}.footer{padding-inline:24px;flex-wrap:wrap}.legal{margin-left:0}
+    }
+    @media(max-width:700px){
+      .header{padding:8px 16px;min-height:68px}.brand img{width:82px;height:48px}.socials,.phone span{display:none}.phone strong{font-size:13px}
+      .page{padding:30px 16px 42px}.breadcrumbs{font-size:11px;margin-bottom:14px}h1{font-size:38px;margin-bottom:24px}
+      .article h2{font-size:27px}.article h3{font-size:20px}.article-hero{min-height:560px}.article-hero-copy{width:calc(100% - 20px);padding:20px;right:20px}.body-types{grid-template-columns:1fr}.stages{grid-template-columns:1fr}.stage{min-height:0}
+      .works{padding:34px 16px}.works h2{font-size:34px}.work-grid{grid-template-columns:repeat(2,1fr)}
+      .footer{padding:16px;display:block}.footer-left{white-space:normal}.legal{margin-top:14px;display:grid;gap:7px}.legal span{border:0;padding:0}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#content">К содержанию</a>
+  <header class="header">
+    <a class="brand" href="https://estakada-service.ru/" aria-label="Эстакада — главная"><img src="../../media/source-site/assets/1c7de03c1bd80ebbde8258aca12b3d4ac68bf699085fd8a7923c4b880f41af8a.png" alt="Техцентр Эстакада"></a>
+    <button class="menu" type="button" aria-expanded="false" aria-controls="main-nav"><span></span><span></span><span></span><b>Меню</b></button>
+    <nav class="nav" id="main-nav" aria-label="Основное меню">
+      <a href="https://estakada-service.ru/services/">Услуги и цены</a><a href="https://estakada-service.ru/actions">Акции</a><a href="https://estakada-service.ru/gallery-of-works/">Наши работы</a><a href="https://estakada-service.ru/reviews">Отзывы</a><a href="https://estakada-service.ru/articles/">Статьи</a><a href="https://estakada-service.ru/contacts">Контакты</a>
+    </nav>
+    <div class="contacts">
+      <div class="socials"><a href="https://t.me/+79855462772" aria-label="Telegram"><img src="../../media/design-concepts/social-icons/telegram.svg" alt=""></a><a href="https://max.ru/u/79855462772" aria-label="MAX"><img src="../../media/design-concepts/social-icons/max.svg" alt=""></a><a href="https://www.instagram.com/attc_estakada" aria-label="Instagram"><img src="../../media/design-concepts/social-icons/instagram.svg" alt=""></a></div>
+      <a class="address" href="https://yandex.ru/maps/org/57771430682"><b>Москва</b><span>Проспект 60-летия Октября, 15Б · Яндекс Карты ↗</span></a>
+      <a class="phone" href="tel:+74991102552"><strong>+7 (499) 110-25-52</strong><span>Ежедневно с 9:00 до 21:00</span></a>
+    </div>
+  </header>
+
+  <main id="content">
+    <section class="page">
+      <nav class="breadcrumbs" aria-label="Хлебные крошки"><a href="https://estakada-service.ru/">Главная</a><span aria-hidden="true">/</span><a href="https://estakada-service.ru/services/">Услуги и цены</a><span aria-hidden="true">/</span><span aria-current="page">Автомойка</span></nav>
+      <h1>АВТОМОЙКА</h1>
+      <div class="content-layout">
+        <article class="article">
+<section class="article-hero" aria-label="Профессиональная автомойка в автотехцентре Эстакада"><img src="../../media/design-concepts/services-v4/car-wash.webp" alt="Автомобиль на профессиональной мойке автотехцентра Эстакада"><div class="article-hero-copy"><p>Профессиональная мойка помогает сохранить внешний вид автомобиля и защищает покрытие от дорожной грязи и реагентов. В АТЦ «Эстакада» доступны техническая, экспресс-, стандартная, комплексная и двухфазная мойка, а также дополнительные защитные обработки.</p></div></section>
+<p>Стоимость зависит от выбранной программы и класса автомобиля. В таблице сохранены категории внутренней страницы; первая колонка цены соответствует самому компактному классу, последняя — самому крупному.</p>
+<section class="price-wrap" aria-labelledby="wash-price-title"><h2 id="wash-price-title">СТОИМОСТЬ АВТОМОЙКИ</h2><div class="price-scroll" tabindex="0" aria-label="Таблица стоимости автомойки; прокручивается по горизонтали на узком экране"><table><thead><tr><th>Услуга</th><th>Класс 1</th><th>Класс 2</th><th>Класс 3</th><th>Класс 4</th><th>Класс 5</th><th>Класс 6</th></tr></thead><tbody>
+<tr><td>Техническая мойка</td><td>300 ₽</td><td>300 ₽</td><td>400 ₽</td><td>400 ₽</td><td>500 ₽</td><td>600 ₽</td></tr>
+<tr><td>Экспресс-мойка</td><td>500 ₽</td><td>500 ₽</td><td>600 ₽</td><td>650 ₽</td><td>750 ₽</td><td>800 ₽</td></tr>
+<tr><td>Стандартная мойка</td><td>800 ₽</td><td>800 ₽</td><td>900 ₽</td><td>1 000 ₽</td><td>1 000 ₽</td><td>1 500 ₽</td></tr>
+<tr><td>Комплексная мойка</td><td>1 700 ₽</td><td>1 700 ₽</td><td>1 800 ₽</td><td>2 000 ₽</td><td>2 500 ₽</td><td>2 700 ₽</td></tr>
+<tr><td>Двухфазная стандартная мойка</td><td>1 600 ₽</td><td>1 600 ₽</td><td>1 700 ₽</td><td>1 800 ₽</td><td>2 200 ₽</td><td>2 400 ₽</td></tr>
+<tr><td>Двухфазная комплексная мойка</td><td>2 300 ₽</td><td>2 500 ₽</td><td>2 700 ₽</td><td>2 900 ₽</td><td>3 100 ₽</td><td>3 300 ₽</td></tr>
+<tr><td>Обезжиривание кузова</td><td>400 ₽</td><td>600 ₽</td><td>700 ₽</td><td>800 ₽</td><td>1 000 ₽</td><td>1 000 ₽</td></tr>
+<tr><td>Холодный воск</td><td>500 ₽</td><td>700 ₽</td><td>700 ₽</td><td>700 ₽</td><td>700 ₽</td><td>700 ₽</td></tr>
+<tr><td>Твёрдый воск</td><td>2 000 ₽</td><td>2 500 ₽</td><td>2 700 ₽</td><td>2 700 ₽</td><td>3 000 ₽</td><td>3 000 ₽</td></tr>
+<tr><td>Полимерное покрытие</td><td>1 500 ₽</td><td>1 500 ₽</td><td>1 500 ₽</td><td>2 000 ₽</td><td>2 000 ₽</td><td>2 000 ₽</td></tr>
+<tr><td>Полироль салона</td><td>800 ₽</td><td>900 ₽</td><td>1 000 ₽</td><td>900 ₽</td><td>1 000 ₽</td><td>1 000 ₽</td></tr>
+<tr><td>Кондиционер кожи</td><td>1 000 ₽</td><td>1 200 ₽</td><td>1 200 ₽</td><td>1 500 ₽</td><td>1 500 ₽</td><td>1 500 ₽</td></tr>
+<tr><td>Чернитель шин</td><td>200 ₽</td><td>200 ₽</td><td>200 ₽</td><td>300 ₽</td><td>400 ₽</td><td>400 ₽</td></tr>
+<tr><td>Химчистка дисков</td><td>400 ₽</td><td>400 ₽</td><td>400 ₽</td><td>400 ₽</td><td>400 ₽</td><td>400 ₽</td></tr>
+<tr><td>Химчистка стёкол</td><td>300 ₽</td><td>300 ₽</td><td>300 ₽</td><td>300 ₽</td><td>300 ₽</td><td>300 ₽</td></tr>
+<tr><td>Мойка двигателя</td><td>1 000 ₽</td><td>1 000 ₽</td><td>1 500 ₽</td><td>1 500 ₽</td><td>2 000 ₽</td><td>2 000 ₽</td></tr>
+<tr><td>Мойка мотоцикла</td><td>600 ₽</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+</tbody></table></div><p class="note">Итоговая цена определяется по классу и фактическому состоянию автомобиля.</p></section>
+</article>
+
+      </div>
+    </section>
+
+    <section class="works" id="works">
+      <p class="kicker">ПРИМЕРЫ ВЫПОЛНЕННЫХ РАБОТ</p><h2>НАШИ <mark>РАБОТЫ</mark></h2>
+      <div class="work-grid">
+        <a class="work-card" href="https://estakada-service.ru/gallery-of-works/nissan-murano-kuzovnoj-remont"><img src="../../media/source-site/assets/bc31db832aa0b73136d9db41b69c392ea6f47abb4c1ed4f6bb9b4999fd192037.jpg" alt="Ниссан Мурано — кузовной ремонт"><div><span>4 фото</span><h3>Ниссан Мурано<br>Кузовной ремонт</h3><i>↗</i></div></a>
+        <a class="work-card" href="https://estakada-service.ru/gallery-of-works/volkswagen-passat-kuzovnoj-remont"><img src="../../media/source-site/assets/160c855642949df7a45b94b10b51eb71ec0edd4aee97c27c7907da1aad4a9753.jpg" alt="Volkswagen Passat — кузовной ремонт"><div><span>9 фото</span><h3>Volkswagen Passat<br>Кузовной ремонт</h3><i>↗</i></div></a>
+        <a class="work-card" href="https://estakada-service.ru/gallery-of-works/volvo-xc60-kuzovnoj-remont"><img src="../../media/source-site/assets/58f5e7c150e629e381e4ef04bce7d17c92d8ceea5739cb36962f16d9dc2dd95e.jpeg" alt="Volvo XC60 — кузовной ремонт"><div><span>9 фото</span><h3>Volvo XC60<br>Кузовной ремонт</h3><i>↗</i></div></a>
+        <a class="work-card" href="https://estakada-service.ru/gallery-of-works/kuzovnoj-remont-hyundai-solaris"><img src="../../media/source-site/assets/95b9563160a557947ae6167503e9262573c6a7bc9f226fbc86d0998e1549f187.jpg" alt="Hyundai Solaris — кузовной ремонт"><div><span>13 фото</span><h3>Hyundai Solaris<br>Кузовной ремонт</h3><i>↗</i></div></a>
+        <a class="work-card" href="https://estakada-service.ru/gallery-of-works/ssangyong-rexton-kuzovnoj-remont"><img src="../../media/source-site/assets/b57e62bdf9b4b1fd706f71129aefd577e8992e283dd02b5ccdaa19ee8123e3c4.jpeg" alt="SsangYong Rexton — кузовной ремонт"><div><span>9 фото</span><h3>SsangYong Rexton<br>Кузовной ремонт</h3><i>↗</i></div></a>
+        <a class="work-card" href="https://estakada-service.ru/gallery-of-works/chrysler-kuzovnoj-remont"><img src="../../media/source-site/assets/eea98ee0f6dac7817eebe044a60e40532896b8939b1b29ce22b631f255c44fa7.jpg" alt="Chrysler — кузовной ремонт"><div><span>21 фото</span><h3>Chrysler<br>Кузовной ремонт</h3><i>↗</i></div></a>
+      </div>
+      <a class="all-works" href="https://estakada-service.ru/gallery-of-works/"><span>Все наши работы</span><span>↗</span></a>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-left"><a class="brand" href="https://estakada-service.ru/"><img src="../../media/source-site/assets/1c7de03c1bd80ebbde8258aca12b3d4ac68bf699085fd8a7923c4b880f41af8a.png" alt="Техцентр Эстакада"></a><p>© 2026 Автотехцентр «Эстакада». Все права защищены.</p></div>
+    <div class="legal"><span>Политика конфиденциальности</span><span>Условия использования файлов cookie</span><span class="credit">Сделано в <b>noname</b></span></div>
+  </footer>
+
+  <script>
+    const menu = document.querySelector('.menu');
+    const nav = document.querySelector('.nav');
+    menu.addEventListener('click', () => {
+      const open = menu.getAttribute('aria-expanded') === 'true';
+      menu.setAttribute('aria-expanded', String(!open));
+      nav.classList.toggle('open', !open);
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+

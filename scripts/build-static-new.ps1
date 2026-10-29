@@ -1,7 +1,7 @@
 param(
     [string]$BaseArchive = "deliverables/estakada-static-site-new-explicit-links-2026-10-29.zip",
-    [string]$OutputDirectory = "deliverables/estakada-static-site-new-2026-10-29-v2",
-    [string]$OutputArchive = "deliverables/estakada-static-site-new-2026-10-29-v2.zip"
+    [string]$OutputDirectory = "deliverables/estakada-static-site-new-2026-10-29-v3",
+    [string]$OutputArchive = "deliverables/estakada-static-site-new-2026-10-29-v3.zip"
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,6 +27,27 @@ if ($LASTEXITCODE -ne 0) { throw "tar.exe extraction failed with exit code $LAST
 $homepageSource = Join-Path $repoRoot "work/public-light-v4.html"
 $homepageTarget = Join-Path $outputPath "index.html"
 Copy-Item -LiteralPath $homepageSource -Destination $homepageTarget -Force
+
+$carWashSource = Join-Path $repoRoot "work/avtomojka.html"
+$carWashTarget = Join-Path $outputPath "services/avtomojka/index.html"
+New-Item -ItemType Directory -Path (Split-Path -Parent $carWashTarget) -Force | Out-Null
+Copy-Item -LiteralPath $carWashSource -Destination $carWashTarget -Force
+
+$galleryTarget = Join-Path $outputPath "gallery-of-works/index.html"
+$galleryContent = [System.IO.File]::ReadAllText($galleryTarget)
+$galleryHook = "    document.querySelectorAll('.album-card').forEach((card) => card.addEventListener('click', () => openAlbum(Number(card.dataset.album))));"
+$galleryQuerySupport = @"
+$galleryHook
+    const requestedAlbum = Number(new URLSearchParams(window.location.search).get('album'));
+    if (Number.isInteger(requestedAlbum) && requestedAlbum >= 0 && requestedAlbum < galleryAlbums.length) {
+      openAlbum(requestedAlbum);
+    }
+"@
+if (-not $galleryContent.Contains($galleryHook)) {
+    throw "Gallery album hook not found in base archive"
+}
+$galleryContent = $galleryContent.Replace($galleryHook, $galleryQuerySupport.TrimEnd())
+[System.IO.File]::WriteAllText($galleryTarget, $galleryContent, [System.Text.UTF8Encoding]::new($false))
 
 $designSource = Join-Path $repoRoot "media/design-concepts"
 $mediaRoot = Join-Path $outputPath "media"
@@ -58,6 +79,8 @@ $htmlFiles = Get-ChildItem -LiteralPath $outputPath -Recurse -File -Filter "*.ht
 foreach ($file in $htmlFiles) {
     $content = [System.IO.File]::ReadAllText($file.FullName)
     $content = $content.Replace('../../media/', '/new/media/').Replace('../media/', '/new/media/')
+    $content = $content.Replace('href="avtomojka.html"', 'href="/new/services/avtomojka/index.html"').Replace('data-href="avtomojka.html"', 'data-href="/new/services/avtomojka/index.html"')
+    $content = [regex]::Replace($content, 'href="gallery-of-works\.html\?album=(?<album>\d+)"', 'href="/new/gallery-of-works/index.html?album=${album}"')
     $content = [regex]::Replace($content, $internalUrlPattern, {
         param($match)
         $route = $match.Groups['path'].Value.Trim('/')
