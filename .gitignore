@@ -38,6 +38,9 @@ Thumbs.db
 # Project scratch files
 work/
 pi/
+deliverables/
+up/
+estakada-static-site-*.zip
 
 # Local recordings and source video
 *.mp4
