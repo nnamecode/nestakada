@@ -37,6 +37,7 @@ Thumbs.db
 
 # Project scratch files
 work/
+pi/
 
 # Local recordings and source video
 *.mp4
