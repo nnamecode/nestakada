@@ -26,6 +26,9 @@ backups/
 logs/
 test-results/
 playwright-report/
+acceptance/local-bindings.json
+acceptance/local-fixture-settings.json
+acceptance/generated-fixtures/
 output/
 
 # Tools and OS

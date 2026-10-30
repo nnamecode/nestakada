@@ -1,0 +1,16 @@
+{
+  "name": "estakada-acceptance",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Acceptance checks only; no website application",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test --max-failures=1",
+    "test:list": "playwright test --list",
+    "test:harness": "playwright test --project=harness",
+    "test:public": "playwright test --project=public-http --project=public-contracts --max-failures=1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
