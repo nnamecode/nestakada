@@ -1,0 +1,126 @@
+{
+  "status": "independently-reviewed-for-local-integration",
+  "authorizedBy": "D-325",
+  "profile": "D-324: max file 1000000 bytes",
+  "dockerReportedImageId": "sha256:6105f968d577220973fb9ed8e0caf3ba48a3e028d23d4d324059b4b4b3739f9c",
+  "baseDockerReportedImageId": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+  "baseLock": "environment/foundation/runtime-images.lock.json",
+  "sourceWheelSha256": "e91c2b1cbeae768c98752e67e717e283d68dae45717b41f2d91eaee648e37b7d",
+  "inputs": [
+    {
+      "sha256": "6c77329f380517f8dacad8cf70db7127135faf72b3e1d1798c6d89dcd8dc82ff",
+      "path": "environment/media-worker/Dockerfile"
+    },
+    {
+      "sha256": "a0a3993c2bd1d04b7484a905ed10bfd6981913875692dfdeb6450775342d365f",
+      "path": "environment/media-worker/requirements.lock"
+    },
+    {
+      "sha256": "17b659a1705a796d65ac3f3cb23934a086263e2d15f5a0bc576edfbae0679040",
+      "path": "environment/media-worker/pillow-input.json"
+    },
+    {
+      "sha256": "849d684dc3c0e0122efa7feb6b05f87a97ddda68f025e7a47919270970f18585",
+      "path": "environment/media-worker/minimize.py"
+    }
+  ],
+  "minimization": {
+    "purpose": "D-325 worker only, no font/AVIF/CMS/Tk/math/morph APIs",
+    "source_wheel_sha256": "e91c2b1cbeae768c98752e67e717e283d68dae45717b41f2d91eaee648e37b7d",
+    "retained_extensions": [
+      "PIL/_imaging.cpython-314-x86_64-linux-gnu.so",
+      "PIL/_webp.cpython-314-x86_64-linux-gnu.so"
+    ],
+    "retained_private_libraries": [
+      "pillow.libs/libXau-154567c4.so.6.0.0",
+      "pillow.libs/libjpeg-6dc8d115.so.62.4.0",
+      "pillow.libs/liblzma-de26b416.so.5.8.4",
+      "pillow.libs/libopenjp2-e530e1bf.so.2.5.4",
+      "pillow.libs/libsharpyuv-0066295b.so.0.1.2",
+      "pillow.libs/libtiff-20b7e810.so.6.3.0",
+      "pillow.libs/libwebp-51b0b3f7.so.7.2.0",
+      "pillow.libs/libwebpdemux-9fe2abcc.so.2.0.17",
+      "pillow.libs/libwebpmux-8fb1c9f6.so.3.1.2",
+      "pillow.libs/libxcb-9065bb12.so.1.1.0",
+      "pillow.libs/libzstd-40ad5e7e.so.1.5.7"
+    ],
+    "removed": [
+      {
+        "path": "PIL/_avif.cpython-314-x86_64-linux-gnu.so",
+        "sha256": "e5a30b964816159559d639be5b35aba6ec312c3c2e5232a379af3002fab93db0"
+      },
+      {
+        "path": "PIL/_imagingcms.cpython-314-x86_64-linux-gnu.so",
+        "sha256": "bb9a2459261d5eb238af21feda5f5ae10aeadfc1525cbb50c2d34865dae1f33e"
+      },
+      {
+        "path": "PIL/_imagingft.cpython-314-x86_64-linux-gnu.so",
+        "sha256": "dbd7d3f53e94b1503de8b2111f613593489aac7458867814a8d2b608973ae21b"
+      },
+      {
+        "path": "PIL/_imagingmath.cpython-314-x86_64-linux-gnu.so",
+        "sha256": "c48c80c879ac57373af368c4dc4d2c1e8dd6a4e31844abeb745134a8dc0ae14d"
+      },
+      {
+        "path": "PIL/_imagingmorph.cpython-314-x86_64-linux-gnu.so",
+        "sha256": "9e79386a8b4b38c1c38c045d346f512af1c70c7f5dc6b4e7f20c150fd4e530f9"
+      },
+      {
+        "path": "PIL/_imagingtk.cpython-314-x86_64-linux-gnu.so",
+        "sha256": "cf6031c484aab36ec3af1dd3fd2432631f60c59d4a1972001bfbd44cdae6c38b"
+      },
+      {
+        "path": "pillow.libs/libavif-c6062d5f.so.16.4.2",
+        "sha256": "d12ec0b696860b292114b130ecac6082fc75c198c1b4fa57b26089e9b0a7eb6a"
+      },
+      {
+        "path": "pillow.libs/libbrotlicommon-53534446.so.1.2.0",
+        "sha256": "72c1ab487e4bd44c906336747bf1926cbf5f164f9d05e0b4fd18b7d8d113b7fe"
+      },
+      {
+        "path": "pillow.libs/libbrotlidec-7e5462ba.so.1.2.0",
+        "sha256": "1b497acc3d8d8e1fc286088f0c288be7c0c54bf5a8fa94b12b23e54de205d48c"
+      },
+      {
+        "path": "pillow.libs/libfreetype-57f805ba.so.6.20.6",
+        "sha256": "5be086dea47fd1c3fadd431ee79fe0b5e5a0c6c38e78f1db55cf2dad17dea430"
+      },
+      {
+        "path": "pillow.libs/libharfbuzz-fb49c9fc.so.0.61450.0",
+        "sha256": "4a30b9e3a12a72691b70b14945f3e8adaa8c2bc191bd8b706aae6ed0f0fa9fc0"
+      },
+      {
+        "path": "pillow.libs/liblcms2-88eaba2f.so.2.0.19",
+        "sha256": "4cf9f69016c7804bcb4fa56f5bbc55640cb1b7196ac7b93ba29ed9df9bd9ff4d"
+      },
+      {
+        "path": "pillow.libs/libpng16-1d1ba958.so.16.58.0",
+        "sha256": "38d5a01026f61afba1bb94698846722840067fc87b2ee9003fe8dcccf1bc155f"
+      }
+    ]
+  },
+  "limits": "Verified 512MiB RAM/1CPU/pids64; common15sec deadline; one job; exchange128MiB actual ENOSPC",
+  "workerSource": [
+    {
+      "sha256": "40e2a0cd8a07cde324a2117b386896d157ea15ff9c73e8ea45669e8a1b0b6992",
+      "name": "probe.py"
+    },
+    {
+      "sha256": "d4044ad4d906ecf107e24b70896965e306a02a74daf98a46ca38ac246208c855",
+      "name": "test_worker.py"
+    },
+    {
+      "sha256": "08fd14772aa6e88222785f50c3f1b8bf651e05989b68bc9294e6589ad2c8a3ee",
+      "name": "worker.py"
+    }
+  ],
+  "verifiedResults": {
+    "oom": 0,
+    "httpUploadAccepted": false,
+    "containerMemoryPeakBytes": 414359552,
+    "jpeg40MpWallMs": 1375,
+    "exchangeEnospc": true,
+    "rgba40MpWallMs": 2529,
+    "unit": "21 PASS 8.723s"
+  }
+}

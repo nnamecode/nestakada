@@ -1,0 +1,19 @@
+{
+  "approvedBy": "D-314",
+  "baseManifestDigest": "sha256:84ed8c0dd296c188bfc24ed506f46589e9285fb0b11cf3a04d91d524d3067e11",
+  "network": "none",
+  "runtimeVersion": "1.30.6",
+  "removedWorldPackages": [
+    "curl",
+    "nginx-module-acme",
+    "nginx-module-geoip",
+    "nginx-module-image-filter",
+    "nginx-module-njs",
+    "nginx-module-xslt"
+  ],
+  "removedAffectedPackages": [
+    "curl",
+    "libcurl",
+    "brotli-libs"
+  ]
+}

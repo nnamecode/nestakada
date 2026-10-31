@@ -1,0 +1,30 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Медиатека — Эстакада{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% url 'media_library:stylesheet' %}">
+<section class="card media-wrap"><h1>Медиатека</h1>
+<p><a href="{% url 'media_library:cleanup' %}">Проверить неиспользуемые файлы</a></p>
+{% if uploaded %}<p data-uploaded-asset-id="{{ uploaded.pk }}">Изображение доступно в медиатеке.</p>{% endif %}
+{% if pending %}<div class="media-note" data-media-pending><p>Есть незавершённая обработка временных данных: {{ pending|length }}.</p><p>Проверьте актуальную медиатеку и состояние обработчика. Не повторяйте загрузку вслепую.</p></div>{% endif %}
+<div class="media-actions"><a href="{% url 'media_library:catalog' %}">Корень медиатеки</a>{% if selected %}<a href="?folder={{ parent|urlencode }}">На уровень выше</a>{% endif %}</div>
+<h2>{% if selected %}Папка: {{ selected_label }}{% else %}Папки материалов{% endif %}</h2>
+<form method="get" action="{% url 'media_library:catalog' %}">
+<input type="hidden" name="folder" value="{{ selected }}">
+{% if current_page %}<input type="hidden" name="page" value="{{ current_page.pk }}">{% endif %}
+<label for="media-search">Поиск в этой папке и подпапках</label><input id="media-search" name="q" value="{{ query }}"><button>Найти</button></form>
+{% if children %}<ul class="media-folders">{% for path,label in children %}<li><a data-media-folder="{{ path }}" href="?folder={{ path|urlencode }}">{{ label }}</a></li>{% endfor %}</ul>{% endif %}
+<div class="media-grid">{% for row in rows %}<article class="media-item" data-media-asset-id="{{ row.asset.pk }}">
+<h3>{{ row.title }}</h3>{% if row.thumbnail %}<img class="media-image" src="{% url 'media_library:preview' row.thumbnail.pk %}" alt="Изображение материала" data-preview-file-id="{{ row.thumbnail.pk }}">{% endif %}
+<p>Изображение {{ row.asset.pk|truncatechars:12 }} · файлов: {{ row.file_count }}</p>
+{% if row.main %}<a data-main-file-id="{{ row.main.pk }}" href="{% url 'media_library:preview' row.main.pk %}">Открыть изображение</a>{% endif %}
+</article>{% empty %}<p>В этой папке нет подходящих изображений.</p>{% endfor %}</div>
+</section>
+<section class="card media-wrap"><h2>Добавить изображение</h2>
+{% if current_page %}<p>Материал: {{ current_page.name }}. Изображение будет добавлено в его постоянную папку.</p>
+<form method="post" enctype="multipart/form-data" action="{% url 'media_library:upload' current_page.pk %}" data-media-upload>
+{% csrf_token %}<input type="hidden" name="generation" value="{{ generation }}">
+<label for="media-image">Один файл JPEG, PNG или WebP, до 1 МБ (1 000 000 байт), без анимации</label>
+<input id="media-image" type="file" name="image" accept="image/jpeg,image/png,image/webp" required><button>Добавить изображение</button></form>
+{% else %}<p>Выберите материал для загрузки:</p><ul>{% for page in pages %}<li><a href="?page={{ page.pk }}">{{ page.name }}</a></li>{% empty %}<li>Материалы ещё не созданы.</li>{% endfor %}</ul>{% endif %}
+<p>Добавление в медиатеку само по себе не заменяет изображения на странице.</p></section>
+{% endblock %}

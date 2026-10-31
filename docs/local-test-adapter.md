@@ -66,3 +66,45 @@ fixture.uploads[fileRef] содержит {path,name,mimeType}. HTTP binding с 
 run-container.ps1 копирует фиксированный список; три необязательных локальных файла — только обычные файлы без reparse point. Устаревшая копия убирается при отсутствии исходника. Профиль, Docker socket, приложение и VPS не монтируются; закреплённый образ D-303 не менялся.
 
 driver-safety работает без сети и проверяет транспорт/ограничения, не AC сайта. application-contracts/form-contracts/content-lifecycle повторно не запускались с заранее отсутствующей зависимостью. Ни один полный AC, TEST-03/04/05/06/07, UX-07 или окончательный ARC-10 этим адаптером не закрывается. Текущие числа/ревью — acceptance-test07-continuation.md.
+
+## Чтение памяти собственной вкладки
+
+`editor-memory-state` объявляется только `{kind: "ui-memory"}` без кода/произвольных полей. Подмена fixture-read запрещена. `browser-memory.js` читает URL/ключи и значения localStorage/sessionStorage непосредственно из actor.page того же локального origin. Возвращает только source=actual-actor-browser и три boolean наличия canary, без содержимого/URL. Ошибки/чужой origin/about:blank не считаются пустым хранилищем. Проверяется буквальная строка и до двух URI-декодирований; transient/IndexedDB/CacheStorage/cookies/frames/произвольные кодировки не покрыты. [Сценарии и ограничения](acceptance-unsaved-editor.md). Две DRIVER-MEMORY самопроверки относятся к оснастке, не AC сайта.
+
+## Раздельные допуски логов и фоновых работ
+
+`log-maintenance-control-v1` связан только с fixed test-actions run/hold/release log maintenance, set/clear log storage fault и advance-log-test-time. `background-job-control-v1` — только start/hold/release isolated invocation, fail/clear own worker fault и advance-background-test-time. Точный перечень находится в driver-safety.js; команды не являются implementation/публичными endpoint сайта.
+
+Обычный fallback permit и разрешение другого домена не дают эти права. Перед каждой командой сохраняются свежий actual-http допуск ARC-10, scope собственного run, instance/admission и проверка пяти correlation headers. Конкретный независимый контроллер ещё должен доказать ограничение своих volumes/workers/clock и атомарную проверку до исполнения. Пока он не создан, fault-команды не запускаются. Дополнительные4selfchecks подтверждают клиентское разделение допусков, не реальную изоляцию/квоту/остановку worker. [Контракты логов](acceptance-log-quota.md), [фоновых работ](acceptance-background-jobs.md).
+
+## Допуски восстановления и частичной очистки
+
+`restore-control-v1` допускает только fixed restore fault/external confirmation/identity recovery/probe preparation, `log-deletion-control-v1` — только set/clear fault файловой стадии собственной подтверждённой операции. Backup permit не разрешает restore; обычная log maintenance не разрешает manual delete faults. Реальные owner-confirmation/password/signed-command и проверка current run остаются внутри выбранной процедуры, не подменяются тестовым permit. Новые7selfchecks входят в74driver-safety; это оснастка, не исполненный restore/delete.
+
+`provisionRestoreWriteProbe(operationId)` работает только в restore fixture с ещё не использованным OWNER-RESTORE-PROBE. Под свежим restore permit выдаётся защищённый одноразовый grant, из private fixture channel читается новая framework session/CSRF после invalidation. Старый cookie/другой run/operation/grant/actor/неактуальная sequence/чужой origin/постоянное browser-storage отвергаются. Только новый actorState переносится в fixture, затем его настоящий context создаётся обычным actorContext; права/бизнесданные метод не меняет. На ошибке fixture закрывается для дальнейших действий. Фактические controller/framework credentials, CSRF и scope cookie к конкретному POST/path/expiry до запуска требуют отдельного независимого ревью; единственная server session row или source marker не доказывают пригодность client request. [Restore контракт и ограничения](acceptance-restore-contracts.md), [очистка](acceptance-log-delete-failures.md).
+
+## Сбои фиксации URL
+
+Отдельный тестовый `url-transition-control-v1` допускает только6fixedactions: set-url-transition-fault, clear-url-transition-fault, hold-url-transition-reconciliation, release-url-transition-reconciliation, hold-url-route-worker, release-url-route-worker. Это инъекция локального отказа IO/барьеров собственногоrun/операции, не изменение URL/БД/receipt/прав и не завершение бизнесоперации. `confirm-page-url-change`/`reconcile-page-url-change` и произвольный DBupdate через control запрещены. OwnerUI/HTTP остаётся единственным тестовым путём самой мутации/явной сверки.
+
+Fallback/backup/html-build/log/background/restore permits не дают этого допуска и наоборот; новый cap не позволяет остановить application без отдельного fallbackcap. Существуют прежние freshactual-http ARC-10/run/instance/admission и correlationchecks перед каждым вызовом. SAFE024-url-transition и SAFE032 проверяют клиентское разделение допусков, не физическийscope controller. Concretecontroller должен доказать whitelistстадий, scopeоперации, правдоподобные IOотказы/барьеры/lease worker, отсутствие post-close late work; пока его нет, команды не запускаются. [Контракт](acceptance-url-transition.md) описывает будущую оснастку без кода сайта.
+
+## Служебные квоты и атомарное сохранение
+
+`service-quota-control-v1` разрешает только run-isolated-service-cleanup/advance-service-test-time/drain-isolated-service-workers собственногоrun. Очистка затрагивает технически истёкшие записи/брошенныевременныефайлы, не рабочие заявки/согласия/используемые медиа/исправныйHTMLнабор и не меняет productionлимиты. `content-storage-control-v1` — только set-content-storage-fault/clear-content-storage-fault в реальных семантических точках version-persist/asset-reference-persist. Save/restore/удалениебизнесданных не допускаются через control.
+
+Дваcap разделены между собой и со всеми прежнимиpermit. Перед каждой командой сохраняются свежие actual-http ARC-10/run/instance/admission/correlationchecks. SAFE024по двумcap и SAFE033 —3новые самопроверки клиентского guard; concretecontrollers/physicalscope/clock/cleanup/IOrollback ещё не доказаны. [Квоты](acceptance-service-quota.md), [версии](acceptance-version-storage.md). UIpreparation для sharedblocks требует actual-db pages+sharedBlocks проекцию в ui-preparation-business-state; существующийguard сравнивает весь объект, не толькоpages. Никаких новых UI-only businessactions/подмены DOM fixture-полями.
+
+## Native форма и условные ответы
+
+`openApplicationDriver({javaScriptEnabled:false})` передаёт строгий boolean в actual actor browser.newContext, включая UI-preparation. У существующих сценариев defaulttrue; inert response parser остаётся отдельным JSfalseконтекстом. Нет подмены настройки декларацией fixture. DRIVER-SAFE-028/029 проверяют строгий тип и настоящее отключение inlineJS/nativePOST на синтетическом HTML без сети.
+
+Ответный Vary читается из фактического header. Новый `not-modified` строго ограничен HTTPGET с If-None-Match, без followRedirectGet, formatHTML и statuses[304]. Успех бизнесоперации по-прежнему требует действительного маркера/JSON;304 не означает принятой заявки. Пустой304 возвращается пустым даже после DOMParser; nonemptyraw отвергается. SAFE030/031 — самопроверки транспорта. [Контракты native](acceptance-form-native.md), [cache](acceptance-form-cache.md), [ревью/результаты](acceptance-form-native-cache-review.md). Реальных bindings/приложения нет, сценарии не исполнялись.
+
+## D-315: источник сведений локальной основы
+
+Текущие runtime образов определяет environment/foundation/runtime-images.lock.json; upstream images.lock.json описывает лишь buildmaterials. Для шести фиксированных process-read views сохраняются ограничения профиля/аргументов/source/runId; никаких произвольных команд или файловыхпутей от теста не добавлено. foundation-dependency-evidence сверяет реальные installeddistributions, archivechecksums, BuildKitreceipts и DockerreportedIDs отдельно отOCIconfig/exportdigests по текущему контракту foundation-security-checks.md. applicationImage — будущий реальный app, основанный на python-runtime; сам app и bridge пока отсутствуют. Нельзя выдавать preflight маркер/JSONилиlocks за runtimeповедение приложения.
+
+## Исполненная локальная очередь D-316/D-317
+
+DEV-02/DEV-28: 21 unit/integration и 11 FOUNDATION PASS; результат в [dev02-dev28-progress.md](dev02-dev28-progress.md), независимое ревью в [dev02-dev28-review.md](dev02-dev28-review.md). После Start test запускать `scripts/test-foundation.ps1`. Adapter foundation-fixture-bridge.mjs предназначен только для 11 readonly проверок: host process/SQL snapshot текущего run плюс живой HTTP. Wrapper закрепляет SHA guard в памяти и проверяет исходники, snapshot, manifest, контейнеры и Nginx до/после suite; прямой Playwright без guard не является приёмкой. Нет инспектора в приложении и Docker socket в runner.

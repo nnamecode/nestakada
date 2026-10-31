@@ -1,0 +1,21 @@
+{
+  "schema": "isolated-ui-http-v1",
+  "targetOrigin": "http://host.docker.internal:8767",
+  "profiles": ["auth-login-isolated-sources"],
+  "operations": {
+    "submit-login-direct": {
+      "kind": "http", "method": "POST", "path": "/manage/login/", "encoding": "form", "freshCsrfPath": "/manage/login/", "followRedirectGet": true,
+      "body": {"username": {"$lookup":"fixture.accounts","key":{"$ref":"args.account"},"field":"username"},"password":{"$lookup":"fixture.secretRefs","key":{"$ref":"args.passwordRef"}}},
+      "result": {"format":"html","outcomes":[{"outcome":"accepted","statuses":[200],"marker":{"selector":"[data-user-id]"}},{"outcome":"denied","statuses":[200],"marker":{"selector":"[data-login-error]"}}],"fields":{"authenticatedUserId":{"selector":"[data-user-id]","attribute":"data-user-id"}}}
+    },
+    "read-authenticated-identity-direct": {
+      "kind":"http","method":"GET","path":"/manage/","followRedirectGet":true,
+      "result":{"format":"html","outcomes":[{"outcome":"accepted","statuses":[200],"marker":{"selector":"[data-user-id]"}},{"outcome":"denied","statuses":[401],"marker":{"selector":"a[href='/manage/login/']"}}],"fields":{"authenticatedUserId":{"selector":"[data-user-id]","attribute":"data-user-id"}}}
+    },
+    "logout-auth-session": {
+      "kind":"http","method":"POST","path":"/manage/logout/","encoding":"form","body":{},"freshCsrfPath":"/manage/","followRedirectGet":true,
+      "result":{"format":"html","outcomes":[{"outcome":"accepted","statuses":[200],"marker":{"selector":"form[action='/manage/login/']"}}]}
+    }
+  },
+  "observations":{"auth-fixture-identifiers":{"kind":"fixture-read"},"auth-source-state":{"kind":"fixture-read"}}
+}

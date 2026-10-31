@@ -1,0 +1,6 @@
+{% extends 'accounts/base.html' %}
+{% block content %}<link rel="stylesheet" href="{% url 'media_library:stylesheet' %}"><section class="card media-wrap"><h1>Удалить только показанные неиспользуемые файлы?</h1>
+<p data-media-total-bytes="{{ preview.total_bytes }}">{{ preview.candidates|length }} изображения · {{ preview.total_bytes }} байт.</p>
+{% for asset in preview.candidates %}<article data-media-confirm-asset="{{ asset.asset_id }}"><h2>Изображение {{ asset.asset_id|truncatechars:12 }}</h2><ul>{% for file in asset.files %}<li>{% if file.kind == 'private-source' %}Приватный исходник{% elif file.kind == 'main' %}Основное изображение{% elif file.kind == 'preview' %}Превью{% else %}Оригинал галереи{% endif %}: {{ file.byte_size }} байт.</li>{% endfor %}</ul></article>{% endfor %}
+<form method="post" action="{% url 'media_library:cleanup_confirm' %}" data-media-confirmation>{% csrf_token %}<input type="hidden" name="generation" value="{{ generation }}"><input type="hidden" name="confirmation" value="{{ preview.confirmation }}"><button class="danger">Подтвердить удаление</button><a href="{% url 'media_library:cleanup' %}">Отмена</a></form>
+<p>Если файл уже используется, удаление не выполняется.</p></section>{% endblock %}

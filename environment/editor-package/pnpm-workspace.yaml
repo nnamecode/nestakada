@@ -1,0 +1,10 @@
+ignoreScripts: true
+strictDepBuilds: true
+supportedArchitectures:
+  os:
+    - linux
+  cpu:
+    - x64
+  libc:
+    - glibc
+minimumReleaseAge: 0

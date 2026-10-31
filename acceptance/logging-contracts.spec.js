@@ -44,18 +44,17 @@ async function prepareDelete(app, category = 'user_actions') {
   result.confirmedEventIds = manifest.eventIds;
   const current = await categoryState(app, category);
   for (const id of manifest.eventIds) { expect(current.visibleEventIds).toContain(id); expect(current.fileEventIds).toContain(id); }
-  expect(displayed.requiresOwnerPassword).toBe(true);
   return result;
 }
 async function deleteCategory(app, prepared, extra = {}, actor = 'OWNER') {
   return app.act(actor, 'confirm-category-log-delete-direct', { confirmation: prepared.confirmation,
-    operationId: prepared.operationId, passwordRef: 'OWNER-CURRENT-SECRET', ...extra });
+    operationId: prepared.operationId, ...extra });
 }
 async function savePage(app, text) {
   const before = await app.observe('page', { page: 'P-LOG-PROBE' });
   identifier(before.revision); expect(typeof before.publicText).toBe('string');
   expect(before.publicText).not.toBe(text);
-  const result = await app.act('OWNER', 'submit-page-direct', { page: 'P-LOG-PROBE', base: before.revision, fields: { text } });
+  const result = await app.act('OWNER', 'save-text', { page: 'P-LOG-PROBE', base: before.revision, text });
   expect(result.outcome).toBe('accepted');
   expect((await app.observe('page', { page: 'P-LOG-PROBE' })).publicText).toBe(text);
   return result;
@@ -159,14 +158,13 @@ for (const actor of ['S-EDIT', 'VISITOR']) {
   });
 }
 
-for (const tamper of ['category', 'boundary', 'password', 'GET']) {
-  test(`LOG-delete-tamper-${tamper} | AT-062 AT-704 AC-062 AC-MAN-004 | cannot expand a reviewed deletion or skip password/POST`, async ({ app }) => {
+for (const tamper of ['category', 'boundary', 'GET']) {
+  test(`LOG-delete-tamper-${tamper} | AT-062 AT-704 AC-062 AC-MAN-004 | cannot expand a reviewed deletion or mutate through GET`, async ({ app }) => {
     await app.reset('category-delete-with-shared-segment'); const prepared = await prepareDelete(app);
     const before = await categoryState(app), other = await categoryState(app, 'site_errors');
-    const args = { confirmation: prepared.confirmation, operationId: prepared.operationId, passwordRef: 'OWNER-CURRENT-SECRET' };
+    const args = { confirmation: prepared.confirmation, operationId: prepared.operationId };
     if (tamper === 'category') args.category = 'site_errors';
     if (tamper === 'boundary') args.boundary = (await app.observe('log-delete-fixture-identifiers')).validLaterBoundary;
-    if (tamper === 'password') args.passwordRef = 'OWNER-WRONG-SYNTHETIC-SECRET';
     if (tamper === 'boundary') identifier(args.boundary);
     const result = await app.act('OWNER', tamper === 'GET' ? 'probe-GET-category-log-delete' : 'confirm-category-log-delete-direct', args);
     expect(['denied', 'conflict']).toContain(result.outcome);

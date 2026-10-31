@@ -1,0 +1,86 @@
+# TEST-12: проверки безопасности локальной основы
+
+**Актуально D-316/D-317, 2026-10-30:** локальные DEV-02/DEV-28 выполнены; 11 FOUNDATION прошли против настоящей основы и независимого ревью, 21 unit/integration прошли. [Результат](./dev02-dev28-progress.md). Полные AT-053/055/312, 140 AC и остальные бизнес-сценарии этим не закрыты. Для FOUNDATION использовать scripts/test-foundation.ps1: host guard до/после обязателен.
+
+Ниже — исходные спецификации и история подготовки до реализации; прежние заявления «не исполнялись»/«код запрещён» относятся к моменту их записи и заменены для этой ограниченной очереди D-316/317.
+
+2026-10-30. Часть единого пакета ENV-05/ARC-11/TEST-12 после D-310. **Согласовано TEST-Q007/D-311**, не разрешение кода/установок и не результат испытания сайта. Основания: security-baseline.md (D-112), принятый поэтапный порядок TEST-Q006, AT-053/055 и базовая часть AT-312, DEV-02/DEV-28. Старый сайт/VPS/его файлы/БД/ОС/настройки не затрагиваются.
+
+Подготовлен `acceptance/foundation-security.spec.js`: **11 частичных сценариев**. Это только приёмочные утверждения. Приложение, Django settings/модели, контейнеры, probe endpoints и реальный fixture bridge здесь не реализованы. Никаких fake business responses или нового публичного API для прохождения тестов.
+
+## Что и когда проверяется
+
+| Постоянный ID | Вход / реальный источник | Утверждение | Момент исполнения |
+|---|---|---|---|
+| FOUNDATION-001 | Python/package metadata выбранного контейнера и реальное server_version_num PostgreSQL | CPython3.14.10/Django5.2.18/psycopg3.3.6+binary3.3.6/django-csp4.0/PostgreSQL18.6 соответствуют выбранному исходному предложению | Первый smoke после согласованной подготовки среды; повтор на основе |
+| FOUNDATION-002 | Реально загруженный local-http settings и два фиксированных дочерних config-load процесса | DEBUGFalse, middleware/autoescape/CSRF включены, строгие локальныеHost, forwarded не доверены; host-only/Lax/HttpOnly session; SecureFalse только для HTTP; нет секретных defaults, без обязательного ключа/пароля загрузка завершается ошибкой без утечки | После DEV-02; проверки missing config не заменяются подставленными exit codes |
+| FOUNDATION-003 | Отдельно загруженный deployment-audit settings | DEBUGFalse, Secure cookies и redirectTrue, отдельные имена cookies/secret reference, без доверенногоproxy до его проверки; это чтение конфигурации, не доказательство HTTPS | После DEV-02; реальный TLS — позднее |
+| FOUNDATION-004 | Настоящий GET `/` с baseline/неизвестнымHost/поддельнымиForwarded на собственныйlocalfront | Baseline200/404 (основа может ещё не иметь главной), неизвестныйHost400, forgedheaders не меняют локальную redirect policy; положительный контроль доступного Django присутствует | После DEV-02 |
+| FOUNDATION-005 | Реальные заголовки GET, а не значения из settings | nosniff/DENY/same-origin Referrer/COOP, начальная CSP report-only с self/noobjects/noembedding, без активного enforcement на этом первоначальном localprofile | После DEV-02; проверка browser blocking/enforcedCSP до соответствующего UI/выпуска отдельно |
+| FOUNDATION-006/007 | Реальная runtime DB connection:current_user/session_user/pg_roles/ownership/effective grants и наследование | Runtime/migrator/bootstrap различны; runtime не администратор/владелецDB/schema, не создаётDB/роли/schema и не наследует мигратора/privileged role; CONNECT доступен | После подготовки ролей DEV-02; CRUD/новые миграции проверяются по мере появления таблиц |
+| FOUNDATION-008 | Host-side Docker inspect + фактический app UID/process metadata | Linuxamd64/nonroot/no privileged/no-new-privileges/cap-dropALL, DBбезhostport, публикацияappтолько127.0.0.1, нетhostnet/pid/socket/rootmount, source/secretread-only, PostgreSQL18 volume target `/var/lib/postgresql` | После фактического создания собственной среды, до доверенного e2e |
+| FOUNDATION-009 | Установленные distributions, реальные lock/артефакты/хэши, inspect запущенных image digests | Runtime набор точно равен lock, совпадают SHAартефактов, выбранные прямые версии, image digest/platform; нет «latest» вместо фиксации | После разрешённой установки/сборки; до DEV-02 feature-кода |
+| FOUNDATION-010 | Реальный `manage.py check --deploy` под deployment-audit, полный результат без suppress | Ошибок нет, новые warnings не игнорируются; разрешено только security.W004 по документированной причине LOCAL-NO-TLS-HSTS | После DEV-02; перед production обязательна новая проверка фактического deployment |
+| FOUNDATION-011 | Настоящий formatter/filter будущего DEV-28, вызванный в собственном тестовом процессе | Реальные synthetic password/token/key/auth/cookie/phone/comment не выходят в форматированный журнал; benign marker сохраняется, пустой вывод не проходит | После DEV-28, до допуска операций, использующих аудит |
+
+Все ID относятся к частям AT-053/055/312. **Ни один полный AC не объявляется закрытым.** Присутствие CsrfViewMiddleware не доказывает CSRF-проверку реального изменяющего endpoint: действительные POST/права/сессии проверяются существующими form/auth наборами и новыми привязками перед соответствующим кодом DEV-03/13. Фактическое прохождение FOUNDATION-001/009 до создания приложения выполняется стартовыми CLI smoke-пробами, описанными ниже; текущая общая Playwright-обёртка требует target/bridge и исполняется после их появления. Это не требование создать приложение до его кода.
+
+## Прямые версии и границы предложения
+
+Константы теста соответствуют выбранному координатором предложению: Python3.14.10, Django5.2.18LTS, PostgreSQL18.6, psycopg[binary]3.3.6, django-csp4.0. Они согласованы владельцем по TEST-Q007/D-311. Если владелец выберет другой конкретный комплект, before-code обновляются эти expected versions и входной manifest, сохраняются ID. Числа не берутся автоматически из установленного окружения ради pass.
+
+Django-csp4.0 не выдаётся за эмпирически проверенный на Python3.14: перед подготовкой приложения обязательны import/system-check smoke под точным выбранным образом и разрешённым lock. Несовместимость — фиксированный отказ подготовки/предложение поправки пакета, не молчаливое снятие pin или исключение middleware. Менеджер зависимостей/точные транзитивные версии/OCI digests фиксируются при подготовке после разрешения, а не выдумываются в этом документе.
+
+## Реальная fixture и provenance
+
+`local-foundation-isolated` — собственный фиксированный тестовый stack/run namespace, отдельные БД/volumes/секреты от development/production и существующего preview. Никаких реальных пользователей/заявок/контактов/секретов. Принимается отдельный локальный допуск ARC-11; физический ARC-10/head/fallback не объявляется выполненным и не требуется для этих обычных local-проверок. Перед первым доверенным запуском independently reviewed bindings доказывают container IDs/volume scope/публикациюпортов/namespace и очистку только собственного run.
+
+Cookie не разделяются по TCPпортам. Планируемый browserdev `http://localhost:8766` отделён hostname от preview `http://127.0.0.1:8765`; testtarget `http://host.docker.internal:8767` в тестовом контейнере имеет свой stack/БД/volumes/секреты. Host-only и разные имена dev/test/deployment cookies дополняют эту границу. Одна смена имени cookie не доказывает, что браузер не отправит её другому порту того жеhost. Реальная доступность loopbackpublication из DockerDesktop проверяется до запуска; отказ не исправляется публикацией в0.0.0.0/изменениемfirewall без нового решения.
+
+Шесть фиксированных `process-read` views:
+
+1. `foundation-runtime-versions` — фактический CPython implementation/version и importlib.metadata выбранных пакетов; реальная PostgreSQL connection даёт server_version_num. Не выводит DSN/пароли.
+2. `foundation-settings(profile)` — whitelist безопасных значений реально импортированного Django settings; middleware/classnames/host/cookie/security policy. `secretReferenceId` — несекретная ссылка изолированного secret store, не ключ/его исходное значение. `missingConfigurationProbes` — два настоящих дочерних процесса с отсутствующим django-secret-key/database-password, фиксированный profile и отсутствие доступа к бизнесмутациям; exitCode/usedFallback/canaryLeakCount вычислены по реальному результату/загрузке и capture до redaction. Не запускать произвольный переданный Python/команду.
+3. `foundation-isolation` — фактический inspect только собственных container/runIDs и app UID/proc state. Поля ports/mounts/privileged/caps не выводятся из ожидаемого Compose. App не получает Docker socket; inspect выполняет сопровождающий на host/test-side. Доказательство доступа к чужимданным/внешней сети не подменяется одним boolean о своёмcontainer.
+4. `foundation-dependency-evidence` — реальные lockedRuntimePackages/installedRuntimePackages, SHAпрочитанныхартефактов/заявленныхhash и currentimageinspect. Runtime distributions исключают только заранее описанные bootstrappackage-manager components, не произвольные незапиненные appзависимости. Прямые версии/все runtime транзитивные distributions входят в lock. В image data различаются multiarchindex и runningamd64digest; сравниваются соответствующие digest одного уровня.
+5. `foundation-deploy-check` — фиксированный commandRef DJANGO_CHECK_DEPLOY и запуск `python manage.py check --deploy --fail-level ERROR --settings=<реальный модуль deployment-audit>`. Module выбирается reviewed binding, не входным произвольнымпутём. `errors`/`warnings` — весь реальный результат; `silencedSystemChecks=[]`. Разрешённый W004 содержит reasonRef LOCAL-NO-TLS-HSTS только потому, что HSTS не вводится до проверкиTLS, а профиль не является действующимproduction. Нельзя отключить всеwarnings/исчезнувшуюprotection ради зелёного результата.
+6. `foundation-audit-redaction` — реальный DEV-28 formatter/filter получает семь фиксированных synthetic fields; returned formattedText — его фактический вывод. `formatterLoadedFromApplication` требует независимого подтверждения import path/config; флаг сам по себе не доказательство. Test проверяет benign marker и собственным existing sensitiveValueCheck ищет фиксированные syntheticcanaries. Ключи/пароли настоящего окружения в данные наблюдения не входят.
+
+Driver ограничивает эти views kind=`process-read` и activeprofile=`local-foundation-isolated`. Args — только необязательный `profile` из local-http/deployment-audit. Ответ имеет **source=actual-process, runId текущегоrun, evidence.fixtureProfile=local-foundation-isolated, data=object**. Родительский guard отклоняет другойsource/run/profile, произвольные command/path/code аргументы и подмену других observations видом actual-process. Конкретный bridge пока отсутствует; этот контракт его не реализует.
+
+Два остальных view kind=`fixture-read`:
+
+- `foundation-db-roles` — sourceactual-db, реальные роли/connection identity/ownership/effective privileges с учётом memberships/PUBLIC/roleinheritance. Runtime флаги отдельно от effectiveпривилегий; absenceSUPERUSER не заменяет проверку наследуемогоDDL. Имена роли безопасны, password/DSN не возвращаются. Проверки не создают объекты в основнойБД и не меняют grants. Реальный запрет DDL/подтверждение CRUD на нужных таблицах — самостоятельные startup/migration проверки после их появления.
+- `foundation-http-response(challenge)` — sourceactual-http, фиксированные baseline/unknown-host/spoofed-forwarded GET`/` к своему разрешённому local origin без followredirects. Unknownhost — только заголовок Host=untrusted.invalid, не внешнийnetworktarget. Spoofed — X-Forwarded-Host=untrusted.invalid/X-Forwarded-Proto=https с действительным Host. Bridge возвращает только status/body/безопасные lowercaseheaders/challenge/method/requestTarget и эти syntheticrequestheaders, безrawCookie/Authorization. Нет test-only application endpoint или самостоятельного вычисления ответа из настроек.
+
+## Ручной/CLI протокол запуска после разрешения подготовки
+
+Команды ниже — план последующей проверки, **сейчас не выполнялись**.
+
+1. Согласовать точные версии/локальную схему. Получить официальныеimages, сохранить immutable digest правильнойplatform и lock всех Pythonruntimeартефактов с SHA256. Не изменять глобальный Python/PATH/Windows/WSL/firewall. Код/локальныесекреты/артефакты остаются наT: по отдельным областям.
+2. В собственном согласованном окружении выполнить `python --version`, `python -m django --version`, importlib.metadata дляpsycopg/psycopg-binary/django-csp и `import csp.middleware`; сравнить с выбранным комплектом. Прочитать `SHOW server_version_num` через своюPGconnection, без вывода credentials. Завершениеimports не называется полной совместимостью всего будущего проекта.
+3. После создания DEV-02 проверить реальные роли/network/ports/mounts и readonly/proc metadata; выполнить системные проверки и фиксированный check--deploy под deployment-audit. Сохранить коды/безопаснуюсводкуfinding IDs, не rawenv. W004 не означаетproductionготовности.
+4. Запустить проектfoundation-security через согласованный runner на reviewизолированномtarget/bindings. До появлениякода/bridge сценарии не исполнять противpreview/VPS и не подменятьmock. Неподготовленнаясреда не считаетсяskip/pass.
+5. После DEV-28 проверить последний сценарий на реальномformatter. До доверенногоe2e отдельно проверить, что fixtureclose завершает своипроцессы/соединения и не затрагиваетdevelopment/production.
+
+## Готовность и остаток
+
+Только authoredassertions/протокол; **все11сценариев не исполнялись**. Синтаксис/collection подтверждают пакет, не безопасность приложения. Реальное TLS/certificate/proxy/fowardedstripping, HTTPS cookies, CSPbrowserenforcement/интеграции/cookiesconsent/вход/CSRFPOST/GETmutation, публикацияпортовизвнестенда, dependencyvulnerabilityaudit/обновление/restore, полнотаauditescaping/canaryencoding и весьproductionпрофиль остаются своими before-module/releaseгейтами AT053/055/312. Не вводятся MFA/CAPTCHA/emailselfreset. Ни код сайта, ни сервер, ни установки этим документом не разрешаются.
+
+## Уточнения независимого ревью TEST-R064/065
+
+FOUNDATION-008 требует пустой capAdd и host-side Docker inspect с канонизацией источников. Поля hostRootSourceMounted/hostProfileSourceMounted/engineSocketSourceMounted/outsideApprovedSourcesMounted вычисляются по реальным источникам, независимо от target. sourceWithinApprovedBoundary проверяется против заранее reviewed mount manifest: только app исходники, readonly секреты своего run, собственные tmpfs/volume. Корень репозитория не монтируется. Конкретные bindings ещё предстоит проверить независимо.
+
+FOUNDATION-009 различает python-base manifest/build provenance, PostgreSQL manifest resolution/config image ID и производный app built/running config ID. Проверяется SHA256 реально использованного dependency lock. manifest digest не сравнивается с config ID; локальному app не выдумывается RepoDigest. Readonly source bind проверяется отдельно от image identity. До приложения CLI smoke проверяет версии/lock/официальные base образы; часть про built app исполняется после DEV-02. Старая формулировка строки таблицы «до feature-кода» относится к dependency preflight, не требует app до его создания.
+
+## Поправка D-313 после TEST-Q008
+
+Локальная публикация относится к отдельному Nginx, не к app. FOUNDATION-001 дополнен фактической версией Nginx1.30.6; FOUNDATION-008 требует пустые app/databasePublishedPorts и loopback-only ingressPublishedPorts, отсутствие ingress у app/db сети у Nginx/web сети у БД; FOUNDATION-009 разделяет официальный local-ingress manifest/resolved/running identity наряду с прежними base/app/PG. Имена process-read views и ограничения транспорта не расширены. Прямые HTTP-наблюдения теперь относятся к своему local front через Nginx: отказ неизвестного Host на edge не выдаётся за отдельный тест внутреннего Django. Реальные Django/bindings и 11 FOUNDATION-прогонов всё ещё отсутствуют. Инфраструктурный preflight — local-foundation-proxy-check.md.
+
+## Текущий контракт D-315
+
+FOUNDATION-001 использует psycopg-c3.3.6, actual Cbackend/libpq170011, systemOpenSSLpackage3.5.7-1~deb13u3 и actual отрицательный XMLprobe SQLSTATE0A000. Binarydistributon отсутствует. FOUNDATION-009 сопоставляет полные runtime distributions с reviewed wheel lock; единственный отдельный bootstrap — pip26.2.2. Нельзя скрыть setuptools/wheel/неожиданный пакет за произвольным списком bootstrap.
+
+В foundation-dependency-evidence теперь sourceMaterials (четыре точных OCIbuildmaterials), sourceArchives (PG18.6 иpsycopg-c3.3.6), runtimeBuilds (python-runtime/postgres/local-ingress с image ID, recipe/input/receiptSHA и фактическимиmaterials) и applicationImage. Python-runtime — базовый образ будущего app, не отдельный запущенный appконтейнер; app provenance должен показывать именно этотbaseDockerID. Для PG/Nginx runningDockerID совпадает с reviewedlockedID. DockerreportedID — opaque APIidentifier, не предполагаемыйOCIconfigdigest. OCIexport/config поля хранятся отдельно; смешивать их нельзя. Hashes observed получают из реальных файлов/provenance, не подставляют из expectedlock. Поставляемый bridge ещё отсутствует и будет независимо проверен перед trusted запуском.
+
+Инфраструктурные результаты и текущиеlocks — base-image-security-remediation.md, environment/foundation/runtime-images.lock.json. Эти проверки процессов/SQL/TLS/ELF не заменяют 11сценариев реального приложения; параметрыsettings/контролиauth/CSRFPOST и actual appauditformatter ещё не реализованы.

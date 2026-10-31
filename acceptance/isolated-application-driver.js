@@ -5,7 +5,9 @@ import { randomUUID } from 'node:crypto';
 import { chromium } from '@playwright/test';
 import { filePayload, multipartPayload } from './upload-support.js';
 import { checkedCanaries, sensitiveValueCheck, htmlSensitiveCheck } from './response-safety.js';
-import { materialize, pick, targetPath, validateBindings, validateStorage, fixtureExchange, guardUiPreparation, infrastructureControlActions, controlCapability, validateControlAdmission, validateControlReply } from './driver-safety.js';
+import { inspectBrowserPersistence } from './browser-memory.js';
+import { authSourceOrigin, authCsrfPreparation } from './driver-safety.js';
+import { actorBrowserOptions, responseReportBody, validateFoundationProcessRequest, foundationProcessData, materialize, pick, targetPath, validateBindings, validateStorage, validateRestoreProbeSession, fixtureExchange, guardUiPreparation, infrastructureControlActions, controlCapability, validateControlAdmission, validateControlReply } from './driver-safety.js';
 
 export const driverKind = 'real-isolated-application-v1';
 const directory = fileURLToPath(new URL('.', import.meta.url));
@@ -20,12 +22,14 @@ export function loadBindings(filename = path.join(directory, 'local-bindings.jso
 }
 const atPath = (data, reference) => pick({ response: data }, `response.${reference}`);
 
-export async function createDriver({ baseURL }) {
+export async function createDriver({ baseURL, javaScriptEnabled = true }) {
+  actorBrowserOptions(undefined, javaScriptEnabled);
   const { base, controlBase, bindings } = validateBindings(loadBindings(), baseURL);
   if (!fs.existsSync(fixtureEntry)) throw new Error('FIXTURE_IO_NOT_IMPLEMENTED');
   let browser, browserPromise, parserPromise, parserContext, parser, fixture, runId, closed = false, poisoned = false, resetting = false, active = 0;
   const actors = new Map(), actorInitializations = new Map(), secrets = new Set();
-  let controlContext;
+  const authRequestIds = new Map();
+  let controlContext, profileName, provisioningRestoreProbe = false;
   const scrub = text => {
     let result = String(text);
     for (const value of secrets) if (value.length >= 4) result = result.replaceAll(value, '[REDACTED]');
@@ -58,6 +62,7 @@ export async function createDriver({ baseURL }) {
     parser = await parserPromise;
   }
   async function actorContext(name, preparing = false) {
+    if (name === 'OWNER-RESTORE-PROBE' && provisioningRestoreProbe) throw new Error('DRIVER_RESTORE_PROBE_PROVISIONING');
     if (preparing) {
       if (closed || poisoned || !resetting || !fixture || !runId) throw new Error('DRIVER_FIXTURE_NOT_READY');
     } else ready();
@@ -66,13 +71,13 @@ export async function createDriver({ baseURL }) {
     if (!actorInitializations.has(name)) actorInitializations.set(name, (async () => {
       await ensureBrowser();
       const storage = validateStorage(fixture.actors[name].storageState, base);
-      const context = await browser.newContext({ storageState: storage, serviceWorkers: 'block', acceptDownloads: false });
+      const context = await browser.newContext(actorBrowserOptions(storage, javaScriptEnabled));
       await context.route('**/*', route => {
         const url = new URL(route.request().url());
         return url.origin === base.origin ? route.continue() : route.abort();
       });
       await context.routeWebSocket('**/*', socket => socket.close());
-      const actor = { context, page: await context.newPage() };
+      const actor = { context, page: await context.newPage(), name };
       actors.set(name, actor);
       return actor;
     })());
@@ -112,6 +117,7 @@ export async function createDriver({ baseURL }) {
     const text = raw.toString('utf8');
     const canaries = checkedCanaries(fixture?.logSensitiveCanaries || []);
     let snapshot, data;
+    if (status === 304 && text.length) throw new Error('DRIVER_NOT_MODIFIED_BODY_NOT_EMPTY');
     if (definition.format === 'json') {
       try { data = JSON.parse(text); } catch { throw new Error('DRIVER_EXPECTED_JSON_RESPONSE'); }
     } else snapshot = await domSnapshot(text, definition);
@@ -134,12 +140,12 @@ export async function createDriver({ baseURL }) {
       if (!rule.header) fields[name] = atPath(data, rule.path);
     for (const [name, rule] of Object.entries(definition.fields || {})) if (rule.header) {
       const header = rule.header.toLowerCase();
-      if (!['cache-control', 'content-type', 'location', 'etag', 'last-modified', 'x-content-type-options', 'content-disposition'].includes(header))
+      if (!['cache-control', 'vary', 'content-type', 'location', 'etag', 'last-modified', 'x-content-type-options', 'content-disposition'].includes(header))
         throw new Error('DRIVER_RESPONSE_HEADER_NOT_ALLOWED');
       fields[name] = response.headers()[header];
     }
     for (const [name, rule] of Object.entries(definition.fields || {})) if (rule.secret) addSecrets(fields[name]);
-    return { ...fields, outcome: matched[0].outcome, body: scrub(snapshot?.body || text), observedStatus: status,
+    return { ...fields, outcome: matched[0].outcome, body: scrub(responseReportBody(status, text, snapshot?.body)), observedStatus: status,
       sensitiveCanaryCheck };
   }
   async function http(actor, definition, scope, transportBase = base, correlation) {
@@ -171,7 +177,22 @@ export async function createDriver({ baseURL }) {
       else if (definition.encoding === 'json') options.data = body;
       else throw new Error('DRIVER_BODY_ENCODING_REQUIRED');
     }
+    if (definition.freshCsrfPath !== undefined) {
+      const csrfPath = authCsrfPreparation(profileName, definition);
+      const preparation = await actor.context.request.get(new URL(csrfPath, transportBase).href, { maxRedirects: 0, timeout: 8000 });
+      if (preparation.status() !== 200) throw new Error('DRIVER_AUTH_CSRF_GET_FAILED');
+      const html = await preparation.text();
+      const token = await parser.evaluate(source => new DOMParser().parseFromString(source,'text/html')
+        .querySelector('input[name="csrfmiddlewaretoken"]')?.value, html);
+      if (typeof token !== 'string' || !/^[A-Za-z0-9]{64}$/u.test(token)) throw new Error('DRIVER_AUTH_CSRF_TOKEN_REQUIRED');
+      addSecrets(token); options.form = { ...(options.form || {}), csrfmiddlewaretoken: token };
+    }
     let response = await actor.context.request.fetch(url.href, options);
+    if (profileName === 'auth-login-isolated-sources' && definition.path === '/manage/login/' && definition.method === 'POST') {
+      const requestId = response.headers()['x-request-id'];
+      if (typeof requestId !== 'string' || !/^[a-zA-Z0-9-]{16,128}$/u.test(requestId)) throw new Error('DRIVER_AUTH_RESPONSE_CORRELATION_REQUIRED');
+      authRequestIds.set(transportBase.origin, requestId);
+    }
     if (correlation) validateControlReply(response.headers(), correlation);
     if ([301, 302, 303, 307, 308].includes(response.status())) {
       const location = response.headers().location;
@@ -233,6 +254,33 @@ export async function createDriver({ baseURL }) {
     return { ...fields, outcome: 'ui-observed', observedTransport: 'dom' };
   }
   const driver = {
+    async provisionRestoreWriteProbe(operationId) {
+      ready();
+      const name = 'OWNER-RESTORE-PROBE';
+      if (profileName !== 'restore-old-point-new-state' || typeof operationId !== 'string' || !operationId ||
+        !Object.hasOwn(fixture.actors, name) || actors.has(name) || actorInitializations.has(name) || provisioningRestoreProbe)
+        throw new Error('DRIVER_RESTORE_PROBE_NOT_FRESH');
+      provisioningRestoreProbe = true; active++;
+      try {
+        const issued = await driver.control('prepare-isolated-restore-write-probe', { operationId, actor: name });
+        if (issued.outcome !== 'accepted' || typeof issued.probeGrantRef !== 'string' || !issued.probeGrantRef)
+          throw new Error('DRIVER_RESTORE_PROBE_GRANT_REQUIRED');
+        addSecrets(issued.probeGrantRef);
+        const reply = await exchange({ kind: 'observe', view: 'fresh-restore-probe-session',
+          args: { operationId, grantRef: issued.probeGrantRef, actor: name }, runId, targetOrigin: base.origin });
+        const actorState = validateRestoreProbeSession(reply, {
+          runId, operationId, grantRef: issued.probeGrantRef, base, previousCookieValues: secrets,
+        });
+        fixture.actors[name] = actorState;
+        addSecrets(actorState.credentials || {});
+        for (const cookie of actorState.storageState.cookies) addSecrets(cookie.value);
+        return { outcome: 'fixture-provisioned', actor: name };
+      } catch (error) {
+        poisoned = true;
+        if (/^(DRIVER_|FIXTURE_IO_)[A-Z_]+$/.test(error.message)) throw error;
+        throw new Error('DRIVER_RESTORE_PROBE_PROVISIONING_FAILED');
+      } finally { active--; provisioningRestoreProbe = false; }
+    },
     async inspectInfrastructureAdmission() {
       if (closed || poisoned || resetting || active) throw new Error('DRIVER_FIXTURE_NOT_READY');
       const reply = await exchange({ kind: 'observe', view: 'infrastructure-admission', targetOrigin: base.origin });
@@ -267,7 +315,7 @@ export async function createDriver({ baseURL }) {
       try {
       for (const actor of actors.values()) await actor.context.close();
       if (controlContext) { await controlContext.close(); controlContext = undefined; }
-      actors.clear(); fixture = undefined; runId = undefined; secrets.clear();
+      actors.clear(); authRequestIds.clear(); fixture = undefined; runId = undefined; profileName = undefined; secrets.clear();
       const reply = await exchange({ kind: 'reset', phase: 'before-ui', profile, options, targetOrigin: base.origin });
       if (typeof reply.runId !== 'string' || reply.runId.length < 16 || reply.source !== 'actual-fixture' ||
         !reply.data?.actors || !reply.evidence?.fixtureVersion) throw new Error('DRIVER_FIXTURE_EVIDENCE_REQUIRED');
@@ -311,6 +359,7 @@ export async function createDriver({ baseURL }) {
         if (final.source !== 'actual-fixture' || final.evidence?.preparationPhase !== 'after-ui-finalized')
           throw new Error('DRIVER_FIXTURE_FINALIZATION_NOT_CONFIRMED');
       }
+      profileName = profile;
       } catch (error) {
         // A partially prepared editor/session is never usable by a later assertion.
         poisoned = true; fixture = undefined;
@@ -327,7 +376,10 @@ export async function createDriver({ baseURL }) {
       active++;
       try {
         const actor = await actorContext(name);
-        if (definition.kind === 'http') return await http(actor, definition, scope);
+        if (definition.kind === 'http') {
+          const transport = profileName === 'auth-login-isolated-sources' ? authSourceOrigin(profileName,name,fixture.actors[name].sourceOrigin) : base;
+          return await http(actor, definition, scope, transport);
+        }
         let mutationSeen = false;
         const listener = request => { if (!['GET', 'HEAD', 'OPTIONS'].includes(request.method())) mutationSeen = true; };
         const uiOnly = definition.result.format === 'ui';
@@ -354,8 +406,19 @@ export async function createDriver({ baseURL }) {
         const actor = await actorContext(args.actor);
         return locate(actor.page, definition.locator).inputValue({ timeout: 5000 });
       }
+      if (definition.kind === 'ui-memory') {
+        const actor = await actorContext(args.actor);
+        return inspectBrowserPersistence(actor.page, base.origin, args.canary);
+      }
+      if (definition.kind === 'process-read') {
+        validateFoundationProcessRequest(view, args, profileName);
+        const reply = await exchange({ kind: 'observe', view, args, runId, targetOrigin: base.origin });
+        return foundationProcessData(reply, { view, args, profileName, runId });
+      }
       if (definition.kind !== 'fixture-read') throw new Error('DRIVER_OBSERVATION_KIND_NOT_SUPPORTED');
-      const reply = await exchange({ kind: 'observe', view, args, runId, targetOrigin: base.origin });
+      const observerArgs = profileName === 'auth-login-isolated-sources' && view === 'auth-source-state' ?
+        { ...args, expectedRequestId: authRequestIds.get(authSourceOrigin(profileName,args.actor,fixture.actors[args.actor]?.sourceOrigin).origin) } : args;
+      const reply = await exchange({ kind: 'observe', view, args: observerArgs, runId, targetOrigin: base.origin });
       if (reply.source !== 'actual-db' && reply.source !== 'actual-http') throw new Error('DRIVER_OBSERVATION_PROVENANCE_REQUIRED');
       return structuredClone(reply.data);
       } catch (error) {

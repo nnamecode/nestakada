@@ -1,0 +1,19 @@
+{
+  "name": "estakada-editor-candidate",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "dependencies": {
+    "@tiptap/core": "3.32.2",
+    "@tiptap/pm": "3.32.2",
+    "@tiptap/starter-kit": "3.32.2",
+    "@tiptap/extension-table": "3.32.2",
+    "@tiptap/extension-text-style": "3.32.2",
+    "@tiptap/extension-text-align": "3.32.2",
+    "@tiptap/extension-subscript": "3.32.2",
+    "@tiptap/extension-superscript": "3.32.2",
+    "esbuild": "0.28.2",
+    "@esbuild/linux-x64": "0.28.2"
+  }
+}

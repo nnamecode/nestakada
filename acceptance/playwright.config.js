@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const reportName = ['harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'list'].includes(process.env.ESTAKADA_TEST_REPORT)
+const reportName = ['harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list'].includes(process.env.ESTAKADA_TEST_REPORT)
   ? process.env.ESTAKADA_TEST_REPORT : 'local';
 
 export default defineConfig({
@@ -15,12 +15,37 @@ export default defineConfig({
   use: { trace: 'off', screenshot: 'off', video: 'off', ignoreHTTPSErrors: false },
   projects: [
     { name: 'harness', testMatch: 'harness.spec.js' },
+    { name: 'foundation-security', testMatch: 'foundation-security.spec.js' },
     { name: 'driver-safety', testMatch: 'driver-safety.spec.js' },
     { name: 'public-http', testMatch: 'public-http.spec.js' },
     { name: 'public-contracts', testMatch: 'public-contracts.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false } },
     { name: 'application-contracts', testMatch: 'application-contracts.spec.js' },
+    { name: 'migration-source', testMatch: 'migration-source.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    { name: 'editor-safety', testMatch: 'editor-safety.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    // Real two-source fixture uses bounded Docker/DB observations between requests.
+    // This is only the test-process budget, not an authentication/session policy.
+    { name: 'auth-login', testMatch: 'auth-login.spec.js', timeout: 120_000 },
+    { name: 'unsaved-editor', testMatch: 'unsaved-editor.spec.js' },
+    { name: 'log-quota', testMatch: 'log-quota.spec.js' },
+    { name: 'background-jobs', testMatch: 'background-jobs.spec.js' },
+    { name: 'restore-contracts', testMatch: 'restore-contracts.spec.js' },
+    { name: 'log-delete-failures', testMatch: 'log-delete-failures.spec.js' },
+    { name: 'version-time', testMatch: 'version-time.spec.js' },
+    { name: 'editor-boundaries', testMatch: 'editor-boundaries.spec.js' },
+    { name: 'migration-contracts', testMatch: 'migration-contracts.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
     { name: 'form-contracts', testMatch: 'form-contracts.spec.js' },
     { name: 'form-windows', testMatch: 'form-window-contracts.spec.js' },
+    { name: 'form-native', testMatch: 'form-native.spec.js' },
+    { name: 'home-source', testMatch: 'home-source.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    { name: 'shared-component-restore', testMatch: 'shared-component-restore.spec.js' },
+    { name: 'url-reserve', testMatch: 'url-reserve.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    { name: 'url-reuse', testMatch: 'url-reuse.spec.js' },
+    { name: 'url-transition', testMatch: 'url-transition.spec.js' },
+    { name: 'service-quota', testMatch: 'service-quota.spec.js' },
+    { name: 'version-storage', testMatch: 'version-storage.spec.js' },
+    { name: 'price-editor', testMatch: 'price-editor.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    { name: 'price-home', testMatch: 'price-home.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    { name: 'form-cache', testMatch: 'form-cache.spec.js' },
     { name: 'shared-blocks', testMatch: 'shared-block-contracts.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
     { name: 'backup-contracts', testMatch: 'backup-contracts.spec.js' },
     { name: 'html-build', testMatch: 'html-build-contracts.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },

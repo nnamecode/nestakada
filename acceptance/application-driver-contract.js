@@ -3,7 +3,7 @@ import { localTarget } from './test-support.js';
 
 // This is a test interface, not a website endpoint or implementation of business rules.
 // A future reviewed adapter must exercise the real isolated app and read its actual state.
-export async function openApplicationDriver() {
+export async function openApplicationDriver({ javaScriptEnabled = true } = {}) {
   const adapterUrl = new URL('./isolated-application-driver.js', import.meta.url);
   if (!fs.existsSync(adapterUrl)) {
     throw new Error('APPLICATION_DRIVER_NOT_IMPLEMENTED: assertions authored; real isolated fixture/UI/HTTP adapter is absent. No mock application is allowed.');
@@ -12,7 +12,7 @@ export async function openApplicationDriver() {
   const adapter = await import(adapterUrl.href);
   if (adapter.driverKind !== 'real-isolated-application-v1' || typeof adapter.createDriver !== 'function')
     throw new Error('A reviewed real isolated application driver is required');
-  const driver = await adapter.createDriver({ baseURL: base.href });
+  const driver = await adapter.createDriver({ baseURL: base.href, javaScriptEnabled });
   for (const method of ['reset', 'act', 'observe', 'close'])
     if (typeof driver?.[method] !== 'function') throw new Error(`Driver method missing: ${method}`);
   return driver;

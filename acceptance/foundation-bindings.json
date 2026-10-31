@@ -1,0 +1,16 @@
+{
+  "schema": "isolated-ui-http-v1",
+  "targetOrigin": "http://host.docker.internal:8767",
+  "profiles": ["local-foundation-isolated"],
+  "operations": {},
+  "observations": {
+    "foundation-runtime-versions": {"kind": "process-read"},
+    "foundation-settings": {"kind": "process-read"},
+    "foundation-isolation": {"kind": "process-read"},
+    "foundation-dependency-evidence": {"kind": "process-read"},
+    "foundation-deploy-check": {"kind": "process-read"},
+    "foundation-audit-redaction": {"kind": "process-read"},
+    "foundation-db-roles": {"kind": "fixture-read"},
+    "foundation-http-response": {"kind": "fixture-read"}
+  }
+}

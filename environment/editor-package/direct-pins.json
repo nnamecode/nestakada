@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "approvedBy": "D-330",
+  "status": "preparation-only-not-integrated",
+  "basePythonImageId": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+  "cacheBudgetBytes": 2147483648,
+  "perMetadataLimitBytes": 2097152,
+  "perNpmArchiveLimitBytes": 33554432,
+  "python": {
+    "html5lib": "1.1",
+    "tinycss2": "1.5.1",
+    "nh3": "0.3.7",
+    "six": "1.17.0",
+    "webencodings": "0.6.1"
+  },
+  "frontend": {
+    "@tiptap/core": "3.32.2",
+    "@tiptap/pm": "3.32.2",
+    "@tiptap/starter-kit": "3.32.2",
+    "@tiptap/extension-table": "3.32.2",
+    "@tiptap/extension-text-style": "3.32.2",
+    "@tiptap/extension-text-align": "3.32.2",
+    "@tiptap/extension-subscript": "3.32.2",
+    "@tiptap/extension-superscript": "3.32.2",
+    "esbuild": "0.28.2",
+    "@esbuild/linux-x64": "0.28.2"
+  },
+  "nh3Filename": "nh3-0.3.7-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+  "nh3Sha256": "70f5ac8626e899a4bab0ef74ca2f5bd602f49c7b739e6e5026b4afc6d63dac42",
+  "esbuildPlatformIntegrity": "sha512-4xTZr1FUmSoQW4XIWmit3tzQrUTZM+N3P0XV8xROKYF50XfI7xeO90+1bZvNwxIufQ9hDQVRJH5YhgPVF8A/HQ=="
+}

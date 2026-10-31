@@ -1,0 +1,68 @@
+{
+  "buildx.build.provenance": {
+    "builder": {
+      "id": ""
+    },
+    "buildType": "https://mobyproject.org/buildkit@v1",
+    "materials": [
+      {
+        "uri": "pkg:docker/debian?digest=sha256:1e1a22175fbf1b32157ddaf0219e1db4e5401fab2b94ed285add64d18587cd2d\u0026platform=linux%2Famd64",
+        "digest": {
+          "sha256": "1e1a22175fbf1b32157ddaf0219e1db4e5401fab2b94ed285add64d18587cd2d"
+        }
+      },
+      {
+        "uri": "pkg:docker/postgres?digest=sha256:f4b419e350fd98d4a8429603295208976dea4c8fb8326d818d346d3e29f1db6f\u0026platform=linux%2Famd64",
+        "digest": {
+          "sha256": "f4b419e350fd98d4a8429603295208976dea4c8fb8326d818d346d3e29f1db6f"
+        }
+      }
+    ],
+    "invocation": {
+      "configSource": {
+        "entryPoint": "Postgres.security.Dockerfile"
+      },
+      "parameters": {
+        "frontend": "dockerfile.v0",
+        "args": {
+          "force-network-mode": "none"
+        },
+        "locals": [
+          {
+            "name": "context"
+          },
+          {
+            "name": "dockerfile"
+          }
+        ],
+        "root": {
+          "configSource": {
+            "path": "Postgres.security.Dockerfile"
+          },
+          "request": {
+            "args": {
+              "force-network-mode": "none",
+              "vcs:localdir:context": "work\\foundation-security-20261030\\pg-context",
+              "vcs:localdir:dockerfile": "environment\\foundation",
+              "vcs:revision": "652e43d7a13e698569727f4248fc30f67c086426",
+              "vcs:source": "https://github.com/nnamecode/nestakada.git"
+            }
+          }
+        },
+        "compatibilityVersion": 30
+      },
+      "environment": {
+        "dockerfileVersion": "1.28.0",
+        "platform": "linux/amd64"
+      }
+    }
+  },
+  "buildx.build.ref": "desktop-linux/desktop-linux/iy7ciqhzjvag9bu5x8lrof7h3",
+  "containerimage.descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:de3d5ee43e308309e10730caead7dd880539d53f0275d977cd2f8c3f62b6eef7",
+    "size": 856
+  },
+  "containerimage.digest": "sha256:de3d5ee43e308309e10730caead7dd880539d53f0275d977cd2f8c3f62b6eef7",
+  "image.name": "docker.io/nestakada-local/postgres:18.6-security-20261030"
+}

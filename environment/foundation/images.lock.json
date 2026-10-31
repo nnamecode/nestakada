@@ -1,0 +1,43 @@
+{
+  "preparationAuthorizedBy": "D-312",
+  "approvedBy": "D-311",
+  "schemaVersion": 1,
+  "resolvedAtUtc": "2026-10-30T17:12:03.8356133Z",
+  "images": [
+    {
+      "reference": "python@sha256:ec6a14df5b63e3fbb3498e3240f7f640c230f9dca67683d23265db3866697f2d",
+      "manifestDigest": "sha256:ec6a14df5b63e3fbb3498e3240f7f640c230f9dca67683d23265db3866697f2d",
+      "platform": "linux/amd64",
+      "component": "python-base",
+      "indexDigest": "sha256:3cabfd7d7aaf394e6040e79fa1eec6ca1c52b74ed9188650472695d9a9326999",
+      "tag": "python:3.14.10-slim-trixie"
+    },
+    {
+      "reference": "postgres@sha256:f4b419e350fd98d4a8429603295208976dea4c8fb8326d818d346d3e29f1db6f",
+      "manifestDigest": "sha256:f4b419e350fd98d4a8429603295208976dea4c8fb8326d818d346d3e29f1db6f",
+      "platform": "linux/amd64",
+      "component": "postgres-entrypoint-source",
+      "indexDigest": "sha256:979bccfde35445db618c65107d27d08c6c21339d8dc3ad4c830c6633947be0e4",
+      "tag": "postgres:18.6-trixie"
+    },
+    {
+      "tag": "nginx:1.30.6-alpine",
+      "indexDigest": "sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949",
+      "approvedBy": "D-313",
+      "manifestDigest": "sha256:84ed8c0dd296c188bfc24ed506f46589e9285fb0b11cf3a04d91d524d3067e11",
+      "reference": "nginx@sha256:84ed8c0dd296c188bfc24ed506f46589e9285fb0b11cf3a04d91d524d3067e11",
+      "platform": "linux/amd64",
+      "component": "local-ingress-base"
+    },
+    {
+      "component": "debian-base",
+      "tag": "debian:trixie-slim",
+      "reference": "debian@sha256:1e1a22175fbf1b32157ddaf0219e1db4e5401fab2b94ed285add64d18587cd2d",
+      "manifestDigest": "sha256:1e1a22175fbf1b32157ddaf0219e1db4e5401fab2b94ed285add64d18587cd2d",
+      "platform": "linux/amd64",
+      "approvedBy": "D-315"
+    }
+  ],
+  "purpose": "Pinned upstream build materials only; run current artifacts from runtime-images.lock.json",
+  "currentApproval": "D-315"
+}

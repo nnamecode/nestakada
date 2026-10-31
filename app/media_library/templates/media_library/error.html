@@ -1,0 +1,2 @@
+{% extends 'accounts/base.html' %}
+{% block content %}<link rel="stylesheet" href="{% url 'media_library:stylesheet' %}"><section class="card media-wrap"><h1>Действие не завершено</h1><p class="error" data-media-upload-error>{{ message }}</p><a href="{% url 'media_library:catalog' %}">Вернуться в медиатеку</a> · <a href="{% url 'media_library:cleanup' %}">Проверить актуальный список файлов</a></section>{% endblock %}

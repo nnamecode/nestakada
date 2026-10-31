@@ -1,0 +1,221 @@
+# D-316 local foundation only. Images and paths come from the checked wrapper.
+name: ${FOUNDATION_PROJECT:?required}
+
+x-app: &django
+  image: ${FOUNDATION_PYTHON_IMAGE:?required}
+  pull_policy: never
+  user: "10001:10001"
+  read_only: true
+  working_dir: /app
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 768m
+  cpus: 1.0
+  pids_limit: 128
+  restart: "no"
+  tmpfs: ['/tmp:rw,nosuid,nodev,noexec,size=128m,uid=10001,gid=10001,mode=1777']
+  labels:
+    nestakada.scope: foundation-${FOUNDATION_ENV:?required}
+
+x-django-env: &django-env
+  DJANGO_SETTINGS_MODULE: estakada.settings.local_http
+  ESTAKADA_LOCAL_ENV: ${FOUNDATION_ENV:?required}
+  ESTAKADA_DB_NAME: estakada_foundation
+  ESTAKADA_DB_PASSWORD_FILE: /run/secrets/database-password
+  PYTHONDONTWRITEBYTECODE: "1"
+  PSYCOPG_IMPL: c
+
+services:
+  db:
+    image: ${FOUNDATION_POSTGRES_IMAGE:?required}
+    pull_policy: never
+    container_name: ${FOUNDATION_PREFIX:?required}-db
+    read_only: true
+    entrypoint: [/bin/sh, /tools/db-start.sh]
+    command: [postgres, -c, listen_addresses=*, -c, max_connections=30, -c, log_statement=none, -c, log_min_error_statement=panic, -c, ssl=on, -c, ssl_cert_file=/run/secrets/database-ca, -c, ssl_key_file=/var/run/postgresql/server.key, -c, ssl_min_protocol_version=TLSv1.2]
+    environment:
+      POSTGRES_DB: estakada_foundation
+      POSTGRES_PASSWORD_FILE: /run/secrets/bootstrap-password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    networks: [db]
+    volumes:
+      - type: volume
+        source: dbdata
+        target: /var/lib/postgresql
+      - type: bind
+        source: ${FOUNDATION_PRIVATE:?required}/bootstrap-password
+        target: /run/secrets/bootstrap-password
+        read_only: true
+      - type: bind
+        source: ${FOUNDATION_PRIVATE:?required}/database-ca
+        target: /run/secrets/database-ca
+        read_only: true
+      - type: bind
+        source: ${FOUNDATION_PRIVATE:?required}/database-server-key
+        target: /run/secrets/database-server-key
+        read_only: true
+      - type: bind
+        source: ${FOUNDATION_DB_START:?required}
+        target: /tools/db-start.sh
+        read_only: true
+    tmpfs:
+      - /var/run/postgresql:rw,nosuid,nodev,noexec,size=16m,uid=999,gid=999,mode=3775
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 128
+    restart: "no"
+    labels:
+      nestakada.scope: foundation-${FOUNDATION_ENV:?required}
+
+  app:
+    <<: *django
+    container_name: ${FOUNDATION_PREFIX:?required}-app
+    command: [python, manage.py, runserver, "0.0.0.0:8000", --noreload, --nothreading]
+    environment:
+      <<: *django-env
+      ESTAKADA_DB_USER: app_runtime
+    networks: [web, db]
+    volumes:
+      - {type: bind, source: '${FOUNDATION_SOURCE:?required}', target: /app, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/runtime-password', target: /run/secrets/database-password, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/django-secret', target: /run/secrets/django-secret, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/deployment-django-secret', target: /run/secrets/deployment-django-secret, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+      - {type: volume, source: state, target: /var/lib/estakada}
+
+      - {type: volume, source: media-exchange, target: /exchange}
+
+  media-worker:
+    image: ${FOUNDATION_WORKER_IMAGE:?required}
+    pull_policy: never
+    container_name: ${FOUNDATION_PREFIX:?required}-media-worker
+    user: "10002:10001"
+    working_dir: /worker
+    command: [python, /worker/worker.py]
+    network_mode: none
+    read_only: true
+    volumes:
+      - {type: bind, source: '${FOUNDATION_WORKER_SOURCE:?required}', target: /worker, read_only: true}
+      - {type: volume, source: media-exchange, target: /exchange}
+    tmpfs: ['/tmp:rw,nosuid,nodev,noexec,size=128m,uid=10002,gid=10001,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 1.0
+    pids_limit: 64
+    restart: "no"
+    labels:
+      nestakada.scope: foundation-${FOUNDATION_ENV:?required}
+
+  ingress:
+    image: ${FOUNDATION_INGRESS_IMAGE:?required}
+    pull_policy: never
+    container_name: ${FOUNDATION_PREFIX:?required}-ingress
+    user: "101:101"
+    entrypoint: [nginx]
+    command: [-c, /preflight/nginx.conf, -g, 'daemon off;']
+    read_only: true
+    networks: [ingress, web]
+    ports: ['127.0.0.1:${FOUNDATION_PORT:?required}:8080']
+    volumes:
+      - {type: bind, source: '${FOUNDATION_NGINX_CONFIG:?required}', target: /preflight/nginx.conf, read_only: true}
+    tmpfs: ['/tmp:rw,nosuid,nodev,noexec,size=16m,uid=101,gid=101,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    restart: "no"
+    labels:
+      nestakada.scope: foundation-${FOUNDATION_ENV:?required}
+
+  state-init:
+    <<: *django
+    profiles: [tools]
+    user: "0:0"
+    network_mode: none
+    cap_add: [CHOWN]
+    entrypoint: [/bin/chown]
+    command: ['10001:10001', /var/lib/estakada]
+    volumes:
+      - {type: volume, source: state, target: /var/lib/estakada}
+
+  init:
+    <<: *django
+    profiles: [tools]
+    working_dir: /tools
+    command: [python, /tools/foundation_db_init.py]
+    networks: [db]
+    environment:
+      FOUNDATION_ENV: ${FOUNDATION_ENV:?required}
+    volumes:
+      - {type: bind, source: '${FOUNDATION_DB_INIT:?required}', target: /tools/foundation_db_init.py, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/bootstrap-password', target: /run/secrets/bootstrap-password, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/migrator-password', target: /run/secrets/migrator-password, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/runtime-password', target: /run/secrets/runtime-password, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+
+  migrate:
+    <<: *django
+    profiles: [tools]
+    command: [python, manage.py, migrate, --noinput]
+    networks: [db]
+    environment:
+      <<: *django-env
+      ESTAKADA_DB_USER: app_migrator
+    volumes:
+      - {type: bind, source: '${FOUNDATION_SOURCE:?required}', target: /app, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/migrator-password', target: /run/secrets/database-password, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/django-secret', target: /run/secrets/django-secret, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/deployment-django-secret', target: /run/secrets/deployment-django-secret, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+
+  units:
+    <<: *django
+    profiles: [tools]
+    command: [python, manage.py, test, audit, content, accounts, media_library, page_versions, foundation_tests, --keepdb, --noinput]
+    networks: [db]
+    environment:
+      <<: *django-env
+      ESTAKADA_DB_NAME: estakada_foundation_unit
+      ESTAKADA_DB_USER: app_migrator
+    volumes:
+      - {type: bind, source: '${FOUNDATION_SOURCE:?required}', target: /app, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/migrator-password', target: /run/secrets/database-password, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/django-secret', target: /run/secrets/django-secret, read_only: true}
+      - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+      - {type: volume, source: media-exchange, target: /exchange}
+
+networks:
+  ingress:
+    name: ${FOUNDATION_PREFIX:?required}-ingress
+    labels: {nestakada.scope: 'foundation-${FOUNDATION_ENV:?required}'}
+  web:
+    name: ${FOUNDATION_PREFIX:?required}-web
+    internal: true
+    labels: {nestakada.scope: 'foundation-${FOUNDATION_ENV:?required}'}
+  db:
+    name: ${FOUNDATION_PREFIX:?required}-db
+    internal: true
+    labels: {nestakada.scope: 'foundation-${FOUNDATION_ENV:?required}'}
+
+volumes:
+  dbdata:
+    name: ${FOUNDATION_PREFIX:?required}-dbdata
+    labels: {nestakada.scope: 'foundation-${FOUNDATION_ENV:?required}'}
+  state:
+    name: ${FOUNDATION_PREFIX:?required}-state
+    labels: {nestakada.scope: 'foundation-${FOUNDATION_ENV:?required}'}
+  media-exchange:
+    name: ${FOUNDATION_PREFIX:?required}-media-exchange
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: size=128m,uid=10001,gid=10001,mode=0770
+    labels: {nestakada.scope: 'foundation-${FOUNDATION_ENV:?required}'}

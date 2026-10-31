@@ -1,0 +1,7 @@
+{% extends 'accounts/base.html' %}
+{% block content %}<link rel="stylesheet" href="{% url 'media_library:stylesheet' %}"><section class="card media-wrap"><h1>Результат очистки</h1>
+{% for result in results %}<article data-media-cleanup-result="{{ result.asset_id }}" data-state="{{ result.state }}" data-released-bytes="{{ result.released_bytes }}" data-pending-files="{{ result.pending_files }}">
+<h2>Изображение {{ result.asset_id|truncatechars:12 }}</h2>
+{% if result.state == 'deleted' %}<p>Удаление завершено.</p>{% elif result.state == 'already_deleted' %}<p>Изображение уже удалено; повторно освобождённое место не учитывается.</p>{% else %}<p class="error">Удаление не завершено. Файлов ожидают повторной проверки: {{ result.pending_files }}.</p>{% endif %}
+<p>В этой попытке физически освобождено: {{ result.released_bytes }} байт.</p></article>{% endfor %}
+<p><a href="{% url 'media_library:cleanup' %}">Проверить актуальный список и повторить незавершённое удаление</a> · <a href="{% url 'media_library:catalog' %}">Медиатека</a></p></section>{% endblock %}

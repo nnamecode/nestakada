@@ -1,0 +1,62 @@
+{
+  "buildx.build.provenance": {
+    "builder": {
+      "id": ""
+    },
+    "buildType": "https://mobyproject.org/buildkit@v1",
+    "materials": [
+      {
+        "uri": "pkg:docker/python?digest=sha256:ec6a14df5b63e3fbb3498e3240f7f640c230f9dca67683d23265db3866697f2d\u0026platform=linux%2Famd64",
+        "digest": {
+          "sha256": "ec6a14df5b63e3fbb3498e3240f7f640c230f9dca67683d23265db3866697f2d"
+        }
+      }
+    ],
+    "invocation": {
+      "configSource": {
+        "entryPoint": "Python.security.Dockerfile"
+      },
+      "parameters": {
+        "frontend": "dockerfile.v0",
+        "args": {
+          "force-network-mode": "none"
+        },
+        "locals": [
+          {
+            "name": "context"
+          },
+          {
+            "name": "dockerfile"
+          }
+        ],
+        "root": {
+          "configSource": {
+            "path": "Python.security.Dockerfile"
+          },
+          "request": {
+            "args": {
+              "force-network-mode": "none",
+              "vcs:localdir:context": "work\\foundation-security-20261030\\python-context",
+              "vcs:localdir:dockerfile": "environment\\foundation",
+              "vcs:revision": "652e43d7a13e698569727f4248fc30f67c086426",
+              "vcs:source": "https://github.com/nnamecode/nestakada.git"
+            }
+          }
+        },
+        "compatibilityVersion": 30
+      },
+      "environment": {
+        "dockerfileVersion": "1.28.0",
+        "platform": "linux/amd64"
+      }
+    }
+  },
+  "buildx.build.ref": "desktop-linux/desktop-linux/y8oswnjjxvdy6ro3srx9t9zpi",
+  "containerimage.descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+    "size": 856
+  },
+  "containerimage.digest": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+  "image.name": "docker.io/nestakada-local/python-runtime:3.14.10-security-20261030"
+}

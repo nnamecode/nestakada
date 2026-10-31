@@ -1,8 +1,100 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+**Текущий D-315:** локальные base-image исправления и независимое ревью завершены; [результаты](base-image-security-remediation.md). Каталог1056/40, приложение/11FOUNDATIONнеисполнены; vendorостатокнеобнулён. Только следующий явный допуск владельца разрешает ограниченную DEV-02/28.
+
+**Обновление D-313:** TEST-Q008 принят; локальный вход через Nginx проверен с компьютера и из Docker, изоляция/ограничения подтверждены независимо. [Итог](local-foundation-proxy-check.md). Базовые образы имеют открытый остаток безопасности; код сайта запрещён. Старые упоминания запрета подготовки/неработающего HTTP относятся к истории до D-312/313.
+
+**Текущее состояние 30.10.2026:** TEST-Q006 принят D-310. [Единый пакет TEST-Q007](local-foundation-package.md) согласован D-311; независимое ревью R064/065 закрыто. Установки и код не разрешены. Каталог: 1056 экземпляров / 40 файлов; матрица 17 text_only / 7 partial_http / 116 assertions_waiting_driver. Это частичное авторство, не прохождение AC. 85 самопроверок драйвера прошли. Следующие абзацы с TEST-Q006 «на согласовании» и прежними числами — история до D-310; действующие зависимости в tasks.md. Код и установки по-прежнему запрещены.
+
 Дата: 2026-10-30. Этап 7 в работе. Основания — D-301–D-305 и повторное поручение владельца продолжать тесты без кода нового сайта и без действий на старом сайте/VPS. Предыдущий проход сохранён в acceptance-test07-preflight.md; его семь первоначальных самопроверок — исторический результат, текущий ниже.
 
-## Текущий проход: резервные точки и ночной HTML
+## Заключительный проход: решение по достаточности
+
+2026-10-30:по прямому поручению владельца выполнен итоговый аудит без новых пачек тестов. [Пакет TEST-EXIT-20261030-01 / TEST-Q006](stage7-exit-review.md) и [20-rowregister](stage7-exit-register.csv) подготовлены на согласование. Независимый stage7_exit_audit закрыл R061–063 к предложению; пригодна только ограниченная локальная первая очередь после ENV-05/предложенныхARC-11/TEST-12 и отдельного разрешения8. ПолныйTEST-01/07 не завершён.
+
+1043/39 и матрица140AT/140AC/63REQ,20text_only/7partial_http/113waitingdriver неизменны.83самопроверки/4документные проверки — прежние факты, не приложение. Новыхбиблиотек/установок/кода/измененийсервера нет. ДействующийDEV-02→TEST-01+ARC-10 сохраняется до ответа. Работа локально, безcommit/push.
+
+Проверки exitпакета:20-rowregister точносовпадаетсcurrentAT/AC/states/delivery/supporting, заполненыконкретныемодульныеворота/роли; исходнаяdependencyDEV02сохранена. После синхронизации4document/изоляционных passed, skipped/unexpected/flaky0,3,096с: `test-results/acceptance/documents-stage7-exit-results.json`, `work/acceptance-documents-stage7-exit.txt`. git diff --check без ошибок. Это не прогонысайта и не новыеfeatureсценарии.
+
+## Предыдущий проход: прайсы и связанные суммы главной
+
+2026-10-30: добавлены25price-editor/11price-home. Пакет **1043 tests in 39 files**, collection exit0:work/acceptance-stage7-list-prices.txt. TEST-R060 исправлен и независимо закрыт. [Отчёт и ограничения](acceptance-prices-review.md).36сценариев сайта не исполнялись:нет приложения/bridge/bindings. Транспорт не менялся, прежние83selfchecks не повторялись и не суммируются с новойпартией.
+
+Матрица140AT: **20 text_only /7 partial_http /113 assertions_waiting_driver**. Полные AC/UX-07/TEST-07 открыты. Старый сайт/VPS не менялись, код нового сайта не писался; работа сохранена локально без commit/push.
+
+После синхронизации4document/изоляционных проверки passed, skipped/unexpected/flaky0,3,055с: `test-results/acceptance/documents-prices-results.json`, `work/acceptance-documents-prices.txt`. JS/PowerShell syntax и git diff --check без ошибок. ПрежниеID AT012/016 сохранены и дополнены прямымиcrosslinksпрайс-сценариев.
+
+## Предыдущий проход: служебные квоты и сохранение версий
+
+2026-10-30: добавлены4service-quota/15version-storage/3selfchecks. Пакет **1007 tests in 37 files**, collection exit0:work/acceptance-stage7-list-service-version.txt. TEST-R059 исправлен и независимо закрыт. **83driver-safety passed**, skipped/unexpected/flaky0,12,816с: test-results/acceptance/driver-service-version-results.json. [Отчёт и ограничения](acceptance-service-version-review.md).19сценариев сайта не исполнялись:нет приложения/bridge/bindings/controller/physicalARC10.
+
+Матрица140AT: **21 text_only /7 partial_http /112 assertions_waiting_driver**. Полные AC/UX-07/TEST-07 открыты. Старый сайт/VPS не менялись, код нового сайта не писался; работа сохранена локально без commit/push.
+
+После синхронизации4document/изоляционных проверки passed, skipped/unexpected/flaky0,2,849с: `test-results/acceptance/documents-service-version-results.json`, `work/acceptance-documents-service-version.txt`. JS/PowerShell syntax и git diff --check без ошибок.
+
+## Предыдущий проход: прерывание фиксации URL
+
+2026-10-30: добавлены11URL-transition/2selfchecks. Пакет **985 tests in 35 files**, collection exit0:work/acceptance-stage7-list-url-transition.txt. TEST-R056–058 исправлены и независимо закрыты. **80driver-safety passed**, skipped/unexpected/flaky0,13,021с: test-results/acceptance/driver-url-transition-results.json. [Отчёт и ограничения](acceptance-url-transition-review.md).11сценариев сайта не исполнялись:нет приложения/bridge/bindings/controller/physicalARC10.
+
+Матрица140AT: **24 text_only /7 partial_http /109 assertions_waiting_driver**. Полные AC/UX-07/TEST-07 открыты. Старый сайт/VPS не менялись, код нового сайта не писался; работа сохранена локально без commit/push.
+
+После синхронизации4document/изоляционных проверки passed, skipped/unexpected/flaky0,2,801с: `test-results/acceptance/documents-url-transition-results.json`, `work/acceptance-documents-url-transition.txt`. JS/PowerShell syntax и git diff --check без ошибок.
+
+## Предыдущий проход: URL, редиректы и аварийный HTML
+
+2026-10-30: добавлены12URL/reserve/SEO и16URLreuse. Пакет **972 tests in 34 files**, collection exit0:work/acceptance-stage7-list-url-reserve.txt. TEST-R055 исправлен и независимо закрыт. [Отчёт и ограничения](acceptance-url-reserve-review.md).28сценариев сайта не исполнялись:нет приложения/bridge/bindings/controller/physicalARC10. Транспорт не менялся, прежние78selfchecks не повторялись и не суммируются с новыми сценариями.
+
+Матрица140AT: **26 text_only /7 partial_http /107 assertions_waiting_driver**. Полные AC/UX-07/TEST-07 открыты. Старый сайт/VPS не менялись, код нового сайта не писался; работа сохранена локально без commit/push.
+
+После синхронизации4document/изоляционных проверки passed, skipped/unexpected/flaky0,2,941с: `test-results/acceptance/documents-url-reserve-results.json`, `work/acceptance-documents-url-reserve.txt`. JS/PowerShell syntax и git diff --check без ошибок.
+
+## Предыдущий проход: главная после удаления источника и общие компоненты
+
+2026-10-30: добавлены7home-source/4shared-component. Пакет **944 tests in 32 files**, collection exit0:work/acceptance-stage7-list-home-blocks.txt. TEST-R054 исправлен и независимо закрыт. [Отчёт и ограничения](acceptance-home-blocks-review.md).11сценариев сайта не исполнялись:нет приложения/bridge/bindings/controller/физического ARC-10. Транспорт не менялся, прежние78selfchecks не повторялись и не суммируются с новыми сценариями.
+
+Матрица140AT: **29 text_only /7 partial_http /104 assertions_waiting_driver**. Полные AC/UX-07/TEST-07 открыты. Старый сайт/VPS не менялись, код нового сайта не писался; работа сохранена локально, без commit/push.
+
+После синхронизации4document/изоляционных проверки passed, skipped/unexpected/flaky0,3,039с; `test-results/acceptance/documents-home-blocks-results.json`, `work/acceptance-documents-home-blocks.txt`. JS/PowerShell syntax и git diff --check без ошибок.
+
+## Предыдущий проход: форма без JS, CSRF и кэш
+
+2026-10-30: добавлены8native/CSRF,22cache и4selfchecks. Пакет **933 tests in 30 files**, TEST-R052–053 независимо закрыты. **78 driver-safety passed**, skipped/unexpected/flaky0,6,576с; JSON test-results/acceptance/driver-form-native-cache-results.json. Collection exit0:work/acceptance-stage7-list-form-native-cache.txt. [Отчёт и ограничения](acceptance-form-native-cache-review.md).
+
+Матрица140AT: **33 text_only /7 partial_http /100 assertions_waiting_driver**. Новые30сценариев сайта не исполнялись:нет приложения/fixture bridge/bindings. Полные AC/UX-07/TEST-07/физический ARC-10 открыты; старый сайт/VPS не менялись, код нового сайта не писался.
+
+После синхронизации4document/изоляционных самопроверки passed, skipped/unexpected/flaky0,2,985с: `test-results/acceptance/documents-form-native-cache-results.json`, `work/acceptance-documents-form-native-cache.txt`. JS/PowerShell syntax и git diff --check без ошибок. Текущая работа сохранена локально, commit/push в этой партии не выполнялись.
+
+## Предыдущий проход: restore и частичная очистка логов
+
+2026-10-30: добавлены10restore/2partial-log-delete/7selfchecks; прежний logging25→24 после удаления необоснованного password-case. Пакет **899 tests in 28 files**, TEST-R046–051 независимо закрыты.74driver-safety прошли; restore/удаления не исполнялись. [Отчёт и ограничения](acceptance-restore-log-review.md).
+
+Матрица140AT: **35 text_only /7 partial_http /98 assertions_waiting_driver**. Только assertions/оснастка:нет реальных CLI/framework/CSRF/controller/bridge/OS/ключей и полного AC. Старый сайт/VPS не трогаем, код нового сайта не пишем; этап7/TEST-07/UX-07/физический ARC-10 продолжаются.
+
+## Предыдущий проход: квота логов и фоновые отказы
+
+2026-10-30: добавлены 9 log-quota/6 background-jobs/4 domain selfchecks. Пакет **881 tests in 26 files**; TEST-R040–045 независимо закрыты в уточнённой частичной области. 67 driver-safety прошли; это оснастка, не физические квоты/остановки работников. [Отчёт и ограничения](acceptance-quota-jobs-review.md).
+
+Матрица140AT: **36 text_only /7 partial_http /97 assertions_waiting_driver**. Нет приложения/controller/bindings и доказанного OS/FS capture; полные AC/TEST-07/UX-07/физический ARC-10 не пройдены. Старый сайт/VPS не трогаем, код нового сайта не пишем.
+
+## Предыдущий проход: вход и несохранённый текст
+
+2026-10-30: добавлены12auth-login/10unsaved-editor/2memory selfchecks. Пакет **862 tests in 24 files**, TEST-R039 независимо закрыт. Свежие63driver-safety прошли; это оснастка, не исполнение новых входов/сохранений приложения. [Отчёт и ограничения](acceptance-auth-memory-review.md).
+
+Матрица140AT: **38 text_only /7 partial_http /95 assertions_waiting_driver**. Браузерное чтение ограничено URL/localStorage/sessionStorage, не доказывает отсутствие transient/IndexedDB/сети. Реальные ingress/IP/CSRF/привязки ещё требуют независимой проверки. Приложение отсутствует, полный AC/TEST-07/UX-07/окончательный ARC-10 не пройден; старый сайт/VPS и код нового сайта не трогаем.
+
+## Предыдущий проход: разметка, ссылки и время версий
+
+2026-10-30: добавлены30editor-safety/4version-time. Пакет **838 tests in 22 files**. TEST-R036–038 исправлены и независимо закрыты:UTC без диктовки Z, экспорт аудита вместо версии, секунды UI необязательны. Новых существенных замечаний в целевой области нет. [Отчёт и ограничения](acceptance-editor-time-review.md).
+
+Матрица140AT: **40 text_only /7 partial_http /93 assertions_waiting_driver**. Приложения/bindings нет, новые бизнес-сценарии не исполнялись. NoJS-парсер не доказывает runtime/CSP/SSRF; полные AC/TEST-07/UX-07/окончательный ARC-10 открыты. Старый сайт/VPS и код нового сайта не трогаем.
+
+## Предыдущий проход: перенос и границы редактора
+
+2026-10-30: добавлены14editor/14migration/1source-only. Пакет **804 tests in 20 files**. TEST-R033–035 исправлены и независимо закрыты; MAP-015/032 и старые цены/классы автомойки остаются отдельными неподготовленными ветвями. Source-only на16закреплённых HTML:1passed/0skipped/unexpected/flaky. Утренний harness:71passed, это оснастка, не AC сайта. [Отчёт и ограничения](acceptance-migration-editor-review.md).
+
+Матрица140AT: **43 text_only /7 partial_http /90 assertions_waiting_driver**. Реальных импорта/бизнес-сценариев приложения нет: приложение/bindings/bridge отсутствуют. Полные AC/TEST-07/UX-07/окончательный ARC-10 открыты, этап7 продолжается; старый сайт/VPS и код нового сайта не трогаем.
+
+## Предыдущий проход: резервные точки и ночной HTML
 
 2026-10-30: добавлены23backup/12html-build и3самопроверки разделённых control-допусков. Целевое независимое ревью закрыло TEST-R029–032. Пакет: **775 tests in 17 files**. Свежие61driver-safety/4documents прошли без skipped/unexpected/flaky; это оснастка, не jobs/restore/AC приложения. [Отчёт и ограничения](acceptance-backup-html-review.md).
 

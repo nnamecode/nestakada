@@ -1,0 +1,62 @@
+{
+  "buildx.build.provenance": {
+    "builder": {
+      "id": ""
+    },
+    "buildType": "https://mobyproject.org/buildkit@v1",
+    "materials": [
+      {
+        "uri": "pkg:docker/nginx?digest=sha256:84ed8c0dd296c188bfc24ed506f46589e9285fb0b11cf3a04d91d524d3067e11\u0026platform=linux%2Famd64",
+        "digest": {
+          "sha256": "84ed8c0dd296c188bfc24ed506f46589e9285fb0b11cf3a04d91d524d3067e11"
+        }
+      }
+    ],
+    "invocation": {
+      "configSource": {
+        "entryPoint": "Dockerfile"
+      },
+      "parameters": {
+        "frontend": "dockerfile.v0",
+        "args": {
+          "force-network-mode": "none"
+        },
+        "locals": [
+          {
+            "name": "context"
+          },
+          {
+            "name": "dockerfile"
+          }
+        ],
+        "root": {
+          "configSource": {
+            "path": "Dockerfile"
+          },
+          "request": {
+            "args": {
+              "force-network-mode": "none",
+              "vcs:localdir:context": "work\\foundation-security-20261030\\nginx-context",
+              "vcs:localdir:dockerfile": "work\\foundation-security-20261030\\nginx-context",
+              "vcs:revision": "652e43d7a13e698569727f4248fc30f67c086426",
+              "vcs:source": "https://github.com/nnamecode/nestakada.git"
+            }
+          }
+        },
+        "compatibilityVersion": 30
+      },
+      "environment": {
+        "dockerfileVersion": "1.28.0",
+        "platform": "linux/amd64"
+      }
+    }
+  },
+  "buildx.build.ref": "desktop-linux/desktop-linux/6onvyzbmh7c8nd1ly4047vzrt",
+  "containerimage.descriptor": {
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "digest": "sha256:a3b293bbab17bfd78d82d2392240d3d351501fba538ab82de1595b1d28d0d646",
+    "size": 856
+  },
+  "containerimage.digest": "sha256:a3b293bbab17bfd78d82d2392240d3d351501fba538ab82de1595b1d28d0d646",
+  "image.name": "docker.io/nestakada-local/ingress:1.30.6-security-20261030"
+}

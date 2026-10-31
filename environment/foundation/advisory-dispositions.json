@@ -1,0 +1,13 @@
+{
+  "baselineIds": 118,
+  "matchedImageAdvisoryRows": 156,
+  "matchedAdvisoryIds": 84,
+  "newMatches": [],
+  "counts": {
+    "vendor-deferred-tracked-for-release": 44,
+    "source-package-removed": 34,
+    "specific-source-path-absent-vendor-status-open": 1,
+    "vendor-unimportant-tracked-for-release": 38,
+    "not-used-in-checked-authentication-path-vendor-undetermined": 1
+  }
+}

@@ -29,6 +29,7 @@ playwright-report/
 acceptance/local-bindings.json
 acceptance/local-fixture-settings.json
 acceptance/generated-fixtures/
+acceptance/local-migration-source/
 output/
 
 # Tools and OS

@@ -1,0 +1,4 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}Эстакада — управление{% endblock %}</title><link rel="stylesheet" href="{% url 'accounts:stylesheet' %}"></head>
+<body><header><a class="brand" href="{% url 'accounts:dashboard' %}">Эстакада</a><span>Управление сайтом</span>{% if user.is_authenticated %}<form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="quiet">Выйти</button></form>{% endif %}</header>
+<main>{% if owner %}<nav><a href="{% url 'accounts:dashboard' %}">Страницы</a><a href="{% url 'accounts:employees' %}">Сотрудники и права</a><a href="{% url 'media_library:catalog' %}">Медиа</a></nav>{% endif %}{% block content %}{% endblock %}</main></body></html>

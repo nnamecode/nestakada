@@ -1,0 +1,15 @@
+{% extends 'accounts/base.html' %}
+{% block content %}<link rel="stylesheet" href="{% url 'media_library:stylesheet' %}">
+<section class="card media-wrap"><h1>Очистка неиспользуемых файлов</h1><p>Файлы удаляются только после вашего выбора и подтверждения. Перед удалением использование проверяется повторно.</p>
+<p><a href="{% url 'media_library:catalog' %}">Медиатека</a> · <a href="{% url 'media_library:cleanup' %}">Повторить проверку использования</a></p>
+<p class="media-total" data-media-total-bytes="{{ total_bytes }}">Проверенные кандидаты: {{ candidates|length }} · {{ total_bytes }} байт.</p>
+{% if unavailable %}<p class="error" data-media-unavailable>Не удалось проверить файлов: {{ unavailable|length }}. Их объём не включён в сумму; обновите проверку.</p>{% endif %}
+<form method="post" action="{% url 'media_library:cleanup_prepare' %}">{% csrf_token %}<input type="hidden" name="generation" value="{{ generation }}">
+<div class="media-grid">{% for row in candidates %}<article class="media-item" data-media-candidate="{{ row.asset.pk }}" data-media-bytes="{{ row.bytes }}">
+<label class="media-check"><input type="checkbox" name="asset_ids" value="{{ row.asset.pk }}"><span>Изображение {{ row.asset.pk|truncatechars:12 }}</span></label>
+{% if row.preview %}<img class="media-image" src="{% url 'media_library:preview' row.preview.pk %}" alt="Кандидат на удаление">{% endif %}
+<p>{{ row.files|length }} файла · {{ row.bytes }} байт. Использований: 0.</p></article>{% endfor %}</div>
+{% if candidates %}<button class="danger">Удалить выбранные</button>{% else %}<p>Проверенных кандидатов для удаления нет.</p>{% endif %}</form></section>
+{% if retained %}<section class="card media-wrap"><h2>Используемые изображения сохраняются</h2>{% for row in retained %}<p data-media-retained="{{ row.asset.pk }}">Изображение {{ row.asset.pk|truncatechars:12 }}: {% for kind,count in row.references %}{{ kind }} — {{ count }}{% if not forloop.last %}; {% endif %}{% endfor %}.</p>{% endfor %}</section>{% endif %}
+{% if pending %}<section class="card media-wrap"><h2>Удаление не завершено</h2><p>Оставшиеся файлы и их описание сохранены. Повторная попытка заново проверяет текущее состояние.</p>{% for asset in pending %}<form method="post" action="{% url 'media_library:cleanup_retry' asset.pk %}" data-media-retry="{{ asset.pk }}">{% csrf_token %}<input type="hidden" name="generation" value="{{ generation }}"><span>Изображение {{ asset.pk|truncatechars:12 }}</span><button>Повторить удаление</button></form>{% endfor %}</section>{% endif %}
+{% endblock %}

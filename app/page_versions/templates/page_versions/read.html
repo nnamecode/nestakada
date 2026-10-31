@@ -1,0 +1,10 @@
+{% extends 'accounts/base.html' %}{% block content %}{% include 'page_versions/_nav.html' %}<section data-version-read="{{ revision.pk }}"><h1>{{ metadata.name|default:'Сохранённая версия' }}</h1>
+{% if stable %}<span class="version-badge version-stable">Stable</span>{% endif %}{% if current %}<span class="version-badge">Текущая</span>{% endif %}
+<p>{{ revision.pk }} · Автор: {{ revision.author_id }} · Сохранена: <time datetime="{{ time.utc }}" data-version-saved-at="{{ time.utc }}">{{ time.moscow }} Europe/Moscow</time></p>
+{% if manual_time %}<p>Указанная дата: <time datetime="{{ manual_time.utc }}">{{ manual_time.moscow }} Europe/Moscow</time></p>{% endif %}<pre class="version-data">{{ metadata.comment }}</pre>
+{% for text in texts %}<h2>{{ text.label }}</h2><pre class="version-data" data-version-text="{{ text.field }}">{{ text.value }}</pre>{% endfor %}
+<div class="version-images">{% for file in images %}<a data-version-file-id="{{ file.pk }}" href="{% url 'page_versions:version_file' page_id revision.pk file.pk %}"><img src="{% url 'page_versions:version_file' page_id revision.pk file.pk %}" alt="Изображение сохранённой версии" loading="lazy"></a>{% endfor %}</div>
+<details><summary>Все сохранённые данные как текст</summary><pre class="version-data" data-version-payload>{{ payload_json }}</pre></details>
+<p><a href="{% url 'page_versions:compare' page_id revision.pk %}">Сравнить с текущей</a></p>
+<form method="post" action="{% url 'page_versions:restore_prepare' page_id revision.pk %}" data-restore-prepare>{% csrf_token %}<input type="hidden" name="generation" value="{{ generation }}"><button>Подготовить восстановление</button></form>
+{% if owner and not stable %}<form method="post" action="{% url 'page_versions:stable_set' page_id revision.pk %}" data-stable-set>{% csrf_token %}<input type="hidden" name="generation" value="{{ generation }}"><input type="hidden" name="operation_id" value="{{ operation_id }}"><input type="hidden" name="view_receipt" value="{{ view_receipt }}"><p>Отметить именно эту просмотренную версию как Stable? Это не публикация.</p><button>Назначить Stable</button></form>{% endif %}</section>{% endblock %}

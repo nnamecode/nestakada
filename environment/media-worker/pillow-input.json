@@ -1,0 +1,10 @@
+{
+  "package": "pillow",
+  "version": "13.0.0",
+  "filename": "pillow-13.0.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+  "url": "https://files.pythonhosted.org/packages/1d/f2/1371707ce438ba9a43f9d24089828494ec6f9396e28cd7903aa704dd6306/pillow-13.0.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+  "sha256": "e91c2b1cbeae768c98752e67e717e283d68dae45717b41f2d91eaee648e37b7d",
+  "size": 7142574,
+  "metadata_source": "https://pypi.org/pypi/pillow/13.0.0/json",
+  "pypi_vulnerabilities": []
+}

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "approvedBy": "D-315",
+  "fixesAuthorizedBy": "D-314",
+  "status": "independently-reviewed-local-artifacts",
+  "purpose": "Local foundation only, no website/application or deployment",
+  "identitySemantics": "Docker-reported image IDs are opaque; OCI config/export digests are separate fields",
+  "requirements": {
+    "path": "environment/foundation/requirements.lock",
+    "sha256": "e296fe093aff14a424aecb576e366b57220b097eff7b44152d966fe14d3299c7"
+  },
+  "images": [
+    {
+      "component": "python-runtime",
+      "version": "3.14.10",
+      "localTag": "nestakada-local/python-runtime:3.14.10-security-20261030",
+      "dockerReportedImageId": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+      "reference": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+      "platform": "linux/amd64",
+      "exportedImageDigest": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+      "recipe": {
+        "path": "environment/foundation/Python.security.Dockerfile",
+        "sha256": "9aadbd535fa6cfa3e55876e119df63d2c79688c4394b243441a844e78194c54e"
+      },
+      "inputs": {
+        "path": "environment/foundation/python-build-inputs.lock.json",
+        "sha256": "1610d83622206e3e3c97505220c4bb8c3d04e575d26dec10a1f669284c51c189"
+      },
+      "receipt": {
+        "path": "environment/foundation/receipts/python-runtime.json",
+        "sha256": "8310a19e6c4871e9d101aba6e1f49d121d572435f5df76aef3c8f8be8dce8124"
+      },
+      "materialComponents": [
+        "python-base"
+      ],
+      "sourceArchiveComponents": [
+        "psycopg-c-source"
+      ]
+    },
+    {
+      "component": "local-ingress",
+      "version": "1.30.6",
+      "localTag": "nestakada-local/ingress:1.30.6-security-20261030",
+      "dockerReportedImageId": "sha256:a3b293bbab17bfd78d82d2392240d3d351501fba538ab82de1595b1d28d0d646",
+      "reference": "sha256:a3b293bbab17bfd78d82d2392240d3d351501fba538ab82de1595b1d28d0d646",
+      "platform": "linux/amd64",
+      "exportedImageDigest": "sha256:a3b293bbab17bfd78d82d2392240d3d351501fba538ab82de1595b1d28d0d646",
+      "recipe": {
+        "path": "environment/foundation/Nginx.security.Dockerfile",
+        "sha256": "ac37facba3cb29389ff0dc73c4c9e0d905ac1d26ef369f22c0c4056fa1f14d60"
+      },
+      "inputs": {
+        "path": "environment/foundation/nginx-build-inputs.lock.json",
+        "sha256": "4976691fbedd5d28561c24917c5e722014851677c4647ab484b3a166a2c4b4e5"
+      },
+      "receipt": {
+        "path": "environment/foundation/receipts/local-ingress.json",
+        "sha256": "e94e56d10603a415f9c4678dd8d897a682eb2e8746d6a7753b3b43b44e76c21a"
+      },
+      "materialComponents": [
+        "local-ingress-base"
+      ],
+      "sourceArchiveComponents": []
+    },
+    {
+      "component": "postgres",
+      "version": "18.6",
+      "localTag": "nestakada-local/postgres:18.6-security-20261030",
+      "dockerReportedImageId": "sha256:de3d5ee43e308309e10730caead7dd880539d53f0275d977cd2f8c3f62b6eef7",
+      "reference": "sha256:de3d5ee43e308309e10730caead7dd880539d53f0275d977cd2f8c3f62b6eef7",
+      "platform": "linux/amd64",
+      "exportedImageDigest": "sha256:de3d5ee43e308309e10730caead7dd880539d53f0275d977cd2f8c3f62b6eef7",
+      "recipe": {
+        "path": "environment/foundation/Postgres.security.Dockerfile",
+        "sha256": "f6eb187d464201e35501b31a86fe15bec7fa50dae55c5137cf8ed0be0fb9ddcb"
+      },
+      "inputs": {
+        "path": "environment/foundation/postgres-build-inputs.lock.json",
+        "sha256": "145a745e66f631c8de19b3241d6515234f4bbf002c81987c05c3b9088b04ba84"
+      },
+      "receipt": {
+        "path": "environment/foundation/receipts/postgres.json",
+        "sha256": "87005cefe8b03d60f55b4ab7cf5cec67f97c072daad1747d4e46998db51a5e3a"
+      },
+      "materialComponents": [
+        "debian-base",
+        "postgres-entrypoint-source"
+      ],
+      "sourceArchiveComponents": [
+        "postgres-source"
+      ]
+    }
+  ],
+  "review": "docs/base-image-security-review.md"
+}

@@ -5,10 +5,65 @@ import { randomBytes } from 'node:crypto';
 import { localTarget, routeUrl } from './test-support.js';
 
 const forbidden = new Set(['__proto__', 'constructor', 'prototype']);
+export function authSourceOrigin(profile, actor, declaredOrigin) {
+  const expected = actor === 'LOGIN-B' ? 'http://host.docker.internal:8769' :
+    ['LOGIN-A','LOGIN-A2'].includes(actor) ? 'http://host.docker.internal:8768' : undefined;
+  if (profile !== 'auth-login-isolated-sources' || !expected || declaredOrigin !== expected)
+    throw new Error('DRIVER_AUTH_SOURCE_SCOPE_REQUIRED');
+  return new URL(expected);
+}
+export function authCsrfPreparation(profile, definition) {
+  const expected = definition.path === '/manage/login/' ? '/manage/login/' :
+    definition.path === '/manage/logout/' ? '/manage/' : undefined;
+  if (profile !== 'auth-login-isolated-sources' || definition.kind !== 'http' || definition.method !== 'POST' ||
+      definition.encoding !== 'form' || !expected || definition.freshCsrfPath !== expected)
+    throw new Error('DRIVER_AUTH_CSRF_SCOPE_REQUIRED');
+  return expected;
+}
+export const foundationProcessViews = new Set(['foundation-runtime-versions', 'foundation-settings',
+  'foundation-isolation', 'foundation-dependency-evidence', 'foundation-deploy-check', 'foundation-audit-redaction']);
+export function validateFoundationProcessRequest(view, args, profileName) {
+  if (profileName !== 'local-foundation-isolated' || !foundationProcessViews.has(view) ||
+    !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).some(key => key !== 'profile') ||
+    (Object.hasOwn(args, 'profile') && !['local-http', 'deployment-audit'].includes(args.profile)))
+    throw new Error('DRIVER_FOUNDATION_PROCESS_SCOPE_REQUIRED');
+}
+export function foundationProcessData(reply, { view, args, profileName, runId }) {
+  validateFoundationProcessRequest(view, args, profileName);
+  if (reply?.source !== 'actual-process' || reply.runId !== runId || reply.evidence?.fixtureProfile !== profileName ||
+    !reply.data || typeof reply.data !== 'object' || Array.isArray(reply.data))
+    throw new Error('DRIVER_FOUNDATION_PROCESS_PROVENANCE_REQUIRED');
+  return structuredClone(reply.data);
+}
+// Applied to the actual visitor context, independently of the inert response parser.
+export function actorBrowserOptions(storageState, javaScriptEnabled = true) {
+  if (typeof javaScriptEnabled !== 'boolean') throw new Error('DRIVER_JAVASCRIPT_POLICY_INVALID');
+  return { storageState, javaScriptEnabled, serviceWorkers: 'block', acceptDownloads: false };
+}
+export function responseReportBody(status, raw, parsed) {
+  if (status === 304) {
+    if (raw.length) throw new Error('DRIVER_NOT_MODIFIED_BODY_NOT_EMPTY');
+    return '';
+  }
+  return parsed || raw;
+}
 const backupActions = new Set(['run-isolated-backup-job', 'fail-isolated-backup-stage', 'block-isolated-backup-storage',
   'corrupt-isolated-backup-object', 'remove-isolated-backup-manifest-object', 'release-isolated-backup-barrier']);
 const htmlBuildActions = new Set(['run-isolated-html-build', 'set-html-build-fault', 'clear-html-build-fault',
   'hold-html-build-phase', 'release-html-build-phase', 'drain-isolated-html-jobs']);
+const logMaintenanceActions = new Set(['run-isolated-log-maintenance', 'hold-log-maintenance-phase',
+  'release-log-maintenance-phase', 'set-log-storage-fault', 'clear-log-storage-fault', 'advance-log-test-time']);
+const backgroundActions = new Set(['start-isolated-job-invocation', 'hold-isolated-job-phase',
+  'release-isolated-job-barrier', 'fail-isolated-job-phase', 'clear-isolated-job-fault', 'advance-background-test-time']);
+const restoreActions = new Set(['set-isolated-restore-fault', 'clear-isolated-restore-fault',
+  'prepare-isolated-external-restore', 'confirm-isolated-external-restore',
+  'confirm-isolated-restore-loss', 'complete-isolated-identity-recovery', 'prepare-isolated-restore-write-probe']);
+const logDeletionActions = new Set(['set-log-delete-file-fault', 'clear-log-delete-file-fault']);
+const urlTransitionActions = new Set(['set-url-transition-fault', 'clear-url-transition-fault',
+  'hold-url-transition-reconciliation', 'release-url-transition-reconciliation',
+  'hold-url-route-worker', 'release-url-route-worker']);
+const serviceQuotaActions = new Set(['run-isolated-service-cleanup', 'advance-service-test-time', 'drain-isolated-service-workers']);
+const contentStorageActions = new Set(['set-content-storage-fault', 'clear-content-storage-fault']);
 export const infrastructureControlActions = new Set([
   'advance-infrastructure-time', 'stop-isolated-component', 'start-isolated-component',
   'block-readiness-channel', 'unblock-readiness-channel', 'replay-captured-readiness-result',
@@ -16,11 +71,18 @@ export const infrastructureControlActions = new Set([
   'rollback-isolated-app-edge-to-valid-old-snapshot', 'hold-front-switch-confirmation',
   'release-front-switch-confirmation', 'block-telegram-transport', 'fail-front-switch-application',
   'hold-response-after-gate-admission', 'release-admitted-response', 'stop-isolated-host-zone',
-  ...backupActions, ...htmlBuildActions,
+  ...backupActions, ...htmlBuildActions, ...logMaintenanceActions, ...backgroundActions, ...restoreActions, ...logDeletionActions, ...urlTransitionActions, ...serviceQuotaActions, ...contentStorageActions,
 ]);
 export function controlCapability(action) {
   if (backupActions.has(action)) return 'backup-control-v1';
   if (htmlBuildActions.has(action)) return 'html-build-control-v1';
+  if (logMaintenanceActions.has(action)) return 'log-maintenance-control-v1';
+  if (backgroundActions.has(action)) return 'background-job-control-v1';
+  if (restoreActions.has(action)) return 'restore-control-v1';
+  if (logDeletionActions.has(action)) return 'log-deletion-control-v1';
+  if (urlTransitionActions.has(action)) return 'url-transition-control-v1';
+  if (serviceQuotaActions.has(action)) return 'service-quota-control-v1';
+  if (contentStorageActions.has(action)) return 'content-storage-control-v1';
   if (infrastructureControlActions.has(action)) return 'fallback-control-v1';
   throw new Error('DRIVER_CONTROL_ACTION_NOT_ALLOWED');
 }
@@ -78,6 +140,14 @@ export function validateBindings(value, baseURL) {
     throw new Error('DRIVER_BINDINGS_INCOMPLETE');
   if (!value.profiles.every(name => typeof name === 'string' && /^[a-zA-Z0-9_-]+$/.test(name)))
     throw new Error('DRIVER_INVALID_PROFILE');
+  for (const [name, observation] of Object.entries(value.observations)) {
+    if ((foundationProcessViews.has(name) || observation.kind === 'process-read') &&
+      (!foundationProcessViews.has(name) || observation.kind !== 'process-read' || Object.keys(observation).some(key => key !== 'kind')))
+      throw new Error('DRIVER_FOUNDATION_PROCESS_DECLARATION_INVALID');
+    if ((name === 'editor-memory-state' || observation.kind === 'ui-memory') &&
+      (name !== 'editor-memory-state' || observation.kind !== 'ui-memory' || Object.keys(observation).some(key => key !== 'kind')))
+      throw new Error('DRIVER_MEMORY_OBSERVATION_INVALID');
+  }
   for (const profile of ['page-history-restore', 'controlled-session-boundary']) {
     if (!value.profiles.includes(profile)) continue;
     const setup = value.profileSetups?.[profile];
@@ -99,11 +169,16 @@ export function validateBindings(value, baseURL) {
       throw new Error('DRIVER_RESULT_RULES_REQUIRED');
     if (!['html', 'json'].includes(operation.result.format)) throw new Error('DRIVER_RESULT_FORMAT_REQUIRED');
     for (const rule of operation.result.outcomes) {
-      if (!['accepted', 'denied', 'conflict', 'pending'].includes(rule.outcome)) throw new Error('DRIVER_INVALID_OUTCOME');
+      if (!['accepted', 'denied', 'conflict', 'pending', 'not-modified'].includes(rule.outcome)) throw new Error('DRIVER_INVALID_OUTCOME');
       if (!Array.isArray(rule.statuses) || !rule.statuses.length || rule.statuses.some(status => !Number.isInteger(status) || status < 100 || status > 599))
         throw new Error('DRIVER_RESULT_STATUSES_REQUIRED');
       // 2xx/login/static HTML is not enough to claim a successful business operation.
-      if (!rule.marker && !rule.jsonEquals) {
+      if (rule.outcome === 'not-modified') {
+        if (operation.kind !== 'http' || operation.method !== 'GET' || operation.followRedirectGet || operation.result.format !== 'html' ||
+          !Object.keys(operation.headers || {}).some(key => key.toLowerCase() === 'if-none-match') ||
+          rule.statuses.length !== 1 || rule.statuses[0] !== 304 || rule.marker || rule.jsonEquals)
+          throw new Error('DRIVER_CONDITIONAL_GET_REQUIRED');
+      } else if (!rule.marker && !rule.jsonEquals) {
         if (['accepted', 'pending'].includes(rule.outcome) || !Array.isArray(rule.statuses) || !rule.statuses.length ||
           rule.statuses.some(status => ![400, 401, 403, 404, 409, 422, 429].includes(status)))
           throw new Error('DRIVER_ACTUAL_RESULT_MARKER_REQUIRED');
@@ -146,7 +221,7 @@ export async function guardUiPreparation({ readState, prepare, subscribe }) {
 }
 
 export function validateControlAdmission(admission, { controlBase, runId, session, capability = 'fallback-control-v1' }) {
-  if (!['fallback-control-v1', 'backup-control-v1', 'html-build-control-v1'].includes(capability)) throw new Error('DRIVER_CONTROL_CAPABILITY_NOT_SUPPORTED');
+  if (!['fallback-control-v1', 'backup-control-v1', 'html-build-control-v1', 'log-maintenance-control-v1', 'background-job-control-v1', 'restore-control-v1', 'log-deletion-control-v1', 'url-transition-control-v1', 'service-quota-control-v1', 'content-storage-control-v1'].includes(capability)) throw new Error('DRIVER_CONTROL_CAPABILITY_NOT_SUPPORTED');
   if (admission?.arc10Verified !== true || admission.isolatedInfrastructure !== true ||
     !Array.isArray(admission.capabilities) || !admission.capabilities.includes(capability) ||
     !admission.reviewedEvidenceId || admission.controlOrigin !== controlBase.origin || admission.runId !== runId ||
@@ -176,6 +251,25 @@ export function validateStorage(storage, base) {
     if (origin.localStorage?.length) throw new Error('DRIVER_PERSISTENT_FIXTURE_STORAGE_FORBIDDEN');
   }
   return storage;
+}
+
+// A fixture credential handoff, not a way to create users/rights or simulate a restore result.
+export function validateRestoreProbeSession(reply, { runId, operationId, grantRef, base, previousCookieValues }) {
+  const e = reply?.evidence, d = reply?.data;
+  if (reply?.source !== 'actual-fixture' || reply.runId !== runId || d?.operationId !== operationId ||
+    d?.grantRef !== grantRef || d?.actor !== 'OWNER-RESTORE-PROBE' ||
+    e?.preparationPhase !== 'fresh-framework-session-after-restore-invalidation' ||
+    e?.rightsChanged !== false || e?.businessDataChanged !== false ||
+    !Number.isSafeInteger(e?.invalidationSequence) || e.invalidationSequence < 0 || !Number.isSafeInteger(e?.sessionCreatedSequence) ||
+    e.sessionCreatedSequence <= e.invalidationSequence || typeof e?.frameworkEvidenceId !== 'string' || !e.frameworkEvidenceId)
+    throw new Error('DRIVER_RESTORE_PROBE_EVIDENCE_REQUIRED');
+  validateStorage(d.actorState?.storageState, base);
+  if (d.actorState.storageState.origins.length) throw new Error('DRIVER_RESTORE_PROBE_PERSISTENT_STORAGE_FORBIDDEN');
+  const sessionCookies = d.actorState.storageState.cookies.filter(cookie => cookie.name === d.sessionCookieName);
+  if (typeof d.sessionCookieName !== 'string' || !d.sessionCookieName || sessionCookies.length !== 1 ||
+    typeof sessionCookies[0].value !== 'string' || sessionCookies[0].value.length < 8 ||
+    previousCookieValues.has(sessionCookies[0].value)) throw new Error('DRIVER_RESTORE_PROBE_FRESH_COOKIE_REQUIRED');
+  return structuredClone(d.actorState);
 }
 
 // Only a reviewed test fixture/observer entrypoint under the acceptance directory.

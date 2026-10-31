@@ -1,0 +1,1 @@
+{% extends 'accounts/base.html' %}{% block content %}{% include 'page_versions/_nav.html' %}<section data-owner-draft="{{ draft.pk }}"><h1>Личный черновик владельца</h1><p>Основа: {{ draft.base_revision_id }}. Это отдельный черновик, он не опубликован и не входит в историю сотрудников.</p><pre class="version-data">{{ payload_json }}</pre></section>{% endblock %}

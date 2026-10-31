@@ -1,0 +1,15 @@
+{% extends 'accounts/base.html' %}{% block content %}
+<link rel="stylesheet" href="/manage/editor-assets/editor.css" data-editor-stylesheet>
+<section data-editor-page data-page-id="{{ page_id }}">
+<h1>Редактор: {{ page.name }}</h1><p>Изменения сохраняются только после проверки и явного нажатия «Сохранить».</p>
+<p><a href="{% url 'page_versions:history' page_id %}">История и Stable</a></p>
+<p role="status" data-editor-status>Загрузка редактора…</p><p data-editor-dirty>Нет несохранённых изменений</p>
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+{% for field in fields %}<section data-editor-field="{{ field.name }}">
+<h2>{% if field.name == 'intro_text' %}Вводный текст{% else %}Основной текст{% endif %}</h2>
+<div data-editor-mount></div>
+</section>{% endfor %}
+<noscript>Для визуального редактора требуется JavaScript. Введённые данные автоматически не отправляются.</noscript>
+</section>{{ initial_state|json_script:'editor-initial-state' }}
+<script type="module" src="/manage/editor-assets/editor-bridge.mjs"></script>
+{% endblock %}
