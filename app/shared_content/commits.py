@@ -10,13 +10,17 @@ from .models import SharedBlock, SharedRevision, SharedDraft, SharedRestoreStage
 from .policy import POLICY, canonical_uuid
 
 
-def _context(actor, kind, generation, before, session_key):
+def _context(actor, kind, generation, before, session_key, action):
     R.assert_connection()
-    after = S.context_locked(actor=actor, kind=kind, generation=generation,
-        source_mode=before.child['sourceMode'], draft_basis=before.child['draftBasis'], stage_id=before.child['stageId'])
+    if action == 'restore_cancel':
+        after = S.cancel_context_locked(actor=actor, kind=kind, generation=generation,
+                                       stage_id=before.child['stageId'])
+    else:
+        after = S.context_locked(actor=actor, kind=kind, generation=generation,
+            source_mode=before.child['sourceMode'], draft_basis=before.child['draftBasis'], stage_id=before.child['stageId'])
     check_editor_session(actor, generation, session_key)
-    if after.stamp != before.stamp or after.current_id != before.child['baseRevisionId']:
-        raise SharedFault('SHARED_CONTEXT_CONFLICT')
+    if after.stamp != before.stamp or (action != 'restore_cancel' and after.current_id != before.child['baseRevisionId']):
+        raise SharedFault('SHARED_SOURCE_UNAVAILABLE' if action == 'restore_cancel' else 'SHARED_CONTEXT_CONFLICT')
     return after
 
 
@@ -53,7 +57,7 @@ def _run(*, actor, kind, generation, before, session_key, action, operation_id, 
                 return prior
             try:
                 with transaction.atomic():
-                    after = _context(actor, kind, generation, before, session_key)
+                    after = _context(actor, kind, generation, before, session_key, action)
                     validate(after)
             except SharedFault as exc:
                 exc.operation_not_started = True
@@ -72,14 +76,15 @@ def _run(*, actor, kind, generation, before, session_key, action, operation_id, 
                     R.check_measurement(R.sample('blob', held_books=[record]))
                 R.require_lease(lease)
                 with transaction.atomic():
-                    after = _context(actor, kind, generation, before, session_key)
+                    after = _context(actor, kind, generation, before, session_key, action)
                     validate(after)
                     _checkpoint('before_metadata', record)
                     R._fault_boundary('before_metadata')
                     result_id, source_id, result_revision = mutate(after, descriptor, record)
                     receipt = C.finish(actor=actor, generation=generation, context=after, action=action,
                         operation_id=operation_id, fingerprint=fingerprint, result_id=result_id,
-                        source_id=source_id, result_revision=result_revision, reservation=record)
+                        source_id=source_id, result_revision=result_revision, reservation=record,
+                        result_code='released' if action == 'restore_cancel' else 'applied')
                     R._fault_boundary('metadata_written')
                 committed = True
                 R._fault_boundary('db_committed')
@@ -190,6 +195,41 @@ def write_checked(*, actor, kind, generation, before, raw_input, result, media_s
     return _run(actor=actor, kind=kind, generation=generation, before=before, session_key=session_key,
         action=action, operation_id=operation_id, fingerprint=fingerprint, new_refs=len(result['bindings']),
         validate=validate, mutate=mutate, html=result['html'])
+
+
+def cancel_restore_stage(*, actor, kind, generation, stage_id, operation_id, confirmed, session_key):
+    if confirmed is not True or type(generation) is not int or generation < 1:
+        raise SharedFault('SHARED_INPUT_REJECTED', 400, operation_not_started=True)
+    try:
+        stage_id = UUID(canonical_uuid(str(stage_id)))
+        operation_id = UUID(canonical_uuid(str(operation_id)))
+    except (ValueError, TypeError):
+        raise SharedFault('SHARED_INPUT_REJECTED', 400, operation_not_started=True) from None
+    fingerprint = C.cancel_fingerprint(generation=generation, stage_id=stage_id)
+    prior = C.lookup_replay(actor=actor, kind=kind, generation=generation, action='restore_cancel',
+        operation_id=operation_id, fingerprint=fingerprint, session_key=session_key)
+    if prior is not None:
+        return C.reconcile_replay(actor=actor, generation=generation, session_key=session_key, value=prior)
+    try:
+        before = S.inspect_cancel_context(actor=actor, kind=kind, generation=generation, stage_id=stage_id)
+    except SharedFault as exc:
+        exc.operation_not_started = True
+        raise
+
+    def validate(after):
+        if after.child['stageId'] != str(stage_id):
+            raise SharedFault('SHARED_SOURCE_UNAVAILABLE')
+
+    def mutate(after, descriptor, record):
+        stage = SharedRestoreStage.objects.select_for_update().get(pk=stage_id, block_id=after.block_id, status='held')
+        C.raw(SharedRestoreStage).filter(pk=stage.pk).update(status='released',
+            terminal_operation_id=operation_id, terminal_actor_id=actor.pk)
+        C.raw(SharedBasePin).filter(holder_kind='restore_stage', holder_id=stage.pk).delete()
+        return None, stage.source_revision_id, None
+
+    return _run(actor=actor, kind=kind, generation=generation, before=before, session_key=session_key,
+        action='restore_cancel', operation_id=operation_id, fingerprint=fingerprint,
+        new_refs=0, validate=validate, mutate=mutate)
 
 
 def prepare_restore(*, actor, kind, generation, before, source_id, operation_id, confirmed, session_key):

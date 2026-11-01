@@ -1,6 +1,7 @@
 import {createEditor} from './carrier-editor.mjs';
 import {mountMediaControls} from './media-editor.mjs';
 import {mountEmbeddedControls,createImageQueue,approvedEmbedded} from './embedded-editor.mjs';
+import {mountPriceEditor} from './price-editor.mjs';
 
 const LABELS={intro_text:'Вводный текст',main_text:'Основной текст'};
 const FONTS=[['inter','Inter'],['oswald','Oswald'],['arial','Arial'],['georgia','Georgia'],['times-new-roman','Times New Roman'],['courier-new','Courier New']];
@@ -30,7 +31,7 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
   const show=text=>{status.textContent=text;};
   const error=exception=>{const code=typeof exception?.code==='string'?exception.code:'';const key=Object.hasOwn(STATUS_ALIASES,code)?STATUS_ALIASES[code]:code;show((Object.hasOwn(STATUS,key)?STATUS[key]:null)||(viewErrors.size?'Не удалось обновить визуальное оформление. Ввод сохранён в памяти. Нажмите «Проверить» перед сохранением.':'Действие не выполнено. Ввод остаётся в открытой вкладке. Проверьте данные перед повторной попыткой.'));};
   function inputs(){return Object.fromEntries([...editors].map(([field,editor])=>[field,editor.getInput()]));}
-  function changes(){return {...initialState.values,...Object.fromEntries(Object.entries(inputs()).map(([field,input])=>[field,input.html]))};}
+  function changes(){return {...initialState.values,...Object.fromEntries(Object.entries(inputs()).map(([field,input])=>[field,input.html])),...(priceControls?{price:priceControls.read()}:{} )};}
   const retryButton=button('Повторить проверку результата прежней отправки',()=>{});retryButton.hidden=true;retryButton.dataset.editorAction='retry-intent';actions.append(retryButton);
   function invalidate(){if(applying)return;epoch++;accepted=null;pending=null;review.hidden=true;dirty.textContent='Есть несохранённые изменения.';}
   function adapterFailure(field,exception){
@@ -44,12 +45,15 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
     if(epoch!==capturedEpoch)fail('CHECK_CHANGED');
     if(!result||!result.normalisedChanges||typeof result.checkReceipt!=='string')fail('EDITOR_CHECK_RESPONSE_INVALID');
     const nextMaps=result.embeddedMedia??initialState.embeddedMedia??{intro_text:[],main_text:[]};
+    if(priceControls&&!Object.hasOwn(result.normalisedChanges,'price'))fail('EDITOR_CHECK_RESPONSE_INVALID');
+    if(!priceControls&&Object.hasOwn(result.normalisedChanges,'price'))fail('EDITOR_CHECK_RESPONSE_INVALID');
+    const nextPrice=priceControls?priceControls.validate(result.normalisedChanges.price):undefined;
     for(const [field,editor] of editors){if(typeof result.normalisedChanges[field]!=='string')fail('EDITOR_CHECK_RESPONSE_INVALID');approvedEmbedded(nextMaps[field]||[],{pageId:initialState.pageId});editor.validateApprovedHtml(result.normalisedChanges[field],{approvedEmbedded:nextMaps[field]||[]});}
     // Prepare every response before replacing anything. A failed field never
     // triggers publication; root can retain/restore its own versioned state.
-    const previous=inputs();applying=true;
-    try{for(const [field,editor] of editors)editor.setApprovedHtml(result.normalisedChanges[field],{emitDirty:false,approvedEmbedded:nextMaps[field]||[]});}
-    catch(exception){for(const [field,editor] of editors)editor.setRawHtml(previous[field].html);throw exception;}
+    const previous=inputs(),previousPrice=priceControls?.read();applying=true;
+    try{for(const [field,editor] of editors)editor.setApprovedHtml(result.normalisedChanges[field],{emitDirty:false,approvedEmbedded:nextMaps[field]||[]});if(priceControls)priceControls.accept(nextPrice);}
+    catch(exception){for(const [field,editor] of editors)editor.setRawHtml(previous[field].html);if(priceControls)priceControls.accept(previousPrice);throw exception;}
     finally{applying=false;}
     viewErrors.clear();
     Object.assign(initialState.values,structuredClone(result.normalisedChanges));
@@ -89,6 +93,9 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
     for(const [name,label] of [['mt','Отступ сверху'],['mr','Отступ справа'],['mb','Отступ снизу'],['ml','Отступ слева']]){const input=document.createElement('input');input.type='number';input.min='0';input.max='64';input.step='1';input.setAttribute('aria-label',label+', px');input.addEventListener('change',()=>command(name,input.value));toolbar.append(input);}
     const link=document.createElement('input');link.type='text';link.setAttribute('aria-label','Адрес ссылки');toolbar.append(link,button('Добавить ссылку',()=>command('link',{href:link.value,target:'_self'})),button('Убрать ссылку',()=>command('removeLink')));
     toolbar.append(button('HTML',()=>{try{editor.setMode('html');show('HTML редактируется только в памяти. Для возврата в визуальный режим выполните проверку.');}catch(exception){error(exception);}}),button('Визуальный режим',()=>{try{editor.setMode('visual');}catch{show('Сначала нажмите «Проверить» и примите подготовленный вариант.');}}));
+    for(const [label,name,action]of[['Вставить простую таблицу','tableInsert','insert'],['Добавить строку таблицы','tableAddRow','add-row'],['Удалить строку таблицы','tableDeleteRow','delete-row'],['Добавить колонку таблицы','tableAddColumn','add-column'],['Удалить колонку таблицы','tableDeleteColumn','delete-column']]){const control=button(label,()=>command(name));control.dataset.editorTableAction=action;toolbar.append(control);}
+    const tablePad=document.createElement('input');tablePad.type='text';tablePad.inputMode='numeric';tablePad.value='4';tablePad.dataset.editorTablePadding='';tablePad.setAttribute('aria-label','Отступ ячеек таблицы, px');const tablePadLabel=document.createElement('label');tablePadLabel.append(document.createTextNode('Отступ ячеек таблицы, px '),tablePad);const tablePadButton=button('Применить отступ ячеек',()=>command('tablePadding',tablePad.value));tablePadButton.dataset.editorTableAction='padding';toolbar.append(tablePadLabel,tablePadButton);
+    editor.bindTablePaddingControls(tablePad,tablePadButton);
   }
   const mediaControls=mountMediaControls({root,before:actions,initial:initialState,run:guarded,listMedia,sourceUrl:mediaSourceUrl,invalidate,queueImage:imageQueue,
     canEdit:()=>!destroyed&&!identityChanged});
@@ -100,9 +107,11 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
     const editor=createEditor(mount,{approvedHtml:state.approvedHtml??'',owner:initialState.owner,field,pageId:initialState.pageId,approvedEmbedded:initialState.embeddedMedia?.[field]||[],queueImage:imageQueue,embeddedSourceUrl:mediaSourceUrl,styleSheet,onDirty:invalidate,onError:exception=>adapterFailure(field,exception),onUntrustedInput:stageUntrusted});editors.set(field,editor);controls(host,editor,field);
     if(state.approvedHtml===null){applying=true;try{editor.setRawHtml(state.rawHtml);}finally{applying=false;}}
   }
-  if(!editors.size)fail('EDITOR_FIELDS_REQUIRED');
+  if(!editors.size&&!Object.hasOwn(initialState.values,'price'))fail('EDITOR_FIELDS_REQUIRED');
   const embeddedControls=mountEmbeddedControls({root,initial:initialState,editors,run:guarded,listMedia,issueEmbedded,queueImage:imageQueue,
     getEpoch:()=>epoch,invalidate,canEdit:()=>!destroyed&&!identityChanged&&!uncertain&&!initialState.draftCancelled});
+  const priceControls=Object.hasOwn(initialState.values,'price')?mountPriceEditor({root,before:actions,initial:initialState.values.price,
+    invalidate,canEdit:()=>!destroyed&&!identityChanged&&!uncertain&&!initialState.draftCancelled,onError:error}):null;
   async function prepare(intent){
     if(!embeddedControls.valid()){show('Подтвердите или отмените выбор изображения внутри текста перед проверкой.');return null;}
     if(!mediaControls.valid()){show('Подтвердите или отмените выбор фото и исправьте его описание и размеры перед проверкой.');return null;}
@@ -198,6 +207,7 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
     for(const node of root.querySelectorAll('textarea,input,pre')){if('value' in node)node.value='';else node.textContent='';}
   }
   function changedIdentity(){
+    priceControls?.destroy();
     embeddedControls.destroy();imageQueue.destroy();
     mediaControls.destroy();
     identityChanged=true;clearOwnedCopies();uncertain=null;accepted=null;pending=null;retryButton.hidden=true;review.replaceChildren();review.hidden=true;
@@ -213,7 +223,7 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
     accepted=null;pending=null;review.hidden=true;
     show('Вход выполнен. Проверьте актуальные права и данные, затем сохраните изменения явно.');
   })));
-  const externalInput=event=>{if(!event.target.closest?.('[data-editor-field]')&&!review.contains(event.target))invalidate();};
+  const externalInput=event=>{if(!event.target.closest?.('[data-editor-field],[data-price-editor]')&&!review.contains(event.target))invalidate();};
   root.addEventListener('input',externalInput);
   const sourceNavigation=event=>{
     const anchor=event.target.closest?.('a[data-editor-source-link]');if(!anchor||!root.contains(anchor))return;
@@ -223,5 +233,5 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,c
   };
   root.addEventListener('click',sourceNavigation);
   return Object.freeze({editors,getInputs:inputs,getChanges:changes,invalidate,
-    destroy(){if(destroyed)return;destroyed=true;embeddedControls.destroy();imageQueue.destroy();mediaControls.destroy();clearOwnedCopies();uncertain=null;accepted=null;pending=null;root.removeEventListener('input',externalInput);root.removeEventListener('click',sourceNavigation);for(const editor of editors.values())editor.destroy();editors.clear();review.replaceChildren();for(const node of owned)node.remove();}});
+    destroy(){if(destroyed)return;destroyed=true;priceControls?.destroy();embeddedControls.destroy();imageQueue.destroy();mediaControls.destroy();clearOwnedCopies();uncertain=null;accepted=null;pending=null;root.removeEventListener('input',externalInput);root.removeEventListener('click',sourceNavigation);for(const editor of editors.values())editor.destroy();editors.clear();review.replaceChildren();for(const node of owned)node.remove();}});
 }

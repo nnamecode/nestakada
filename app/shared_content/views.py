@@ -10,7 +10,7 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from accounts.views import gate
 from accounts.services import require_session
-from editor_runtime.guards import EditorFault, EditorSlot, input_profile, read_json_bytes
+from editor_runtime.guards import EditorFault, EditorSlot, InputProfile, input_profile, read_json_bytes
 from editor_runtime.processing import normalize_input, strict_json, ProcessingRejected
 from . import services as S, commands as C, quota
 from .faults import SharedFault
@@ -230,6 +230,25 @@ def draft(request, kind):
 @guarded
 def apply(request, kind):
     return write(request, kind, 'apply')
+
+
+@require_POST
+@guarded
+def restore_cancel(request, kind, stage_id):
+    with EditorSlot():
+        value = cancel_input(request, kind)
+        return operation_response(C.cancel_restore_stage(actor=request.user, kind=kind,
+            generation=request.auth_generation, stage_id=stage_id, operation_id=value['operationId'],
+            confirmed=value['confirmCancel'], session_key=request.session.session_key))
+
+
+@before_book
+def cancel_input(request, kind):
+    if request.META.get('QUERY_STRING'):
+        raise SharedFault('SHARED_INPUT_REJECTED', 400)
+    S.inspect_admission(actor=request.user, kind=kind, generation=request.auth_generation)
+    raw = read_json_bytes(request, InputProfile(16384))
+    return C.parse_cancel_request(raw, generation=request.auth_generation)
 
 
 @require_POST

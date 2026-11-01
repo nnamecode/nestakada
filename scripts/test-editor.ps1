@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-cleanup','shared-public','shared-calibration','unicode','parser','entity','editor','all')][string]$Suite='save')
+param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-cleanup','shared-cancel','shared-public','shared-calibration','unicode','parser','entity','editor','all')][string]$Suite='save')
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=Join-Path $repo 'work/foundation/test'
@@ -20,7 +20,7 @@ if($LASTEXITCODE -ne 0 -or $actual.Id -ne $image){throw 'Pinned candidate requir
 $network=docker.exe network inspect nestakada-foundation-test-db|ConvertFrom-Json
 if($LASTEXITCODE -ne 0 -or !$network.Internal -or $network.Labels.'nestakada.scope' -ne 'foundation-test'){throw 'Private test DB network required'}
 $quotaArgs=@()
-if($Suite -in @('shared-reservation','shared-cleanup','shared-public','shared-calibration','shared','all')){
+if($Suite -in @('shared-reservation','shared-cleanup','shared-cancel','shared-public','shared-calibration','shared','all')){
     $stateVolume=@(docker.exe volume inspect nestakada-foundation-test-state|ConvertFrom-Json)[0]
     if($LASTEXITCODE -ne 0 -or !$stateVolume -or $stateVolume.Name -ne 'nestakada-foundation-test-state' -or
        $stateVolume.Driver -ne 'local' -or $stateVolume.Labels.'nestakada.scope' -ne 'foundation-test'){throw 'Existing private test state volume required'}
@@ -62,7 +62,12 @@ elseif($Suite -eq 'shared-provenance'){$dockerArgs+=@('shared_content.test_share
 elseif($Suite -eq 'shared-journal'){$dockerArgs+=@('shared_content.test_shared_journal','--failfast')}
 elseif($Suite -eq 'shared-reservation'){$dockerArgs+=@('shared_content.test_shared_reservation','--failfast')}
 elseif($Suite -eq 'shared-cleanup'){$dockerArgs+=@('shared_content.test_shared_cleanup.SharedCleanupStorageTests','shared_content.test_shared_cleanup.SharedCleanupTests','--failfast')}
+elseif($Suite -eq 'shared-cancel'){$dockerArgs+=@('shared_content.test_shared_cancel','--failfast')}
 elseif($Suite -eq 'shared-public'){$dockerArgs+=@('shared_content.test_shared_public','--failfast')}
+elseif($Suite -eq 'price-gui'){$dockerArgs+=@('page_editor.test_price_gui_http','--failfast')}
+elseif($Suite -eq 'table-gui'){$dockerArgs+=@('page_editor.test_table_gui_http','--failfast')}
+elseif($Suite -eq 'restore-terminal'){$dockerArgs+=@('page_editor.test_restore_terminal_http','--failfast')}
+elseif($Suite -eq 'terminal-ui'){$dockerArgs+=@('page_editor.test_terminal_ui_http','page_editor.test_restore_terminal_http','page_versions.test_http','--failfast')}
 elseif($Suite -eq 'shared-calibration'){$dockerArgs+=@('shared_content.test_shared_calibration','shared_content.test_shared_cleanup.SharedCleanupCalibrationTests','--failfast')}
 elseif($Suite -eq 'unicode'){$dockerArgs+=@('page_editor.test_unicode_admission','--failfast')}
 elseif($Suite -eq 'parser'){$dockerArgs+=@('page_editor.test_html_parser','--failfast')}

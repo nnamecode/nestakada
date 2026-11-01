@@ -13,7 +13,7 @@ from accounts.services import lock_auth
 from content.models import lock_content
 from media_library.models import Asset, AssetFile
 from media_library.storage import MediaStorage
-from .models import SharedBlock, SharedRevision, SharedDraft, SharedRestoreStage
+from .models import SharedBlock, SharedRevision, SharedDraft, SharedRestoreStage, SharedBasePin
 from .faults import SharedFault
 from .policy import POLICY, PROTOCOL, canonical_uuid
 from .content import descriptor_for, content_html
@@ -110,6 +110,39 @@ def context_locked(*, actor, kind, generation, source_mode='current', draft_basi
         'actor': actor.pk, 'context': child, 'sourceHash': selected_hash, 'sourceDescriptor': descriptor})
     return SharedContext(actor.pk, str(block.pk), kind, generation,
         str(block.current_revision_id) if block.current_revision_id else None, '', stamp, child, descriptor)
+
+
+def cancel_context_locked(*, actor, kind, generation, stage_id):
+    admission = admission_locked(actor=actor, kind=kind, generation=generation)
+    stage = SharedRestoreStage.objects.select_for_update().filter(pk=UUID(canonical_uuid(str(stage_id))),
+        block_id=admission.block_id, actor_id=actor.pk, actor_generation=generation, status='held',
+        terminal_operation_id__isnull=True, terminal_actor_id__isnull=True).first()
+    if stage is None:
+        raise SharedFault('SHARED_SOURCE_UNAVAILABLE')
+    expected = {stage.source_revision_id, stage.base_revision_id} - {None}
+    pins = list(SharedBasePin.objects.filter(holder_id=stage.pk)
+                .order_by('id').values_list('id', 'revision_id', 'holder_kind'))
+    if (len(pins) != len(expected) or {row[1] for row in pins} != expected
+            or any(row[2] != 'restore_stage' for row in pins)):
+        raise SharedFault('SHARED_SOURCE_UNAVAILABLE')
+    child = {'processor': PROTOCOL, 'kind': kind, 'generation': generation,
+        'baseRevisionId': str(stage.base_revision_id) if stage.base_revision_id else None,
+        'sourceMode': 'restore-stage', 'draftBasis': None, 'stageId': str(stage.pk), 'policy': POLICY}
+    stamp = digest({'action': 'restore_cancel', 'stage': str(stage.pk), 'block': admission.block_id,
+        'actor': actor.pk, 'generation': generation, 'source': str(stage.source_revision_id),
+        'base': child['baseRevisionId'], 'status': stage.status, 'schema': stage.schema_version,
+        'policy': stage.policy_version, 'terminalOperation': None, 'terminalActor': None,
+        'pins': [[str(identity), str(revision), holder] for identity, revision, holder in pins]})
+    block = SharedBlock.objects.only('current_revision_id').get(pk=admission.block_id)
+    return SharedContext(actor.pk, admission.block_id, kind, generation,
+        str(block.current_revision_id) if block.current_revision_id else None, '', stamp, child)
+
+
+def inspect_cancel_context(**kwargs):
+    if connection.in_atomic_block:
+        raise SharedFault('SHARED_CALL_FROM_AUTOCOMMIT', 503)
+    with transaction.atomic():
+        return cancel_context_locked(**kwargs)
 
 
 def inspect_context(**kwargs):

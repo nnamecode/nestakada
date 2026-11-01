@@ -1,5 +1,83 @@
 # DEV-07 — независимое ревью, работа продолжается
 
+## DEV07-CLOSE-03: мобильная ширина, 2026-11-01
+
+Независимо проверены precode RP07-001–005,2tools/неизменная normal fixture и actual DOM A/B/A406→390→406: lastnavlink405.9px, navclient366/scroll394 при390. CSS diff ровно25bytes main>nav{flex-wrap:wrap}, original1432bytes unchanged;231before/after source manifests различаются толькоmanage.css. Actualverify FIRST PASS5групп/45измерений/9состояний×5ширин, root widths точно viewport и controls outside0; candidate отсутствует. Рецензент лично просмотрел2diagnostic+4verify PNG, price local scroll/desktop fits/simple table fits/terminalбезcanary подтверждены. Published domain/version audit/Shared baseline неизменны, cleanup scoped/permanent ledgers сохранены, config/QA drift0. [Результат](dev07-responsive-results.md): CLOSE-03 выполнен, остаётся CLOSE-04; полные TEST09/10 и production не закрыты.
+
+## DEV07-CLOSE-02: отмена собственного shared stage, 2026-11-01
+
+Pre-code и product review положительные: metadata-only cancel, fresh session/generation, exact pins/stamp, отдельная cancel ветка без ослабления прежних writers, same RC book/reserve4MiB/nullable released receipt, atomic terminal/pins/audit/quota, fingerprint-bound ACK. UI confirm/RAM/manual exact retry/terminal block и отдельная вкладка актуального источника проверены. QA review допустил7 framework/2 native; первый fixture FAIL сохранён, однострочная правка draft=False независимо подтверждена. SC-QA001 Budget cache oracle исправлен до native без reset. Рецензент лично подтвердил7 PASS178.456s,3 raw observations/170events без превышений; native2 FIRST PASS/6negatives/cleanup, source231/config/QA drift0.13 reservation regressions PASS144.268s. Actual quota655360/0snap/0held/0debt отделена от stale cache после synthetic teardown, permanents24/66/857 сохранены. [Итог и границы](dev07-shared-cancel-results.md); CLOSE-03/04, TEST09/10 и production не закрыты.
+
+## DEV07-CLOSE-01: обычная локальная интеграция, 2026-11-01
+
+Независимо проверены минимальный product/config diff, receipt admission и закрытый QA-инструмент; затем лично сверены фактические 20 framework PASS и 8 успешных NH07-групп, source230/config10/QA3 drift0. Exact BUSY141ms, app deadline120172ms/408 при drip5s, FD4→4 и healthy Check подтверждены. Cleanup сохранил Shared baseline/system route/permanent ledgers. Блокеров CLOSE-01 нет; особенность NH008.status=HTTP408 явно отражена в [итоге](dev07-normal-profile-results.md). Shared Apply/CLOSE-02/03/04, TEST09/10 и production не объявляются завершёнными.
+
+## DEV07-CLOSE-AUDIT: независимая сверка завершения, 2026-11-01
+
+По D-363 независимо сопоставлены implementation-plan §4–6, delivery/supporting/verification AC, текущая normal-конфигурация и фактические результаты последних инкрементов. [Конечный список](dev07-completion-audit.md): CLOSE-01 обычная интеграция runtime/routes/templates/admission/transport; CLOSE-02 предусмотренный shared stage cancel; CLOSE-03 атрибуция/исправление известного406px overflow; CLOSE-04 один ограниченный normal-profile компонентный набор и итоговое ревью. Это четыре запланированных блока, не факт их реализации.
+
+NH001–003 подтверждены чтением urls/settings/requirements/runtime wrapper/ingress: product URLConf не подключает editor/http_urls/assets, template/admission discovery отсутствуют, normal094 runtime не получает approvededitorpackages изcandidate782, normalingress не подключает D331 large-route/reader связку. Actual404/503 обычного стенда в аудите не измерялись. Уточнено: Nginx64MiB/streaming — точный allowlist3PagePOST; text5MiB/shared4MiB — application reader budgets, Shared под согласованным outer11MiB; не статические role-based nginx limits.
+
+SC001 подтверждён editor-contract§6 и lifecycle-results:56, отсутствием cancel route/command при существующем held→consumed. Cancel освобождает activepins/status с replay, не разрешает terminalmetadata/history/фото cleanup, forceUNKNOWN/resetdebt/TTL. Mobile406/390 — доказанный дефект проявления; конкретный DOM/CSS виновник ещё не установлен. FMT004 требует сохранности сложных spans/caption/marks через историю/restore, не автоматически новых merge/split кнопок. CLOSE04 ограничен исходными core/criticalmedia/representativealreadyallowedMAX сценариями, допускает проверенный exact-source reuse.
+
+Полный publicbody/меню/валидаторы, импорт/214SHA, head/дерево/публикация и общий scan отнесены DEV08/09/10/15/20/29; fulltargetload/failures и реальные8семейств×3версии сохраняются TEST09/10. Известные функциональные дефекты туда не откладываются. Новые правила/функции/сокращение AC не выдуманы. Предварительная98%оценка уточнена90–95% из-за незавершённой normal integration и shared cancel; этап8 около20%. Код/среда не менялись, Docker/тесты не запускались; старый сайт/VPS не затронуты.
+
+## DEV07-SID: итоговое независимое ревью, 2026-11-01
+
+По D-362 проверен контракт SID-001–004 и два новых QA tools при неизменном продукте. SID-QA001 до запуска усилил ANYcookie-change до точного old/new estakada_test_session nonempty+changed; CSRF сравнивается с реальным bridge current-state GET той же операции, не с независимой маской другого GET. ProbeC0B5BA0D…/host53DD2D4A…/неизменная fixture713B5B4B… прошли независимый execution gate и node syntax checks.
+
+Рецензент лично подтвердил actualFIRST4/4 browser PASS/failednull/stderr0, все230host/frozenSHA0drift на runfa5fe187…/manifest96551e07…. App manifest совпадает с RUI; прежние20serverPASS относятся к отдельному предыдущему run, здесь не исполнялись. Реальный logout/login другого actor блокирует selecteddraft Check, employeestage Save и unknownDraft retry до editorPOST; retained textarea/pre/script handles очищены. SID003 доказывает один настоящий draftUPDATE/receipt при неизменном current до abort, затем no2ndPOST, без выдуманного rollback. SID004 доказывает новую session при прежней generation, сохранность собственного RAM/basis/noautosend и один explicitfreshCheckSave commit.
+
+Cleanup0users/pages/versions/drafts/stages/pins,1systemRoute; permanent673versionIDs/172mediaIDs/350receipts/822audit сохранены. Stand Stop выполнен с томами; final-checks.json active=false/foundation[]/browser[]. [Результаты и границы](dev07-selected-identity-results.md). Положительное заключение ограничено SID, без physicalheap/allstorage/newgeneration/fulllateauth/media/MAX/allbrowser/responsive claims. Известный mobile editor406px overflow остаётся. Далее конечная сверка функциональных блокеров DEV-07 по плану, сохраняя обязательные TEST-09/10. DEV-07 около98%, этап8 около20%; старый сайт/VPS не затронуты.
+
+## DEV07-RUI: итоговое независимое ревью, 2026-11-01
+
+По D-361 проверены контракт RUI-001–006, product views.py SHA D063E247… и QA56EBFB49… до запуска. Exact singleton VERSIONS_STAGE_STALE, свежий E.enter, status-only own actor/Page/UUID SQL и whitelist фиксированных409 сообщений не читают candidate, не создают receipt и не меняют status/pins; foreign/missing/unknown и посторонние ValidationError сохраняют общий прежний путь.
+
+Рецензент лично подтвердил actual20 серверных PASS/59.663с (6 RUI+6 RST+8 старых versions HTTP), actual3/3 native PASS с первого run и все230host/frozenSHA0drift на source3e015682…/96551e07…. Probe40A984E4…/host68D3688A… прошли независимый gate; старая fixture713B5B4B… неизменна и включает receipt projection в domainHash. Положительные ownheld/samePagegrants, точные private причины, repeated GET/read-only, реальные nativecancel/editedSave/currentcompetitor и foreign generic подтверждены. SQL detector с настоящим ORM positive trigger доказывает отсутствие payload SELECT в terminal GET, не успешное чтение payload. Injected MEDIA_UNAVAILABLE следует после настоящего get_stage/preflight и проверяет границу обработки ошибки.
+
+Финальный cleanup0liveusers/pages/versions/drafts/stages/pins,1systemRoute и постоянные660versionIDs/172mediaIDs/343receipts/800audit сохранены; stderr0. Stand Stop с сохранением томов выполнен, final-checks.json active=false/foundation[]/browser[]. Положительное заключение ограничено этим UI-срезом; gone/fullsession/read-races/identity/MAX/media/legacy/browser/resource и полная responsive матрица остаются открытыми. [Результаты](dev07-terminal-ui-results.md). DEV-07 около 98%, этап 8 около 20%; старый сайт/VPS не затронуты.
+
+## DEV07-RST: итоговое независимое ревью, 2026-11-01
+
+Срез RST-001–006 по D-360 прошёл precode/code и фактическое независимое ревью: 6 серверных PASS/27.658с и 3 Chromium/Nginx группы PASS на одном source e1e5ad80…/manifest71f78a96…. Рецензент лично сверил actual reports и все 229 host/frozen SHA, drift0/0. С TP2 продуктовые файлы не менялись; добавлен только новый Python QA. [Факты и ограничения](dev07-restore-terminal-results.md).
+
+RST-QA001 до native run закрыт включением той же actual ordered receipt projection в domainHash. Первый native run остался FAIL: UI001 PASS, UI002 PlaywrightError. Подтверждённый статический дефект двух CSRF selectors исправлен ограничением до editor page; без `.first()` и без ослабления oracles. ProbeDE95A13E…/fixture713B5B4B…/host2DA0F98A… повторно проверены перед новым run, затем actual3/3PASS лично подтверждены. Неустановленный полный текст первого PlaywrightError не выдумывается.
+
+Подтверждены собственные положительные stage paths, явные cancel/edited Save, separate stage_restore/cancel/Save exact replay без повторной записи, source provenance, fresh-op refusal и samePage/samegrants запрет чужого stage для owner/employee. Invalidated/grant-stale/exact-grants-restore доказаны framework, не отдельными browser groups. Native reply проверен также через BrowserContext.request; это не визуальная отрисовка каждого replay.
+
+Cleanup0users/pages/versions/drafts/stages/pins, сохранён один system Route и постоянные 643versionIDs/172mediaIDs/334receipts/785audit. Итоговый final-checks.json подтверждает active=false и отсутствие foundation/browser контейнеров; тома сохранены. Положительное заключение ограничено RST, без закрытия всех D07: terminal-specific stage_read UI/gone/fullsession/identity/MAX/media/legacy/resource/responsive остаются открытыми. DEV-07 около 98%, этап 8 около 20%; старый сайт/VPS не затронуты.
+
+## DEV07-TP2: итоговое независимое ревью, 2026-11-01
+
+После разрешения D-359 рецензент независимо проверил код, точные различия снимков и фактические результаты: 5 модельных групп PASS, 5 HTTP/PG-тестов PASS за 59.868с, 5 браузерных групп таблиц и 5 групп регрессии прайса PASS через Chromium/Nginx. Блокеров в этой ограниченной локальной области нет. [Полные результаты и границы](dev07-table-gui-results.md).
+
+HTTP/PG выполнен на run1398c86e…/manifestfe4f2687…, оба финальных браузерных набора — на run3c263320…/manifest59351653…. Между ними изменились только carrier-editor.mjs, editor.mjs и производный bundle; Python/QA/helper неизменны. Все 228 текущих и замороженных исходников совпадают. Backend/model не объявляются повторно выполненными на финальном снимке.
+
+TP2-REV001 закрыт final PM guard и native HTML-only проверкой 15000li. TP2-REV002 закрыт ограниченной привязкой padding с положительными проверками и отрицательными crossfield/rebuild. TP2-REV003 закрыт раздельной историей табличных команд: строгие сравнения полного содержимого при Undo/Redo до и после ввода прошли. Исправления QA сохранили точный код отказа, отсутствие Check receipt, DB/FS-проверки и разрешённый suffix рядом с настоящим фото. Первые неуспешные запуски сохранены как неуспешные.
+
+Рецензент подтвердил очистку собственных users/pages/versions, сохранение системного маршрута и постоянных журналов/receipt/media/version IDs. Финальная остановка подтверждена final-checks.json: active=false, работающих foundation/browser контейнеров нет, host/frozen drift=0; тома сохранены. Миграции и профиль записи не менялись.
+
+Измеренные пики относятся ко всему браузерному набору, не ко всем возможным максимумам. Native real-photo, полная MAX/legacy/media/browser/lifecycle матрица, public renderer и общая адаптивность остаются открытыми; прежний overflow 406px при viewport390 отмечен отдельно. DEV-07 около 98%, этап 8 около 20%; этап 9 не начинается. Старый сайт/VPS не затронуты. Ниже сохранено промежуточное ревью до разрешённого возобновления.
+
+## DEV07-TP2: промежуточное ревью и пауза, 2026-11-01
+
+Precode8сценариев и bounded implementation приняты для локальных проб. Рецензент проверил typed esTableBlock/manual PM transactions/closed import-export/stock plugins disabled, geometry и PM40k proof, protected selection/candidate guards, direct-cell CSSOM/GC и single-body zebra. TP2-REV001 ordinary PM overhead>40k исправлен finalguard до Editor/NodeViews с exact HTML-onlyfallback, carrier8957f425…; bundle11b5396653…. Model5PASS лично подтверждены, nativeEnterTab/undo/realresources ещё не выполнялись.
+
+Framework5/60.353с:4PASS+1FAIL, не5PASS. При настоящем READY-фото prefix displacement отказан409 вместо QA expected400, suffix ещё не исполнен. Независимый статический путь подтверждён: protected_policy.py ControlledUnsupported(PROTECTED_STRUCTURE_EDIT_UNSUPPORTED)→normalizer_child.py EDITOR_CAPABILITY_UNAVAILABLE→checks.py409. Предлагается точный409+code/no proof с прежними DB/FS checks; до владельческого возобновления правка не применяется.
+
+QA-агент дважды использовал предполагаемый отсутствующий путь; остановлен по AGENTS. Reviewer прерван после статического заключения.26изменений сохранены/SHA, native не запускался. Никакого положительного result gate TP2 нет; задача «Приостановлено владельцу». [Факты](dev07-table-gui-results.md), [план DEV07-TP2-RESUME-001](../work/dev07-table-20261101/resume-plan.md). Старый сайт/VPS не затронуты, DEV-07 около98%, этап8 около20%.
+
+## DEV07-TP1: независимое ревью, 2026-11-01
+
+`/root/combined_review` проверил контракт TP1-001–009 до кода, затем product/QA/native harness и фактические результаты; исходный продукт не редактировал. Verdict ограниченного PriceV1 GUI положительный:6модельных групп PASS,4HTTP-PG PASS20.513с и5Chromium/Nginx групп PASS наfinal226/run050c5459-b030-49e7-aba9-4605c94a9c79/manifestaa54ba3f39dbe33a9b3ba1d6f38967c9b0dc02589e112938e813540a78b8aa36. Frozen/host SHA лично сверены0drift.
+
+TP1-REV001/P2: multiline textinput заменён textarea, exact LF в actualPG/reload/native подтверждён. TP1-REV002/P1: defaultUUIDfactory randomUUID недоступен в разрешённом HTTP origin; отдельный capability witness подтвердил отсутствиеAPI. Исправлен defaultfactory через getRandomValues/v4, новый meaningfuldefaultfactory model test и actual creation21rows закрыли ошибку без повышения доверия origin. TP1-R01/R02/R03: wholeRAMmatrix/ID/caps/epoch/atomicaccept/price-onlygrants/identity проверены в scoped коде/actualcases.
+
+Первые QA SyntaxError/404/template/profile-image ошибки сохранены отдельно, исправлены по точной причине. TP1-QA002/003 lateCheck case наблюдает реальный delayed response, новую9.99 и NEWCheck→Save с новой квитанцией. DIAGNOSTIC screenshot witness before inline0→after9 при CSP/storage0 выявил defaultcaret Playwright; только2screenshot options приведены к прежнему caret:initial, строгие guards не ослаблялись. Finalnative CSP/storage/inline/pageErrors/external/stderr0.
+
+Own cleanup0users/pages/versions/1preservedSystemRoute, permanentledgers сохранены; стенд остановлен/тома сохранены. Отличие от предыдущего226cohort572c… только price-editor.mjs и derivedbundle5a9d19bd…; промежуточные5model/4HTTP иfailednative не подменяют финальные6/4/5. Native small21rows и model10000 — разные доказательства; fullGUI10000/resource/всеAT105/прочиебраузеры/HTML-table GUI/production не объявляются готовыми. [Результат и продолжение](dev07-price-gui-results.md).
+
 ## DEV07-SH-PUB: независимое ревью, 2026-11-01
 
 `/root/combined_review` независимо проверил precode контракт/PUB07-001–009, API, product/QA и native harness; исходный продукт не редактировал. Actual10PASS168.854с, затем108найдено/104выполнено PASS734.771с/4heavy skip на одном223-file source87a93668-9ae1-4e78-8271-771c399b9cfb/manifest87d57a04d503cdb468b101462d0aadb7f4a122058cecf5669bc0161b9fcffeaf лично прочитаны. Новые10 входят в104. Frozen/host SHA сверены0drift; из прежних216app файлов изменён только shared_content/policy.py, миграции/численный writer profile прежние.

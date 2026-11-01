@@ -26,11 +26,12 @@ def credential(variable, purpose, default):
     except (OSError, UnicodeError, ValueError):
         raise ImproperlyConfigured(f'Required isolated credential unavailable ({purpose})') from None
 
-INSTALLED_APPS = ['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','audit.apps.AuditConfig','content.apps.ContentConfig','accounts.apps.AccountsConfig','media_library.apps.MediaLibraryConfig','page_versions.apps.PageVersionsConfig','shared_content.apps.SharedContentConfig']
+INSTALLED_APPS = ['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','audit.apps.AuditConfig','content.apps.ContentConfig','accounts.apps.AccountsConfig','media_library.apps.MediaLibraryConfig','page_versions.apps.PageVersionsConfig','shared_content.apps.SharedContentConfig','page_editor']
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'page_editor.middleware.EditorAdmissionMiddleware',
     'shared_content.middleware.SharedAdmissionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

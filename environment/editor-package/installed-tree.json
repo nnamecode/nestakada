@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate-output-only-not-integrated",
+  "baseImageId": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+  "baselineSha256": "45e4baa7d4266b99bbcd689fea560e775d2a2f8a73cc67afb0bd4a80177953ff",
+  "packageVersions": {
+    "html5lib": "1.1",
+    "tinycss2": "1.5.1",
+    "nh3": "0.3.7",
+    "six": "1.17.0",
+    "webencodings": "0.6.1"
+  },
+  "files": [
+    {
+      "path": "html5lib/__init__.py",
+      "byteSize": 1143,
+      "sha256": "a569d871f67af7034badd40bedba6be3d1548bc3bcc342a1282387b324606064"
+    },
+    {
+      "path": "html5lib/_ihatexml.py",
+      "byteSize": 16728,
+      "sha256": "89f3b017ba57aa6c938485dcddba1673deace0c0decea46b455a7b1700d8505b"
+    },
+    {
+      "path": "html5lib/_inputstream.py",
+      "byteSize": 32300,
+      "sha256": "20ab8c898f2bcdbee9a88182a5bbd3aacc72b0b1298041d662f60416ee0b5002"
+    },
+    {
+      "path": "html5lib/_tokenizer.py",
+      "byteSize": 77028,
+      "sha256": "5af2506b63258b836d4e684b5e45fc272e45716b6da826a20d388ac9ac3c0fe9"
+    },
+    {
+      "path": "html5lib/_trie/__init__.py",
+      "byteSize": 109,
+      "sha256": "9ea7e03bdd74df6f411152794f8a6c57042d8ddda2272117436f97f1cd58c705"
+    },
+    {
+      "path": "html5lib/_trie/_base.py",
+      "byteSize": 1013,
+      "sha256": "09ac9b63232ba3cb844506236f2dad4de4946ad9d60df5aba1437d37b7adcb9c"
+    },
+    {
+      "path": "html5lib/_trie/py.py",
+      "byteSize": 1763,
+      "sha256": "ce0ed16521f127c98b9ae23fed510857c0289884ab824bea08fe3bec0817686d"
+    },
+    {
+      "path": "html5lib/_utils.py",
+      "byteSize": 4919,
+      "sha256": "031009486d797b26ab0a028c9e5530cecd57ea31475ea12f8656043b10059a2b"
+    },
+    {
+      "path": "html5lib/constants.py",
+      "byteSize": 83464,
+      "sha256": "2e5fb2ccb53f8dc8f2008fe1e7bce4a99eda416139b79c40e32fe3420a14521c"
+    },
+    {
+      "path": "html5lib/filters/__init__.py",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "html5lib/filters/alphabeticalattributes.py",
+      "byteSize": 919,
+      "sha256": "95589973624c09c9578bfe6076ebe6773ad1c6d3b95e8f4e3676c70550acca45"
+    },
+    {
+      "path": "html5lib/filters/base.py",
+      "byteSize": 286,
+      "sha256": "cfe214f590188e9b15b2a995b7b92e582eb78d1d7584332be8256bbee6a8f16d"
+    },
+    {
+      "path": "html5lib/filters/inject_meta_charset.py",
+      "byteSize": 2945,
+      "sha256": "7a00d75041d79801bde74e31cf42ba00b0e0624bd4ac2daad7961455e3655508"
+    },
+    {
+      "path": "html5lib/filters/lint.py",
+      "byteSize": 3631,
+      "sha256": "ba95c04ece81cbb728b7ba346e736a475e6c3ead859fa5678efa32de0c8efeb6"
+    },
+    {
+      "path": "html5lib/filters/optionaltags.py",
+      "byteSize": 10588,
+      "sha256": "f25593ef927468138798f81f9aa4c749f3e93cca74d53f3834abb409179dc5c1"
+    },
+    {
+      "path": "html5lib/filters/sanitizer.py",
+      "byteSize": 26885,
+      "sha256": "5c635277322a0d3687a2dd55fab463d55fd73a8940a49ee7f79b473fd25c80d5"
+    },
+    {
+      "path": "html5lib/filters/whitespace.py",
+      "byteSize": 1214,
+      "sha256": "f1e5aa671778502e33945196ea2c98e9ffb6bae4fca4e09200b737219b7bfede"
+    },
+    {
+      "path": "html5lib/html5parser.py",
+      "byteSize": 117174,
+      "sha256": "c39859261d1cbc3de0e024b5f7a0e24e6b86a522823187b5192e3afb27ff5994"
+    },
+    {
+      "path": "html5lib/serializer.py",
+      "byteSize": 15747,
+      "sha256": "2b691fa0bc8c3cc14f7ddbac7d1df44abc4d91fd26241f76f8fe7f467b7269a2"
+    },
+    {
+      "path": "html5lib/treeadapters/__init__.py",
+      "byteSize": 650,
+      "sha256": "d7c87223e6add9a06c74ace9c11c1ae65185d62a6072d693617a14f449f66508"
+    },
+    {
+      "path": "html5lib/treeadapters/genshi.py",
+      "byteSize": 1715,
+      "sha256": "087dbba40b032a6bb864690052bc2dcbbbb429ab862c26512cf33368edcce6fa"
+    },
+    {
+      "path": "html5lib/treeadapters/sax.py",
+      "byteSize": 1776,
+      "sha256": "04a4bcc284139ca8aa79f7c7b310a152a2f8ab6651ff06f97dcf4c277cd00bcb"
+    },
+    {
+      "path": "html5lib/treebuilders/__init__.py",
+      "byteSize": 3592,
+      "sha256": "032b12272bcf7e290230cb1356f6b1c2480389e10b0f975f47c149200baaee16"
+    },
+    {
+      "path": "html5lib/treebuilders/base.py",
+      "byteSize": 14553,
+      "sha256": "a1e64d18407e92df746091951f4e606f96bc13b89db3601b630191b150a27969"
+    },
+    {
+      "path": "html5lib/treebuilders/dom.py",
+      "byteSize": 8925,
+      "sha256": "db6c216f40bbd735c8b1a8b999a9a0eaacc11228a070122f683cb802cc376add"
+    },
+    {
+      "path": "html5lib/treebuilders/etree.py",
+      "byteSize": 12824,
+      "sha256": "11b987c7ec10fb5d4c56e7133ed17b525f76fa640637751dbbf29f0e7f887e19"
+    },
+    {
+      "path": "html5lib/treebuilders/etree_lxml.py",
+      "byteSize": 14754,
+      "sha256": "39acc31d918efeae059d5b380e1b38873ce7d89c0600eb3eadf57c2c0954196e"
+    },
+    {
+      "path": "html5lib/treewalkers/__init__.py",
+      "byteSize": 5719,
+      "sha256": "3813ed7354d4e661b2cb5f100ccc4a132604cf4c3115450d8f9bf4f978266216"
+    },
+    {
+      "path": "html5lib/treewalkers/base.py",
+      "byteSize": 7476,
+      "sha256": "a2e88eb2e4b3bc8d0a8337563fc3e5c4869236cf5f6a585b8a29c011cfd42096"
+    },
+    {
+      "path": "html5lib/treewalkers/dom.py",
+      "byteSize": 1413,
+      "sha256": "107c8547c0fc958367c8353d971fc82a2815251c9e7141ae6b498e8bb1c1ba47"
+    },
+    {
+      "path": "html5lib/treewalkers/etree.py",
+      "byteSize": 4539,
+      "sha256": "8240f8b5f11f4563ec106be01c72716662995d4bc1cd5546cf7bf90bf30888e1"
+    },
+    {
+      "path": "html5lib/treewalkers/etree_lxml.py",
+      "byteSize": 6345,
+      "sha256": "78b79d6e7ea73e396979b89bb165628decbb584a730f0c54dee6f0528b9d06e0"
+    },
+    {
+      "path": "html5lib/treewalkers/genshi.py",
+      "byteSize": 2309,
+      "sha256": "e03d8f1026799f764ddeabb78cc97dc98ec1f358e7400a414125657da22e61b0"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/AUTHORS.rst",
+      "byteSize": 983,
+      "sha256": "0eb3403227e80e9b90c899fe296f87e8af13b766b9aca9d5d94178f8346b1942"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/INSTALLER",
+      "byteSize": 4,
+      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/LICENSE",
+      "byteSize": 1084,
+      "sha256": "16a39991619e92f18680932da2a9199fdf7d95df3ecaedc52ea06218aabafd6f"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/METADATA",
+      "byteSize": 16076,
+      "sha256": "637c3e9ddff6d87427411cb7cb2a55b15fe47b6145f78b940f8faf1a97360e72"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/RECORD",
+      "byteSize": 3486,
+      "sha256": "bbecbf5b996176c1c2d4e48c9c0e1b0a2dfed7522043f140216eaf88cbbcfcb0"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/REQUESTED",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/WHEEL",
+      "byteSize": 110,
+      "sha256": "9064fbe0b5b245466b2f85602e1ebf835d8879597ff6ef5956169dae05d95046"
+    },
+    {
+      "path": "html5lib-1.1.dist-info/top_level.txt",
+      "byteSize": 9,
+      "sha256": "5c45fa087a6c9129af8c9078b4fea6e10e4d6178487ffd1c78c7343cd6f324f4"
+    },
+    {
+      "path": "nh3/__init__.py",
+      "byteSize": 95,
+      "sha256": "55b262e6d662ac02ba1c06d0a45e1a658a74fd2715245ed8079d04e8d34b430e"
+    },
+    {
+      "path": "nh3/__init__.pyi",
+      "byteSize": 2535,
+      "sha256": "82de92f3264b567858e065ed13552dea807af7efce2baa783c8cd07b3974b574"
+    },
+    {
+      "path": "nh3/nh3.abi3.so",
+      "byteSize": 2431944,
+      "sha256": "682276a9d02fc4ea49d9ecfdaec84221af8eb5b87a155f09c09693af430702ef"
+    },
+    {
+      "path": "nh3/py.typed",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/INSTALLER",
+      "byteSize": 4,
+      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/METADATA",
+      "byteSize": 1991,
+      "sha256": "a26f711be87c09e5cf75678bc8ec704ddeb21bc4bcaf470c504c73bc29d032c0"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/RECORD",
+      "byteSize": 851,
+      "sha256": "81cb1b8f07c3091c9bf50a143660350dad8a6e97209b308ae7c46733f65fdbca"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/REQUESTED",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/WHEEL",
+      "byteSize": 143,
+      "sha256": "10779ca97bf5ad5fff0339d63dc5eea52d99e7fe23fa36793b66564bd0e0584d"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/licenses/LICENSE",
+      "byteSize": 1086,
+      "sha256": "1c5bbd459c8f73e10e39602ac595e8981fb3dd3e895ecfc62e57410f9fbfd47b"
+    },
+    {
+      "path": "nh3-0.3.7.dist-info/sboms/nh3.cyclonedx.json",
+      "byteSize": 91073,
+      "sha256": "870dae533e49ff53c36785c9f623a3e39787826d832c39f4b0540a6f45c0284c"
+    },
+    {
+      "path": "six-1.17.0.dist-info/INSTALLER",
+      "byteSize": 4,
+      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
+    },
+    {
+      "path": "six-1.17.0.dist-info/LICENSE",
+      "byteSize": 1066,
+      "sha256": "4375ba20e2b9c6c4e7cad2940a628fd90e95cc3d50ee92aae755715d8ba1fbd0"
+    },
+    {
+      "path": "six-1.17.0.dist-info/METADATA",
+      "byteSize": 1658,
+      "sha256": "562042078c2752549f6d8a7c86dbc5dd708088a7be6d80672ec7b07100b72468"
+    },
+    {
+      "path": "six-1.17.0.dist-info/RECORD",
+      "byteSize": 611,
+      "sha256": "1c94725b0668d91e3fa8238d5ad89bf5ee2e77c06ff751bb967d793fe22d1bb5"
+    },
+    {
+      "path": "six-1.17.0.dist-info/REQUESTED",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "six-1.17.0.dist-info/WHEEL",
+      "byteSize": 109,
+      "sha256": "a7178d5f925db427b9f0f51260ff6ea6673b8dd44f82f4f41a6f646f5487955c"
+    },
+    {
+      "path": "six-1.17.0.dist-info/top_level.txt",
+      "byteSize": 4,
+      "sha256": "fe2547fe2604b445e70fc9d819062960552f9145bdb043b51986e478a4806a2b"
+    },
+    {
+      "path": "six.py",
+      "byteSize": 34703,
+      "sha256": "c51c91f703d3d4b3696c923cb5fec213e05e75d9215393befac7f2fa6a3904df"
+    },
+    {
+      "path": "tinycss2/__init__.py",
+      "byteSize": 603,
+      "sha256": "6166f89c3ae26fe0f17c1e621a9ee123cd119cd39ec501af513ec8daa5ef079f"
+    },
+    {
+      "path": "tinycss2/ast.py",
+      "byteSize": 23674,
+      "sha256": "4b601bdd7a8de7f7431712f4c5b2458c7e0f0d169450482facabe1c47b8d966c"
+    },
+    {
+      "path": "tinycss2/bytes.py",
+      "byteSize": 4768,
+      "sha256": "3fef060f8fe3f066a9d98b324b15e5d6a075e930aa4b82ed2aba39538c077ac5"
+    },
+    {
+      "path": "tinycss2/color3.py",
+      "byteSize": 11118,
+      "sha256": "519ba2478061f133324dba47dd064d9aff48e2177e74de606b1801a6659bc49f"
+    },
+    {
+      "path": "tinycss2/color4.py",
+      "byteSize": 16817,
+      "sha256": "15e173b9a1a58f178ce15cd533468e11ae51547d0cc2acd90f38e0e88abff8a0"
+    },
+    {
+      "path": "tinycss2/color5.py",
+      "byteSize": 4087,
+      "sha256": "cd83377c24ad62649d3e0774afe8583871430a699c3671104e2f2baa27f3397e"
+    },
+    {
+      "path": "tinycss2/nth.py",
+      "byteSize": 3488,
+      "sha256": "7f4eab938baec8305fed37d17bc0790b30b717636a94a847e005e43bf85cc8f0"
+    },
+    {
+      "path": "tinycss2/parser.py",
+      "byteSize": 19071,
+      "sha256": "de093241879145cacd0497c131b8bb9d50c5b7c228379fd95977301bd18f72cc"
+    },
+    {
+      "path": "tinycss2/serializer.py",
+      "byteSize": 4423,
+      "sha256": "21f544fc13723284355eb536ae408acf88853c5ef31c5570d669fcfa568dadf1"
+    },
+    {
+      "path": "tinycss2/tokenizer.py",
+      "byteSize": 15396,
+      "sha256": "2e5aa84188c67a96f16dcb322479888668e16b0114ff9492c791b3a9e83b3c14"
+    },
+    {
+      "path": "tinycss2-1.5.1.dist-info/INSTALLER",
+      "byteSize": 4,
+      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
+    },
+    {
+      "path": "tinycss2-1.5.1.dist-info/METADATA",
+      "byteSize": 3007,
+      "sha256": "97a184ce0b479d613e7bb4bbc693067ae4c04e5665fd78e8381252f855bcab59"
+    },
+    {
+      "path": "tinycss2-1.5.1.dist-info/RECORD",
+      "byteSize": 1255,
+      "sha256": "abe561582b265a121748caece9faf4e8cfab150013280bb1bd3a275e885eab7f"
+    },
+    {
+      "path": "tinycss2-1.5.1.dist-info/REQUESTED",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tinycss2-1.5.1.dist-info/WHEEL",
+      "byteSize": 82,
+      "sha256": "1b68144734c4b66791f27add5d425f3620775585718a03d0f9b110ba3a4d88db"
+    },
+    {
+      "path": "tinycss2-1.5.1.dist-info/licenses/LICENSE",
+      "byteSize": 1534,
+      "sha256": "6b94acee20ec9f2709333134f3ba70322535fb420af0ce8c1455d9cbe297f1d5"
+    },
+    {
+      "path": "webencodings/__init__.py",
+      "byteSize": 10717,
+      "sha256": "a53144a7b71688567c4395c28a878e28d2d08a680f52cecb830f8795b854bbcc"
+    },
+    {
+      "path": "webencodings/custom.py",
+      "byteSize": 2457,
+      "sha256": "baebdb3dd3be70b11ce577fed08c4909d8c78d35f0cc6a8a2c80e03339ef11e4"
+    },
+    {
+      "path": "webencodings/labels.py",
+      "byteSize": 9525,
+      "sha256": "910e9cca23c84d58824c6dea4fba3a27947fa077adfa3841cdc9293168d27277"
+    },
+    {
+      "path": "webencodings-0.6.1.dist-info/INSTALLER",
+      "byteSize": 4,
+      "sha256": "ceebae7b8927a3227e5303cf5e0f1f7b34bb542ad7250ac03fbcde36ec2f1508"
+    },
+    {
+      "path": "webencodings-0.6.1.dist-info/METADATA",
+      "byteSize": 3426,
+      "sha256": "3d9819d1209e5b56d4c6315efca7d5ca452ba7e55d4c3617ec63555c099bfb70"
+    },
+    {
+      "path": "webencodings-0.6.1.dist-info/RECORD",
+      "byteSize": 756,
+      "sha256": "45762f1816ddb7cb77e3b78344a213ff8138d9938856f60b76434f4160293066"
+    },
+    {
+      "path": "webencodings-0.6.1.dist-info/REQUESTED",
+      "byteSize": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "webencodings-0.6.1.dist-info/WHEEL",
+      "byteSize": 81,
+      "sha256": "ff23073da055face9f40cc14a28f3735275308cddcf315d6157461a9a7cdfbb6"
+    },
+    {
+      "path": "webencodings-0.6.1.dist-info/licenses/LICENSE",
+      "byteSize": 1519,
+      "sha256": "e06ef33485e7498ad592887c41fa79cc8a7fecde576c7210e11bfdddef58040e"
+    }
+  ],
+  "treeSha256": "0ff2295262379b7bbde187a39e30243dd06476612608db75ff878248fa0209b1",
+  "byteSize": 3211887
+}

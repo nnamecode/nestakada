@@ -34,6 +34,10 @@ if(root){
     return selected.size?'?'+selected:'';
   }
   function url(action,selected){
+    if(action==='cancel-stage'){
+      if(!['header','footer'].includes(root.dataset.kind)||!validId(selected))fail();
+      return '/manage/shared/'+root.dataset.kind+'/stages/'+selected+'/cancel/';
+    }
     if(!['header','footer'].includes(root.dataset.kind)||!['check','draft','apply'].includes(action))fail();
     return '/manage/shared/'+root.dataset.kind+'/'+action+'/'+selected;
   }
@@ -55,12 +59,23 @@ if(root){
     return context;
   }
   function acknowledge(result,intent){
+    if(intent.action==='cancel-stage'){
+      if(!result||result.ok!==true||result.operationId!==intent.value.operationId||result.resultId!==null
+        ||result.resultCode!=='released'||typeof result.replay!=='boolean'||result.gone!==false
+        ||result.editorContext!==null||result.stageId!==intent.query||result.outcomeKnown!==true)fail();
+      uncertain=null;retry.hidden=true;invalidate();basisUnavailable=true;
+      for(const control of root.querySelectorAll('button[data-action]'))control.disabled=true;
+      root.querySelector('[data-current-source]').hidden=false;
+      status.textContent='Подготовка восстановления отменена. Публичная версия и черновик не изменены. Ваш текст остаётся здесь; актуальный источник открывается отдельно.';
+      return;
+    }
     if(!result||result.ok!==true||result.operationId!==intent.value.operationId||!validId(result.resultId)||result.resultCode!=='applied'||typeof result.replay!=='boolean'||typeof result.gone!=='boolean')fail();
     const context=result.gone||result.editorContext===null?null:verifyContext(result,intent);
     uncertain=null;retry.hidden=true;invalidate();
     if(context===null){basisUnavailable=true;status.textContent='Прежняя операция подтверждена, но её основание больше недоступно. Ввод остаётся здесь; откройте актуальный источник отдельно.';return;}
     root.dataset.base=context.baseRevisionId||'';root.dataset.sourceMode=context.sourceMode;
     root.dataset.draftId=context.draftBasis?.id||'';root.dataset.draftRevision=context.draftBasis?String(context.draftBasis.revision):'';root.dataset.stageId='';
+    const cancel=root.querySelector('[data-action="cancel-stage"]');if(cancel)cancel.hidden=true;
     if(epoch!==intent.epoch||input.value!==intent.value.html){status.textContent='Прежняя операция подтверждена. Новые изменения остаются в этой вкладке и ещё не сохранены.';return;}
     cleanEpoch=epoch;status.textContent=intent.action==='draft'?'Черновик сохранён отдельно. Публичная версия не изменена.':'Изменения сохранены.';
   }
@@ -107,7 +122,18 @@ if(root){
     if(uncertain){status.textContent=unknownMessage;return;}
     if(basisUnavailable){status.textContent='Откройте актуальный источник отдельно. Ваш ввод остаётся в этой вкладке.';return;}
     const action=button.dataset.action;
-    if(!['check','draft','apply'].includes(action))return;
+    if(!['check','draft','apply','cancel-stage'].includes(action))return;
+    if(action==='cancel-stage'){
+      if(root.dataset.sourceMode!=='restore-stage'||!validId(root.dataset.stageId)){status.textContent='Подготовка восстановления недоступна. Ваш текст остаётся здесь.';return;}
+      if(!window.confirm('Отменить только эту подготовку восстановления? Публичная версия и черновик останутся прежними, введённый текст останется в открытой вкладке.'))return;
+      busy=true;
+      try{
+        const value={protocol:'shared-editor-v1',generation:Number(root.dataset.generation),operationId:operationId(),confirmCancel:true};
+        const body=JSON.stringify(value),intent={action,body,value:JSON.parse(body),query:root.dataset.stageId,epoch};
+        status.textContent='Отменяется подготовка восстановления…';await transmit(intent);
+      }finally{busy=false;}
+      return;
+    }
     if(action!=='check'&&(!checked||checked.epoch!==epoch||checked.html!==input.value)){status.textContent='Сначала проверьте текущий текст.';return;}
     if(action==='apply'&&!window.confirm('Применить этот общий блок ко всему сайту?'))return;
     busy=true;

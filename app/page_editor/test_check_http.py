@@ -27,12 +27,14 @@ from page_versions.models import (PageRevision, PageContentState, OwnerDraft,
 from page_editor.checks import (CheckFault, inspect_context, verify_check_receipt,
                                 SALT)
 
-# Explicit test-only wiring: global product URLconf is untouched.
-urlpatterns = [path("manage/pages/<uuid:page_id>/edit/", include("page_editor.http_urls")),
-               path("", include("estakada.urls"))]
+# Test alias of the real normal routes; do not register the editor namespace twice.
+urlpatterns = [path("", include("estakada.urls"))]
 TEST_MIDDLEWARE = list(settings.MIDDLEWARE)
-TEST_MIDDLEWARE.insert(TEST_MIDDLEWARE.index("django.middleware.csrf.CsrfViewMiddleware"),
-                       "page_editor.middleware.EditorAdmissionMiddleware")
+if "page_editor.middleware.EditorAdmissionMiddleware" not in TEST_MIDDLEWARE:
+    TEST_MIDDLEWARE.insert(TEST_MIDDLEWARE.index("django.middleware.csrf.CsrfViewMiddleware"),
+                           "page_editor.middleware.EditorAdmissionMiddleware")
+assert TEST_MIDDLEWARE.count("page_editor.middleware.EditorAdmissionMiddleware") == 1
+assert TEST_MIDDLEWARE.index("page_editor.middleware.EditorAdmissionMiddleware") < TEST_MIDDLEWARE.index("django.middleware.csrf.CsrfViewMiddleware")
 
 OWNER_PASSWORD = "Synthetic-check-owner-password"
 EMPLOYEE_PASSWORD = "Synthetic-check-employee-password"

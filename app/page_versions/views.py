@@ -271,7 +271,24 @@ def stage_context(request,page_id,stage_id):
 @require_GET
 @protected
 def stage_read(request,page_id,stage_id):
-    return render(request,'page_versions/stage.html',stage_context(request,page_id,stage_id))
+    try:
+        context=stage_context(request,page_id,stage_id)
+    except ValidationError as exc:
+        if exc.messages!=['VERSIONS_STAGE_STALE']:raise
+        # Only the currently authorised actor may see their own stage status.
+        # Do not load a historical payload or manufacture an operation receipt.
+        with transaction.atomic():
+            page,profile,fields,owner,state=E.enter(request.user,page_id,request.auth_generation)
+            status=RestoreStage.objects.filter(pk=stage_id,page=page,actor_id=request.user.pk).values_list('status',flat=True).first()
+        messages={
+            'released':'Подготовка восстановления отменена. Данные для подстановки не выдаются.',
+            'consumed':'Подготовка восстановления уже применена. Повторная подстановка недоступна.',
+            'invalidated':'Подготовка восстановления утратила актуальность. Подготовьте восстановление заново из истории.',
+            'held':'Подготовка восстановления утратила актуальность. Подготовьте восстановление заново из истории.',
+        }
+        if status not in messages:raise
+        return error(request,page_id,messages[status]+' Текущая версия страницы не изменена этим просмотром.')
+    return render(request,'page_versions/stage.html',context)
 
 
 @require_POST

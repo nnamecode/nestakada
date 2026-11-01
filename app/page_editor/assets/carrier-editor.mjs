@@ -1,8 +1,11 @@
 // D-330 pinned packages only. This adapter is not server admission or a sanitizer.
 import { Editor, Node, Mark, Extension } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { Plugin, TextSelection } from '@tiptap/pm/state';
+import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
+import {closeHistory} from '@tiptap/pm/history';
 import { canSplit, canJoin } from '@tiptap/pm/transform';
+import {Table} from '@tiptap/extension-table';
+import {proveTableGeometry,proveDocumentTables,simpleTableJson,tableTransaction,selectedTable} from './table-editor.mjs';
 import {approvedEmbedded,readMarker,markerHtml,protectedShape,insertBlockHtml,replaceMarkerInHtml} from './embedded-editor.mjs';
 
 const FONTS = Object.freeze({inter:'Inter,Arial,sans-serif',oswald:'Oswald,Arial,sans-serif',arial:'Arial,sans-serif',georgia:'Georgia,serif','times-new-roman':'"Times New Roman",serif','courier-new':'"Courier New",monospace'});
@@ -16,7 +19,8 @@ const BLOCK_TAGS = new Set(['p','h1','h2','h3','blockquote','ul','ol','li','tabl
 const escapeText = value => String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 const escapeAttr = value => escapeText(value).replaceAll('"','&quot;').replaceAll("'",'&#x27;');
 const failure = code => { const error = new Error(code); error.code=code; throw error; };
-const VISUAL_UNSUPPORTED = new Set(['EDITOR_PROTECTED_OR_UNSUPPORTED','EDITOR_EMPTY_ANCHOR_UNSUPPORTED','EDITOR_NESTED_ANCHOR_UNSUPPORTED','EDITOR_LIST_UNSUPPORTED','EDITOR_EMPTY_LIST_UNSUPPORTED','EDITOR_BLOCK_UNSUPPORTED','EDITOR_INLINE_UNSUPPORTED']);
+const TABLE_HISTORY_BOUNDARY = new PluginKey('esCheckedTableHistoryBoundary');
+const VISUAL_UNSUPPORTED = new Set(['EDITOR_PROTECTED_OR_UNSUPPORTED','EDITOR_EMPTY_ANCHOR_UNSUPPORTED','EDITOR_NESTED_ANCHOR_UNSUPPORTED','EDITOR_LIST_UNSUPPORTED','EDITOR_EMPTY_LIST_UNSUPPORTED','EDITOR_BLOCK_UNSUPPORTED','EDITOR_INLINE_UNSUPPORTED','EDITOR_VISUAL_NODE_BUDGET']);
 const blank = names => Object.fromEntries(names.map(name=>[name,null]));
 function uuid(){const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;const hex=[...bytes].map(value=>value.toString(16).padStart(2,'0')).join('');return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);}
 
@@ -78,16 +82,17 @@ class Rules {
     try{void sheet.cssRules;}catch{failure('EDITOR_STYLESHEET_REQUIRED');}
     this.sheet=sheet;this.onFault=onFault;this.scope='esf-'+uuid().replaceAll('-','');this.next=0;this.entries=new Map();
   }
-  key(facts){return JSON.stringify(Object.entries(facts).sort(([a],[b])=>a.localeCompare(b,'en')));}
+  key(facts,suffix=''){return JSON.stringify([suffix,Object.entries(facts).sort(([a],[b])=>a.localeCompare(b,'en'))]);}
   ensure(facts) {
     try{return this.ensureRule(facts);}catch(error){this.onFault?.(error);throw error;}
   }
-  ensureRule(facts) {
+  ensureTable(padding){if(padding===null)return '';if(!Number.isInteger(padding)||padding<0||padding>32)failure('EDITOR_TABLE_PADDING_INVALID');try{return this.ensureRule({padding:padding+'px'},' > tbody > tr > :is(td,th)');}catch(error){this.onFault?.(error);throw error;}}
+  ensureRule(facts,suffix='') {
     if(!Object.keys(facts).length)return '';
-    const key=this.key(facts);let entry=this.entries.get(key);
+    const key=this.key(facts,suffix);let entry=this.entries.get(key);
     if(!entry){
       if(!Number.isSafeInteger(this.next)||this.entries.size>=40000)failure('EDITOR_RULE_BUDGET');
-      const className=this.scope+'-n'+this.next++;const index=this.sheet.insertRule('.'+className+'{}',this.sheet.cssRules.length);
+      const className=this.scope+'-n'+this.next++;const index=this.sheet.insertRule('.'+className+suffix+'{}',this.sheet.cssRules.length);
       const rule=this.sheet.cssRules[index];for(const [name,value] of Object.entries(facts))rule.style.setProperty(name,value);
       entry={className,rule};this.entries.set(key,entry);
     }
@@ -97,6 +102,7 @@ class Rules {
     const active=new Set();let nodes=0;
     doc.descendants(node=>{
       if(++nodes>40000)failure('EDITOR_NODE_BUDGET');
+      if(node.type.name==='table'&&node.attrs.esCellPad!==null){const facts={padding:node.attrs.esCellPad+'px'};active.add(this.key(facts,' > tbody > tr > :is(td,th)'));this.ensureTable(node.attrs.esCellPad);}
       for(const [attrs,names] of [[node.attrs,BLOCK],...(node.type.name==='esProtectedSlot'?[[node.attrs,FORMAT]]:[]),...node.marks.filter(mark=>mark.type.name==='esFormat').map(mark=>[mark.attrs,FORMAT])]){
         const facts=styleFacts(attrs,names);if(!Object.keys(facts).length)continue;
         const key=this.key(facts);active.add(key);this.ensure(facts);
@@ -271,12 +277,34 @@ function extensionsFor({owner,pageId,rules,approvedTables,requestHtml,embeddedMa
       else dom.append(document.createTextNode(' Предпросмотр недоступен'));
       return {dom,destroy(){destroyed=true;image.removeAttribute('src');finish();}};
     }});
-  const safety=Extension.create({name:'esNoDefaultPaste',addProseMirrorPlugins:()=>[new Plugin({
-    filterTransaction(transaction,state){if(!transaction.docChanged||protectedShape(transaction.doc)===protectedShape(state.doc))return true;onBlocked();return false;},
+  const tableWrapper=Node.create({name:'esTableBlock',group:'block',content:'table',isolating:true,
+    parseHTML:()=>[],renderHTML:()=>['div',{'data-editor-table':''},0]});
+  const tableNode=Table.extend({
+    addAttributes:()=>({esCellPad:{default:null,rendered:false}}),
+    addCommands:()=>({}),addKeyboardShortcuts:()=>({}),addProseMirrorPlugins:()=>[],
+    parseHTML:()=>[],renderHTML:()=>['table',{'class':'es-rich-table'},['tbody',0]],
+    addNodeView:()=>({node})=>{const dom=document.createElement('table'),contentDOM=document.createElement('tbody');dom.append(contentDOM);
+      const update=value=>{const rows=[];value.forEach(row=>{const cells=[];row.forEach(cell=>cells.push({rowspan:cell.attrs.rowspan,colspan:cell.attrs.colspan}));rows.push({cells});});proveTableGeometry([{rows}]);dom.className=['es-rich-table',rules.ensureTable(value.attrs.esCellPad)].filter(Boolean).join(' ');};update(node);
+      return {dom,contentDOM,update(next){if(next.type.name!=='table')return false;update(next);return true;}};},
+  }).configure({resizable:false,renderWrapper:false,View:null});
+  const tableRow=Node.create({name:'tableRow',content:'(tableCell | tableHeader)+',tableRole:'row',
+    addAttributes:()=>({esSection:{default:'body',rendered:false}}),parseHTML:()=>[],renderHTML:({node})=>['tr',{'data-editor-table-section':node.attrs.esSection},0]});
+  const tableCell=(head)=>Node.create({name:head?'tableHeader':'tableCell',content:'paragraph',tableRole:head?'header_cell':'cell',isolating:true,
+    addAttributes:()=>({colspan:{default:1,rendered:false},rowspan:{default:1,rendered:false},...(head?{esScope:{default:null,rendered:false}}:{})}),
+    parseHTML:()=>[],renderHTML:({node})=>[head?'th':'td',head&&node.attrs.esScope?{scope:node.attrs.esScope}:{},0]});
+  const safety=Extension.create({name:'esNoDefaultPaste',priority:1000,addProseMirrorPlugins:()=>[new Plugin({
+    appendTransaction(transactions,oldState,newState){
+      if(!transactions.some(transaction=>transaction.docChanged&&transaction.getMeta(TABLE_HISTORY_BOUNDARY)===true))return null;
+      // Only the checked content transaction carries our boundary tag. This
+      // metadata-only fence has no steps/selection change and cannot retrigger
+      // itself; subsequent typing therefore starts a separate history event.
+      return closeHistory(newState.tr).setMeta('addToHistory',false);
+    },
+    filterTransaction(transaction,state){if(!transaction.docChanged)return true;try{proveDocumentTables(transaction.doc);if(protectedShape(transaction.doc)!==protectedShape(state.doc))failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');candidateBudget(canonicalDocument(transaction.doc,{owner,approvedTables}));return true;}catch(error){onBlocked(error);return false;}},
     props:{handleDOMEvents:{dragstart:(view,event)=>{event.preventDefault();return true;}}}})]});
   return [StarterKit.configure({paragraph:false,heading:false,blockquote:false,bulletList:false,orderedList:false,listItem:false,bold:false,italic:false,underline:false,strike:false,link:false,code:false,codeBlock:false,horizontalRule:false,dropcursor:false,gapcursor:false,trailingNode:false}),
     blockNode('paragraph','p','inline*'),blockNode('heading','h2','inline*'),blockNode('blockquote','blockquote','block+'),blockNode('bulletList','ul','listItem+'),blockNode('orderedList','ol','listItem+'),
-    Node.create({name:'listItem',content:'paragraph block*',defining:true,parseHTML:()=>[{tag:'li'}],renderHTML:()=>['li',{},0]}),...marks,format,anchor,link,opaque,protectedParent,protectedSlot,protectedImage,safety];
+    Node.create({name:'listItem',content:'paragraph block*',defining:true,parseHTML:()=>[{tag:'li'}],renderHTML:()=>['li',{},0]}),...marks,format,anchor,link,opaque,protectedParent,protectedSlot,protectedImage,tableWrapper,tableNode,tableRow,tableCell(false),tableCell(true),safety];
 }
 
 function approvedTableSlices(html) {
@@ -295,7 +323,7 @@ function approvedDocument(html,{owner,approvedTables,embeddedMap=new Map()}) {
   if(/<\/?(?:script|style|iframe|object|embed|img|svg|math|form|input|button|textarea|select|link|meta|base)\b/i.test(html))failure('EDITOR_APPROVED_INPUT_REQUIRED');
   const documentValue=new DOMParser().parseFromString(html,'text/html');
   if(documentValue.querySelector('[style],[class],[id]'))failure('EDITOR_APPROVED_INPUT_REQUIRED');
-  const tables=approvedTableSlices(html);let tableIndex=0;
+  const tables=approvedTableSlices(html);let tableIndex=0,richSlots=0,richPM=0;const promoted=new Map();
   if(tables.length!==documentValue.querySelectorAll('table').length)failure('EDITOR_CANONICAL_TABLE_INVALID');
   function readAttrs(element,names,extra=[]) {
     const allowed=new Set([...names.map(name=>ATTR[name]),...extra]);
@@ -352,7 +380,9 @@ function approvedDocument(html,{owner,approvedTables,embeddedMap=new Map()}) {
       flush();if(node.nodeType!==1||!BLOCK_TAGS.has(node.localName))failure('EDITOR_BLOCK_UNSUPPORTED');
       const tag=node.localName;
       if(tag==='table'){
-        const source=tables[tableIndex];tableIndex+=1+node.querySelectorAll('table').length;approvedTables.add(source);output.push({type:'esOpaqueTable',attrs:{approvedHtml:source}});continue;
+        const source=tables[tableIndex];tableIndex+=1+node.querySelectorAll('table').length;
+        const rich=simpleTableJson(node,inline,{remainingSlots:20000-richSlots,remainingPM:40000-richPM}),slots=rich?rich.content[0].content.reduce((sum,row)=>sum+row.content.length,0):0;
+        if(rich){richSlots+=slots;let count=0;const stack=[rich];while(stack.length){const child=stack.pop();count++;if(child.content)stack.push(...child.content);}richPM+=count;promoted.set(rich,{source,count});output.push(rich);}else{approvedTables.add(source);output.push({type:'esOpaqueTable',attrs:{approvedHtml:source}});}continue;
       }
       if(tag==='li')failure('EDITOR_LIST_CONTEXT_INVALID');
       const attrs=readAttrs(node,BLOCK);
@@ -373,7 +403,13 @@ function approvedDocument(html,{owner,approvedTables,embeddedMap=new Map()}) {
     }
     flush();return output;
   }
-  const content=blocks(documentValue.body.childNodes);return {type:'doc',content:content.length?content:[{type:'paragraph'}]};
+  const content=blocks(documentValue.body.childNodes),result={type:'doc',content:content.length?content:[{type:'paragraph'}]};
+  let count=-1;const stack=[result];while(stack.length){const child=stack.pop();count++;if(child.content)stack.push(...child.content);}
+  // Non-table siblings also consume the existing Rules PM-node budget. Fall
+  // back before constructing Editor/NodeViews; exact source stays actor-owned.
+  for(const [node,entry]of [...promoted].reverse()){if(count<=40000)break;approvedTables.add(entry.source);delete node.content;node.type='esOpaqueTable';node.attrs={approvedHtml:entry.source};count-=entry.count-1;}
+  if(count>40000)failure('EDITOR_VISUAL_NODE_BUDGET');
+  return result;
 }
 
 function canonicalDocument(doc,{owner,approvedTables}) {
@@ -397,12 +433,20 @@ function canonicalDocument(doc,{owner,approvedTables}) {
     if(name==='esProtectedSlot')return '<span'+htmlAttrs({'data-es-slot':node.attrs.slotId,...carrierAttrs(node.attrs,FORMAT),...(node.attrs.anchor?{'data-es-anchor':node.attrs.anchor}:{})})+'>'+content(node)+'</span>';
     if(name==='esProtectedParent')return '<'+node.attrs.tag+htmlAttrs({'data-es-parent':node.attrs.parentId,...carrierAttrs(node.attrs,BLOCK)})+'>'+content(node)+'</'+node.attrs.tag+'>';
     if(name==='esOpaqueTable'){if(!approvedTables.has(node.attrs.approvedHtml))failure('EDITOR_APPROVED_TABLE_REQUIRED');return node.attrs.approvedHtml;}
+    if(name==='esTableBlock')return content(node);
+    if(name==='table'){
+      const padding=node.attrs.esCellPad;if(padding!==null&&(!Number.isInteger(padding)||padding<0||padding>32))failure('EDITOR_TABLE_PADDING_INVALID');
+      let head='',body='';node.forEach(row=>{const html='<tr>'+content(row)+'</tr>';if(row.attrs.esSection==='head')head+=html;else if(row.attrs.esSection==='body')body+=html;else failure('EDITOR_TABLE_UNSUPPORTED');});
+      return '<table'+htmlAttrs(padding===null?{}:{'data-es-cellpad':String(padding)})+'>'+(head?'<thead>'+head+'</thead>':'')+(body?'<tbody>'+body+'</tbody>':'')+'</table>';
+    }
+    if(name==='tableRow')failure('EDITOR_TABLE_UNSUPPORTED');
+    if(name==='tableCell'||name==='tableHeader'){const tag=name==='tableHeader'?'th':'td';return '<'+tag+htmlAttrs(name==='tableHeader'&&node.attrs.esScope?{scope:node.attrs.esScope}:{})+'>'+content(node)+'</'+tag+'>';}
     if(name==='doc')return content(node);
     if(name==='listItem')return '<li>'+content(node)+'</li>';
     const tag={paragraph:'p',blockquote:'blockquote',bulletList:'ul',orderedList:'ol'}[name]||(name==='heading'?'h'+node.attrs.level:null);
     if(!tag||(name==='heading'&&(![1,2,3].includes(node.attrs.level)||!owner&&node.attrs.level===1)))failure('EDITOR_NODE_UNSUPPORTED');
     const attrs=carrierAttrs(node.attrs,BLOCK),body=content(node);
-    if(parent==='listItem'&&name==='paragraph'&&node.attrs.esUnwrapped&&!Object.keys(attrs).length)return body;
+    if(['listItem','tableCell','tableHeader'].includes(parent)&&name==='paragraph'&&node.attrs.esUnwrapped&&!Object.keys(attrs).length)return body;
     return '<'+tag+htmlAttrs(attrs)+'>'+body+'</'+tag+'>';
   }
   return serialize(doc);
@@ -412,13 +456,66 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
   if(!(element instanceof HTMLElement)||typeof owner!=='boolean'||!['intro_text','main_text'].includes(field))failure('EDITOR_CONTEXT_INVALID');
   let editor=null,rules=null,mode='visual',dirty=false,destroyed=false,viewBlocked=false,approvedBaseDoc=null,approvedCanonical='';let approvedTables=new Set();
   let embeddedMap=approvedEmbedded(initialEmbedded,{pageId});
+  let paddingBookmark=null,paddingControls=null,paddingUnbind=null;
   const visual=document.createElement('div'),source=document.createElement('textarea');visual.className='es-visual';source.className='es-html-source';source.hidden=true;source.setAttribute('aria-label','HTML содержимого');source.spellcheck=false;element.replaceChildren(visual,source);
   const report=error=>{onError({code:error.code||'EDITOR_OPERATION_FAILED',viewBlocked});};
   const styleFailure=error=>{viewBlocked=true;report(error);};
   const markDirty=()=>{dirty=true;onDirty({field,mode,dirty:true});};
   const guarded=callback=>{try{if(destroyed)failure('EDITOR_DESTROYED');return callback();}catch(error){report(error);throw error;}};
+  const clearPadding=()=>{paddingBookmark=null;};
+  const ownPaddingControl=node=>!!paddingControls&&(node===paddingControls.input||node===paddingControls.button);
+  function validPaddingBookmark(){
+    const saved=paddingBookmark;
+    return !!saved&&!destroyed&&!viewBlocked&&mode==='visual'&&editor?.view===saved.view
+      &&editor.state.doc===saved.doc&&saved.doc.nodeAt(saved.tablePos)===saved.tableNode;
+  }
+  function rememberPadding(){
+    if(destroyed||viewBlocked||mode!=='visual'||!editor){clearPadding();return;}
+    const dom=visual.ownerDocument.getSelection();
+    if(dom?.anchorNode&&dom.focusNode&&editor.view.dom.contains(dom.anchorNode)&&editor.view.dom.contains(dom.focusNode)){
+      try{const selection=commandSelection(editor.view),table=selectedTable(selection);if(!table)failure('EDITOR_SELECT_TABLE');proveDocumentTables(editor.state.doc);
+        paddingBookmark={view:editor.view,doc:editor.state.doc,anchor:selection.anchor,head:selection.head,tablePos:table.pos,tableNode:table.node};return;
+      }catch{clearPadding();return;}
+    }
+    // Moving between these two controls may already have cleared native DOM
+    // selection. It never authorizes a new bookmark from a stale PM selection.
+    if(!ownPaddingControl(visual.ownerDocument.activeElement)||!validPaddingBookmark())clearPadding();
+  }
+  function paddingSelection(){
+    try{return commandSelection(editor.view);}catch(error){
+      if(!ownPaddingControl(visual.ownerDocument.activeElement)||!validPaddingBookmark())throw error;
+      const saved=paddingBookmark,selection=TextSelection.create(saved.doc,saved.anchor,saved.head),table=selectedTable(selection);
+      if(!table||table.pos!==saved.tablePos||table.node!==saved.tableNode)failure('EDITOR_SELECTION_UNSUPPORTED');
+      return selection;
+    }
+  }
+  function bindPadding(input,button){
+    const host=element.closest('[data-editor-field]');
+    if(!(input instanceof HTMLElement)||!(button instanceof HTMLElement)||!host||host.dataset.editorField!==field
+      ||input.closest('[data-editor-field]')!==host||button.closest('[data-editor-field]')!==host
+      ||!input.matches('input[data-editor-table-padding]')||!button.matches('button[data-editor-table-action="padding"]'))failure('EDITOR_CONTEXT_INVALID');
+    paddingUnbind?.();clearPadding();paddingControls={input,button};
+    const doc=visual.ownerDocument,win=doc.defaultView;
+    const focusOut=event=>{if(ownPaddingControl(event.relatedTarget))rememberPadding();else clearPadding();};
+    const focusIn=event=>{if(ownPaddingControl(event.target))rememberPadding();else clearPadding();};
+    const pointer=event=>{if(ownPaddingControl(event.target))rememberPadding();else clearPadding();};
+    const selectionChanged=()=>{
+      if(!paddingBookmark)return;if(!validPaddingBookmark()){clearPadding();return;}
+      if(!ownPaddingControl(doc.activeElement)){clearPadding();return;}
+      const dom=doc.getSelection(),closest=node=>(node?.nodeType===1?node:node?.parentElement)?.closest('.es-editor-surface');
+      if(dom?.anchorNode&&dom.focusNode&&(closest(dom.anchorNode)||closest(dom.focusNode))){
+        try{const current=commandSelection(editor.view);if(current.anchor!==paddingBookmark.anchor||current.head!==paddingBookmark.head)clearPadding();}catch{clearPadding();}
+      }
+      // Native selection inside the owned text input is allowed. A genuine
+      // user selection elsewhere already clears through pointer/focus events;
+      // a range in either editor is checked above, never treated as input text.
+    };
+    visual.addEventListener('focusout',focusOut,true);doc.addEventListener('focusin',focusIn,true);doc.addEventListener('pointerdown',pointer,true);doc.addEventListener('selectionchange',selectionChanged);win.addEventListener('blur',clearPadding);
+    paddingUnbind=()=>{visual.removeEventListener('focusout',focusOut,true);doc.removeEventListener('focusin',focusIn,true);doc.removeEventListener('pointerdown',pointer,true);doc.removeEventListener('selectionchange',selectionChanged);win.removeEventListener('blur',clearPadding);paddingControls=null;clearPadding();};
+  }
   function refresh(){if(editor&&rules)rules.refresh(editor.state.doc);}
   function dispatchCandidate(transaction){
+    proveDocumentTables(transaction.doc);
     if(protectedShape(transaction.doc)!==protectedShape(editor.state.doc))failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
     candidateBudget(canonicalDocument(transaction.doc,{owner,approvedTables}));
     editor.view.dispatch(transaction);return true;
@@ -489,12 +586,13 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
     return canonicalDocument(doc,{owner,approvedTables});
   }
   function build(html,records=[...embeddedMap.values()]) {
+    clearPadding();
     const nextMap=approvedEmbedded(records,{pageId});
     const nextTables=new Set();const doc=approvedDocument(html,{owner,approvedTables:nextTables,embeddedMap:nextMap});
     approvedBaseDoc=null;approvedCanonical='';
     if(editor)editor.destroy();if(rules)rules.destroy();approvedTables=nextTables;embeddedMap=nextMap;rules=new Rules(styleSheet,styleFailure);
     editor=new Editor({element:visual,injectCSS:false,enableInputRules:false,enablePasteRules:false,content:doc,
-      extensions:extensionsFor({owner,pageId,rules,approvedTables,embeddedMap,queueImage,embeddedSourceUrl,requestHtml:()=>api.setMode('html'),onBlocked:()=>report({code:'EDITOR_PROTECTED_COMMAND_UNSUPPORTED'})}),
+      extensions:extensionsFor({owner,pageId,rules,approvedTables,embeddedMap,queueImage,embeddedSourceUrl,requestHtml:()=>api.setMode('html'),onBlocked:error=>report(error||{code:'EDITOR_PROTECTED_COMMAND_UNSUPPORTED'})}),
       editorProps:{attributes:{class:'es-editor-surface',role:'textbox','aria-label':'Текст страницы'},handleDOMEvents:{
         paste(view,event){event.preventDefault();const html=event.clipboardData?.getData('text/html')||'',text=event.clipboardData?.getData('text/plain')||'';
           if(html){onUntrustedInput({field,html,text,intent:'paste'});return true;}
@@ -503,6 +601,12 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
       },
         handleKeyDown(view,event){
           if(protectedDeleteBoundary(view,event)){event.preventDefault();report({code:'EDITOR_PROTECTED_COMMAND_UNSUPPORTED'});return true;}
+          if(['Enter','Tab'].includes(event.key)&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!event.isComposing){
+            try{const selection=commandSelection(view);proveDocumentTables(view.state.doc);const table=selectedTable(selection);
+              if(table){event.preventDefault();if(event.key==='Enter'){dispatchCandidate(view.state.tr.setSelection(selection).replaceSelectionWith(view.state.schema.nodes.hardBreak.create()));}
+                else{const width=table.node.firstChild.childCount,next=table.rowIndex*width+table.columnIndex+(event.shiftKey?-1:1);if(next<0||next>=table.node.childCount*width)failure('EDITOR_TABLE_BOUNDARY');const rowIndex=Math.floor(next/width),columnIndex=next%width;let pos=table.pos+4;for(let r=0;r<rowIndex;r++)pos+=table.node.child(r).nodeSize;for(let c=0;c<columnIndex;c++)pos+=table.node.child(rowIndex).child(c).nodeSize;dispatchCandidate(view.state.tr.setSelection(TextSelection.create(view.state.doc,pos)));}return true;}
+            }catch(error){event.preventDefault();report(error);return true;}
+          }
           try{if(paragraphKey(view,event))return true;}catch(error){event.preventDefault();report(error);return true;}
           const selection=view.state.selection,slot=selection.$from.parent;
           if(slot.type.name!=='esProtectedSlot')return false;
@@ -518,13 +622,14 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
     });
     // Pinned Tiptap emits this before EditorView.updateState, hence before any
     // node/mark view can fail while rendering the newly applied transaction.
-    editor.on('beforeTransaction',({nextState})=>{if(!editor.state.doc.eq(nextState.doc))markDirty();});
+    editor.on('beforeTransaction',({transaction,nextState})=>{if(transaction?.docChanged||editor.state.doc!==nextState.doc)clearPadding();if(!editor.state.doc.eq(nextState.doc))markDirty();});
     refresh();source.value=html;viewBlocked=false;
     // One actor/view-owned base only, after successful closed import/render.
     // PM nodes are immutable: undo may legitimately return to this exact model.
     approvedBaseDoc=editor.state.doc;approvedCanonical=html;
   }
   function htmlOnly(html){
+    clearPadding();
     approvedBaseDoc=null;approvedCanonical='';
     editor?.destroy();editor=null;rules?.destroy();rules=null;approvedTables.clear();
     source.value=html;mode='html';source.hidden=false;visual.hidden=true;viewBlocked=false;
@@ -532,6 +637,7 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
   source.addEventListener('input',markDirty);
   const stopLink=event=>{if(event.target.closest?.('a'))event.preventDefault();};visual.addEventListener('auxclick',stopLink);
   const api={
+    bindTablePaddingControls:(input,button)=>guarded(()=>bindPadding(input,button)),
     validateApprovedHtml:(html,{approvedEmbedded:records=[...embeddedMap.values()]}={})=>guarded(()=>{try{approvedDocument(html,{owner,approvedTables:new Set(),embeddedMap:approvedEmbedded(records,{pageId})});return {visual:true};}catch(error){if(VISUAL_UNSUPPORTED.has(error.code))return {visual:false,code:error.code};throw error;}}),
     getCanonicalHtml:()=>guarded(()=>visualCanonical()),
     getInput:()=>guarded(()=>({mode,html:mode==='html'?source.value:visualCanonical(editor?.state.doc,{forCheck:true})})),
@@ -540,7 +646,7 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
       catch(error){if(!VISUAL_UNSUPPORTED.has(error.code))throw error;htmlOnly(html);}
       dirty=emitDirty;if(emitDirty)markDirty();else onDirty({field,mode,dirty:false});
     }),
-    setRawHtml:raw=>guarded(()=>{if(typeof raw!=='string')failure('EDITOR_RAW_TYPE_INVALID');source.value=raw;mode='html';source.hidden=false;visual.hidden=true;markDirty();}),
+    setRawHtml:raw=>guarded(()=>{clearPadding();if(typeof raw!=='string')failure('EDITOR_RAW_TYPE_INVALID');source.value=raw;mode='html';source.hidden=false;visual.hidden=true;markDirty();}),
     stageEmbedded:issuance=>guarded(()=>{
       if(!owner||issuance.field!==field||viewBlocked)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
       if(mode==='html'){
@@ -564,8 +670,14 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
     setMode:next=>guarded(()=>{if(next==='html'){if(mode==='visual')source.value=visualCanonical(editor?.state.doc,{forCheck:true});mode='html';source.hidden=false;visual.hidden=true;return;}
       if(next!=='visual')failure('EDITOR_MODE_INVALID');if(mode==='html')failure('EDITOR_SERVER_CHECK_REQUIRED');}),
     command:(name,value)=>guarded(()=>{
+      if(name!=='tablePadding')clearPadding();
       if(viewBlocked)failure('EDITOR_VIEW_RECHECK_REQUIRED');
       if(mode!=='visual')failure('EDITOR_VISUAL_MODE_REQUIRED');
+      if(['tableInsert','tableAddRow','tableDeleteRow','tableAddColumn','tableDeleteColumn','tablePadding'].includes(name)){
+        try{const selection=name==='tablePadding'?paddingSelection():commandSelection(editor.view);proveDocumentTables(editor.state.doc);
+          const transaction=closeHistory(tableTransaction(editor.state,selection,name,value)).setMeta(TABLE_HISTORY_BOUNDARY,true),result=dispatchCandidate(transaction);editor.view.focus();return result;
+        }finally{clearPadding();}
+      }
       if(name==='clearFormatting')return clearSelectedFormatting(commandSelection(editor.view));
       if(FORMAT.includes(name)){
         const attrs=validateAttrs({[name]:value},[name]),selection=commandSelection(editor.view);
@@ -580,6 +692,7 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
         const shape=protectedShape(editor.state.doc);let formatChain=editor.chain();
         if(!selection.eq(editor.state.selection))formatChain=formatChain.command(({tr})=>{tr.setSelection(selection);return true;});
         const result=formatChain.setMark('esFormat',attrs).command(({tr})=>{
+          proveDocumentTables(tr.doc);
           if(protectedShape(tr.doc)!==shape)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
           candidateBudget(canonicalDocument(tr.doc,{owner,approvedTables}));
           return true;
@@ -610,7 +723,7 @@ export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEm
     }),
     focus:()=>guarded(()=>mode==='html'?source.focus():editor.view.focus()),
     destroy:()=>{
-      if(destroyed)return;destroyed=true;approvedBaseDoc=null;approvedCanonical='';approvedHtml='';
+      if(destroyed)return;clearPadding();paddingUnbind?.();paddingUnbind=null;destroyed=true;approvedBaseDoc=null;approvedCanonical='';approvedHtml='';
       for(const node of element.querySelectorAll('textarea,input,pre')){if('value' in node)node.value='';else node.textContent='';}
       editor?.destroy();editor=null;rules?.destroy();rules=null;approvedTables.clear();approvedBaseDoc=null;approvedCanonical='';approvedHtml='';source.value='';visual.replaceChildren();element.replaceChildren();
       embeddedMap.clear();initialEmbedded=[];

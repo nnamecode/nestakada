@@ -16,6 +16,32 @@ from .models import (SharedBlock, SharedRevision, SharedDraft, SharedRestoreStag
 from .policy import canonical_uuid, POLICY
 
 
+def cancel_fingerprint(*, generation, stage_id):
+    return S.digest({'protocol': 'shared-editor-v1', 'generation': generation,
+                     'stageId': canonical_uuid(str(stage_id)), 'confirmCancel': True})
+
+
+def parse_cancel_request(raw_input, *, generation):
+    try:
+        if type(raw_input) is not bytes or len(raw_input) > 16384:
+            raise ValueError()
+        value = strict_json(raw_input.decode('utf-8'))
+        if (type(value) is not dict or set(value) != {'protocol', 'generation', 'operationId', 'confirmCancel'}
+                or value['protocol'] != 'shared-editor-v1' or type(value['generation']) is not int
+                or value['generation'] != generation or value['generation'] < 1 or value['confirmCancel'] is not True):
+            raise ValueError()
+        canonical_uuid(value['operationId'])
+        return value
+    except (ValueError, TypeError, KeyError, UnicodeError, RecursionError):
+        raise SharedFault('SHARED_INPUT_REJECTED', 400) from None
+
+
+def cancel_restore_stage(*, actor, kind, generation, stage_id, operation_id, confirmed, session_key):
+    from .commits import cancel_restore_stage as cancel
+    return cancel(actor=actor, kind=kind, generation=generation, stage_id=stage_id,
+        operation_id=operation_id, confirmed=confirmed, session_key=session_key)
+
+
 def parse_write_request(raw_input):
     """Bounded closed DTO, without HTML normalization or current/source reads."""
     if type(raw_input) is not bytes or len(raw_input) > 4 * 1024 * 1024:
@@ -71,6 +97,18 @@ def result_for(receipt, replay=False):
         return {'ok': False, 'code': 'SHARED_OPERATION_ABORTED', 'operationId': str(receipt.pk),
             'outcomeKnown': True, 'resultId': None, 'resultCode': 'aborted',
             'replay': replay, 'gone': False, 'editorContext': None}
+    if receipt.action == 'restore_cancel':
+        stages = list(SharedRestoreStage.objects.filter(block_id=receipt.block_id,
+            actor_id=receipt.actor_id, actor_generation=receipt.actor_generation,
+            source_revision_id=receipt.source_revision_id, base_revision_id=receipt.base_revision_id,
+            status='released', terminal_operation_id=receipt.pk, terminal_actor_id=receipt.actor_id)
+            .values_list('id', flat=True)[:2])
+        if (receipt.result_code != 'released' or receipt.result_id is not None
+                or receipt.result_identity_kind is not None or len(stages) != 1
+                or receipt.fingerprint != cancel_fingerprint(generation=receipt.actor_generation, stage_id=stages[0])):
+            raise SharedFault('SHARED_RESULT_UNAVAILABLE', 503)
+        return {'ok': True, 'operationId': str(receipt.pk), 'resultId': None, 'resultCode': 'released',
+            'replay': replay, 'gone': False, 'editorContext': None, 'stageId': str(stages[0]), 'outcomeKnown': True}
     kinds = {'sharedrevision': SharedRevision, 'shareddraft': SharedDraft, 'sharedrestorestage': SharedRestoreStage}
     gone = False
     if receipt.result_id is not None:
@@ -136,12 +174,12 @@ def reconcile_replay(*, actor, generation, session_key, value):
 
 
 def finish(*, actor, generation, context, action, operation_id, fingerprint, result_id,
-           reservation, source_id=None, result_revision=None):
+           reservation, source_id=None, result_revision=None, result_code='applied'):
     from . import reservations as R, profiles
     receipt = SharedReceipt.objects.create(id=operation_id, action=action, actor_id=actor.pk,
         actor_generation=generation, block_id=context.block_id, source_revision_id=source_id,
         base_revision_id=context.child['baseRevisionId'], fingerprint=fingerprint,
-        result_code='applied', result_id=result_id, result_revision=result_revision,
+        result_code=result_code, result_id=result_id, result_revision=result_revision,
         source_stamp=reservation['book']['sourceStamp'], reservation_profile=reservation['book']['profileId'],
         reservation_book_sha256=reservation['sha256'])
     record_event(category=Category.USER_ACTIONS, event_code='SHARED_' + action.upper(), level=Level.INFO,

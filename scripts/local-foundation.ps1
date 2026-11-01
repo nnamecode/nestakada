@@ -78,6 +78,52 @@ function Check-Locks {
     }
     return $lock
 }
+function Check-EditorRuntime($BaseLock) {
+    $packageRoot = Join-Path $repo 'environment/editor-package'
+    foreach ($parent in @((Join-Path $repo 'environment'),$packageRoot)) { Reject-Link $parent }
+    $receiptRelative = 'environment/editor-package/local-runtime.json'
+    $receiptPath = Join-Path $repo $receiptRelative
+    Reject-Link $receiptPath
+    $receiptSha = (Get-FileHash -LiteralPath $receiptPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($receiptSha -ne '634b91630fac20a12aba9ce9f243038aab3c91c202bac0383c2db8ee7139d74b') { throw 'Reviewed editor runtime receipt changed.' }
+    $receipt = Get-Content -Raw -LiteralPath $receiptPath | ConvertFrom-Json
+    $fields = @('schemaVersion','status','authorizedBy','integrationAuthority','baseImageId','appImageId','platform','user','pythonVersion','baseLayers','editorLayer','packageVersions','inputs','validation','scope')
+    if ((@($receipt.PSObject.Properties.Name | Sort-Object) -join ',') -cne (@($fields | Sort-Object) -join ',')) { throw 'Editor runtime receipt schema mismatch.' }
+    $base = @($BaseLock.images | Where-Object component -eq 'python-runtime')
+    if ($base.Count -ne 1 -or $receipt.schemaVersion -ne 1 -or $receipt.status -cne 'verified-local-candidate' -or
+        $receipt.authorizedBy -cne 'D-330' -or $receipt.integrationAuthority -cne 'DEV07-NH-RESUME-001' -or
+        $receipt.baseImageId -cne $base[0].reference -or $receipt.appImageId -cnotmatch '^sha256:[a-f0-9]{64}$' -or
+        $receipt.editorLayer -cnotmatch '^sha256:[a-f0-9]{64}$' -or $receipt.user -cne '10001:10001' -or
+        $receipt.platform -cne 'linux/amd64' -or $receipt.pythonVersion -cne '3.14.10') { throw 'Editor runtime is not admitted for local integration.' }
+    $versions = [ordered]@{html5lib='1.1';tinycss2='1.5.1';nh3='0.3.7';six='1.17.0';webencodings='0.6.1'}
+    if ((@($receipt.packageVersions.PSObject.Properties.Name | Sort-Object) -join ',') -cne (@($versions.Keys | Sort-Object) -join ',')) { throw 'Editor runtime package set changed.' }
+    foreach ($name in $versions.Keys) { if ($receipt.packageVersions.$name -cne $versions[$name]) { throw 'Editor runtime package version changed.' } }
+    $validationFields = @('status','installedTreeVerified','metadataVersionsVerified','basePrefixVerified','baseLayerCount','fileCount')
+    if ((@($receipt.validation.PSObject.Properties.Name | Sort-Object) -join ',') -cne (@($validationFields | Sort-Object) -join ',') -or
+        $receipt.validation.status -cne 'PASS' -or $receipt.validation.installedTreeVerified -cne $true -or
+        $receipt.validation.metadataVersionsVerified -cne $true -or $receipt.validation.basePrefixVerified -cne $true -or
+        $receipt.validation.baseLayerCount -ne 8 -or $receipt.validation.fileCount -ne 85) { throw 'Editor runtime verification is incomplete.' }
+    $inputPaths = @('environment/editor-package/App.candidate.Dockerfile','environment/editor-package/requirements.lock','environment/editor-package/installed-tree.json')
+    if (@($receipt.inputs).Count -ne 3 -or (@($receipt.inputs | ForEach-Object path | Sort-Object) -join ',') -cne (@($inputPaths | Sort-Object) -join ',')) { throw 'Editor runtime input set changed.' }
+    foreach ($entry in $receipt.inputs) {
+        if ((@($entry.PSObject.Properties.Name | Sort-Object) -join ',') -cne 'path,sha256' -or $entry.sha256 -cnotmatch '^[a-f0-9]{64}$') { throw 'Editor runtime input descriptor invalid.' }
+        $path = [IO.Path]::GetFullPath((Join-Path $repo $entry.path))
+        if (!$path.StartsWith($packageRoot + [IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) { throw 'Editor runtime input escaped its directory.' }
+        Reject-Link $path
+        if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $entry.sha256) { throw 'Reviewed editor runtime input changed.' }
+    }
+    $actualBase = (Docker @('image','inspect',$receipt.baseImageId) | ConvertFrom-Json)[0]
+    $actual = (Docker @('image','inspect',$receipt.appImageId) | ConvertFrom-Json)[0]
+    $baseLayers = @($actualBase.RootFS.Layers); $appLayers = @($actual.RootFS.Layers)
+    if ($actualBase.Id -cne $receipt.baseImageId -or $actual.Id -cne $receipt.appImageId -or
+        $actual.Os -cne 'linux' -or $actual.Architecture -cne 'amd64' -or $actual.Config.User -cne '10001:10001' -or
+        $baseLayers.Count -ne 8 -or @($receipt.baseLayers).Count -ne 8 -or $appLayers.Count -ne 9 -or
+        $appLayers[8] -cne $receipt.editorLayer) { throw 'Editor runtime image identity/config/layers mismatch.' }
+    for ($index=0; $index -lt 8; $index++) {
+        if ($baseLayers[$index] -cne $receipt.baseLayers[$index] -or $appLayers[$index] -cne $baseLayers[$index]) { throw 'Editor runtime base layer prefix changed.' }
+    }
+    return [pscustomobject]@{image=$receipt.appImageId;receiptPath=$receiptRelative;receiptSha256=$receiptSha}
+}
 function Check-MediaWorker($BaseLock) {
     foreach ($parent in @((Join-Path $repo 'tools'),(Join-Path $repo 'tools/media_worker'),(Join-Path $repo 'environment'),(Join-Path $repo 'environment/media-worker'))) { Reject-Link $parent }
     $receiptPath = Join-Path $repo 'environment/media-worker/candidate-receipt.json'
@@ -195,6 +241,7 @@ if ($Action -eq 'UnitTests') {
 }
 
 $lock = Check-Locks
+$editorRuntime = Check-EditorRuntime $lock
 $worker = Check-MediaWorker $lock
 $existing = @(Check-OwnedResources)
 if ($existing.Count) { throw 'Foundation containers already exist; run Stop before a new Start.' }
@@ -244,6 +291,7 @@ Prepare-Secrets $images['python-runtime']
 $values = [ordered]@{
     FOUNDATION_PROJECT=$project; FOUNDATION_PREFIX=$project; FOUNDATION_ENV=$Environment; FOUNDATION_PORT=$port
     FOUNDATION_PYTHON_IMAGE=$images['python-runtime']; FOUNDATION_POSTGRES_IMAGE=$images['postgres']; FOUNDATION_INGRESS_IMAGE=$images['local-ingress']
+    FOUNDATION_APP_IMAGE=$editorRuntime.image
     FOUNDATION_SOURCE=$source; FOUNDATION_PRIVATE=$private
     FOUNDATION_WORKER_IMAGE=$worker.dockerReportedImageId; FOUNDATION_WORKER_SOURCE=$workerSource
     FOUNDATION_DB_START=(Join-Path $repo 'environment/foundation/db-start.sh')
@@ -252,6 +300,8 @@ $values = [ordered]@{
 }
 Write-Utf8 $envFile (($values.GetEnumerator() | ForEach-Object { "$($_.Key)='$(([string]$_.Value).Replace('\','/'))'" }) -join "`n")
 $manifest = [ordered]@{runId=$runId; environment=$Environment; active=$false; composeProject=$project
+    selectedAppImage=$editorRuntime.image; selectedBaseImage=$images['python-runtime']
+    editorRuntimeReceipt=[ordered]@{path=$editorRuntime.receiptPath;sha256=$editorRuntime.receiptSha256}
     containers=[ordered]@{app="$project-app";db="$project-db";ingress="$project-ingress";'media-worker'="$project-media-worker"}
     sourceDirectory=$source; sourceManifest=$sourceManifest; sourceSha256=(Get-FileHash -LiteralPath $sourceManifest -Algorithm SHA256).Hash.ToLowerInvariant()
     workerSourceDirectory=$workerSource; workerSourceManifest=$workerManifest

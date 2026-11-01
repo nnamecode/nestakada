@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "verified-local-candidate",
+  "authorizedBy": "D-330",
+  "integrationAuthority": "DEV07-NH-RESUME-001",
+  "baseImageId": "sha256:09433387bce7dd726eb2f76918287c04c1fbd340eed1db2aaa3397fbd0474951",
+  "appImageId": "sha256:782f53c4a5e9473c5b93441adaac8da1ccbdcb93bc961a8d958c3b55c6e39986",
+  "platform": "linux/amd64",
+  "user": "10001:10001",
+  "pythonVersion": "3.14.10",
+  "baseLayers": [
+    "sha256:a5d6d345f6afa08d7c31272055746d60a838b290bfcc82c0a23e8e984d61a933",
+    "sha256:8eba5daee91ceb0cc3c02594b5c5be9a6fda4f8ca08733d545a2da7fea33a128",
+    "sha256:a6b7eb63fc46cead2cbe639534c6f3f8098476f5c2d7d947b8ba3f477fd2f4c2",
+    "sha256:f66b96bf60a6f6ffb34ff693cd2237be631a7cc79dbd850ccdbfc634b4e903e8",
+    "sha256:5777cdb8b57ee1a42d828af193bc297a03f9971765e16b218f404ff93be73ae7",
+    "sha256:331607dc3327d06a139fca72674cd103dd295e5c548927ab13bddc66e798cc09",
+    "sha256:f83bc6052e6b4a3ffc64f687a08246e539088ea02a264047824a1d73143a0965",
+    "sha256:347514980a936205b14a99a8d5687fcd4e22fdcbbae87acd664a9d8a3e7cd7cf"
+  ],
+  "editorLayer": "sha256:8246b813e7a5fcc81bfe567de6e45f0d6bc8c9af19c6b48b61af4624bacaf5fe",
+  "packageVersions": {
+    "html5lib": "1.1",
+    "tinycss2": "1.5.1",
+    "nh3": "0.3.7",
+    "six": "1.17.0",
+    "webencodings": "0.6.1"
+  },
+  "inputs": [
+    {
+      "sha256": "04d8288fe73dd0fbf89b853ef4c5f67e063d6dbc0369613a09a2143d1e21b5f8",
+      "path": "environment/editor-package/App.candidate.Dockerfile"
+    },
+    {
+      "sha256": "3c0f35be0b3d7cc37da279d8c217db68af029a31139273740ac6a82ffea33b0e",
+      "path": "environment/editor-package/requirements.lock"
+    },
+    {
+      "sha256": "e9f578c16795459c4555795d726b4ccb343e4216fac3e6cdaf45cea9fe2ad169",
+      "path": "environment/editor-package/installed-tree.json"
+    }
+  ],
+  "validation": {
+    "status": "PASS",
+    "installedTreeVerified": true,
+    "metadataVersionsVerified": true,
+    "basePrefixVerified": true,
+    "baseLayerCount": 8,
+    "fileCount": 85
+  },
+  "scope": "Ordinary local dev/test integration only; not a production runtime decision"
+}

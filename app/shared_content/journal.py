@@ -14,7 +14,7 @@ from .storage import SharedStorage, facts
 MAX_BOOK_BYTES = 4096
 FIELDS = frozenset(('bookSchema', 'profileId', 'operationId', 'blockId', 'action', 'actorId',
                    'generation', 'inputFingerprint', 'sourceStamp', 'reservedBytes', 'snapshotIncrement'))
-ACTIONS = {'draft': 0, 'apply': 1, 'restore_prepare': 0}
+ACTIONS = {'draft': 0, 'apply': 1, 'restore_prepare': 0, 'restore_cancel': 0}
 
 
 def _uuid(value):

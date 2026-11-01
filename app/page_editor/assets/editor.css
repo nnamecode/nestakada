@@ -10,3 +10,16 @@
 .es-protected-slot{display:inline-block;outline:1px dotted #c6aa78;min-width:3ch;min-height:1.5em;max-width:100%;vertical-align:baseline}.es-protected-parent{min-height:28px;overflow-wrap:anywhere}
 .es-media{margin:18px 0;padding:16px;border:1px solid #c6aa78;border-radius:8px;background:#fff}.es-media img{display:block;max-width:100%;max-height:240px;object-fit:contain}.es-media label{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.es-media-controls{display:flex;flex-wrap:wrap;gap:8px}.es-media button{margin:4px;min-height:36px}.es-media input,.es-media select{max-width:100%;min-height:34px}.es-media [data-editor-media-field=alt]{min-width:220px}
 .es-media button{max-width:100%;overflow-wrap:anywhere;white-space:normal}
+.es-price-editor{margin:18px 0;padding:16px;border:1px solid #bfc5cc;border-radius:8px;background:#fff}
+.es-price-editor button{min-height:36px;max-width:100%;margin:4px;white-space:normal;overflow-wrap:anywhere}
+.es-price-editor input,.es-price-editor select,.es-price-editor textarea{max-width:100%;min-height:36px;font:inherit}
+.es-price-editor label{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0}
+.es-price-editor input[type=checkbox]{min-height:20px;min-width:20px}
+.es-price-scroll{max-width:100%;overflow:auto}.es-price-scroll table{border-collapse:collapse;width:100%}
+.es-price-scroll td,.es-price-scroll th{min-width:180px;padding:8px;vertical-align:top;border:1px solid #cbd0d6;text-align:left}
+.es-price-pages{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.es-visual [data-editor-table]{max-width:100%;overflow:auto;margin:12px 0}
+.es-rich-table{border-collapse:collapse;width:100%;table-layout:auto}
+.es-rich-table>tbody>tr>td,.es-rich-table>tbody>tr>th{border:1px solid #cbd0d6;vertical-align:top;text-align:left;background:transparent}
+.es-rich-table>tbody>tr:nth-child(even)>td,.es-rich-table>tbody>tr:nth-child(even)>th{background:#1b293b0a}
+.es-rich-table>tbody>tr>td>p,.es-rich-table>tbody>tr>th>p{margin:0;min-height:1em}

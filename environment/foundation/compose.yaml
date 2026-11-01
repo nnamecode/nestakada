@@ -73,8 +73,9 @@ services:
 
   app:
     <<: *django
+    image: ${FOUNDATION_APP_IMAGE:?required}
     container_name: ${FOUNDATION_PREFIX:?required}-app
-    command: [python, manage.py, runserver, "0.0.0.0:8000", --noreload, --nothreading]
+    command: [python, manage.py, runserver, "0.0.0.0:8000", --noreload]
     environment:
       <<: *django-env
       ESTAKADA_DB_USER: app_runtime
@@ -162,6 +163,7 @@ services:
 
   migrate:
     <<: *django
+    image: ${FOUNDATION_APP_IMAGE:?required}
     profiles: [tools]
     command: [python, manage.py, migrate, --noinput]
     networks: [db]
@@ -177,6 +179,7 @@ services:
 
   units:
     <<: *django
+    image: ${FOUNDATION_APP_IMAGE:?required}
     profiles: [tools]
     command: [python, manage.py, test, audit, content, accounts, media_library, page_versions, foundation_tests, --keepdb, --noinput]
     networks: [db]
