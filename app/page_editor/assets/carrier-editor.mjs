@@ -1,7 +1,9 @@
 // D-330 pinned packages only. This adapter is not server admission or a sanitizer.
 import { Editor, Node, Mark, Extension } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { Plugin } from '@tiptap/pm/state';
+import { Plugin, TextSelection } from '@tiptap/pm/state';
+import { canSplit, canJoin } from '@tiptap/pm/transform';
+import {approvedEmbedded,readMarker,markerHtml,protectedShape,insertBlockHtml,replaceMarkerInHtml} from './embedded-editor.mjs';
 
 const FONTS = Object.freeze({inter:'Inter,Arial,sans-serif',oswald:'Oswald,Arial,sans-serif',arial:'Arial,sans-serif',georgia:'Georgia,serif','times-new-roman':'"Times New Roman",serif','courier-new':'"Courier New",monospace'});
 const FORMAT = ['font','size','fg','bg'];
@@ -95,7 +97,7 @@ class Rules {
     const active=new Set();let nodes=0;
     doc.descendants(node=>{
       if(++nodes>40000)failure('EDITOR_NODE_BUDGET');
-      for(const [attrs,names] of [[node.attrs,BLOCK],...node.marks.filter(mark=>mark.type.name==='esFormat').map(mark=>[mark.attrs,FORMAT])]){
+      for(const [attrs,names] of [[node.attrs,BLOCK],...(node.type.name==='esProtectedSlot'?[[node.attrs,FORMAT]]:[]),...node.marks.filter(mark=>mark.type.name==='esFormat').map(mark=>[mark.attrs,FORMAT])]){
         const facts=styleFacts(attrs,names);if(!Object.keys(facts).length)continue;
         const key=this.key(facts);active.add(key);this.ensure(facts);
       }
@@ -116,7 +118,102 @@ function setNodeDom(dom,node,rules) {
   dom.className=className;
 }
 
-function extensionsFor({owner,rules,approvedTables,requestHtml}) {
+function protectedDeleteBoundary(view,event){
+  if(event.key!=='Backspace'&&event.key!=='Delete')return false;
+  const direction=event.key==='Backspace'?-1:1,selection=view.dom.ownerDocument.getSelection();
+  if(!selection?.rangeCount||!selection.anchorNode||!selection.focusNode
+      ||!view.dom.contains(selection.anchorNode)||!view.dom.contains(selection.focusNode))return false;
+  const closest=(node,selector)=>(node.nodeType===1?node:node.parentElement)?.closest(selector);
+  const isProtected=node=>node&&['esProtectedParent','esProtectedSlot','esProtected'].includes(node.type.name);
+  const containsProtected=node=>{if(!node)return false;if(isProtected(node))return true;let found=false;node.descendants(child=>{if(isProtected(child)){found=true;return false;}return !found;});return found;};
+  const slotAt=position=>{const resolved=view.state.doc.resolve(position);for(let depth=resolved.depth;depth>0;depth--){const node=resolved.node(depth);if(node.type.name==='esProtectedSlot')return {node,start:resolved.start(depth),end:resolved.end(depth),offset:position-resolved.start(depth)};}return null;};
+  try{
+    const anchor=view.posAtDOM(selection.anchorNode,selection.anchorOffset,-1);
+    const focus=view.posAtDOM(selection.focusNode,selection.focusOffset,direction);
+    const anchorSlot=slotAt(anchor),focusSlot=slotAt(focus);
+    if(!selection.isCollapsed){
+      if(anchorSlot&&focusSlot&&anchorSlot.start===focusSlot.start){
+        const a=closest(selection.anchorNode,'[data-editor-protected-slot]'),f=closest(selection.focusNode,'[data-editor-protected-slot]');
+        return !a||!f||a.dataset.editorProtectedSlot!==anchorSlot.node.attrs.slotId||f.dataset.editorProtectedSlot!==focusSlot.node.attrs.slotId;
+      }
+      let hazard=false;view.state.doc.nodesBetween(Math.min(anchor,focus),Math.max(anchor,focus),node=>{if(isProtected(node)){hazard=true;return false;}return !hazard;});
+      return hazard||!!closest(selection.anchorNode,'[data-editor-protected-parent]')||!!closest(selection.focusNode,'[data-editor-protected-parent]');
+    }
+    if(focusSlot){
+      const domSlot=closest(selection.focusNode,'[data-editor-protected-slot]');
+      if(domSlot&&domSlot.dataset.editorProtectedSlot!==focusSlot.node.attrs.slotId)return true;
+      if(!domSlot&&closest(selection.focusNode,'[data-editor-protected-parent]'))return true;
+      const boundary=direction<0?focusSlot.offset===0:focusSlot.offset===focusSlot.node.content.size;
+      if(boundary)return true;
+      const domAnchorSlot=closest(selection.anchorNode,'[data-editor-protected-slot]');
+      if(anchor===focus&&anchorSlot?.start===focusSlot.start
+          &&domSlot?.dataset.editorProtectedSlot===focusSlot.node.attrs.slotId
+          &&domAnchorSlot?.dataset.editorProtectedSlot===focusSlot.node.attrs.slotId
+          &&(view.state.selection.anchor!==anchor||view.state.selection.head!==focus)){
+        // Native cursor movement may precede ProseMirror's selectionchange update.
+        // Synchronize only the validated interior caret; native deletion stays native.
+        view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc,anchor,focus)));
+      }
+      return false;
+    }
+    const resolved=view.state.doc.resolve(focus);
+    if(closest(selection.focusNode,'[data-editor-protected-parent]'))return true;
+    for(let depth=resolved.depth;depth>0;depth--)if(isProtected(resolved.node(depth)))return true;
+    if(!resolved.parent.inlineContent)return containsProtected(resolved.nodeBefore)||containsProtected(resolved.nodeAfter);
+    if(direction<0?resolved.parentOffset!==0:resolved.parentOffset!==resolved.parent.content.size)return false;
+    // Ordinary text at a boundary may merge with a protected adjacent block.
+    // Walk outward only while no intervening sibling exists.
+    for(let depth=resolved.depth;depth>0;depth--){
+      const edge=view.state.doc.resolve(direction<0?resolved.before(depth):resolved.after(depth));
+      const neighbor=direction<0?edge.nodeBefore:edge.nodeAfter;
+      if(neighbor)return containsProtected(neighbor);
+    }
+    return false;
+  }catch{
+    // A stale DOM point in a protected region must not start native merging.
+    return !!closest(selection.focusNode,'[data-editor-protected-parent]')||!!closest(selection.anchorNode,'[data-editor-protected-parent]');
+  }
+}
+
+// Read both live endpoints once. Commands use this exact range, never a later
+// stale PM selection. This maps approved editor DOM, not untrusted HTML input.
+function commandSelection(view){
+  const dom=view.dom.ownerDocument.getSelection();
+  if(!dom?.rangeCount||!dom.anchorNode||!dom.focusNode
+      ||!view.dom.contains(dom.anchorNode)||!view.dom.contains(dom.focusNode))failure('EDITOR_SELECTION_UNSUPPORTED');
+  const closest=(node,selector)=>(node.nodeType===1?node:node.parentElement)?.closest(selector);
+  if(closest(dom.anchorNode,'[data-editor-embedded-marker],.es-opaque-table')||closest(dom.focusNode,'[data-editor-embedded-marker],.es-opaque-table'))failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+  const anchor=view.posAtDOM(dom.anchorNode,dom.anchorOffset,1);
+  const head=dom.isCollapsed?anchor:view.posAtDOM(dom.focusNode,dom.focusOffset,1);
+  const selection=TextSelection.create(view.state.doc,anchor,head);
+  if(!selection.$anchor.parent.inlineContent||!selection.$head.parent.inlineContent)failure('EDITOR_SELECTION_UNSUPPORTED');
+  for(const [point,node] of [[selection.$anchor,dom.anchorNode],[selection.$head,dom.focusNode]]){
+    const slot=closest(node,'[data-editor-protected-slot]');
+    if(point.parent.type.name==='esProtectedSlot'){
+      if(!slot||slot.dataset.editorProtectedSlot!==point.parent.attrs.slotId)failure('EDITOR_SELECTION_UNSUPPORTED');
+      const parent=closest(node,'[data-editor-protected-parent]');
+      if(!parent||point.depth<2||parent.dataset.editorProtectedParent!==point.node(point.depth-1).attrs.parentId)failure('EDITOR_SELECTION_UNSUPPORTED');
+    }else if(slot||closest(node,'[data-editor-protected-parent]'))failure('EDITOR_SELECTION_UNSUPPORTED');
+  }
+  return selection;
+}
+
+// Only a serialization of our typed PM model reaches this finite scanner.
+// No raw HTML DOM parse or browser repair is part of candidate admission.
+function candidateBudget(html){
+  if(new TextEncoder().encode(html).length>1048576)failure('EDITOR_CANDIDATE_LIMIT');
+  let nodes=0,depth=0,text=0,last=0;const tags=/<\/?[a-z][^>]*>/gu;
+  const count=value=>{const decoded=value.replace(/&(amp|lt|gt|quot|apos|#x27);/gu,entity=>({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&#x27;':"'"})[entity]);for(const unused of decoded.replace(/\r\n?/gu,'\n').normalize('NFC')){if(++text>200000)failure('EDITOR_CANDIDATE_LIMIT');}};
+  for(const match of html.matchAll(tags)){
+    count(html.slice(last,match.index));last=match.index+match[0].length;
+    if(match[0][1]==='/'){depth--;continue;}
+    if(++nodes>20000||depth+1>32)failure('EDITOR_CANDIDATE_LIMIT');
+    if(match[0]!=='<br>')depth++;
+  }
+  count(html.slice(last));if(depth!==0)failure('EDITOR_CANDIDATE_INVALID');
+}
+
+function extensionsFor({owner,pageId,rules,approvedTables,requestHtml,embeddedMap,queueImage,embeddedSourceUrl,onBlocked}) {
   function blockNode(name,tag,content,extra={}) {
     return Node.create({name,group:'block',content,...extra,
       addAttributes:()=>({...attrsDefinition(BLOCK),...(name==='paragraph'?{esUnwrapped:{default:false,rendered:false}}:{}),...(name==='heading'?{level:{default:2,rendered:false}}:{})}),
@@ -147,10 +244,39 @@ function extensionsFor({owner,rules,approvedTables,requestHtml}) {
       const details=document.createElement('details'),summary=document.createElement('summary'),pre=document.createElement('pre');summary.textContent='Показать HTML таблицы';pre.textContent=node.attrs.approvedHtml;details.append(summary,pre);dom.append(message,button,details);return {dom};
     },
   });
-  const safety=Extension.create({name:'esNoDefaultPaste',addProseMirrorPlugins:()=>[new Plugin({props:{handleDOMEvents:{dragstart:(view,event)=>{event.preventDefault();return true;}}}})]});
+  const protectedParent=Node.create({name:'esProtectedParent',group:'block',content:'esProtectedSlot (esProtected esProtectedSlot)+',defining:true,isolating:true,
+    addAttributes:()=>({...attrsDefinition(BLOCK),parentId:{default:null},tag:{default:'p'}}),parseHTML:()=>[],renderHTML:()=>['div',{},0],
+    addNodeView:()=>({node})=>{const dom=document.createElement(node.attrs.tag);dom.dataset.editorProtectedParent=node.attrs.parentId;setNodeDom(dom,node,rules);dom.classList.add('es-protected-parent');return {dom,contentDOM:dom};}});
+  const protectedSlot=Node.create({name:'esProtectedSlot',group:'block',content:'inline*',defining:true,isolating:true,
+    addAttributes:()=>({...attrsDefinition(FORMAT),anchor:{default:null},slotId:{default:null}}),parseHTML:()=>[],renderHTML:()=>['span',{},0],
+    addNodeView:()=>({node})=>{let current=node;const dom=document.createElement('span');dom.dataset.editorProtectedSlot=node.attrs.slotId;
+      const update=value=>{dom.className=rules.ensure(styleFacts(value.attrs,FORMAT));dom.classList.add('es-protected-slot');};update(node);
+      return {dom,contentDOM:dom,update(next){if(next.type!==current.type||next.attrs.slotId!==current.attrs.slotId)return false;current=next;update(next);return true;}};}});
+  const protectedImage=Node.create({name:'esProtected',group:'block',atom:true,selectable:true,draggable:false,
+    addAttributes:()=>({markerId:{default:null},imageId:{default:null},reference:{default:null}}),parseHTML:()=>[],renderHTML:()=>['span',{}],
+    addNodeView:()=>({node})=>{
+      const item=embeddedMap.get(node.attrs.markerId);
+      if(!item||item.imageId!==node.attrs.imageId||JSON.stringify(item.reference)!==JSON.stringify(node.attrs.reference))failure('EDITOR_EMBEDDED_MAPPING_INVALID');
+      const dom=document.createElement('span');dom.contentEditable='false';dom.className='es-embedded-atom es-embedded-align-'+item.reference.alignment;
+      dom.dataset.editorEmbeddedMarker=item.markerId;dom.dataset.editorEmbeddedImageId=item.imageId;
+      const image=document.createElement('img');image.alt=item.reference.alt;image.decoding='async';dom.append(image);
+      for(const [key,attribute] of [['width_px','width'],['height_px','height']])if(item.reference[key]!==null)image.setAttribute(attribute,String(item.reference[key]));
+      let destroyed=false,finish=()=>{};
+      if(item.thumbnailUrl)queueImage(()=>new Promise(resolve=>{if(destroyed){resolve();return;}let timer;
+        finish=failed=>{clearTimeout(timer);image.onload=null;image.onerror=null;if(failed&&!destroyed){image.removeAttribute('src');dom.append(document.createTextNode(' Предпросмотр недоступен.'))};resolve();};image.onload=()=>finish(false);image.onerror=()=>finish(true);timer=setTimeout(()=>finish(true),10000);
+        try{let url=item.thumbnailUrl;
+          if(url.includes('/media/files/')&&typeof embeddedSourceUrl==='function')url=embeddedSourceUrl(url);
+          const checked=approvedEmbedded([{...item,thumbnailUrl:url}],{pageId});image.src=checked.get(item.markerId).thumbnailUrl;
+        }catch{finish(true);}}));
+      else dom.append(document.createTextNode(' Предпросмотр недоступен'));
+      return {dom,destroy(){destroyed=true;image.removeAttribute('src');finish();}};
+    }});
+  const safety=Extension.create({name:'esNoDefaultPaste',addProseMirrorPlugins:()=>[new Plugin({
+    filterTransaction(transaction,state){if(!transaction.docChanged||protectedShape(transaction.doc)===protectedShape(state.doc))return true;onBlocked();return false;},
+    props:{handleDOMEvents:{dragstart:(view,event)=>{event.preventDefault();return true;}}}})]});
   return [StarterKit.configure({paragraph:false,heading:false,blockquote:false,bulletList:false,orderedList:false,listItem:false,bold:false,italic:false,underline:false,strike:false,link:false,code:false,codeBlock:false,horizontalRule:false,dropcursor:false,gapcursor:false,trailingNode:false}),
     blockNode('paragraph','p','inline*'),blockNode('heading','h2','inline*'),blockNode('blockquote','blockquote','block+'),blockNode('bulletList','ul','listItem+'),blockNode('orderedList','ol','listItem+'),
-    Node.create({name:'listItem',content:'paragraph block*',defining:true,parseHTML:()=>[{tag:'li'}],renderHTML:()=>['li',{},0]}),...marks,format,anchor,link,opaque,safety];
+    Node.create({name:'listItem',content:'paragraph block*',defining:true,parseHTML:()=>[{tag:'li'}],renderHTML:()=>['li',{},0]}),...marks,format,anchor,link,opaque,protectedParent,protectedSlot,protectedImage,safety];
 }
 
 function approvedTableSlices(html) {
@@ -162,14 +288,13 @@ function approvedTableSlices(html) {
   if(stack.length||slices.some(value=>value===null))failure('EDITOR_CANONICAL_TABLE_INVALID');return slices;
 }
 
-function approvedDocument(html,{owner,approvedTables}) {
+function approvedDocument(html,{owner,approvedTables,embeddedMap=new Map()}) {
   if(typeof html!=='string'||new TextEncoder().encode(html).length>1048576)failure('EDITOR_APPROVED_INPUT_REQUIRED');
   // Only server-approved strings reach this inert parser. Raw input has no path
   // to this function. The server policy, not this adapter, performs sanitation.
   if(/<\/?(?:script|style|iframe|object|embed|img|svg|math|form|input|button|textarea|select|link|meta|base)\b/i.test(html))failure('EDITOR_APPROVED_INPUT_REQUIRED');
   const documentValue=new DOMParser().parseFromString(html,'text/html');
   if(documentValue.querySelector('[style],[class],[id]'))failure('EDITOR_APPROVED_INPUT_REQUIRED');
-  if(documentValue.querySelector('[data-es-protected],[data-es-image],[data-es-parent],[data-es-slot]'))failure('EDITOR_PROTECTED_OR_UNSUPPORTED');
   const tables=approvedTableSlices(html);let tableIndex=0;
   if(tables.length!==documentValue.querySelectorAll('table').length)failure('EDITOR_CANONICAL_TABLE_INVALID');
   function readAttrs(element,names,extra=[]) {
@@ -212,6 +337,17 @@ function approvedDocument(html,{owner,approvedTables}) {
     const output=[];let pending=[];
     const flush=()=>{if(pending.length){output.push({type:'paragraph',attrs:{esUnwrapped:allowUnwrapped},content:inline(pending)});pending=[];}};
     for(const node of nodes){
+      if(node.nodeType===1&&node.hasAttribute('data-es-parent')){
+        flush();const tag=node.localName;if(!['p','h1','h2','h3','blockquote'].includes(tag)||tag==='h1'&&!owner)failure('EDITOR_PROTECTED_OR_UNSUPPORTED');
+        const blockAttrs=readAttrs(node,BLOCK,['data-es-parent']),parentId=node.getAttribute('data-es-parent');
+        if(!/^[0-9a-f-]{36}$/u.test(parentId||'')||node.childNodes.length<3||node.childNodes.length%2!==1)failure('EDITOR_PROTECTED_OR_UNSUPPORTED');
+        const children=[];
+        [...node.childNodes].forEach((child,index)=>{
+          if(child.nodeType!==1||child.localName!=='span')failure('EDITOR_PROTECTED_OR_UNSUPPORTED');
+          if(index%2===0){const slotId=child.getAttribute('data-es-slot');if(!/^[0-9a-f-]{36}$/u.test(slotId||''))failure('EDITOR_PROTECTED_OR_UNSUPPORTED');const values=readAttrs(child,FORMAT,['data-es-slot','data-es-anchor']);children.push({type:'esProtectedSlot',attrs:{...values,slotId,anchor:child.getAttribute('data-es-anchor')},content:inline(child.childNodes)});}
+          else {if(!embeddedMap.has(child.getAttribute('data-es-protected')))failure('EDITOR_PROTECTED_OR_UNSUPPORTED');children.push({type:'esProtected',attrs:readMarker(child,embeddedMap)});}
+        });output.push({type:'esProtectedParent',attrs:{...blockAttrs,parentId,tag},content:children});continue;
+      }
       if(node.nodeType===3||node.nodeType===1&&INLINE_TAGS.has(node.localName)){pending.push(node);continue;}
       flush();if(node.nodeType!==1||!BLOCK_TAGS.has(node.localName))failure('EDITOR_BLOCK_UNSUPPORTED');
       const tag=node.localName;
@@ -228,6 +364,7 @@ function approvedDocument(html,{owner,approvedTables}) {
           if(child.nodeType===3&&!child.data.trim())continue;
           if(child.nodeType!==1||child.localName!=='li'||child.attributes.length)failure('EDITOR_LIST_UNSUPPORTED');
           const content=blocks(child.childNodes,{allowUnwrapped:true});
+          if(content[0]?.type==='esProtectedParent')failure('EDITOR_LIST_UNSUPPORTED');
           if(!content.length||content[0].type!=='paragraph')content.unshift({type:'paragraph',attrs:{esUnwrapped:true},content:[]});
           items.push({type:'listItem',content});
         }
@@ -256,6 +393,9 @@ function canonicalDocument(doc,{owner,approvedTables}) {
     const name=node.type.name;
     if(name==='text')return wrapped(escapeText(node.text),node.marks);
     if(name==='hardBreak')return wrapped('<br>',node.marks);
+    if(name==='esProtected')return markerHtml(node.attrs);
+    if(name==='esProtectedSlot')return '<span'+htmlAttrs({'data-es-slot':node.attrs.slotId,...carrierAttrs(node.attrs,FORMAT),...(node.attrs.anchor?{'data-es-anchor':node.attrs.anchor}:{})})+'>'+content(node)+'</span>';
+    if(name==='esProtectedParent')return '<'+node.attrs.tag+htmlAttrs({'data-es-parent':node.attrs.parentId,...carrierAttrs(node.attrs,BLOCK)})+'>'+content(node)+'</'+node.attrs.tag+'>';
     if(name==='esOpaqueTable'){if(!approvedTables.has(node.attrs.approvedHtml))failure('EDITOR_APPROVED_TABLE_REQUIRED');return node.attrs.approvedHtml;}
     if(name==='doc')return content(node);
     if(name==='listItem')return '<li>'+content(node)+'</li>';
@@ -268,15 +408,75 @@ function canonicalDocument(doc,{owner,approvedTables}) {
   return serialize(doc);
 }
 
-export function createEditor(element,{approvedHtml,owner,field,styleSheet,onDirty=()=>{},onError=()=>{},onUntrustedInput=()=>{}}={}) {
+export function createEditor(element,{approvedHtml,owner,field,pageId,approvedEmbedded:initialEmbedded=[],queueImage=task=>task(),embeddedSourceUrl,styleSheet,onDirty=()=>{},onError=()=>{},onUntrustedInput=()=>{}}={}) {
   if(!(element instanceof HTMLElement)||typeof owner!=='boolean'||!['intro_text','main_text'].includes(field))failure('EDITOR_CONTEXT_INVALID');
   let editor=null,rules=null,mode='visual',dirty=false,destroyed=false,viewBlocked=false,approvedBaseDoc=null,approvedCanonical='';let approvedTables=new Set();
+  let embeddedMap=approvedEmbedded(initialEmbedded,{pageId});
   const visual=document.createElement('div'),source=document.createElement('textarea');visual.className='es-visual';source.className='es-html-source';source.hidden=true;source.setAttribute('aria-label','HTML содержимого');source.spellcheck=false;element.replaceChildren(visual,source);
   const report=error=>{onError({code:error.code||'EDITOR_OPERATION_FAILED',viewBlocked});};
   const styleFailure=error=>{viewBlocked=true;report(error);};
   const markDirty=()=>{dirty=true;onDirty({field,mode,dirty:true});};
   const guarded=callback=>{try{if(destroyed)failure('EDITOR_DESTROYED');return callback();}catch(error){report(error);throw error;}};
   function refresh(){if(editor&&rules)rules.refresh(editor.state.doc);}
+  function dispatchCandidate(transaction){
+    if(protectedShape(transaction.doc)!==protectedShape(editor.state.doc))failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+    candidateBudget(canonicalDocument(transaction.doc,{owner,approvedTables}));
+    editor.view.dispatch(transaction);return true;
+  }
+  function clearSelectedFormatting(selection){
+    const doc=editor.state.doc;
+    let protectedRange=false;
+    doc.nodesBetween(selection.from,selection.to,node=>{if(['esProtectedParent','esProtectedSlot','esProtected','esOpaqueTable'].includes(node.type.name))protectedRange=true;});
+    const slot=selection.$from.parent;
+    if(slot.type.name==='esProtectedSlot'){
+      if(selection.empty||!selection.$from.sameParent(selection.$to)||FORMAT.some(name=>slot.attrs[name]!==null&&slot.attrs[name]!==undefined))failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+    }else if(protectedRange)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+    // A no-op setSelection clears stored marks, including links and anchors.
+    // Only a genuinely moved live caret must discard the old location's marks.
+    const transaction=editor.state.tr,names=['esFormat',...Object.keys(MARK_TAG)];
+    if(!selection.eq(editor.state.selection))transaction.setSelection(selection);
+    for(const name of names){const type=editor.schema.marks[name];if(selection.empty)transaction.removeStoredMark(type);else transaction.removeMark(selection.from,selection.to,type);}
+    const result=dispatchCandidate(transaction);editor.view.focus();return result;
+  }
+  function paragraphKey(view,event){
+    if(!['Enter','Backspace','Delete'].includes(event.key)||event.shiftKey||event.ctrlKey||event.metaKey||event.altKey||event.isComposing)return false;
+    const selection=commandSelection(view),point=selection.$from;
+    const structuralHazard=node=>['esProtectedParent','esProtectedSlot','esProtected','esOpaqueTable'].includes(node.type.name)||node.isAtom&&!node.isInline;
+    if(event.key==='Enter'&&!selection.empty){
+      const withinSlot=point.parent.type.name==='esProtectedSlot'&&point.sameParent(selection.$to);
+      let hazard=false;
+      view.state.doc.nodesBetween(selection.from,selection.to,node=>{
+        if(structuralHazard(node)&&!(withinSlot&&['esProtectedParent','esProtectedSlot'].includes(node.type.name)))hazard=true;
+      });
+      if(hazard)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+    }
+    // Existing headings/lists and supported non-collapsed ordinary workflows
+    // keep their established PM handlers. This cohort adds root paragraphs.
+    if(!selection.empty||point.depth!==1||point.parent.type.name!=='paragraph')return false;
+    const index=point.index(0),doc=view.state.doc;
+    let lastProtected=-1;doc.forEach((node,offset,childIndex)=>{let found=node.type.name==='esProtectedParent';node.descendants(child=>{if(['esProtectedParent','esProtectedSlot','esProtected'].includes(child.type.name))found=true;});if(found)lastProtected=childIndex;});
+    if(event.key==='Enter'){
+      if(index<=lastProtected)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+      const before=point.nodeBefore?.marks.find(mark=>mark.type.name==='esAnchor'),after=point.nodeAfter?.marks.find(mark=>mark.type.name==='esAnchor');
+      if(before&&after&&before.eq(after))failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+      const attrs={...point.parent.attrs,anchor:null},types=[{type:point.parent.type,attrs}];
+      if(!canSplit(doc,point.pos,1,types))failure('EDITOR_SELECTION_UNSUPPORTED');
+      event.preventDefault();return dispatchCandidate(view.state.tr.setSelection(selection).split(point.pos,1,types));
+    }
+    const backward=event.key==='Backspace';
+    if(backward?point.parentOffset!==0:point.parentOffset!==point.parent.content.size)return false;
+    const leftIndex=backward?index-1:index,rightIndex=leftIndex+1;
+    if(leftIndex<0||rightIndex>=doc.childCount)return false;
+    const left=doc.child(leftIndex),right=doc.child(rightIndex);
+    const neighbor=backward?left:right;
+    let hazard=structuralHazard(neighbor);neighbor.descendants(node=>{if(structuralHazard(node))hazard=true;});
+    if(hazard)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+    if(left.type.name!=='paragraph'||right.type.name!=='paragraph')return false;
+    if(leftIndex<=lastProtected||JSON.stringify(left.attrs)!==JSON.stringify(right.attrs)||right.attrs.anchor!==null&&right.attrs.anchor!==undefined)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+    const position=backward?point.before(1):point.after(1);
+    if(!canJoin(doc,position))failure('EDITOR_SELECTION_UNSUPPORTED');
+    event.preventDefault();return dispatchCandidate(view.state.tr.setSelection(selection).join(position));
+  }
   function visualCanonical(doc=editor?.state.doc,{forCheck=false}={}){
     if(!editor||!doc)failure('EDITOR_VISUAL_UNAVAILABLE');
     if(viewBlocked){
@@ -288,18 +488,31 @@ export function createEditor(element,{approvedHtml,owner,field,styleSheet,onDirt
     if(approvedBaseDoc&&doc.eq(approvedBaseDoc))return approvedCanonical;
     return canonicalDocument(doc,{owner,approvedTables});
   }
-  function build(html) {
-    const nextTables=new Set();const doc=approvedDocument(html,{owner,approvedTables:nextTables});
+  function build(html,records=[...embeddedMap.values()]) {
+    const nextMap=approvedEmbedded(records,{pageId});
+    const nextTables=new Set();const doc=approvedDocument(html,{owner,approvedTables:nextTables,embeddedMap:nextMap});
     approvedBaseDoc=null;approvedCanonical='';
-    if(editor)editor.destroy();if(rules)rules.destroy();approvedTables=nextTables;rules=new Rules(styleSheet,styleFailure);
+    if(editor)editor.destroy();if(rules)rules.destroy();approvedTables=nextTables;embeddedMap=nextMap;rules=new Rules(styleSheet,styleFailure);
     editor=new Editor({element:visual,injectCSS:false,enableInputRules:false,enablePasteRules:false,content:doc,
-      extensions:extensionsFor({owner,rules,approvedTables,requestHtml:()=>api.setMode('html')}),
+      extensions:extensionsFor({owner,pageId,rules,approvedTables,embeddedMap,queueImage,embeddedSourceUrl,requestHtml:()=>api.setMode('html'),onBlocked:()=>report({code:'EDITOR_PROTECTED_COMMAND_UNSUPPORTED'})}),
       editorProps:{attributes:{class:'es-editor-surface',role:'textbox','aria-label':'Текст страницы'},handleDOMEvents:{
         paste(view,event){event.preventDefault();const html=event.clipboardData?.getData('text/html')||'',text=event.clipboardData?.getData('text/plain')||'';
           if(html){onUntrustedInput({field,html,text,intent:'paste'});return true;}
           if(text){try{view.dispatch(view.state.tr.insertText(text));}catch(error){styleFailure(error);}}return true;},
         drop(view,event){event.preventDefault();onUntrustedInput({field,html:event.dataTransfer?.getData('text/html')||'',text:event.dataTransfer?.getData('text/plain')||'',intent:'drop'});return true;},
       },
+        handleKeyDown(view,event){
+          if(protectedDeleteBoundary(view,event)){event.preventDefault();report({code:'EDITOR_PROTECTED_COMMAND_UNSUPPORTED'});return true;}
+          try{if(paragraphKey(view,event))return true;}catch(error){event.preventDefault();report(error);return true;}
+          const selection=view.state.selection,slot=selection.$from.parent;
+          if(slot.type.name!=='esProtectedSlot')return false;
+          if(event.key==='Enter'){
+            event.preventDefault();
+            if(selection.$to.parent===slot)view.dispatch(view.state.tr.replaceSelectionWith(view.state.schema.nodes.hardBreak.create()));
+            else report({code:'EDITOR_PROTECTED_COMMAND_UNSUPPORTED'});return true;
+          }
+          return false;
+        },
         handleClick(view,pos,event){if(event.target.closest?.('a')){event.preventDefault();return true;}return false;},
       },onUpdate(){try{markDirty();refresh();}catch(error){styleFailure(error);}},
     });
@@ -319,20 +532,61 @@ export function createEditor(element,{approvedHtml,owner,field,styleSheet,onDirt
   source.addEventListener('input',markDirty);
   const stopLink=event=>{if(event.target.closest?.('a'))event.preventDefault();};visual.addEventListener('auxclick',stopLink);
   const api={
-    validateApprovedHtml:html=>guarded(()=>{try{approvedDocument(html,{owner,approvedTables:new Set()});return {visual:true};}catch(error){if(VISUAL_UNSUPPORTED.has(error.code))return {visual:false,code:error.code};throw error;}}),
+    validateApprovedHtml:(html,{approvedEmbedded:records=[...embeddedMap.values()]}={})=>guarded(()=>{try{approvedDocument(html,{owner,approvedTables:new Set(),embeddedMap:approvedEmbedded(records,{pageId})});return {visual:true};}catch(error){if(VISUAL_UNSUPPORTED.has(error.code))return {visual:false,code:error.code};throw error;}}),
     getCanonicalHtml:()=>guarded(()=>visualCanonical()),
     getInput:()=>guarded(()=>({mode,html:mode==='html'?source.value:visualCanonical(editor?.state.doc,{forCheck:true})})),
-    setApprovedHtml:(html,{emitDirty=false}={})=>guarded(()=>{
-      try{build(html);mode='visual';source.hidden=true;visual.hidden=false;}
+    setApprovedHtml:(html,{emitDirty=false,approvedEmbedded:records=[...embeddedMap.values()]}={})=>guarded(()=>{
+      try{build(html,records);mode='visual';source.hidden=true;visual.hidden=false;}
       catch(error){if(!VISUAL_UNSUPPORTED.has(error.code))throw error;htmlOnly(html);}
       dirty=emitDirty;if(emitDirty)markDirty();else onDirty({field,mode,dirty:false});
     }),
     setRawHtml:raw=>guarded(()=>{if(typeof raw!=='string')failure('EDITOR_RAW_TYPE_INVALID');source.value=raw;mode='html';source.hidden=false;visual.hidden=true;markDirty();}),
+    stageEmbedded:issuance=>guarded(()=>{
+      if(!owner||issuance.field!==field||viewBlocked)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+      if(mode==='html'){
+        api.setRawHtml(issuance.action==='insert'?source.value+insertBlockHtml(issuance):replaceMarkerInHtml(source.value,issuance));return;
+      }
+      let candidate;
+      if(issuance.action==='insert'){
+        const json=editor.state.doc.toJSON(),index=editor.state.selection.$from.index(0);
+        if(json.content[index]?.type==='esProtectedParent')failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+        json.content.splice(index+1,0,{type:'esProtectedParent',attrs:{parentId:issuance.ids.parentId,tag:'p'},content:[
+          {type:'esProtectedSlot',attrs:{slotId:issuance.ids.slotBeforeId}},
+          {type:'esProtected',attrs:{markerId:issuance.ids.markerId,imageId:issuance.ids.imageId,reference:issuance.image}},
+          {type:'esProtectedSlot',attrs:{slotId:issuance.ids.slotAfterId}}]});candidate=editor.schema.nodeFromJSON(json);
+      }else{
+        let pos=null;editor.state.doc.descendants((node,index)=>{if(node.type.name==='esProtected'&&node.attrs.markerId===issuance.ids.markerId)pos=index;});
+        if(pos===null)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+        candidate=editor.state.tr.setNodeMarkup(pos,undefined,{markerId:issuance.ids.markerId,imageId:issuance.ids.imageId,reference:issuance.image}).doc;
+      }
+      api.setRawHtml(canonicalDocument(candidate,{owner,approvedTables}));
+    }),
     setMode:next=>guarded(()=>{if(next==='html'){if(mode==='visual')source.value=visualCanonical(editor?.state.doc,{forCheck:true});mode='html';source.hidden=false;visual.hidden=true;return;}
       if(next!=='visual')failure('EDITOR_MODE_INVALID');if(mode==='html')failure('EDITOR_SERVER_CHECK_REQUIRED');}),
     command:(name,value)=>guarded(()=>{
       if(viewBlocked)failure('EDITOR_VIEW_RECHECK_REQUIRED');
-      if(mode!=='visual')failure('EDITOR_VISUAL_MODE_REQUIRED');let chain=editor.chain().focus();
+      if(mode!=='visual')failure('EDITOR_VISUAL_MODE_REQUIRED');
+      if(name==='clearFormatting')return clearSelectedFormatting(commandSelection(editor.view));
+      if(FORMAT.includes(name)){
+        const attrs=validateAttrs({[name]:value},[name]),selection=commandSelection(editor.view);
+        const withinSlot=selection.$from.parent.type.name==='esProtectedSlot'&&selection.$from.sameParent(selection.$to);
+        if(!withinSlot){
+          let hazard=false;
+          editor.state.doc.nodesBetween(selection.from,selection.to,node=>{
+            if(['esProtectedParent','esProtectedSlot','esProtected','esOpaqueTable'].includes(node.type.name)||node.isAtom&&!node.isInline)hazard=true;
+          });
+          if(hazard)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+        }
+        const shape=protectedShape(editor.state.doc);let formatChain=editor.chain();
+        if(!selection.eq(editor.state.selection))formatChain=formatChain.command(({tr})=>{tr.setSelection(selection);return true;});
+        const result=formatChain.setMark('esFormat',attrs).command(({tr})=>{
+          if(protectedShape(tr.doc)!==shape)failure('EDITOR_PROTECTED_COMMAND_UNSUPPORTED');
+          candidateBudget(canonicalDocument(tr.doc,{owner,approvedTables}));
+          return true;
+        }).run();
+        editor.view.focus();return result;
+      }
+      editor.view.focus();let chain=editor.chain();
       if(Object.hasOwn(MARK_TAG,name))return chain.toggleMark(name).run();
       if(name==='paragraph')return chain.setNode('paragraph').run();
       if(name==='heading'){if(![1,2,3].includes(value)||!owner&&value===1)failure('EDITOR_OWNER_HEADING_REQUIRED');return chain.setNode('heading',{level:value}).run();}
@@ -350,20 +604,16 @@ export function createEditor(element,{approvedHtml,owner,field,styleSheet,onDirt
         onUntrustedInput({field,html:visualCanonical(transaction.doc),text:'',intent:'link'});return true;
       }
       if(name==='removeLink')return chain.unsetMark('esLink').run();
-      if(FORMAT.includes(name)){const attrs=validateAttrs({[name]:value},[name]);return chain.setMark('esFormat',attrs).run();}
       if(['align','mt','mr','mb','ml'].includes(name)){const attrs=validateAttrs({[name]:value},[name]);const selected=editor.state.selection.$from.parent.type.name;if(!['paragraph','heading','blockquote','bulletList','orderedList'].includes(selected))failure('EDITOR_SELECTION_UNSUPPORTED');return chain.updateAttributes(selected,attrs).run();}
-      if(name==='clearFormatting'){
-        chain=chain.unsetMark('esFormat');for(const markName of Object.keys(MARK_TAG))chain=chain.unsetMark(markName);
-        return chain.run(); // Anchor identities and explicit link bindings survive.
-      }
       if(name==='undo')return chain.undo().run();if(name==='redo')return chain.redo().run();
       failure('EDITOR_COMMAND_UNSUPPORTED');
     }),
-    focus:()=>guarded(()=>mode==='html'?source.focus():editor.commands.focus()),
+    focus:()=>guarded(()=>mode==='html'?source.focus():editor.view.focus()),
     destroy:()=>{
       if(destroyed)return;destroyed=true;approvedBaseDoc=null;approvedCanonical='';approvedHtml='';
       for(const node of element.querySelectorAll('textarea,input,pre')){if('value' in node)node.value='';else node.textContent='';}
       editor?.destroy();editor=null;rules?.destroy();rules=null;approvedTables.clear();approvedBaseDoc=null;approvedCanonical='';approvedHtml='';source.value='';visual.replaceChildren();element.replaceChildren();
+      embeddedMap.clear();initialEmbedded=[];
       onDirty=()=>{};onError=()=>{};onUntrustedInput=()=>{};
     },
   };

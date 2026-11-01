@@ -27,6 +27,11 @@ FAILURES = {
     'EDITOR_CAPABILITY_UNAVAILABLE': 409,
     'EDITOR_CHECK_RECEIPT_INVALID': 409,
     'EDITOR_WORKER_PROTOCOL': 503,
+    'EDITOR_MEDIA_UNAVAILABLE': 409,
+    'EDITOR_MEDIA_INVALID': 400,
+    'EDITOR_EMBEDDED_INVALID': 400,
+    'EDITOR_EMBEDDED_FORBIDDEN': 403,
+    'EDITOR_EMBEDDED_STALE': 409,
 }
 
 
@@ -45,14 +50,15 @@ class CheckContext:
     child: dict
     permission_hash: str
     stamp: str
+    payload: dict | None = None
 
     @property
     def profile(self):
         return input_profile(owner=self.child['owner'], can_price='price' in self.child['fields'])
 
 
-def inspect_context(*, actor, page_id, generation, origin):
-    """Take and release domain locks before any body read or child execution."""
+def inspect_admission(*, actor, page_id, generation):
+    """Metadata-only admission: never touch source, route, layout or JSON."""
     E.outside()
     try:
         with transaction.atomic():
@@ -60,10 +66,41 @@ def inspect_context(*, actor, page_id, generation, origin):
             fields = sorted(set(fields) & OWNER_FIELDS)
             if not fields:
                 raise PermissionDenied('EDITOR_FIELDS_FORBIDDEN')
+            return {'owner': owner, 'fields': fields, 'generation': generation,
+                    'page_id': str(page.pk), 'current_revision_id': str(state.current_revision_id)}
+    except ValidationError:
+        raise CheckFault('EDITOR_BASE_UNAVAILABLE') from None
+
+
+def inspect_context(*, actor, page_id, generation, origin, selector=None, allow_unavailable=False):
+    """Take and release domain locks before any body read or child execution."""
+    E.outside()
+    return _inspect_context_locked(actor=actor, page_id=page_id, generation=generation, origin=origin,
+                                   selector=selector, allow_unavailable=allow_unavailable)
+
+
+def _inspect_context_locked(*, actor, page_id, generation, origin, selector=None, allow_unavailable=False):
+    """Internal shared final-check boundary; caller may retain the transaction."""
+    try:
+        with transaction.atomic():
+            page, profile, fields, owner, state = E.enter(actor, page_id, generation)
+            engine_fields = fields
+            fields = sorted(set(fields) & OWNER_FIELDS)
+            if not fields:
+                raise PermissionDenied('EDITOR_FIELDS_FORBIDDEN')
             target = Route.objects.filter(page=page, kind=Route.Kind.PRIMARY).values_list('target', flat=True).first()
             if type(target) is not str or not target.startswith('/'):
                 raise CheckFault('EDITOR_CAPABILITY_UNAVAILABLE')
-            layout = PageRevision.objects.filter(pk=state.current_revision_id).values_list('payload__layout', flat=True).get()
+            from .source_context import current_selector, selected_source
+            selector = current_selector() if selector is None else selector
+            readable = True
+            try:
+                payload, base, source_facts = selected_source(page, profile, engine_fields, owner, state, selector)
+            except ValidationError:
+                if not allow_unavailable:
+                    raise
+                payload, base, source_facts, readable = None, str(state.current_revision_id), {}, False
+            layout = payload['layout'] if readable else []
             if type(layout) is not list:
                 raise CheckFault('EDITOR_CAPABILITY_UNAVAILABLE')
             protected = set()
@@ -77,12 +114,17 @@ def inspect_context(*, actor, page_id, generation, origin):
                     protected.add(field)
             child = {'protocol': 'page-editor-context-v1', 'owner': owner, 'fields': fields,
                      'generation': generation, 'page_id': str(page.pk),
-                     'base_revision_id': str(state.current_revision_id),
+                     'base_revision_id': base,
                      'page_path': target, 'origin': origin, 'protected_fields': sorted(protected),
-                     'policy_version': policy_constants.POLICY_VERSION}
+                     'policy_version': policy_constants.POLICY_VERSION,
+                     'source': selector, 'can_read_source': readable,
+                     'current_revision_id': str(state.current_revision_id)}
+            if readable:
+                child['embedded_source'] = {key: payload[key] for key in ('intro_text', 'main_text', 'layout', 'embedded_images')}
             permission_hash = E.permission_hash(profile, fields)
-            stamp = fingerprint({'child': child, 'permissions': permission_hash, 'policy': CHECK_POLICY})
-            return CheckContext(actor.pk, child, permission_hash, stamp)
+            stamp = fingerprint({'child': child, 'sourceFacts': source_facts,
+                                 'permissions': permission_hash, 'policy': CHECK_POLICY})
+            return CheckContext(actor.pk, child, permission_hash, stamp, payload)
     except ValidationError:
         raise CheckFault('EDITOR_BASE_UNAVAILABLE') from None
 
@@ -96,6 +138,8 @@ def check_worker_result(result, *, raw, context):
             raise CheckFault('EDITOR_WORKER_PROTOCOL')
         raise CheckFault(result['code'])
     expected = {'accepted', 'changes', 'warnings', 'changed', 'input_fingerprint', 'normalized_fingerprint', 'policy_version'}
+    if 'derived' in result or 'intentBindings' in result:
+        expected |= {'derived', 'intentBindings'}
     if (set(result) != expected or type(result['changes']) is not dict or not result['changes']
             or not set(result['changes']) <= set(context.child['fields'])
             or type(result['warnings']) is not list or type(result['changed']) is not bool
@@ -113,20 +157,26 @@ def check_worker_result(result, *, raw, context):
     return result
 
 
-def issue_check_receipt(*, context, result):
+def issue_check_receipt(*, context, result, media_evidence=None, derived_map_hash=None):
     if (context.child['policy_version'] != policy_constants.POLICY_VERSION
             or result['policy_version'] != policy_constants.POLICY_VERSION):
         raise CheckFault('EDITOR_CONTEXT_CHANGED')
-    return signing.dumps({'protocol': CHECK_POLICY, 'actorId': context.actor_id,
+    data = {'protocol': CHECK_POLICY, 'actorId': context.actor_id,
         'semanticPolicy': context.child['policy_version'],
         'generation': context.child['generation'], 'pageId': context.child['page_id'],
         'baseRevisionId': context.child['base_revision_id'], 'contextStamp': context.stamp,
-        'permissionHash': context.permission_hash, 'editingFrom': 'current',
+        'permissionHash': context.permission_hash, 'editingFrom': context.child.get('source', {}).get('editingFrom', 'current'),
+        'source': context.child.get('source'),
         'inputFingerprint': result['input_fingerprint'],
-        'normalizedFingerprint': result['normalized_fingerprint']}, salt=SALT, compress=False)
+        'normalizedFingerprint': result['normalized_fingerprint']}
+    if media_evidence is not None:
+        data['mediaEvidence'] = media_evidence
+    if derived_map_hash is not None:
+        data['derivedMapHash'] = derived_map_hash
+    return signing.dumps(data, salt=SALT, compress=False)
 
 
-def verify_check_receipt(token, *, context, changes):
+def verify_check_receipt(token, *, context, changes, media_evidence=None, derived_map_hash=None, _before_fs=False):
     """Proof only; future writes must still reparse and recheck actual context."""
     if type(token) is not str or len(token) > 8192:
         raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID')
@@ -135,7 +185,13 @@ def verify_check_receipt(token, *, context, changes):
     except (signing.BadSignature, ValueError, TypeError):
         raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID') from None
     expected = {'protocol', 'semanticPolicy', 'actorId', 'generation', 'pageId', 'baseRevisionId', 'contextStamp',
-                'permissionHash', 'editingFrom', 'inputFingerprint', 'normalizedFingerprint'}
+                'permissionHash', 'editingFrom', 'source', 'inputFingerprint', 'normalizedFingerprint'}
+    if media_evidence is not None:
+        expected.add('mediaEvidence')
+    elif _before_fs and type(value) is dict and 'mediaEvidence' in value:
+        expected.add('mediaEvidence')
+    if derived_map_hash is not None:
+        expected.add('derivedMapHash')
     if (type(value) is not dict or set(value) != expected
             or value['protocol'] != CHECK_POLICY or value['actorId'] != context.actor_id
             or value['semanticPolicy'] != policy_constants.POLICY_VERSION
@@ -144,8 +200,16 @@ def verify_check_receipt(token, *, context, changes):
             or value['pageId'] != context.child['page_id']
             or value['baseRevisionId'] != context.child['base_revision_id']
             or value['contextStamp'] != context.stamp or value['permissionHash'] != context.permission_hash
-            or value['editingFrom'] != 'current' or type(value['inputFingerprint']) is not str
+            or value['source'] != context.child.get('source')
+            or value['editingFrom'] != context.child.get('source', {}).get('editingFrom', 'current')
+            or type(value['inputFingerprint']) is not str
             or re.fullmatch('[a-f0-9]{64}', value['inputFingerprint']) is None
             or value['normalizedFingerprint'] != fingerprint(changes)):
+        raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID')
+    if media_evidence is not None and value.get('mediaEvidence') != media_evidence:
+        raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID')
+    if derived_map_hash is not None and value.get('derivedMapHash') != derived_map_hash:
+        raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID')
+    if _before_fs and 'mediaEvidence' in value and (type(value['mediaEvidence']) is not str or re.fullmatch('[a-f0-9]{64}', value['mediaEvidence']) is None):
         raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID')
     return value

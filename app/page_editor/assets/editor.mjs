@@ -1,4 +1,6 @@
 import {createEditor} from './carrier-editor.mjs';
+import {mountMediaControls} from './media-editor.mjs';
+import {mountEmbeddedControls,createImageQueue,approvedEmbedded} from './embedded-editor.mjs';
 
 const LABELS={intro_text:'Вводный текст',main_text:'Основной текст'};
 const FONTS=[['inter','Inter'],['oswald','Oswald'],['arial','Arial'],['georgia','Georgia'],['times-new-roman','Times New Roman'],['courier-new','Courier New']];
@@ -17,9 +19,10 @@ function select(label,options,handler){const wrapper=document.createElement('lab
  * normalisationChanged,fieldWarnings,checkReceipt,baseRevisionId.
  * save/draft({changes,checkReceipt,operationId,context}) return a DEV05 receipt.
  */
-export function mountEditorPage({root,initialState,styleSheet,check,save,draft,reauth}={}){
+export function mountEditorPage({root,initialState,styleSheet,check,save,draft,cancelDraft,reauth,listMedia,mediaSourceUrl,issueEmbedded}={}){
   if(!(root instanceof HTMLElement)||!initialState||typeof initialState.owner!=='boolean'||!Array.isArray(initialState.fields)||!initialState.values||typeof check!=='function')fail('EDITOR_MOUNT_INVALID');
-  const editors=new Map(),owned=[],viewErrors=new Set();let epoch=0,busy=false,pending=null,accepted=null,applying=false,destroyed=false,uncertain=null,identityChanged=false;
+  const editors=new Map(),owned=[],viewErrors=new Set();let epoch=0,cleanEpoch=0,busy=false,pending=null,accepted=null,applying=false,destroyed=false,uncertain=null,identityChanged=false;
+  const imageQueue=createImageQueue();
   const status=root.querySelector('[data-editor-status]')||document.createElement('p');if(!status.parentNode){status.dataset.editorStatus='';root.append(status);owned.push(status);}status.setAttribute('role','status');status.setAttribute('aria-live','polite');
   const dirty=root.querySelector('[data-editor-dirty]')||document.createElement('p');if(!dirty.parentNode){dirty.dataset.editorDirty='';root.append(dirty);owned.push(dirty);}
   const actions=document.createElement('div');actions.className='es-page-actions';root.append(actions);owned.push(actions);
@@ -40,15 +43,18 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,r
   function acceptChecked(result,capturedEpoch){
     if(epoch!==capturedEpoch)fail('CHECK_CHANGED');
     if(!result||!result.normalisedChanges||typeof result.checkReceipt!=='string')fail('EDITOR_CHECK_RESPONSE_INVALID');
-    for(const [field,editor] of editors){if(typeof result.normalisedChanges[field]!=='string')fail('EDITOR_CHECK_RESPONSE_INVALID');editor.validateApprovedHtml(result.normalisedChanges[field]);}
+    const nextMaps=result.embeddedMedia??initialState.embeddedMedia??{intro_text:[],main_text:[]};
+    for(const [field,editor] of editors){if(typeof result.normalisedChanges[field]!=='string')fail('EDITOR_CHECK_RESPONSE_INVALID');approvedEmbedded(nextMaps[field]||[],{pageId:initialState.pageId});editor.validateApprovedHtml(result.normalisedChanges[field],{approvedEmbedded:nextMaps[field]||[]});}
     // Prepare every response before replacing anything. A failed field never
     // triggers publication; root can retain/restore its own versioned state.
     const previous=inputs();applying=true;
-    try{for(const [field,editor] of editors)editor.setApprovedHtml(result.normalisedChanges[field],{emitDirty:false});}
+    try{for(const [field,editor] of editors)editor.setApprovedHtml(result.normalisedChanges[field],{emitDirty:false,approvedEmbedded:nextMaps[field]||[]});}
     catch(exception){for(const [field,editor] of editors)editor.setRawHtml(previous[field].html);throw exception;}
     finally{applying=false;}
     viewErrors.clear();
     Object.assign(initialState.values,structuredClone(result.normalisedChanges));
+    initialState.embeddedMedia=structuredClone(nextMaps);embeddedControls.refresh();
+    mediaControls.refresh();
     accepted={result,epoch};pending=null;review.hidden=true;dirty.textContent='Проверено. Для применения нажмите «Сохранить».';
   }
   function showReview(result,capturedEpoch){
@@ -84,18 +90,26 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,r
     const link=document.createElement('input');link.type='text';link.setAttribute('aria-label','Адрес ссылки');toolbar.append(link,button('Добавить ссылку',()=>command('link',{href:link.value,target:'_self'})),button('Убрать ссылку',()=>command('removeLink')));
     toolbar.append(button('HTML',()=>{try{editor.setMode('html');show('HTML редактируется только в памяти. Для возврата в визуальный режим выполните проверку.');}catch(exception){error(exception);}}),button('Визуальный режим',()=>{try{editor.setMode('visual');}catch{show('Сначала нажмите «Проверить» и примите подготовленный вариант.');}}));
   }
+  const mediaControls=mountMediaControls({root,before:actions,initial:initialState,run:guarded,listMedia,sourceUrl:mediaSourceUrl,invalidate,queueImage:imageQueue,
+    canEdit:()=>!destroyed&&!identityChanged});
   for(const state of initialState.fields){
     const field=state?.name;
     if(!Object.hasOwn(LABELS,field)||editors.has(field)||!state||typeof state.rawHtml!=='string'||state.approvedHtml!==null&&typeof state.approvedHtml!=='string')fail('EDITOR_MOUNT_INVALID');
     const host=root.querySelector('[data-editor-field="'+field+'"]');if(!host)fail('EDITOR_FIELD_MISSING');
     let mount=host.querySelector('[data-editor-mount]');if(!mount){mount=document.createElement('div');mount.dataset.editorMount='';host.append(mount);owned.push(mount);}
-    const editor=createEditor(mount,{approvedHtml:state.approvedHtml??'',owner:initialState.owner,field,styleSheet,onDirty:invalidate,onError:exception=>adapterFailure(field,exception),onUntrustedInput:stageUntrusted});editors.set(field,editor);controls(host,editor,field);
+    const editor=createEditor(mount,{approvedHtml:state.approvedHtml??'',owner:initialState.owner,field,pageId:initialState.pageId,approvedEmbedded:initialState.embeddedMedia?.[field]||[],queueImage:imageQueue,embeddedSourceUrl:mediaSourceUrl,styleSheet,onDirty:invalidate,onError:exception=>adapterFailure(field,exception),onUntrustedInput:stageUntrusted});editors.set(field,editor);controls(host,editor,field);
     if(state.approvedHtml===null){applying=true;try{editor.setRawHtml(state.rawHtml);}finally{applying=false;}}
   }
   if(!editors.size)fail('EDITOR_FIELDS_REQUIRED');
+  const embeddedControls=mountEmbeddedControls({root,initial:initialState,editors,run:guarded,listMedia,issueEmbedded,queueImage:imageQueue,
+    getEpoch:()=>epoch,invalidate,canEdit:()=>!destroyed&&!identityChanged&&!uncertain&&!initialState.draftCancelled});
   async function prepare(intent){
+    if(!embeddedControls.valid()){show('Подтвердите или отмените выбор изображения внутри текста перед проверкой.');return null;}
+    if(!mediaControls.valid()){show('Подтвердите или отмените выбор фото и исправьте его описание и размеры перед проверкой.');return null;}
+    if(initialState.draftCancelled){show('Черновик отменён. Ввод остаётся в памяти. Откройте актуальную страницу отдельным действием.');return null;}
+    if(initialState.rebase===true&&!root.querySelector('[data-editor-rebase-confirm]')?.checked){show('Сначала сравните черновик с текущей версией и явно подтвердите перенос основы без объединения.');return null;}
     const capturedEpoch=epoch,data=changes();let result;
-    try{result=await check(data);}catch(exception){if(exception?.code==='EDITOR_IDENTITY_CHANGED')scrub(data);throw exception;}
+    try{result=await check(embeddedControls.project(data));}catch(exception){if(exception?.code==='EDITOR_IDENTITY_CHANGED')scrub(data);throw exception;}
     if(capturedEpoch!==epoch)fail('CHECK_CHANGED');
     if(!result||!result.normalisedChanges)fail('EDITOR_CHECK_RESPONSE_INVALID');
     const changed=[...editors.keys()].some(field=>result.normalisedChanges[field]!==data[field]);
@@ -108,13 +122,37 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,r
     const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
     if(!response||response.operation_id!==intent.body.operationId||!uuid.test(response.result_id||'')||typeof response.result_code!=='string'||!response.result_code||typeof response.replay!=='boolean'||typeof response.gone!=='boolean')fail('UNKNOWN_RESULT');
     uncertain=null;retryButton.hidden=true;
+    if(!response.gone){embeddedControls.acknowledge(intent.embeddedTokens);scrub(intent.embeddedTokens);}
+    // Any proven acknowledgement invalidates the old proof, even if the user
+    // edited again during transport. Basis belongs to this exact operation.
+    accepted=null;pending=null;review.hidden=true;
+    if(intent.name==='draft'&&!response.gone){
+      const expectedRevision=intent.body.context.draftBasis?intent.body.context.draftBasis.revision+1:1;
+      if(!response.draftBasis||response.draftBasis.id!==response.result_id||response.draftBasis.revision!==expectedRevision||!uuid.test(response.baseRevisionId||''))fail('UNKNOWN_RESULT');
+      Object.assign(initialState,{baseRevisionId:response.baseRevisionId,editingFrom:'owner-draft',draftBasis:structuredClone(response.draftBasis),stageId:null,rebase:false,targetCurrentId:null});
+    }else if(intent.name==='save'&&!response.gone){
+      Object.assign(initialState,{baseRevisionId:response.result_id,currentRevisionId:response.result_id,editingFrom:'current',draftBasis:null,stageId:null,rebase:false,targetCurrentId:null});
+    }else if(intent.name==='cancel-draft')initialState.draftCancelled=true;
+    if(initialState.rebase!==true){const comparison=root.querySelector('[data-editor-rebase-comparison]');if(comparison)comparison.hidden=true;}
+    const sourceLabel=root.querySelector('[data-editor-source-label]');
+    if(sourceLabel&&!response.gone)sourceLabel.textContent=intent.name==='draft'?'Редактируется сохранённый личный черновик. Публичная версия не изменена.':intent.name==='cancel-draft'?'Сохранённый черновик отменён. Ввод остаётся только в этой вкладке.':'Редактируется актуальная версия страницы.';
+    for(const anchor of root.querySelectorAll('[data-editor-rebase-link]'))anchor.hidden=true;
+    for(const anchor of root.querySelectorAll('[data-editor-draft-link]')){
+      if(intent.name==='draft'&&!response.gone){const query=new URLSearchParams({source:'owner-draft',draftId:response.draftBasis.id,draftRevision:String(response.draftBasis.revision)});anchor.href=`/manage/pages/${encodeURIComponent(initialState.pageId)}/edit/?${query}`;}
+      else if(intent.name==='cancel-draft'||intent.body.context.editingFrom==='owner-draft'&&intent.name==='save')anchor.hidden=true;
+    }
+    if(intent.name==='cancel-draft'){
+      dirty.textContent='Черновик отменён. Несохранённый ввод остаётся только в открытой вкладке.';
+      show('Сохранённый черновик удалён. Публичная версия не изменена. Для продолжения откройте актуальную страницу.');return;
+    }
     if(intent.epoch!==epoch){show('Прежняя операция подтверждена. Новые изменения остаются в открытой вкладке и ещё не сохранены.');return;}
-    accepted=null;pending=null;dirty.textContent=intent.name==='draft'?'Черновик сохранён отдельно от сайта.':'Сохранение подтверждено.';
+    if(intent.name!=='cancel-draft'&&!response.gone)mediaControls.refresh();
+    cleanEpoch=epoch;dirty.textContent=intent.name==='draft'?'Черновик сохранён отдельно от сайта.':'Сохранение подтверждено.';
     show(response.gone?'Операция обработана. Снимок больше не хранится.':intent.name==='draft'?'Черновик сохранён. Публичная версия не изменена.':'Изменения сохранены.');
   }
   async function transmitIntent(intent){
     try{await submitIntent(intent);}catch(exception){
-      if(exception?.code==='EDITOR_IDENTITY_CHANGED'){scrub(intent.body);throw exception;}
+      if(exception?.code==='EDITOR_IDENTITY_CHANGED'){scrub(intent.body);scrub(intent.embeddedTokens);throw exception;}
       if(exception?.outcomeKnown===true&&[400,401,403,404,408,409,411,413,415].includes(exception.status)){
         uncertain=null;retryButton.hidden=true;invalidate();throw exception;
       }
@@ -124,16 +162,27 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,r
   retryButton.addEventListener('click',guarded(async()=>{if(!uncertain)return;await transmitIntent(uncertain);}));
   for(const [label,name,callback] of [['Сохранить','save',save],['Сохранить черновик','draft',draft]]){
     if(typeof callback!=='function')continue;
-    const action=button(label,guarded(async()=>{
+    const action=button(name==='draft'&&initialState.rebase===true?'Сохранить перенос основы черновика':label,guarded(async()=>{
+      if(initialState.draftCancelled){show('Черновик отменён. Откройте актуальную страницу отдельным действием; ввод пока остаётся в памяти.');return;}
+      if(name==='save'&&initialState.rebase===true){show('Сначала явно сохраните перенос основы черновика. Страница ещё не изменена.');return;}
       if(uncertain){show(STATUS.UNKNOWN_RESULT);return;}
       if(viewErrors.size){show('Не удалось обновить визуальное оформление. Ввод сохранён в памяти. Нажмите «Проверить» перед сохранением.');return;}
       const result=accepted?.epoch===epoch?accepted.result:await prepare(name);if(!result)return;
-      const context=Object.fromEntries(['pageId','generation','baseRevisionId','editingFrom','draftBasis','stageId'].map(key=>[key,initialState[key]??null]));
-      const intent={name,callback,epoch,body:structuredClone({changes:result.normalisedChanges,checkReceipt:result.checkReceipt,operationId:uuid(),context})};
+      const context=Object.fromEntries(['pageId','generation','baseRevisionId','editingFrom','draftBasis','stageId','rebase','targetCurrentId'].map(key=>[key,initialState[key]??null]));
+      const intent={name,callback,epoch,embeddedTokens:embeddedControls.capture(result.normalisedChanges),body:structuredClone({changes:result.normalisedChanges,checkReceipt:result.checkReceipt,operationId:uuid(),context})};
       await transmitIntent(intent);
     }));action.dataset.editorAction=name;actions.append(action);
   }
-  if(initialState.owner&&typeof draft!=='function'){const note=document.createElement('p');note.textContent='Сохранение черновика на этом экране пока недоступно.';actions.append(note);}
+  if(initialState.owner&&typeof draft!=='function'){const note=document.createElement('p');note.textContent=initialState.editingFrom==='restore-stage'?'Подготовленное восстановление можно применить отдельным сохранением. Сохранение его копии в черновик на этом экране пока недоступно.':'Сохранение черновика на этом экране пока недоступно.';actions.append(note);}
+  if(initialState.owner&&typeof cancelDraft==='function'){
+    const cancelButton=button('Отменить сохранённый черновик',guarded(async()=>{
+      if(!initialState.draftBasis||initialState.draftCancelled){show('На этом экране нет действующего черновика для отмены.');return;}
+      if(uncertain){show(STATUS.UNKNOWN_RESULT);return;}
+      if(!window.confirm('Удалить именно этот сохранённый черновик? Публичная версия не изменится. Ввод останется только в открытой вкладке.'))return;
+      const context=structuredClone(Object.fromEntries(['pageId','generation','baseRevisionId','editingFrom','draftBasis','stageId','rebase','targetCurrentId'].map(key=>[key,initialState[key]??null])));
+      await transmitIntent({name:'cancel-draft',callback:cancelDraft,epoch,body:{operationId:uuid(),context}});
+    }));cancelButton.dataset.editorAction='cancel-draft';actions.append(cancelButton);
+  }
   if(typeof save!=='function')show('Визуальная правка доступна. Сохранение пока не подключено.');else show('Ввод остаётся в памяти вкладки до явного сохранения.');
   function scrub(value,seen=new Set()){
     if(!value||typeof value!=='object'||seen.has(value))return;seen.add(value);
@@ -141,12 +190,16 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,r
     if(Array.isArray(value))value.length=0;
   }
   function clearOwnedCopies(){
-    scrub(uncertain?.body);scrub(accepted?.result);scrub(pending?.result);
+    scrub(uncertain?.body);scrub(uncertain?.embeddedTokens);scrub(accepted?.result);scrub(pending?.result);
     scrub(initialState.values);initialState.values={};scrub(initialState.fields);initialState.fields=[];
-    for(const name of ['pageId','generation','baseRevisionId','editingFrom','draftBasis','stageId','checkReceipt']){scrub(initialState[name]);initialState[name]=null;}
+    scrub(initialState.media);initialState.media={};
+    scrub(initialState.embeddedMedia);initialState.embeddedMedia={};
+    for(const name of ['pageId','generation','baseRevisionId','currentRevisionId','editingFrom','draftBasis','stageId','rebase','targetCurrentId','checkReceipt','draftCancelled']){scrub(initialState[name]);initialState[name]=null;}
     for(const node of root.querySelectorAll('textarea,input,pre')){if('value' in node)node.value='';else node.textContent='';}
   }
   function changedIdentity(){
+    embeddedControls.destroy();imageQueue.destroy();
+    mediaControls.destroy();
     identityChanged=true;clearOwnedCopies();uncertain=null;accepted=null;pending=null;retryButton.hidden=true;review.replaceChildren();review.hidden=true;
     for(const editor of editors.values())editor.destroy();editors.clear();
     for(const control of root.querySelectorAll('button,input,select,textarea'))control.disabled=true;
@@ -162,6 +215,13 @@ export function mountEditorPage({root,initialState,styleSheet,check,save,draft,r
   })));
   const externalInput=event=>{if(!event.target.closest?.('[data-editor-field]')&&!review.contains(event.target))invalidate();};
   root.addEventListener('input',externalInput);
+  const sourceNavigation=event=>{
+    const anchor=event.target.closest?.('a[data-editor-source-link]');if(!anchor||!root.contains(anchor))return;
+    if(identityChanged||busy){event.preventDefault();return;}
+    if(uncertain){event.preventDefault();show(STATUS.UNKNOWN_RESULT);return;}
+    if((epoch!==cleanEpoch||accepted||pending||!review.hidden)&&!window.confirm('Открыть другой источник? Несохранённый ввод этой вкладки будет потерян.'))event.preventDefault();
+  };
+  root.addEventListener('click',sourceNavigation);
   return Object.freeze({editors,getInputs:inputs,getChanges:changes,invalidate,
-    destroy(){if(destroyed)return;destroyed=true;clearOwnedCopies();uncertain=null;accepted=null;pending=null;root.removeEventListener('input',externalInput);for(const editor of editors.values())editor.destroy();editors.clear();review.replaceChildren();for(const node of owned)node.remove();}});
+    destroy(){if(destroyed)return;destroyed=true;embeddedControls.destroy();imageQueue.destroy();mediaControls.destroy();clearOwnedCopies();uncertain=null;accepted=null;pending=null;root.removeEventListener('input',externalInput);root.removeEventListener('click',sourceNavigation);for(const editor of editors.values())editor.destroy();editors.clear();review.replaceChildren();for(const node of owned)node.remove();}});
 }

@@ -1,0 +1,4 @@
+{% extends 'accounts/base.html' %}{% block content %}<h1>Сравнение {{ context.kind }}</h1><h2>Сохранённая версия {{ row.sequence }}</h2><pre data-saved-html>{{ saved_html }}</pre>
+<h2>Текущее содержимое</h2><pre data-current-html>{{ context.source_html }}</pre>
+<p>Сравнение не меняет сайт. Восстановление подставляет допустимые данные в редактор; публикация требует отдельного применения. Меню строится по текущей структуре сайта.</p>
+<a href="{% url 'shared_content:editor' context.kind %}">Вернуться в редактор</a>{% endblock %}

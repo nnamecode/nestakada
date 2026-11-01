@@ -1,6 +1,6 @@
 """Static resource-limited PageInput producer. No Django, DB or filesystem IO."""
 import hashlib
-from .input_policy import decode_input, validate_context, plain, fingerprint
+from .input_policy import decode_input, validate_context, plain, fingerprint, image_reference
 from .price_policy import normalize_price
 
 
@@ -9,17 +9,41 @@ def rejected(code):
 
 
 def normalize(raw, context):
+    from .html_parser import _parse_session
+    with _parse_session():
+        return _normalize(raw, context)
+
+
+def _normalize(raw, context):
     context = validate_context(context)
     from .policy_constants import POLICY_VERSION
     if context['policy_version'] != POLICY_VERSION:
         raise RuntimeError('EDITOR_POLICY_CHANGED')
-    save = context.get('action') == 'save'
-    value = decode_input(raw, save=save)
+    if context.get('action') == 'embedded-issue':
+        from .embedded_policy import source_bindings
+        return {'sourceBindings': source_bindings(context)}
+    save = context.get('action') in ('save', 'draft')
+    draft = context.get('action') == 'draft'
+    value = decode_input(raw, save=save, draft=draft)
+    source = context.get('source', {'editingFrom': 'current', 'draftBasis': None, 'stageId': None,
+                                    'rebase': False, 'targetCurrentId': None})
+    source_matches = (all(value[key] == source[key] for key in ('editingFrom', 'draftBasis', 'stageId'))
+                      and (not draft or value['rebase'] == source['rebase']))
     if save:
         metadata = {'operationId': value['operationId'], 'checkReceipt': value['checkReceipt'],
                     'baseRevisionId': value['baseRevisionId'], 'generation': value['generation'],
                     'fields': sorted(value['changes']), 'editingFrom': value['editingFrom'],
-                    'fingerprint': fingerprint(value)}
+                    # Permanent current receipts predate source selectors. Their
+                    # exact-request fingerprint must survive this extension.
+                    'fingerprint': fingerprint(value) if source == {
+                        'editingFrom': 'current', 'draftBasis': None, 'stageId': None,
+                        'rebase': False, 'targetCurrentId': None
+                    } else fingerprint({'input': value, 'source': source}),
+                    'source': source, 'action': 'draft' if draft else 'save'}
+        if not source_matches:
+            return {**rejected('EDITOR_INPUT_REJECTED'), 'save_request': metadata}
+        if context.get('can_read_source') is False:
+            return {**rejected('EDITOR_BASE_UNAVAILABLE'), 'save_request': metadata}
         candidate_context = dict(context, base_revision_id=value['baseRevisionId'])
         try:
             result = _normalize_value(value, candidate_context, raw, POLICY_VERSION)
@@ -27,6 +51,8 @@ def normalize(raw, context):
             result = rejected('EDITOR_INPUT_REJECTED')
         result['save_request'] = metadata
         return result
+    if not source_matches:
+        return rejected('EDITOR_INPUT_REJECTED')
     return _normalize_value(value, context, raw, POLICY_VERSION)
 
 
@@ -40,8 +66,6 @@ def _normalize_value(value, context, raw, POLICY_VERSION):
         return rejected('EDITOR_FIELDS_FORBIDDEN')
     if value['editingFrom'] == 'owner-draft' and not context['owner']:
         return rejected('EDITOR_FIELDS_FORBIDDEN')
-    if value['editingFrom'] != 'current' or any(field in changes for field in ('main_image', 'preview_image')):
-        return rejected('EDITOR_CAPABILITY_UNAVAILABLE')
 
     # Lazy imports keep this native dependency boundary entirely in the child.
     from .html_policy import normalize_html
@@ -49,9 +73,20 @@ def _normalize_value(value, context, raw, POLICY_VERSION):
     url_context = URLContext(page_path=context['page_path'], origin=context['origin'])
     normalized = {}
     warnings = []
+    comparison = changes
+    derived = intents = None
+    if 'embedded_source' in context:
+        from .embedded_policy import normalize_fields
+        from .types import ControlledUnsupported
+        try:
+            rich, rich_warnings, derived, intents, projection = normalize_fields(changes, context)
+        except ControlledUnsupported:
+            return rejected('EDITOR_CAPABILITY_UNAVAILABLE')
+        normalized.update(rich);warnings.extend(rich_warnings)
+        comparison = {**changes, **projection}
     remaining = 20000
     for field in ('intro_text', 'main_text'):
-        if field not in changes:
+        if field not in changes or 'embedded_source' in context:
             continue
         try:
             result = normalize_html(changes[field], owner=context['owner'], field=field,
@@ -73,13 +108,19 @@ def _normalize_value(value, context, raw, POLICY_VERSION):
         if type(changes['indexing_allowed']) is not bool:
             raise ValueError('EDITOR_INPUT_INVALID')
         normalized['indexing_allowed'] = changes['indexing_allowed']
-    if normalized != changes:
+    for field in ('main_image', 'preview_image'):
+        if field in changes:
+            normalized[field] = image_reference(changes[field])
+    if normalized != comparison:
         for field in normalized:
             item = {'field': field, 'code': 'NORMALIZATION_REVIEW_REQUIRED'}
-            if normalized[field] != changes[field] and item not in warnings:
+            if normalized[field] != comparison[field] and item not in warnings:
                 warnings.append(item)
-    return {'accepted': True, 'changes': normalized, 'warnings': warnings,
+    result = {'accepted': True, 'changes': normalized, 'warnings': warnings,
             'policy_version': POLICY_VERSION,
-            'changed': normalized != changes,
+            'changed': normalized != comparison,
             'input_fingerprint': hashlib.sha256(raw).hexdigest(),
             'normalized_fingerprint': fingerprint(normalized)}
+    if derived is not None:
+        result.update(derived=derived, intentBindings=intents)
+    return result

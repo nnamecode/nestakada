@@ -2,7 +2,28 @@
 <link rel="stylesheet" href="/manage/editor-assets/editor.css" data-editor-stylesheet>
 <section data-editor-page data-page-id="{{ page_id }}">
 <h1>Редактор: {{ page.name }}</h1><p>Изменения сохраняются только после проверки и явного нажатия «Сохранить».</p>
-<p><a href="{% url 'page_versions:history' page_id %}">История и Stable</a></p>
+<p><a href="{% url 'page_versions:history' page_id %}" data-editor-source-link>История и Stable</a></p>
+<nav aria-label="Источник редактирования">
+<a href="{% url 'page_editor:editor' page_id %}" data-editor-source-link>Открыть актуальную страницу</a>
+{% if owner and draft_navigation %}
+<a href="{{ draft_navigation.edit_url }}" data-editor-source-link data-editor-draft-link>Открыть сохранённый черновик</a>
+<a href="{{ draft_navigation.rebase_url }}" data-editor-source-link data-editor-rebase-link>Сравнить черновик с текущей версией и перенести основу</a>
+{% endif %}
+</nav>
+<p data-editor-source-label>{% if initial_state.editingFrom == 'owner-draft' %}Редактируется личный черновик владельца. Он не опубликован.{% elif initial_state.editingFrom == 'restore-stage' %}Редактируется подготовленное восстановление. Текущая версия ещё не изменена.{% else %}Редактируется актуальная версия страницы.{% endif %}</p>
+{% if owner and draft_comparison %}
+<section data-editor-draft-comparison{% if initial_state.rebase %} data-editor-rebase-comparison{% endif %}>
+<h2>Черновик и актуальная версия страницы</h2>
+<p>{% if draft_comparison.draftBaseRevisionId == draft_comparison.currentRevisionId %}Основа черновика совпадает с текущей версией страницы.{% else %}После создания основы черновика текущая версия страницы изменилась.{% endif %}</p>
+{% for field in draft_comparison.fields %}
+<details><summary>{{ field.label }}</summary><h3>Сохранённый черновик</h3><pre data-editor-compare-draft="{{ field.name }}">{{ field.draft }}</pre><h3>Актуальная версия</h3><pre data-editor-compare-current="{{ field.name }}">{{ field.current }}</pre></details>
+{% endfor %}
+{% if initial_state.rebase %}
+<p>Перенос основы сохранит целиком проверенный черновик на показанной актуальной основе. Автоматического объединения содержимого нет. Публичная версия от этого действия не изменится.</p>
+<label><input type="checkbox" data-editor-rebase-confirm>Я сравнил содержимое и подтверждаю перенос основы черновика на показанную актуальную версию без объединения</label>
+{% endif %}
+</section>
+{% endif %}
 <p role="status" data-editor-status>Загрузка редактора…</p><p data-editor-dirty>Нет несохранённых изменений</p>
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 {% for field in fields %}<section data-editor-field="{{ field.name }}">

@@ -10,7 +10,6 @@ import re
 import unicodedata
 from uuid import UUID
 from xml.etree import ElementTree as ET
-import html5lib
 from html5lib._tokenizer import HTMLTokenizer
 from html5lib.constants import tokenTypes
 import tinycss2
@@ -23,6 +22,7 @@ from .types import (PolicyError, ControlledUnsupported, ProtectedContext, Policy
     NormalizationResult, Metrics, Anchor)
 from .urls import anchor_label, normalize_link, validate_context
 from .tables import inspect_tables
+from .html_parser import parse_fragment
 
 HTML_NS='http://www.w3.org/1999/xhtml'
 INLINE=frozenset({'br','strong','em','u','s','sub','sup','span','a'})
@@ -54,7 +54,7 @@ def _tag(node):
     return node.tag
 
 
-def _scan(value, owner):
+def _scan(value, owner, *, allow_media_intent=False):
     """Inspect tokens even if the HTML5 tree builder would discard them."""
     starts=0
     for token in HTMLTokenizer(value):
@@ -79,7 +79,8 @@ def _scan(value, owner):
                 for name,content in token.get('data',{}).items():
                     if type(name) is not str or name.startswith('on') or ':' in name:_error('ATTRIBUTE_FORBIDDEN')
                     _string(content,multiline=name=='style')
-                    if name!='style' and name not in attributes_for(ALIASES.get(tag,tag)):_error('ATTRIBUTE_FORBIDDEN')
+                    if name!='style' and name not in attributes_for(ALIASES.get(tag,tag)):
+                        if not (allow_media_intent and owner and tag=='span' and name=='data-es-media-intent'):_error('ATTRIBUTE_FORBIDDEN')
 
 
 def _number(value, minimum, maximum, *, integer=False, px=False):
@@ -237,6 +238,22 @@ def _signature(tree):
 def normalize_html(value: str, *, owner: bool, field: str, scope_id: str,
                    protected_context: ProtectedContext, url_context=None,
                    table_budget_remaining=MAX_UI_TABLE_SLOTS) -> NormalizationResult:
+    result, _ = _normalize_html(value, owner=owner, field=field, scope_id=scope_id,
+        protected_context=protected_context, url_context=url_context,
+        table_budget_remaining=table_budget_remaining)
+    return result
+
+
+def _build_protected_source(value, *, field, scope_id, layout, embedded_images, url_context=None):
+    result, context = _normalize_html(value, owner=True, field=field, scope_id=scope_id,
+        protected_context=ProtectedContext(), source_facts=(layout, embedded_images), url_context=url_context)
+    if result.changed:
+        raise ControlledUnsupported('PROTECTED_SOURCE_AMBIGUOUS')
+    return context
+
+
+def _normalize_html(value, *, owner, field, scope_id, protected_context,
+                    url_context=None, table_budget_remaining=MAX_UI_TABLE_SLOTS, source_facts=None, map_builder=None):
     if type(owner) is not bool or type(field) is not str or field not in FIELDS or not isinstance(protected_context,ProtectedContext) or type(protected_context.nodes) is not tuple:_error('POLICY_CONTEXT_INVALID')
     _uuid(scope_id)
     if url_context is not None:validate_context(url_context)
@@ -247,7 +264,7 @@ def normalize_html(value: str, *, owner: bool, field: str, scope_id: str,
     if len(source)>MAX_SOURCE_BYTES:_error('SOURCE_BYTE_LIMIT')
     candidate=_string(value.replace('\r\n','\n').replace('\r','\n'),multiline=True)
     _scan(candidate,owner)
-    tree=html5lib.parseFragment(candidate,treebuilder='etree',namespaceHTMLElements=True)
+    tree=parse_fragment(candidate)
     source_metrics=_metrics(tree,len(source))
     anchors=[];anchor_links=[];unsupported=set();warnings=set()
     tree.text=_string(tree.text or '',multiline=True)
@@ -284,29 +301,46 @@ def normalize_html(value: str, *, owner: bool, field: str, scope_id: str,
                 if link:anchor_links.append(link)
             except ControlledUnsupported as exc:unsupported.add(exc.code)
         if 'data-es-anchor' in attributes:anchors.append(Anchor(attributes['data-es-anchor'],field))
-        if any(name in PROTECTED_ATTRS for name in attributes):unsupported.add('PROTECTED_INTEGRATION_UNSUPPORTED')
         node.attrib.clear();node.attrib.update(attributes)
     if len({anchor.label for anchor in anchors})!=len(anchors):_error('ANCHOR_DUPLICATE')
     table_capabilities=inspect_tables(tree,remaining_budget=table_budget_remaining)
-    if protected_context.nodes:unsupported.add('PROTECTED_INTEGRATION_UNSUPPORTED')
     if unsupported:raise ControlledUnsupported(sorted(unsupported)[0])
+    from . import protected_policy
+    if map_builder is not None:
+        protected_context = map_builder(tree)
+    if source_facts is not None:
+        try:
+            protected_context = protected_policy._source_context(tree,
+                source_sha256=hashlib.sha256(source).hexdigest(), field=field, scope_id=scope_id,
+                layout=source_facts[0], embedded_images=source_facts[1])
+        except PolicyError as exc:
+            if isinstance(exc, ControlledUnsupported):
+                raise
+            raise ControlledUnsupported('PROTECTED_SOURCE_AMBIGUOUS') from None
+    pending_assets = protected_policy.validate_tree(tree, context=protected_context,
+        field=field, scope_id=scope_id, owner=owner)
     _metrics(tree,len(source));canonical=_serialize(tree)
     if len(canonical.encode('utf-8'))>MAX_SOURCE_BYTES:_error('NORMALIZED_BYTE_LIMIT')
+    if source_facts is not None and canonical!=value:
+        raise ControlledUnsupported('PROTECTED_SOURCE_AMBIGUOUS')
     # All original source has been validated before the only native clean call.
     cleaned=clean.restricted_clean(canonical)
-    checked=html5lib.parseFragment(cleaned,treebuilder='etree',namespaceHTMLElements=True)
+    checked=parse_fragment(cleaned)
     _metrics(checked,len(source))
     if _signature(checked)!=_signature(tree):_error('SANITIZER_DIVERGENCE')
+    protected_policy.validate_tree(checked, context=protected_context, field=field, scope_id=scope_id, owner=owner)
     final=_serialize(checked)
     recleaned=clean.restricted_clean(final)
-    reparsed=html5lib.parseFragment(recleaned,treebuilder='etree',namespaceHTMLElements=True)
+    reparsed=parse_fragment(recleaned)
     _metrics(reparsed,len(source))
     if _signature(reparsed)!=_signature(checked) or _serialize(reparsed)!=final:_error('SERIALIZATION_UNSTABLE')
+    protected_policy.validate_tree(reparsed, context=protected_context, field=field, scope_id=scope_id, owner=owner)
     if final!=value:warnings.add('NORMALIZATION_REVIEW_REQUIRED')
     known={anchor.label for anchor in anchors}
     if any(link.field==field and link.anchor not in known for link in anchor_links):warnings.add('ANCHOR_TARGET_UNRESOLVED')
-    return NormalizationResult(POLICY_VERSION,final,final!=value,
+    result = NormalizationResult(POLICY_VERSION,final,final!=value,
         tuple(PolicyWarning(code,field) for code in sorted(warnings)),hashlib.sha256(source).hexdigest(),
         hashlib.sha256(final.encode('utf-8')).hexdigest(),source_metrics,
-        tuple(reversed(anchors)),tuple(reversed(anchor_links)),(),table_capabilities,
+        tuple(reversed(anchors)),tuple(reversed(anchor_links)),pending_assets,table_capabilities,
         sum(fact.virtual_slots for fact in table_capabilities if fact.rich_widget))
+    return result, protected_context

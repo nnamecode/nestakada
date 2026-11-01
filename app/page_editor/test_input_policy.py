@@ -78,13 +78,13 @@ class InputPolicyTests(unittest.TestCase):
         result = self.run_input(self.payload({'h1': 'injected'}), context)
         self.assertEqual(result, {'accepted': False, 'code': 'EDITOR_FIELDS_FORBIDDEN'})
 
-    def test_inconsistent_and_unsupported_editing_modes(self):
+    def test_inconsistent_and_selector_mismatched_editing_modes(self):
         value = self.payload()
         value['stageId'] = PAGE
         with self.assertRaises(ProcessingRejected):
             self.run_input(value)
         value['editingFrom'] = 'restore-stage'
-        self.assertEqual(self.run_input(value), {'accepted': False, 'code': 'EDITOR_CAPABILITY_UNAVAILABLE'})
+        self.assertEqual(self.run_input(value), {'accepted': False, 'code': 'EDITOR_INPUT_REJECTED'})
 
     def test_trusted_context_and_semantic_policy_must_match(self):
         context = self.context()

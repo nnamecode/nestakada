@@ -203,13 +203,21 @@ class EditorSaveHttpTests(TransactionTestCase):
             self.assertEqual(response.status_code, status)
             self.assertIn("no-store", response["Cache-Control"])
 
-    def test_draft_stage_media_explicitly_unsupported(self):
+    def test_source_body_mismatch_and_media_capability_are_distinct(self):
         value = self.prepare()
         before = self.state()
-        for changed in ({**value,"editingFrom":"owner-draft","draftBasis":{"id":str(uuid4()),"revision":1}},
-                        {**value,"editingFrom":"restore-stage","stageId":str(uuid4())},
-                        {**value,"changes":{"main_image":None}}):
-            self.assert_error(self.save(changed), 409, "EDITOR_CAPABILITY_UNAVAILABLE")
+        forged_draft={**value,"editingFrom":"owner-draft","draftBasis":{"id":str(uuid4()),"revision":1}}
+        self.assert_error(self.save(forged_draft), 400, "EDITOR_INPUT_REJECTED")
+        forged_stage={**value,"editingFrom":"restore-stage","stageId":str(uuid4())}
+        self.assert_error(self.save(forged_stage), 400, "EDITOR_INPUT_REJECTED")
+        media={**value,"changes":{"main_image":None}}
+        self.assert_error(self.save(media), 409, "EDITOR_CHECK_RECEIPT_INVALID")
+        protected='<span data-es-protected="'+str(uuid4())+'">X</span>'
+        unsupported={**value,"changes":{"main_text":protected}}
+        invalid_marker=self.save(unsupported)
+        self.assert_error(invalid_marker, 400, "EDITOR_INPUT_REJECTED")
+        self.assertNotIn("checkReceipt", invalid_marker.json())
+        self.assertNotIn("result_id", invalid_marker.json())
         self.assertEqual(self.state(), before)
 
     def test_atomic_fault_after_real_ledger_audit_rolls_back_everything(self):

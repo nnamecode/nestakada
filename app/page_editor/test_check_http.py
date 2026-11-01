@@ -214,13 +214,27 @@ class EditorCheckHttpTests(TransactionTestCase):
         self.assertNotIn(canary, str(list(events.values())))
         self.assertEqual(self.state(), before)
 
-    def test_current_only_draft_stage_and_media_explicit_capability_refusal(self):
+    def test_current_source_body_mismatch_and_media_capability_are_distinct(self):
         before = self.state()
-        variants = [self.payload(editingFrom="owner-draft", draftBasis={"id":str(uuid4()), "revision":1}),
-                    self.payload(editingFrom="restore-stage", stageId=str(uuid4())),
-                    self.payload({"main_image":None})]
-        for value in variants:
-            self.assert_error(self.post(self.owner_client, value), 409, "EDITOR_CAPABILITY_UNAVAILABLE")
+        forged_draft = self.payload(editingFrom="owner-draft", draftBasis={"id":str(uuid4()), "revision":1})
+        self.assert_error(self.post(self.owner_client, forged_draft), 400, "EDITOR_INPUT_REJECTED")
+        forged_stage = self.payload(editingFrom="restore-stage", stageId=str(uuid4()))
+        self.assert_error(self.post(self.owner_client, forged_stage), 400, "EDITOR_INPUT_REJECTED")
+        media = self.payload({"main_image":None})
+        response = self.post(self.owner_client, media)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["normalisedChanges"], {"main_image":None})
+        self.assertIsInstance(response.json()["checkReceipt"], str)
+        self.assertTrue(response.json()["checkReceipt"])
+        unavailable = {"asset_id":str(uuid4()), "alt":"Synthetic missing asset", "alignment":"center",
+                       "width_px":None, "height_px":None}
+        self.assert_error(self.post(self.owner_client, self.payload({"main_image":unavailable})),
+                          409, "EDITOR_MEDIA_UNAVAILABLE")
+        protected = '<span data-es-protected="' + str(uuid4()) + '">X</span>'
+        invalid_marker = self.post(self.owner_client, self.payload({"main_text":protected}))
+        self.assert_error(invalid_marker, 400, "EDITOR_INPUT_REJECTED")
+        self.assertNotIn("checkReceipt", invalid_marker.json())
+        self.assertNotIn("result_id", invalid_marker.json())
         self.assertEqual(self.state(), before)
 
     def test_generation_and_base_conflicts_real_child(self):

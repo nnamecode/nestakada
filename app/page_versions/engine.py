@@ -287,12 +287,12 @@ def commit_employee(*,actor,page_id,base_revision,patch,expected_generation,oper
     return _commit(actor,page_id,base_revision,expected_generation,operation_id,'commit_employee',patch=patch,stage_id=stage_id,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key)
 
 
-def commit_owner(*,actor,page_id,base_revision,snapshot,expected_generation,operation_id,stage_id=None,draft_id=None,draft_revision=None,editor_request_fingerprint=None,editor_session_key=None):
+def commit_owner(*,actor,page_id,base_revision,snapshot,expected_generation,operation_id,stage_id=None,draft_id=None,draft_revision=None,expected_draft_hash=None,editor_request_fingerprint=None,editor_session_key=None):
     return _commit(actor,page_id,base_revision,expected_generation,operation_id,'commit_owner',snapshot=snapshot,
-        stage_id=stage_id,draft_id=draft_id,draft_revision=draft_revision,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key)
+        stage_id=stage_id,draft_id=draft_id,draft_revision=draft_revision,expected_draft_hash=expected_draft_hash,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key)
 
 
-def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=None,snapshot=None,stage_id=None,draft_id=None,draft_revision=None,editor_request_fingerprint=None,editor_session_key=None):
+def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=None,snapshot=None,stage_id=None,draft_id=None,draft_revision=None,expected_draft_hash=None,editor_request_fingerprint=None,editor_session_key=None):
     outside();owner_required=action=='commit_owner'
     if editor_request_fingerprint is not None and (type(editor_request_fingerprint) is not str or re.fullmatch('[a-f0-9]{64}',editor_request_fingerprint) is None):
         raise ValidationError('VERSIONS_INVALID_EDITOR_FINGERPRINT')
@@ -315,8 +315,12 @@ def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=Non
             # producer still validates the final candidate; stage/base/rights stay exact.
         if draft_id:
             draft=draft_for(page)
-            if draft is None or draft.pk!=uid(draft_id) or draft.revision!=draft_revision or draft.base_revision_id!=state.current_revision_id or draft.payload!=payload:
+            if draft is None or draft.pk!=uid(draft_id) or draft.revision!=draft_revision or draft.base_revision_id!=state.current_revision_id:
                 raise ValidationError('VERSIONS_DRAFT_CONFLICT')
+            if editor_request_fingerprint is not None:
+                if expected_draft_hash is None or draft.payload_hash!=expected_draft_hash or S.digest(draft.payload)!=expected_draft_hash:
+                    raise ValidationError('VERSIONS_DRAFT_CONFLICT')
+            elif draft.payload!=payload:raise ValidationError('VERSIONS_DRAFT_CONFLICT')
         return payload
     with transaction.atomic():
         page,profile,fields,owner,state=enter(actor,page_id,generation,owner=owner_required)
@@ -348,25 +352,33 @@ def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=Non
         return finish(operation_id,action,actor,page,generation,params,row.pk,code='restored' if stage_id else 'applied',source=source_id,editor_request_fingerprint=editor_request_fingerprint or '')
 
 
-def save_owner_draft(*,actor,page_id,base_revision,snapshot,expected_generation,operation_id,draft_revision=None,rebase=False):
+def save_owner_draft(*,actor,page_id,base_revision,snapshot,expected_generation,operation_id,draft_revision=None,rebase=False,draft_id=None,expected_draft_hash=None,expected_draft_base=None,editor_request_fingerprint=None,editor_session_key=None):
     outside();action='rebase_draft' if rebase else 'save_draft'
+    if editor_request_fingerprint is not None and (type(editor_request_fingerprint) is not str or re.fullmatch('[a-f0-9]{64}',editor_request_fingerprint) is None):
+        raise ValidationError('VERSIONS_INVALID_EDITOR_FINGERPRINT')
     params={'base':str(uid(base_revision)),'payload':S.digest(snapshot.data()) if type(snapshot) is S.Snapshot else None,'draft_revision':draft_revision}
     def inspect(page,state):
         payload=_snapshot(snapshot,page);base=revision(page,base_revision);draft=draft_for(page)
         if draft is None:
-            if draft_revision is not None or base.pk!=state.current_revision_id:raise ValidationError('VERSIONS_DRAFT_CONFLICT')
+            if draft_revision is not None or draft_id is not None or base.pk!=state.current_revision_id:raise ValidationError('VERSIONS_DRAFT_CONFLICT')
         elif draft.revision!=draft_revision or (base.pk!=state.current_revision_id if rebase else base.pk!=draft.base_revision_id):
             raise ValidationError('VERSIONS_DRAFT_CONFLICT')
+        if editor_request_fingerprint is not None and draft is not None:
+            if (draft_id is None or draft.pk!=uid(draft_id) or draft.payload_hash!=expected_draft_hash or S.digest(draft.payload)!=expected_draft_hash
+                    or expected_draft_base is None or draft.base_revision_id!=uid(expected_draft_base)):
+                raise ValidationError('VERSIONS_DRAFT_CONFLICT')
         return payload,draft
     with transaction.atomic():
         page,profile,fields,owner,state=enter(actor,page_id,expected_generation,owner=True)
-        previous=replay(operation_id,action,actor,page,expected_generation,params)
+        if editor_request_fingerprint is not None:check_editor_session(actor,expected_generation,editor_session_key)
+        previous=replay(operation_id,action,actor,page,expected_generation,params,editor_request_fingerprint=editor_request_fingerprint)
         if previous:return previous
         payload,draft=inspect(page,state)
     evidence=preflight(payload)
     with transaction.atomic():
         page,profile,fields,owner,state=enter(actor,page_id,expected_generation,owner=True)
-        previous=replay(operation_id,action,actor,page,expected_generation,params)
+        if editor_request_fingerprint is not None:check_editor_session(actor,expected_generation,editor_session_key)
+        previous=replay(operation_id,action,actor,page,expected_generation,params,editor_request_fingerprint=editor_request_fingerprint)
         if previous:return previous
         checked,draft=inspect(page,state)
         if checked!=payload:raise ValidationError('VERSIONS_DRAFT_CONFLICT')
@@ -378,16 +390,20 @@ def save_owner_draft(*,actor,page_id,base_revision,snapshot,expected_generation,
             raw(OwnerDraft).filter(pk=draft.pk).update(base_revision_id=uid(base_revision),payload=payload,payload_hash=S.digest(payload),author_id=actor.pk,updated_at=now(),revision=draft.revision+1)
         VersionBasePin.objects.create(revision_id=uid(base_revision),holder_kind='owner_draft',holder_id=draft.pk)
         sync_usage('draft',draft.pk,payload)
-        return finish(operation_id,action,actor,page,expected_generation,params,draft.pk,source=base_revision)
+        return finish(operation_id,action,actor,page,expected_generation,params,draft.pk,source=base_revision,editor_request_fingerprint=editor_request_fingerprint or '')
 
 
-def cancel_owner_draft(*,actor,page_id,draft_id,draft_revision,expected_generation,operation_id):
+def cancel_owner_draft(*,actor,page_id,draft_id,draft_revision,expected_generation,operation_id,editor_request_fingerprint=None,editor_session_key=None):
+    outside()
+    if editor_request_fingerprint is not None and (type(editor_request_fingerprint) is not str or re.fullmatch('[a-f0-9]{64}',editor_request_fingerprint) is None):
+        raise ValidationError('VERSIONS_INVALID_EDITOR_FINGERPRINT')
     params={'draft':str(uid(draft_id)),'draft_revision':draft_revision}
     with transaction.atomic():
         page,profile,fields,owner,state=enter(actor,page_id,expected_generation,owner=True)
-        previous=replay(operation_id,'cancel_draft',actor,page,expected_generation,params)
+        if editor_request_fingerprint is not None:check_editor_session(actor,expected_generation,editor_session_key)
+        previous=replay(operation_id,'cancel_draft',actor,page,expected_generation,params,editor_request_fingerprint=editor_request_fingerprint)
         if previous:return previous
         draft=draft_for(page)
         if draft is None or draft.pk!=uid(draft_id) or draft.revision!=draft_revision:raise ValidationError('VERSIONS_DRAFT_CONFLICT')
         remove_usage('draft',draft.pk);raw(VersionBasePin).filter(holder_kind='owner_draft',holder_id=draft.pk).delete();raw(OwnerDraft).filter(pk=draft.pk).delete()
-        return finish(operation_id,'cancel_draft',actor,page,expected_generation,params,draft.pk,code='released')
+        return finish(operation_id,'cancel_draft',actor,page,expected_generation,params,draft.pk,code='released',editor_request_fingerprint=editor_request_fingerprint or '')

@@ -1,15 +1,16 @@
 """Exact editor JSON admission before CSRF can parse a multipart body."""
 import re
 from uuid import UUID
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.db import DatabaseError
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 from accounts.services import require_session, note_denial
-from .checks import inspect_context
-from editor_runtime.guards import EditorFault
+from .checks import inspect_admission
+from .source_context import selector_for
+from editor_runtime.guards import EditorFault, BodyTooLarge, BodyMalformed, LengthRequired
 
-CHECK_PATH = re.compile(r'^/manage/pages/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/edit/(?:check|save)/$')
+CHECK_PATH = re.compile(r'^/manage/pages/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/edit/(check|save|draft|draft/cancel|embedded/issue)/$')
 
 
 class EditorAdmissionMiddleware(MiddlewareMixin):
@@ -21,11 +22,38 @@ class EditorAdmissionMiddleware(MiddlewareMixin):
             return None
         try:
             actor = require_session(request, touch=False)
+            if match.group(2) in ('draft/cancel', 'embedded/issue'):
+                if match.group(2) == 'draft/cancel' and request.META.get('QUERY_STRING'):
+                    return JsonResponse({'ok': False, 'code': 'EDITOR_INPUT_REJECTED'}, status=400)
+                if match.group(2) == 'embedded/issue':
+                    selector_for(request)
+                context = inspect_admission(actor=actor, page_id=UUID(match.group(1)), generation=request.auth_generation)
+                if not context['owner']:
+                    raise PermissionDenied('EDITOR_FIELDS_FORBIDDEN')
+                if request.content_type != 'application/json':
+                    return JsonResponse({'ok': False, 'code': 'EDITOR_JSON_REQUIRED'}, status=415)
+                if request.META.get('HTTP_TRANSFER_ENCODING'):
+                    raise BodyMalformed()
+                length = request.META.get('CONTENT_LENGTH', '')
+                if not length:
+                    raise LengthRequired()
+                if not length.isascii() or not length.isdecimal():
+                    raise BodyMalformed()
+                try:
+                    size = int(length)
+                except ValueError:
+                    raise BodyMalformed() from None
+                if size > 16384:
+                    raise BodyTooLarge()
+                return None
             if request.content_type != 'application/json':
                 return JsonResponse({'ok': False, 'code': 'EDITOR_JSON_REQUIRED'}, status=415)
-            origin = request.build_absolute_uri('/').rstrip('/')
-            inspect_context(actor=actor, page_id=UUID(match.group(1)),
-                            generation=request.auth_generation, origin=origin)
+            selector = selector_for(request)
+            context = inspect_admission(actor=actor, page_id=UUID(match.group(1)), generation=request.auth_generation)
+            if (match.group(2) == 'draft' or selector['editingFrom'] == 'owner-draft') and not context['owner']:
+                raise PermissionDenied('EDITOR_FIELDS_FORBIDDEN')
+        except ValidationError:
+            return JsonResponse({'ok': False, 'code': 'EDITOR_INPUT_REJECTED'}, status=400)
         except PermissionDenied:
             note_denial(request, 'page')
             return JsonResponse({'ok': False, 'code': 'EDITOR_FIELDS_FORBIDDEN'}, status=403)

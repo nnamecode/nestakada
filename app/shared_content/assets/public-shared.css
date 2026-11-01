@@ -1,0 +1,57 @@
+/* Shared geometry extracted from the accepted public-light-v4 template.
+   Fonts/icons/body sections are deliberately supplied by their future host. */
+.es-header,.es-footer{--orange:#f47b20;--line:#d9d9d5;color:#111;font:16px/1.45 "Segoe UI",Arial,sans-serif}
+.es-header *,.es-footer *{box-sizing:border-box;min-width:0}
+.es-header a,.es-footer a{color:inherit;text-decoration:none}
+.es-header img,.es-footer img{display:block;max-width:100%}
+.es-header :focus-visible,.es-footer :focus-visible{outline:4px solid #2468d4;outline-offset:4px}
+.es-header{min-height:76px;padding:7px clamp(20px,4vw,70px);display:flex;align-items:center;gap:18px;border-bottom:1px solid var(--line);background:#fff}
+.es-brand img{width:94px;height:62px;object-fit:contain}
+.es-header nav{display:flex;align-items:center;gap:15px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.es-header nav a{padding:12px 0;border-bottom:3px solid transparent;overflow-wrap:anywhere}
+.es-header nav a:hover{border-color:var(--orange)}
+.es-menu-button{display:none;border:0;background:transparent;padding:8px;font:inherit}
+.es-menu-button span{display:block;width:25px;height:2px;background:#111;margin:5px}
+.es-menu-button b{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.es-header-contacts{margin-left:auto;display:flex;align-items:center;gap:5px}
+.es-header-socials{display:flex;gap:5px;flex:0 0 auto}
+.es-header-socials a{display:block;width:27px;height:27px;border-radius:6px;overflow:hidden}
+.es-header-socials img{width:100%;height:100%;object-fit:cover}
+.es-header-address,.es-header-phone{display:flex;flex-direction:column;padding-left:7px;border-left:1px solid #d6d6d2;line-height:1.2;text-align:left}
+.es-header-address b,.es-header-phone strong{font-size:12px;white-space:nowrap}
+.es-header-address span{font-size:9.5px;overflow-wrap:anywhere;max-width:165px}
+.es-header-phone span{font-size:8px;white-space:nowrap}
+.es-header-phone strong{font-size:14px}
+.es-footer{min-height:72px;background:#e7e7e4;padding:10px clamp(20px,4vw,70px);display:flex;align-items:center;justify-content:space-between;gap:24px}
+.es-footer-left{display:flex;flex-direction:row;align-items:center;gap:14px;white-space:nowrap}
+.es-footer .es-brand img{width:86px;height:auto}
+.es-footer-left p{color:#555;font-size:10px;margin:0}
+.es-footer-legal{display:flex;align-items:center;margin-left:auto;color:#555;font-size:10px;white-space:nowrap}
+.es-footer-legal>span{padding:0 14px;border-left:1px solid #c7c7c3}
+.es-footer-legal>span:first-child{border-left:0}
+.es-footer-credit b{color:var(--orange);font-size:12px}
+@media(min-width:801px){.es-header-socials a{width:23px;height:23px}}
+@media(max-width:800px){
+.es-header{position:relative;min-height:0;padding:9px 16px;gap:12px;flex-wrap:wrap}
+.es-header .es-brand{order:1;flex:0 0 auto}.es-header .es-brand img{width:92px;height:48px}
+.es-header[data-menu-ready="true"] .es-menu-button{order:3;display:block;margin-left:0;width:44px;height:44px;padding:8px;border:1px solid #d7d7d3;border-radius:6px;background:#fff}
+.es-menu-button span{width:24px;margin:5px auto}
+.es-header nav{order:5;width:100%;flex-direction:column;align-items:flex-start;padding:14px 16px;gap:0;background:#fff;box-shadow:0 12px 24px rgba(0,0,0,.12)}
+.es-header[data-menu-ready="true"] nav{display:none;position:absolute;z-index:20;top:100%;left:0;right:0;border-bottom:1px solid var(--line)}
+.es-header[data-menu-ready="true"] nav[data-open="true"]{display:flex}
+.es-header nav a{width:100%;padding:13px 2px;border-bottom:1px solid #e5e5e1;font-size:13px}
+.es-header-contacts{order:2;margin-left:auto;gap:8px}.es-header-socials a{width:28px;height:28px}
+.es-header-address,.es-header-phone{justify-content:center;min-height:36px;padding-left:8px;border-left-color:#d7d7d3;line-height:1.15;margin:0}
+.es-header-address b,.es-header-phone strong{font-size:12px}.es-header-address span{max-width:150px;font-size:9px;line-height:1.25}
+.es-footer{min-height:0;padding:18px;align-items:flex-start;gap:16px;flex-direction:column}
+.es-footer-left{width:100%;white-space:normal}.es-footer-legal{width:100%;margin:0;flex-wrap:wrap;gap:8px 14px;white-space:normal}
+.es-footer-legal>span{padding:0;border:0}
+}
+@media(max-width:640px){
+.es-header{padding:8px 12px}.es-header .es-brand img{width:88px;height:46px}
+.es-header[data-menu-ready="true"] .es-menu-button{margin-left:auto}
+.es-header-contacts{order:4;width:100%;margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 9px;padding-top:7px;border-top:1px solid #e4e4e0}
+.es-header-socials{grid-row:1/3;align-self:center}.es-header-socials a{width:27px;height:27px}
+.es-header-address,.es-header-phone{min-height:0;padding-left:8px}.es-header-address b,.es-header-phone strong{font-size:12px}
+.es-header-address span{max-width:none;font-size:9px}.es-header-phone span{font-size:8px}
+}

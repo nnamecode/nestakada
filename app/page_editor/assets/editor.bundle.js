@@ -525,9 +525,9 @@ var Mark = class _Mark {
   /**
   @internal
   */
-  constructor(type, attrs) {
+  constructor(type, attrs2) {
     this.type = type;
-    this.attrs = attrs;
+    this.attrs = attrs2;
   }
   /**
   Given a set of marks, create a new set which contains this one as
@@ -1179,9 +1179,9 @@ var Node = class _Node {
   /**
   @internal
   */
-  constructor(type, attrs, content, marks = Mark.none) {
+  constructor(type, attrs2, content, marks = Mark.none) {
     this.type = type;
-    this.attrs = attrs;
+    this.attrs = attrs2;
     this.marks = marks;
     this.content = content || Fragment.empty;
   }
@@ -1296,8 +1296,8 @@ var Node = class _Node {
   Check whether this node's markup correspond to the given type,
   attributes, and marks.
   */
-  hasMarkup(type, attrs, marks) {
-    return this.type == type && compareDeep(this.attrs, attrs || type.defaultAttrs || emptyAttrs) && Mark.sameSet(this.marks, marks || Mark.none);
+  hasMarkup(type, attrs2, marks) {
+    return this.type == type && compareDeep(this.attrs, attrs2 || type.defaultAttrs || emptyAttrs) && Mark.sameSet(this.marks, marks || Mark.none);
   }
   /**
   Create a new node with the same markup as this node, containing
@@ -1581,8 +1581,8 @@ var TextNode = class _TextNode extends Node {
   /**
   @internal
   */
-  constructor(type, attrs, content, marks) {
-    super(type, attrs, null, marks);
+  constructor(type, attrs2, content, marks) {
+    super(type, attrs2, null, marks);
     if (!content)
       throw new RangeError("Empty text nodes are not allowed");
     this.text = content;
@@ -1628,13 +1628,13 @@ function wrapMarks(marks, str) {
     str = marks[i2].type.name + "(" + str + ")";
   return str;
 }
-function checkAttrs(attrs, values, type, name) {
+function checkAttrs(attrs2, values, type, name) {
   for (let attr in values)
-    if (!(attr in attrs))
+    if (!(attr in attrs2))
       throw new RangeError(`Unsupported attribute ${attr} for ${type} of type ${name}`);
-  for (let attr in attrs) {
-    if (attrs[attr].validate)
-      attrs[attr].validate(values[attr]);
+  for (let attr in attrs2) {
+    if (attrs2[attr].validate)
+      attrs2[attr].validate(values[attr]);
   }
 }
 var ContentMatch = class _ContentMatch {
@@ -2039,20 +2039,20 @@ function checkForDeadEnds(match, stream) {
       stream.err("Only non-generatable nodes (" + nodes.join(", ") + ") in a required position (see https://prosemirror.net/docs/guide/#generatable)");
   }
 }
-function defaultAttrs(attrs) {
+function defaultAttrs(attrs2) {
   let defaults2 = /* @__PURE__ */ Object.create(null);
-  for (let attrName in attrs) {
-    let attr = attrs[attrName];
+  for (let attrName in attrs2) {
+    let attr = attrs2[attrName];
     if (!attr.hasDefault)
       return null;
     defaults2[attrName] = attr.default;
   }
   return defaults2;
 }
-function computeAttrs(attrs, value) {
+function computeAttrs(attrs2, value) {
   let built = /* @__PURE__ */ Object.create(null);
-  for (let name in attrs) {
-    let attr = attrs[name];
+  for (let name in attrs2) {
+    let attr = attrs2[name];
     let given = value && value[name];
     if (given === void 0) {
       if (attr.hasDefault)
@@ -2066,11 +2066,11 @@ function computeAttrs(attrs, value) {
   }
   return built;
 }
-function initAttrs(typeName, attrs) {
+function initAttrs(typeName, attrs2) {
   let result = /* @__PURE__ */ Object.create(null);
-  if (attrs)
-    for (let name in attrs)
-      result[name] = new Attribute(typeName, name, attrs[name]);
+  if (attrs2)
+    for (let name in attrs2)
+      result[name] = new Attribute(typeName, name, attrs2[name]);
   return result;
 }
 var NodeType = class _NodeType {
@@ -2148,11 +2148,11 @@ var NodeType = class _NodeType {
   /**
   @internal
   */
-  computeAttrs(attrs) {
-    if (!attrs && this.defaultAttrs)
+  computeAttrs(attrs2) {
+    if (!attrs2 && this.defaultAttrs)
       return this.defaultAttrs;
     else
-      return computeAttrs(this.attrs, attrs);
+      return computeAttrs(this.attrs, attrs2);
   }
   /**
   Create a `Node` of this type. The given attributes are
@@ -2162,20 +2162,20 @@ var NodeType = class _NodeType {
   `null`. Similarly `marks` may be `null` to default to the empty
   set of marks.
   */
-  create(attrs = null, content, marks) {
+  create(attrs2 = null, content, marks) {
     if (this.isText)
       throw new Error("NodeType.create can't construct text nodes");
-    return new Node(this, this.computeAttrs(attrs), Fragment.from(content), Mark.setFrom(marks));
+    return new Node(this, this.computeAttrs(attrs2), Fragment.from(content), Mark.setFrom(marks));
   }
   /**
   Like [`create`](https://prosemirror.net/docs/ref/#model.NodeType.create), but check the given content
   against the node type's content restrictions, and throw an error
   if it doesn't match.
   */
-  createChecked(attrs = null, content, marks) {
+  createChecked(attrs2 = null, content, marks) {
     content = Fragment.from(content);
     this.checkContent(content);
-    return new Node(this, this.computeAttrs(attrs), content, Mark.setFrom(marks));
+    return new Node(this, this.computeAttrs(attrs2), content, Mark.setFrom(marks));
   }
   /**
   Like [`create`](https://prosemirror.net/docs/ref/#model.NodeType.create), but see if it is
@@ -2185,8 +2185,8 @@ var NodeType = class _NodeType {
   always be created, this will always succeed if you pass null or
   `Fragment.empty` as content.
   */
-  createAndFill(attrs = null, content, marks) {
-    attrs = this.computeAttrs(attrs);
+  createAndFill(attrs2 = null, content, marks) {
+    attrs2 = this.computeAttrs(attrs2);
     content = Fragment.from(content);
     if (content.size) {
       let before = this.contentMatch.fillBefore(content);
@@ -2198,7 +2198,7 @@ var NodeType = class _NodeType {
     let after = matched && matched.fillBefore(Fragment.empty, true);
     if (!after)
       return null;
-    return new Node(this, attrs, content.append(after), Mark.setFrom(marks));
+    return new Node(this, attrs2, content.append(after), Mark.setFrom(marks));
   }
   /**
   Returns true if the given fragment is valid content for this node
@@ -2225,7 +2225,7 @@ var NodeType = class _NodeType {
   /**
   @internal no longer useful, but called by old prosemirror-view versions
   */
-  checkAttrs(attrs) {
+  checkAttrs(attrs2) {
   }
   /**
   Check whether the given mark type is allowed in this node.
@@ -2314,10 +2314,10 @@ var MarkType = class _MarkType {
   containing only some of the mark's attributes. The others, if
   they have defaults, will be added.
   */
-  create(attrs = null) {
-    if (!attrs && this.instance)
+  create(attrs2 = null) {
+    if (!attrs2 && this.instance)
       return this.instance;
-    return new Mark(this, computeAttrs(this.attrs, attrs));
+    return new Mark(this, computeAttrs(this.attrs, attrs2));
   }
   /**
   @internal
@@ -2398,14 +2398,14 @@ var Schema = class {
   `content` may be a `Fragment`, `null`, a `Node`, or an array of
   nodes.
   */
-  node(type, attrs = null, content, marks) {
+  node(type, attrs2 = null, content, marks) {
     if (typeof type == "string")
       type = this.nodeType(type);
     else if (!(type instanceof NodeType))
       throw new RangeError("Invalid node type: " + type);
     else if (type.schema != this)
       throw new RangeError("Node type from different schema used (" + type.name + ")");
-    return type.createChecked(attrs, content, marks);
+    return type.createChecked(attrs2, content, marks);
   }
   /**
   Create a text node in the schema. Empty text nodes are not
@@ -2418,10 +2418,10 @@ var Schema = class {
   /**
   Create a mark with the given type and attributes.
   */
-  mark(type, attrs) {
+  mark(type, attrs2) {
     if (typeof type == "string")
       type = this.marks[type];
-    return type.create(attrs);
+    return type.create(attrs2);
   }
   /**
   @internal
@@ -2639,9 +2639,9 @@ function wsOptionsFor(type, preserveWhitespace, base2) {
   return type && type.whitespace == "pre" ? OPT_PRESERVE_WS | OPT_PRESERVE_WS_FULL : base2 & ~OPT_OPEN_LEFT;
 }
 var NodeContext = class {
-  constructor(type, attrs, marks, solid, match, options) {
+  constructor(type, attrs2, marks, solid, match, options) {
     this.type = type;
-    this.attrs = attrs;
+    this.attrs = attrs2;
     this.marks = marks;
     this.solid = solid;
     this.options = options;
@@ -2943,14 +2943,14 @@ var ParseContext = class {
   }
   // Try to start a node of the given type, adjusting the context when
   // necessary.
-  enter(type, attrs, marks, preserveWS) {
-    let innerMarks = this.findPlace(type.create(attrs), marks, false);
+  enter(type, attrs2, marks, preserveWS) {
+    let innerMarks = this.findPlace(type.create(attrs2), marks, false);
     if (innerMarks)
-      innerMarks = this.enterInner(type, attrs, marks, true, preserveWS);
+      innerMarks = this.enterInner(type, attrs2, marks, true, preserveWS);
     return innerMarks;
   }
   // Open a node of the given type
-  enterInner(type, attrs, marks, solid = false, preserveWS) {
+  enterInner(type, attrs2, marks, solid = false, preserveWS) {
     this.closeExtra();
     let top = this.top;
     top.match = top.match && top.match.matchType(type);
@@ -2965,7 +2965,7 @@ var ParseContext = class {
       }
       return true;
     });
-    this.nodes.push(new NodeContext(type, attrs, applyMarks, solid, null, options));
+    this.nodes.push(new NodeContext(type, attrs2, applyMarks, solid, null, options));
     this.open++;
     return marks;
   }
@@ -3259,13 +3259,13 @@ function doc(options) {
   return options.document || window.document;
 }
 var suspiciousAttributeCache = /* @__PURE__ */ new WeakMap();
-function suspiciousAttributes(attrs) {
-  let value = suspiciousAttributeCache.get(attrs);
+function suspiciousAttributes(attrs2) {
+  let value = suspiciousAttributeCache.get(attrs2);
   if (value === void 0)
-    suspiciousAttributeCache.set(attrs, value = suspiciousAttributesInner(attrs));
+    suspiciousAttributeCache.set(attrs2, value = suspiciousAttributesInner(attrs2));
   return value;
 }
-function suspiciousAttributesInner(attrs) {
+function suspiciousAttributesInner(attrs2) {
   let result = null;
   function scan(value) {
     if (value && typeof value == "object") {
@@ -3284,7 +3284,7 @@ function suspiciousAttributesInner(attrs) {
       }
     }
   }
-  scan(attrs);
+  scan(attrs2);
   return result;
 }
 function renderSpec(doc3, structure, xmlNS, blockArraysIn) {
@@ -3304,18 +3304,18 @@ function renderSpec(doc3, structure, xmlNS, blockArraysIn) {
   }
   let contentDOM;
   let dom = xmlNS ? doc3.createElementNS(xmlNS, tagName) : doc3.createElement(tagName);
-  let attrs = structure[1], start = 1;
-  if (attrs && typeof attrs == "object" && attrs.nodeType == null && !Array.isArray(attrs)) {
+  let attrs2 = structure[1], start = 1;
+  if (attrs2 && typeof attrs2 == "object" && attrs2.nodeType == null && !Array.isArray(attrs2)) {
     start = 2;
-    for (let name in attrs)
-      if (attrs[name] != null) {
+    for (let name in attrs2)
+      if (attrs2[name] != null) {
         let space2 = name.indexOf(" ");
         if (space2 > 0)
-          dom.setAttributeNS(name.slice(0, space2), name.slice(space2 + 1), attrs[name]);
+          dom.setAttributeNS(name.slice(0, space2), name.slice(space2 + 1), attrs2[name]);
         else if (name == "style" && dom.style)
-          dom.style.cssText = attrs[name];
+          dom.style.cssText = attrs2[name];
         else
-          dom.setAttribute(name, attrs[name]);
+          dom.setAttribute(name, attrs2[name]);
       }
   }
   for (let i2 = start; i2 < structure.length; i2++) {
@@ -4250,12 +4250,12 @@ function lift(tr2, range, target) {
     }
   tr2.step(new ReplaceAroundStep(start, end, gapStart, gapEnd, new Slice(before.append(after), openStart, openEnd), before.size - openStart, true));
 }
-function findWrapping(range, nodeType, attrs = null, innerRange = range) {
+function findWrapping(range, nodeType, attrs2 = null, innerRange = range) {
   let around = findWrappingOutside(range, nodeType);
   let inner = around && findWrappingInside(innerRange, nodeType);
   if (!inner)
     return null;
-  return around.map(withAttrs).concat({ type: nodeType, attrs }).concat(inner.map(withAttrs));
+  return around.map(withAttrs).concat({ type: nodeType, attrs: attrs2 }).concat(inner.map(withAttrs));
 }
 function withAttrs(type) {
   return { type, attrs: null };
@@ -4295,12 +4295,12 @@ function wrap(tr2, range, wrappers) {
   let start = range.start, end = range.end;
   tr2.step(new ReplaceAroundStep(start, end, start, end, new Slice(content, 0, 0), wrappers.length, true));
 }
-function setBlockType(tr2, from2, to, type, attrs) {
+function setBlockType(tr2, from2, to, type, attrs2) {
   if (!type.isTextblock)
     throw new RangeError("Type given to setBlockType should be a textblock");
   let mapFrom = tr2.steps.length;
   tr2.doc.nodesBetween(from2, to, (node, pos) => {
-    let attrsHere = typeof attrs == "function" ? attrs(node) : attrs;
+    let attrsHere = typeof attrs2 == "function" ? attrs2(node) : attrs2;
     if (node.isTextblock && !node.hasMarkup(type, attrsHere) && canChangeType(tr2.doc, tr2.mapping.slice(mapFrom).map(pos), type)) {
       let convertNewlines = null;
       if (type.schema.linebreakReplacement) {
@@ -4345,13 +4345,13 @@ function canChangeType(doc3, pos, type) {
   let $pos = doc3.resolve(pos), index = $pos.index();
   return $pos.parent.canReplaceWith(index, index + 1, type);
 }
-function setNodeMarkup(tr2, pos, type, attrs, marks) {
+function setNodeMarkup(tr2, pos, type, attrs2, marks) {
   let node = tr2.doc.nodeAt(pos);
   if (!node)
     throw new RangeError("No node at given position");
   if (!type)
     type = node.type;
-  let newNode = type.create(attrs, null, marks || node.marks);
+  let newNode = type.create(attrs2, null, marks || node.marks);
   if (node.isLeaf)
     return tr2.replaceWith(pos, pos + node.nodeSize, newNode);
   if (!type.validContent(node.content))
@@ -4703,10 +4703,10 @@ var Fitter = class {
     }
     return $to;
   }
-  openFrontierNode(type, attrs = null, content) {
+  openFrontierNode(type, attrs2 = null, content) {
     let top = this.frontier[this.depth];
     top.match = top.match.matchType(type);
-    this.placed = addToFragment(this.placed, this.depth, Fragment.from(type.create(attrs, content)));
+    this.placed = addToFragment(this.placed, this.depth, Fragment.from(type.create(attrs2, content)));
     this.frontier.push({ type, match: type.contentMatch });
   }
   closeFrontierNode() {
@@ -4910,11 +4910,11 @@ var AttrStep = class _AttrStep extends Step {
     let node = doc3.nodeAt(this.pos);
     if (!node)
       return StepResult.fail("No node at attribute step's position");
-    let attrs = /* @__PURE__ */ Object.create(null);
+    let attrs2 = /* @__PURE__ */ Object.create(null);
     for (let name in node.attrs)
-      attrs[name] = node.attrs[name];
-    attrs[this.attr] = this.value;
-    let updated = node.type.create(attrs, null, node.marks);
+      attrs2[name] = node.attrs[name];
+    attrs2[this.attr] = this.value;
+    let updated = node.type.create(attrs2, null, node.marks);
     return StepResult.fromReplace(doc3, this.pos, this.pos + 1, new Slice(Fragment.from(updated), 0, node.isLeaf ? 0 : 1));
   }
   getMap() {
@@ -4947,11 +4947,11 @@ var DocAttrStep = class _DocAttrStep extends Step {
     this.value = value;
   }
   apply(doc3) {
-    let attrs = /* @__PURE__ */ Object.create(null);
+    let attrs2 = /* @__PURE__ */ Object.create(null);
     for (let name in doc3.attrs)
-      attrs[name] = doc3.attrs[name];
-    attrs[this.attr] = this.value;
-    let updated = doc3.type.create(attrs, doc3.content, doc3.marks);
+      attrs2[name] = doc3.attrs[name];
+    attrs2[this.attr] = this.value;
+    let updated = doc3.type.create(attrs2, doc3.content, doc3.marks);
     return StepResult.ok(updated);
   }
   getMap() {
@@ -5161,16 +5161,16 @@ var Transform = class {
   Set the type of all textblocks (partly) between `from` and `to` to
   the given node type with the given attributes.
   */
-  setBlockType(from2, to = from2, type, attrs = null) {
-    setBlockType(this, from2, to, type, attrs);
+  setBlockType(from2, to = from2, type, attrs2 = null) {
+    setBlockType(this, from2, to, type, attrs2);
     return this;
   }
   /**
   Change the type, attributes, and/or marks of the node at `pos`.
   When `type` isn't given, the existing node type is preserved,
   */
-  setNodeMarkup(pos, type, attrs = null, marks) {
-    setNodeMarkup(this, pos, type, attrs, marks);
+  setNodeMarkup(pos, type, attrs2 = null, marks) {
+    setNodeMarkup(this, pos, type, attrs2, marks);
     return this;
   }
   /**
@@ -6636,10 +6636,10 @@ function selectTextblockSide(side) {
 }
 var selectTextblockStart = selectTextblockSide(-1);
 var selectTextblockEnd = selectTextblockSide(1);
-function wrapIn(nodeType, attrs = null) {
+function wrapIn(nodeType, attrs2 = null) {
   return function(state, dispatch) {
     let { $from, $to } = state.selection;
-    let range = $from.blockRange($to), wrapping = range && findWrapping(range, nodeType, attrs);
+    let range = $from.blockRange($to), wrapping = range && findWrapping(range, nodeType, attrs2);
     if (!wrapping)
       return false;
     if (dispatch)
@@ -6647,7 +6647,7 @@ function wrapIn(nodeType, attrs = null) {
     return true;
   };
 }
-function setBlockType2(nodeType, attrs = null) {
+function setBlockType2(nodeType, attrs2 = null) {
   return function(state, dispatch) {
     let applicable = false;
     for (let i2 = 0; i2 < state.selection.ranges.length && !applicable; i2++) {
@@ -6655,7 +6655,7 @@ function setBlockType2(nodeType, attrs = null) {
       state.doc.nodesBetween(from2, to, (node, pos) => {
         if (applicable)
           return false;
-        if (!node.isTextblock || node.hasMarkup(nodeType, attrs))
+        if (!node.isTextblock || node.hasMarkup(nodeType, attrs2))
           return;
         if (node.type == nodeType) {
           applicable = true;
@@ -6671,7 +6671,7 @@ function setBlockType2(nodeType, attrs = null) {
       let tr2 = state.tr;
       for (let i2 = 0; i2 < state.selection.ranges.length; i2++) {
         let { $from: { pos: from2 }, $to: { pos: to } } = state.selection.ranges[i2];
-        tr2.setBlockType(from2, to, nodeType, attrs);
+        tr2.setBlockType(from2, to, nodeType, attrs2);
       }
       dispatch(tr2.scrollIntoView());
     }
@@ -6713,21 +6713,21 @@ for (let key in pcBaseKeymap)
 var mac = typeof navigator != "undefined" ? /Mac|iP(hone|[oa]d)/.test(navigator.platform) : typeof os != "undefined" && os.platform ? os.platform() == "darwin" : false;
 
 // deps/node_modules/prosemirror-schema-list/dist/index.js
-function wrapInList(listType, attrs = null) {
+function wrapInList(listType, attrs2 = null) {
   return function(state, dispatch) {
     let { $from, $to } = state.selection;
     let range = $from.blockRange($to);
     if (!range)
       return false;
     let tr2 = dispatch ? state.tr : null;
-    if (!wrapRangeInList(tr2, range, listType, attrs))
+    if (!wrapRangeInList(tr2, range, listType, attrs2))
       return false;
     if (dispatch)
       dispatch(tr2.scrollIntoView());
     return true;
   };
 }
-function wrapRangeInList(tr2, range, listType, attrs = null) {
+function wrapRangeInList(tr2, range, listType, attrs2 = null) {
   let doJoin = false, outerRange = range, doc3 = range.$from.doc;
   if (range.depth >= 2 && range.$from.node(range.depth - 1).type.compatibleContent(listType) && range.startIndex == 0) {
     if (range.$from.index(range.depth - 1) == 0)
@@ -6738,7 +6738,7 @@ function wrapRangeInList(tr2, range, listType, attrs = null) {
       range = new NodeRange(range.$from, doc3.resolve(range.$to.end(range.depth)), range.depth);
     doJoin = true;
   }
-  let wrap2 = findWrapping(outerRange, listType, attrs, range);
+  let wrap2 = findWrapping(outerRange, listType, attrs2, range);
   if (!wrap2)
     return false;
   if (tr2)
@@ -7246,11 +7246,11 @@ function posFromCaret(view, node, offset, coords) {
   }
   return outsideBlock > -1 ? outsideBlock : view.docView.posFromDOM(node, offset, -1);
 }
-function elementFromPoint(element, coords, box) {
-  let len = element.childNodes.length;
+function elementFromPoint(element3, coords, box) {
+  let len = element3.childNodes.length;
   if (len && box.top < box.bottom) {
     for (let startI = Math.max(0, Math.min(len - 1, Math.floor(len * (coords.top - box.top) / (box.bottom - box.top)) - 2)), i2 = startI; ; ) {
-      let child = element.childNodes[i2];
+      let child = element3.childNodes[i2];
       if (isElt(child)) {
         let rects = child.getClientRects();
         for (let j = 0; j < rects.length; j++) {
@@ -7263,7 +7263,7 @@ function elementFromPoint(element, coords, box) {
         break;
     }
   }
-  return element;
+  return element3;
 }
 function posAtCoords(view, coords) {
   let doc3 = view.dom.ownerDocument, node, offset = 0;
@@ -8375,13 +8375,13 @@ function computeOuterDeco(outerDeco, node, needsWrap) {
     return noDeco;
   let top = needsWrap ? noDeco[0] : new OuterDecoLevel(), result = [top];
   for (let i2 = 0; i2 < outerDeco.length; i2++) {
-    let attrs = outerDeco[i2].type.attrs;
-    if (!attrs)
+    let attrs2 = outerDeco[i2].type.attrs;
+    if (!attrs2)
       continue;
-    if (attrs.nodeName)
-      result.push(top = new OuterDecoLevel(attrs.nodeName));
-    for (let name in attrs) {
-      let val = attrs[name];
+    if (attrs2.nodeName)
+      result.push(top = new OuterDecoLevel(attrs2.nodeName));
+    for (let name in attrs2) {
+      let val = attrs2[name];
       if (val == null)
         continue;
       if (needsWrap && result.length == 1)
@@ -8960,19 +8960,19 @@ function temporarilyEditableNear(view, pos) {
       return setEditable(before);
   }
 }
-function setEditable(element) {
-  element.contentEditable = "true";
-  if (safari && element.draggable) {
-    element.draggable = false;
-    element.wasDraggable = true;
+function setEditable(element3) {
+  element3.contentEditable = "true";
+  if (safari && element3.draggable) {
+    element3.draggable = false;
+    element3.wasDraggable = true;
   }
-  return element;
+  return element3;
 }
-function resetEditable(element) {
-  element.contentEditable = "false";
-  if (element.wasDraggable) {
-    element.draggable = true;
-    element.wasDraggable = null;
+function resetEditable(element3) {
+  element3.contentEditable = "false";
+  if (element3.wasDraggable) {
+    element3.draggable = true;
+    element3.wasDraggable = null;
   }
 }
 function removeClassOnSelectionChange(view) {
@@ -10453,8 +10453,8 @@ var WidgetType = class _WidgetType {
   }
 };
 var InlineType = class _InlineType {
-  constructor(attrs, spec) {
-    this.attrs = attrs;
+  constructor(attrs2, spec) {
+    this.attrs = attrs2;
     this.spec = spec || noSpec;
   }
   map(mapping, span, offset, oldOffset) {
@@ -10475,8 +10475,8 @@ var InlineType = class _InlineType {
   }
 };
 var NodeType2 = class _NodeType {
-  constructor(attrs, spec) {
-    this.attrs = attrs;
+  constructor(attrs2, spec) {
+    this.attrs = attrs2;
     this.spec = spec || noSpec;
   }
   map(mapping, span, offset, oldOffset) {
@@ -10540,16 +10540,16 @@ var Decoration = class _Decoration {
   Creates an inline decoration, which adds the given attributes to
   each inline node between `from` and `to`.
   */
-  static inline(from2, to, attrs, spec) {
-    return new _Decoration(from2, to, new InlineType(attrs, spec));
+  static inline(from2, to, attrs2, spec) {
+    return new _Decoration(from2, to, new InlineType(attrs2, spec));
   }
   /**
   Creates a node decoration. `from` and `to` should point precisely
   before and after a node in the document. That node, and only that
   node, will receive the given attributes.
   */
-  static node(from2, to, attrs, spec) {
-    return new _Decoration(from2, to, new NodeType2(attrs, spec));
+  static node(from2, to, attrs2, spec) {
+    return new _Decoration(from2, to, new NodeType2(attrs2, spec));
   }
   /**
   The spec provided when creating this decoration. Can be useful
@@ -12147,25 +12147,25 @@ EditorView.prototype.dispatch = function(tr2) {
     this.updateState(this.state.apply(tr2));
 };
 function computeDocDeco(view) {
-  let attrs = /* @__PURE__ */ Object.create(null);
-  attrs.class = "ProseMirror";
-  attrs.contenteditable = String(view.editable);
+  let attrs2 = /* @__PURE__ */ Object.create(null);
+  attrs2.class = "ProseMirror";
+  attrs2.contenteditable = String(view.editable);
   view.someProp("attributes", (value) => {
     if (typeof value == "function")
       value = value(view.state);
     if (value)
       for (let attr in value) {
         if (attr == "class")
-          attrs.class += " " + value[attr];
+          attrs2.class += " " + value[attr];
         else if (attr == "style")
-          attrs.style = (attrs.style ? attrs.style + ";" : "") + value[attr];
-        else if (!attrs[attr] && attr != "contenteditable" && attr != "nodeName")
-          attrs[attr] = String(value[attr]);
+          attrs2.style = (attrs2.style ? attrs2.style + ";" : "") + value[attr];
+        else if (!attrs2[attr] && attr != "contenteditable" && attr != "nodeName")
+          attrs2[attr] = String(value[attr]);
       }
   });
-  if (!attrs.translate)
-    attrs.translate = "no";
-  return [Decoration.node(0, view.state.doc.content.size, attrs)];
+  if (!attrs2.translate)
+    attrs2.translate = "no";
+  return [Decoration.node(0, view.state.doc.content.size, attrs2)];
 }
 function updateCursorWrapper(view) {
   if (view.markCursor) {
@@ -13233,9 +13233,9 @@ function isRegExp(value) {
   return Object.prototype.toString.call(value) === "[object RegExp]";
 }
 function objectIncludes(object1, object2, options = { strict: true }) {
-  const keys2 = Object.keys(object2);
-  if (!keys2.length) return true;
-  return keys2.every((key) => {
+  const keys3 = Object.keys(object2);
+  if (!keys3.length) return true;
+  return keys3.every((key) => {
     if (options.strict) return object2[key] === object1[key];
     if (isRegExp(object2[key])) return object2[key].test(object1[key]);
     return object2[key] === object1[key];
@@ -13564,7 +13564,7 @@ function defaultBlockAt2(match) {
   return null;
 }
 var insertDefaultBlock = (options = {}) => ({ tr: tr2, dispatch, editor }) => {
-  const { pos, attrs, content, updateSelection: updateSelection2 = true } = options;
+  const { pos, attrs: attrs2, content, updateSelection: updateSelection2 = true } = options;
   let $pos;
   if (typeof pos === "number") $pos = tr2.doc.resolve(pos);
   else if (pos) $pos = pos;
@@ -13572,7 +13572,7 @@ var insertDefaultBlock = (options = {}) => ({ tr: tr2, dispatch, editor }) => {
   const defaultType = defaultBlockAt2($pos.parent.contentMatchAt($pos.index()));
   if (!defaultType) return false;
   const validAttrKeys = Object.keys(defaultType.spec.attrs || {});
-  const filteredAttrs = attrs ? Object.fromEntries(Object.entries(attrs).filter(([key]) => validAttrKeys.includes(key))) : {};
+  const filteredAttrs = attrs2 ? Object.fromEntries(Object.entries(attrs2).filter(([key]) => validAttrKeys.includes(key))) : {};
   let node;
   if (content) {
     const parsed = createNodeFromContent(content, editor.schema);
@@ -13663,8 +13663,8 @@ function normalizeKeyName2(name) {
   return result;
 }
 var keyboardShortcut = (name) => ({ editor, view, tr: tr2, dispatch }) => {
-  const keys2 = normalizeKeyName2(name).split(/-(?!$)/);
-  const key = keys2.find((item) => ![
+  const keys3 = normalizeKeyName2(name).split(/-(?!$)/);
+  const key = keys3.find((item) => ![
     "Alt",
     "Ctrl",
     "Meta",
@@ -13672,10 +13672,10 @@ var keyboardShortcut = (name) => ({ editor, view, tr: tr2, dispatch }) => {
   ].includes(item));
   const event = new KeyboardEvent("keydown", {
     key: key === "Space" ? " " : key,
-    altKey: keys2.includes("Alt"),
-    ctrlKey: keys2.includes("Ctrl"),
-    metaKey: keys2.includes("Meta"),
-    shiftKey: keys2.includes("Shift"),
+    altKey: keys3.includes("Alt"),
+    ctrlKey: keys3.includes("Ctrl"),
+    metaKey: keys3.includes("Meta"),
+    shiftKey: keys3.includes("Shift"),
     bubbles: true,
     cancelable: true
   });
@@ -14877,10 +14877,10 @@ var splitListItem = (typeOrName, overrideAttrs = {}) => ({ tr: tr2, state, dispa
   }
   return true;
 };
-function createNode(type, content, attrs) {
+function createNode(type, content, attrs2) {
   if (!type.validContent(content)) return null;
   try {
-    return type.create(attrs, content);
+    return type.create(attrs2, content);
   } catch {
     return null;
   }
@@ -15516,7 +15516,7 @@ function mergeDecorationSets(doc3, decorationSetsByExtension) {
 }
 function unionWidgetKeys(widgetKeysByExtension) {
   const merged = /* @__PURE__ */ new Set();
-  for (const keys2 of Object.values(widgetKeysByExtension)) for (const key of keys2) merged.add(key);
+  for (const keys3 of Object.values(widgetKeysByExtension)) for (const key of keys3) merged.add(key);
   return merged;
 }
 function validateDecorationSpec(name, spec) {
@@ -15974,7 +15974,7 @@ function mergeDeep(target, source) {
   });
   return output;
 }
-function updateMarkViewAttributes(checkMark, editor, attrs = {}) {
+function updateMarkViewAttributes(checkMark, editor, attrs2 = {}) {
   const { state } = editor;
   const { doc: doc3, tr: tr2 } = state;
   const thisMark = checkMark;
@@ -15988,13 +15988,13 @@ function updateMarkViewAttributes(checkMark, editor, attrs = {}) {
     });
     if (!foundMark) return;
     let needsUpdate = false;
-    Object.keys(attrs).forEach((k) => {
-      if (attrs[k] !== foundMark.attrs[k]) needsUpdate = true;
+    Object.keys(attrs2).forEach((k) => {
+      if (attrs2[k] !== foundMark.attrs[k]) needsUpdate = true;
     });
     if (needsUpdate) {
       const updatedMark = checkMark.type.create({
         ...checkMark.attrs,
-        ...attrs
+        ...attrs2
       });
       tr2.removeMark(from2, to, checkMark.type);
       tr2.addMark(from2, to, updatedMark);
@@ -16696,8 +16696,8 @@ var ExtensionManager = class {
           editor,
           extension,
           HTMLAttributes,
-          updateAttributes: (attrs) => {
-            updateMarkViewAttributes(mark, editor, attrs);
+          updateAttributes: (attrs2) => {
+            updateMarkViewAttributes(mark, editor, attrs2);
           }
         });
       };
@@ -17071,8 +17071,8 @@ var TextDirection = Extension.create({
       types: nodeExtensions.filter((extension) => extension.name !== "text").map((extension) => extension.name),
       attributes: { dir: {
         default: this.options.direction,
-        parseHTML: (element) => {
-          const dir = element.getAttribute("dir");
+        parseHTML: (element3) => {
+          const dir = element3.getAttribute("dir");
           if (dir && (dir === "ltr" || dir === "rtl" || dir === "auto")) return dir;
           return this.options.direction;
         },
@@ -17674,13 +17674,13 @@ var Editor = class extends EventEmitter {
   /**
   * Creates a ProseMirror view.
   */
-  createView(element) {
+  createView(element3) {
     const { editorProps, enableExtensionDispatchTransaction } = this.options;
     const baseDispatch = editorProps.dispatchTransaction || this.dispatchTransaction.bind(this);
     const dispatch = enableExtensionDispatchTransaction ? this.extensionManager.dispatchTransaction(baseDispatch) : baseDispatch;
     const baseTransformPastedHTML = editorProps.transformPastedHTML;
     const transformPastedHTML = this.extensionManager.transformPastedHTML(baseTransformPastedHTML);
-    this.editorView = new EditorView(element, {
+    this.editorView = new EditorView(element3, {
       ...editorProps,
       attributes: this.getEditorViewAttributes(),
       dispatchTransaction: dispatch,
@@ -18003,9 +18003,9 @@ function markPasteRule(config) {
 var jsxElements = /* @__PURE__ */ new WeakSet();
 var jsxFragments = /* @__PURE__ */ new WeakSet();
 function createJSXElement(spec) {
-  const element = spec;
-  jsxElements.add(element);
-  return element;
+  const element3 = spec;
+  jsxElements.add(element3);
+  return element3;
 }
 function isJSXElement(value) {
   return Array.isArray(value) && jsxElements.has(value);
@@ -18347,11 +18347,11 @@ var CodeBlock = Node2.create({
   addAttributes() {
     return { language: {
       default: this.options.defaultLanguage,
-      parseHTML: (element) => {
+      parseHTML: (element3) => {
         var _element$firstElement;
         const { languageClassPrefix } = this.options;
         if (!languageClassPrefix) return null;
-        const language = [...((_element$firstElement = element.firstElementChild) === null || _element$firstElement === void 0 ? void 0 : _element$firstElement.classList) || []].filter((className) => className.startsWith(languageClassPrefix)).map((className) => className.replace(languageClassPrefix, ""))[0];
+        const language = [...((_element$firstElement = element3.firstElementChild) === null || _element$firstElement === void 0 ? void 0 : _element$firstElement.classList) || []].filter((className) => className.startsWith(languageClassPrefix)).map((className) => className.replace(languageClassPrefix, ""))[0];
         if (!language) return null;
         return language;
       },
@@ -19696,7 +19696,7 @@ MultiToken.prototype = {
     const className = options.get("className", href, token);
     const target = options.get("target", href, token);
     const rel = options.get("rel", href, token);
-    const attrs = options.getObj("attributes", href, token);
+    const attrs2 = options.getObj("attributes", href, token);
     const eventListeners = options.getObj("events", href, token);
     attributes.href = formattedHref;
     if (className) {
@@ -19708,8 +19708,8 @@ MultiToken.prototype = {
     if (rel) {
       attributes.rel = rel;
     }
-    if (attrs) {
-      Object.assign(attributes, attrs);
+    if (attrs2) {
+      Object.assign(attributes, attrs2);
     }
     return {
       tagName,
@@ -20141,9 +20141,9 @@ function clickHandler(options) {
       if (options.enableClickSelection) handled = options.editor.commands.extendMarkRange(options.type.name);
       if (options.openOnClick) {
         var _link$href, _link$target;
-        const attrs = getAttributes(view.state, options.type.name);
-        const href = (_link$href = link.href) !== null && _link$href !== void 0 ? _link$href : attrs.href;
-        const target = (_link$target = link.target) !== null && _link$target !== void 0 ? _link$target : attrs.target;
+        const attrs2 = getAttributes(view.state, options.type.name);
+        const href = (_link$href = link.href) !== null && _link$href !== void 0 ? _link$href : attrs2.href;
+        const target = (_link$target = link.target) !== null && _link$target !== void 0 ? _link$target : attrs2.target;
         if (href) {
           window.open(href, target);
           handled = true;
@@ -20349,8 +20349,8 @@ var Link = Mark2.create({
     return {
       href: {
         default: null,
-        parseHTML(element) {
-          return element.getAttribute("href");
+        parseHTML(element3) {
+          return element3.getAttribute("href");
         }
       },
       target: { default: (_this$options$HTMLAtt = this.options.HTMLAttributes.target) !== null && _this$options$HTMLAtt !== void 0 ? _this$options$HTMLAtt : null },
@@ -20764,10 +20764,10 @@ function parseListMarker(marker) {
 }
 function buildOrderedListAttrsFromMarker(marker) {
   const { type, start } = parseListMarker(marker);
-  const attrs = {};
-  if (type) attrs.type = type;
-  if (start !== 1) attrs.start = start;
-  return attrs;
+  const attrs2 = {};
+  if (type) attrs2.type = type;
+  if (start !== 1) attrs2.start = start;
+  return attrs2;
 }
 function getListMarker(type, index, separator = ". ") {
   const position = index + 1;
@@ -21349,21 +21349,21 @@ var OrderedList = Node2.create({
     return {
       start: {
         default: 1,
-        parseHTML: (element) => {
-          return element.hasAttribute("start") ? parseInt(element.getAttribute("start") || "", 10) : 1;
+        parseHTML: (element3) => {
+          return element3.hasAttribute("start") ? parseInt(element3.getAttribute("start") || "", 10) : 1;
         }
       },
       type: {
         default: null,
-        parseHTML: (element) => {
-          const htmlType = element.getAttribute("type");
+        parseHTML: (element3) => {
+          const htmlType = element3.getAttribute("type");
           if (htmlType) return htmlType;
-          const style2 = element.getAttribute("style");
+          const style2 = element3.getAttribute("style");
           if (style2) {
             const mappedFromOl = cssListStyleTypeToHtmlType(style2);
             if (mappedFromOl) return mappedFromOl;
           }
-          const firstLi = element.querySelector("li");
+          const firstLi = element3.querySelector("li");
           if (firstLi) {
             const liStyle = firstLi.getAttribute("style");
             if (liStyle) {
@@ -21381,12 +21381,12 @@ var OrderedList = Node2.create({
   },
   renderHTML({ HTMLAttributes }) {
     const { start, type, ...attributesWithoutType } = HTMLAttributes;
-    const attrs = mergeAttributes(this.options.HTMLAttributes, attributesWithoutType);
-    if (start !== 1) attrs.start = start;
-    if (type && type !== "1") attrs.type = type;
+    const attrs2 = mergeAttributes(this.options.HTMLAttributes, attributesWithoutType);
+    if (start !== 1) attrs2.start = start;
+    if (type && type !== "1") attrs2.type = type;
     return [
       "ol",
-      attrs,
+      attrs2,
       0
     ];
   },
@@ -21396,12 +21396,12 @@ var OrderedList = Node2.create({
     const startValue = token.start || 1;
     const typeValue = token.typeMarker;
     const content = token.items ? parseListItems(token.items, helpers) : [];
-    const attrs = {};
-    if (startValue !== 1) attrs.start = startValue;
-    if (typeValue) attrs.type = typeValue;
-    if (Object.keys(attrs).length > 0) return {
+    const attrs2 = {};
+    if (startValue !== 1) attrs2.start = startValue;
+    if (typeValue) attrs2.type = typeValue;
+    if (Object.keys(attrs2).length > 0) return {
       type: "orderedList",
-      attrs,
+      attrs: attrs2,
       content
     };
     return {
@@ -21511,8 +21511,8 @@ var TaskItem = Node2.create({
     return { checked: {
       default: false,
       keepOnSplit: false,
-      parseHTML: (element) => {
-        const dataChecked = element.getAttribute("data-checked");
+      parseHTML: (element3) => {
+        const dataChecked = element3.getAttribute("data-checked");
         return dataChecked === "" || dataChecked === "true";
       },
       renderHTML: (attributes) => ({ "data-checked": attributes.checked })
@@ -21522,9 +21522,9 @@ var TaskItem = Node2.create({
     return [{
       tag: `li[data-type="${this.name}"]`,
       priority: 51,
-      contentElement: (element) => {
+      contentElement: (element3) => {
         var _element$querySelecto;
-        return (_element$querySelecto = element.querySelector("div")) !== null && _element$querySelecto !== void 0 ? _element$querySelecto : element;
+        return (_element$querySelecto = element3.querySelector("div")) !== null && _element$querySelecto !== void 0 ? _element$querySelecto : element3;
       }
     }];
   },
@@ -22914,6 +22914,320 @@ var StarterKit = Extension.create({
 });
 var src_default = StarterKit;
 
+// source/embedded-editor.mjs
+var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
+var IDKEYS = ["layoutId", "parentId", "markerId", "imageId", "slotBeforeId", "slotAfterId"];
+var REFKEYS = ["asset_id", "alt", "alignment", "width_px", "height_px"];
+var escape = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#x27;");
+var attrs = (values) => Object.entries(values).filter(([, value]) => value !== null && value !== void 0).sort(([a], [b]) => a.localeCompare(b, "en")).map(([key, value]) => " " + key + '="' + escape(value) + '"').join("");
+function fail() {
+  throw Object.assign(new Error("EDITOR_EMBEDDED_INVALID"), { code: "EDITOR_EMBEDDED_INVALID" });
+}
+function keys2(value, expected) {
+  return value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).sort().join() === [...expected].sort().join();
+}
+function imageRef(value) {
+  if (!keys2(value, REFKEYS) || !UUID.test(value.asset_id) || typeof value.alt !== "string" || [...value.alt].length > 300 || /[\x00-\x1f\x7f]/u.test(value.alt) || !["left", "center", "right"].includes(value.alignment) || ["width_px", "height_px"].some((key) => value[key] !== null && (!Number.isSafeInteger(value[key]) || value[key] <= 0))) fail();
+  return structuredClone(value);
+}
+function approvedEmbedded(records, { pageId } = {}) {
+  if (!Array.isArray(records)) fail();
+  const result = /* @__PURE__ */ new Map();
+  for (const item of records) {
+    if (!keys2(item, ["markerId", "imageId", "reference", "url", "thumbnailUrl"]) || !UUID.test(item.markerId) || !UUID.test(item.imageId) || result.has(item.markerId)) fail();
+    const reference = imageRef(item.reference);
+    for (const key of ["url", "thumbnailUrl"]) if (item[key] !== null) {
+      if (!UUID.test(pageId || "") || typeof item[key] !== "string") fail();
+      const prefix = `/manage/pages/${pageId}/edit/media/`, url = new URL(item[key], location.origin);
+      if (url.origin !== location.origin || url.hash || !item[key].startsWith(prefix) || !new RegExp("^" + prefix + "(?:files|picker-files)/[0-9a-f-]{36}/$", "u").test(url.pathname)) fail();
+    }
+    result.set(item.markerId, { ...item, reference });
+  }
+  return result;
+}
+function markerAttributes(value) {
+  if (!UUID.test(value.markerId) || !UUID.test(value.imageId)) fail();
+  const ref2 = imageRef(value.reference);
+  return {
+    "data-es-protected": value.markerId,
+    "data-es-image": value.imageId,
+    "data-es-asset": ref2.asset_id,
+    "data-es-alt": ref2.alt,
+    "data-es-image-align": ref2.alignment,
+    "data-es-width": ref2.width_px,
+    "data-es-height": ref2.height_px
+  };
+}
+function markerHtml(value) {
+  return "<span" + attrs(markerAttributes(value)) + "></span>";
+}
+function readMarker(element3, map2) {
+  const item = map2.get(element3.getAttribute("data-es-protected"));
+  if (!item) fail();
+  const expected = markerAttributes(item), actual = Object.fromEntries([...element3.attributes].map((attr) => [attr.name, attr.value]));
+  const normalized = Object.fromEntries(Object.entries(expected).filter(([, value]) => value !== null).map(([key, value]) => [key, String(value)]));
+  if (JSON.stringify(Object.entries(actual).sort()) !== JSON.stringify(Object.entries(normalized).sort()) || element3.childNodes.length) fail();
+  return { markerId: item.markerId, imageId: item.imageId, reference: structuredClone(item.reference) };
+}
+function protectedShape(doc3) {
+  const rows = [];
+  function walk(node, path, ancestors) {
+    if (node.type.name === "esProtectedParent") {
+      const children = [];
+      node.forEach((child) => children.push(child.type.name === "esProtectedSlot" ? { slotId: child.attrs.slotId } : child.type.name === "esProtected" ? child.attrs : { invalid: true }));
+      rows.push({ path, ancestors, attrs: node.attrs, children });
+      return;
+    }
+    if (node.type.name === "esProtected" || node.type.name === "esProtectedSlot") {
+      rows.push({ orphan: true, path, attrs: node.attrs });
+      return;
+    }
+    let index = 0;
+    node.forEach((child) => walk(child, [...path, index++], [...ancestors, { type: node.type.name, attrs: node.attrs }]));
+  }
+  walk(doc3, [], []);
+  return JSON.stringify(rows);
+}
+function createImageQueue() {
+  let tail = Promise.resolve(), destroyed = false;
+  const queue = (task) => {
+    tail = tail.then(() => destroyed ? void 0 : task(), () => destroyed ? void 0 : task());
+    return tail;
+  };
+  queue.destroy = () => {
+    destroyed = true;
+  };
+  return queue;
+}
+var SPAN = /<span\b(?:[^"'<>]|"[^"]*"|'[^']*')*>/giu;
+function markerId(tag) {
+  const match = /\bdata-es-protected\s*=\s*(?:"([0-9a-f-]{36})"|'([0-9a-f-]{36})'|([0-9a-f-]{36}))/iu.exec(tag);
+  return match ? match[1] || match[2] || match[3] : null;
+}
+function replaceMarkerInHtml(html, issuance) {
+  let count = 0;
+  const output = html.replace(SPAN, (tag) => {
+    if (markerId(tag) !== issuance.ids.markerId) return tag;
+    count++;
+    return markerHtml({ markerId: issuance.ids.markerId, imageId: issuance.ids.imageId, reference: issuance.image }).slice(0, -7);
+  });
+  if (count !== 1) fail();
+  return output;
+}
+function insertBlockHtml(issuance) {
+  return "<p" + attrs({ "data-es-parent": issuance.ids.parentId }) + "><span" + attrs({ "data-es-slot": issuance.ids.slotBeforeId }) + "></span>" + markerHtml({ markerId: issuance.ids.markerId, imageId: issuance.ids.imageId, reference: issuance.image }) + "<span" + attrs({ "data-es-slot": issuance.ids.slotAfterId }) + "></span></p>";
+}
+function element(tag, text) {
+  const node = document.createElement(tag);
+  if (text !== void 0) node.textContent = text;
+  return node;
+}
+function mountEmbeddedControls({ root, initial, editors, run: run3, canEdit, getEpoch, invalidate, listMedia, issueEmbedded, queueImage }) {
+  const permits = /* @__PURE__ */ new Map(), sections = [], records = /* @__PURE__ */ new Map();
+  let destroyed = false;
+  function button2(text, fn) {
+    const node = element("button", text);
+    node.type = "button";
+    node.addEventListener("click", run3(fn));
+    return node;
+  }
+  function sourceItems(field) {
+    return initial.embeddedMedia?.[field] || [];
+  }
+  function picture(host, item) {
+    if (!item?.thumbnailUrl) return;
+    const prefix = `/manage/pages/${initial.pageId}/edit/media/`, url = new URL(item.thumbnailUrl, location.origin);
+    if (url.origin !== location.origin || url.hash || !item.thumbnailUrl.startsWith(prefix) || !new RegExp("^" + prefix + "(?:files|picker-files)/[0-9a-f-]{36}/$", "u").test(url.pathname)) fail();
+    imageRef(item.reference);
+    const img = element("img");
+    img.alt = item.reference.alt;
+    host.append(img);
+    queueImage(() => new Promise((resolve) => {
+      if (destroyed || !img.isConnected) {
+        resolve();
+        return;
+      }
+      let timer;
+      const done = () => {
+        clearTimeout(timer);
+        img.onload = null;
+        img.onerror = null;
+        resolve();
+      };
+      img.onload = done;
+      img.onerror = done;
+      timer = setTimeout(done, 1e4);
+      img.src = item.thumbnailUrl;
+    }));
+  }
+  function refresh() {
+    for (const [field, record] of records) {
+      const previous = record.target.value;
+      record.target.replaceChildren();
+      const option = element("option", "\u041D\u043E\u0432\u043E\u0435 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u043C \u0431\u043B\u043E\u043A\u043E\u043C");
+      option.value = "";
+      record.target.append(option);
+      const seen = /* @__PURE__ */ new Set();
+      for (const item of [...sourceItems(field), ...[...permits.values()].filter((value) => value.field === field).map((value) => ({ markerId: value.ids.markerId, reference: value.image }))]) {
+        if (seen.has(item.markerId)) continue;
+        seen.add(item.markerId);
+        const choice = element("option", "\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435: " + (item.reference.alt || item.markerId));
+        choice.value = item.markerId;
+        record.target.append(choice);
+      }
+      if (seen.has(previous)) record.target.value = previous;
+    }
+  }
+  for (const [field, editor] of editors) {
+    if (!initial.owner || typeof listMedia !== "function" || typeof issueEmbedded !== "function") continue;
+    const section = element("section");
+    section.className = "es-embedded-controls";
+    section.dataset.editorEmbedded = field;
+    section.append(element("h3", "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u0432\u043D\u0443\u0442\u0440\u0438 " + (field === "intro_text" ? "\u0432\u0432\u043E\u0434\u043D\u043E\u0433\u043E" : "\u043E\u0441\u043D\u043E\u0432\u043D\u043E\u0433\u043E") + " \u0442\u0435\u043A\u0441\u0442\u0430"));
+    const target = element("select");
+    target.dataset.editorEmbeddedMarker = "";
+    target.setAttribute("aria-label", "\u041C\u0435\u0441\u0442\u043E \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F");
+    section.append(target);
+    const query = element("input");
+    query.type = "search";
+    query.setAttribute("aria-label", "\u041F\u043E\u0438\u0441\u043A \u0433\u043E\u0442\u043E\u0432\u043E\u0433\u043E \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0432\u043D\u0443\u0442\u0440\u0438 \u0442\u0435\u043A\u0441\u0442\u0430");
+    const list = element("div"), pendingHost = element("div"), notice = element("p");
+    notice.setAttribute("role", "status");
+    const record = { target, list, pendingHost, notice, pending: null, metadata: {}, after: null };
+    records.set(field, record);
+    const open = button2("\u0412\u044B\u0431\u0440\u0430\u0442\u044C \u0444\u043E\u0442\u043E \u0434\u043B\u044F \u0442\u0435\u043A\u0441\u0442\u0430", () => browse(null));
+    open.dataset.editorEmbeddedAction = "open";
+    const more = button2("\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0435 \u0433\u043E\u0442\u043E\u0432\u044B\u0435 \u0444\u043E\u0442\u043E", () => browse(record.after));
+    more.hidden = true;
+    section.append(query, open, more, list, pendingHost, notice);
+    for (const [key, label] of [["alt", "\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0444\u043E\u0442\u043E (alt)"], ["alignment", "\u0412\u044B\u0440\u0430\u0432\u043D\u0438\u0432\u0430\u043D\u0438\u0435"], ["width_px", "\u0428\u0438\u0440\u0438\u043D\u0430, px"], ["height_px", "\u0412\u044B\u0441\u043E\u0442\u0430, px"]]) {
+      const wrap2 = element("label", label + " "), input = element(key === "alignment" ? "select" : "input");
+      input.dataset.editorEmbeddedField = key;
+      input.setAttribute("aria-label", "\u0412\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u043E\u0435 \u0444\u043E\u0442\u043E: " + label);
+      if (key === "alignment") for (const value of ["left", "center", "right"]) {
+        const option = element("option", value === "left" ? "\u0421\u043B\u0435\u0432\u0430" : value === "center" ? "\u041F\u043E \u0446\u0435\u043D\u0442\u0440\u0443" : "\u0421\u043F\u0440\u0430\u0432\u0430");
+        option.value = value;
+        input.append(option);
+      }
+      else input.type = key === "alt" ? "text" : "number";
+      if (key === "alignment") input.value = "center";
+      record.metadata[key] = input;
+      wrap2.append(input);
+      section.append(wrap2);
+      input.addEventListener("input", invalidate);
+    }
+    async function browse(after) {
+      const result = await listMedia({ q: query.value, after });
+      if (destroyed) return;
+      if (!result || !Array.isArray(result.items) || result.items.length > 50 || result.nextAfter !== null && !UUID.test(result.nextAfter)) fail();
+      list.replaceChildren();
+      record.after = result.nextAfter;
+      more.hidden = record.after === null;
+      for (const item of result.items) {
+        if (!UUID.test(item.assetId) || !UUID.test(item.mainFileId) || !UUID.test(item.previewFileId) || typeof item.label !== "string") fail();
+        const prefix = `/manage/pages/${initial.pageId}/edit/media/picker-files/`;
+        if (item.mainUrl !== prefix + item.mainFileId + "/" || item.previewUrl !== prefix + item.previewFileId + "/") fail();
+        const choose = button2("\u0412\u044B\u0431\u0440\u0430\u0442\u044C " + item.label, async () => {
+          if (!canEdit()) return;
+          record.pending = item;
+          invalidate();
+          pendingHost.replaceChildren();
+          const oldPermit = permits.get(field + ":" + target.value), old = oldPermit ? { markerId: oldPermit.ids.markerId, imageId: oldPermit.ids.imageId, reference: oldPermit.image, ...oldPermit.preview } : sourceItems(field).find((value) => value.markerId === target.value);
+          if (old) {
+            pendingHost.append(element("h4", "\u041F\u0440\u0435\u0436\u043D\u0435\u0435 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435"));
+            picture(pendingHost, old);
+            for (const [key, input] of Object.entries(record.metadata)) input.value = old.reference[key] ?? "";
+          }
+          pendingHost.append(element("h4", "\u041D\u043E\u0432\u043E\u0435 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435"));
+          picture(pendingHost, { reference: { asset_id: item.assetId, alt: "", alignment: "center", width_px: null, height_px: null }, url: item.mainUrl, thumbnailUrl: item.previewUrl });
+          const action = target.value ? "replace" : "insert";
+          const confirm = button2(action === "replace" ? "\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C \u0437\u0434\u0435\u0441\u044C" : "\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u0437\u0434\u0435\u0441\u044C \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u043C \u0431\u043B\u043E\u043A\u043E\u043C", async () => {
+            if (!canEdit() || !record.pending) return;
+            const reference = { asset_id: record.pending.assetId };
+            for (const [key, input] of Object.entries(record.metadata)) reference[key] = key === "alt" || key === "alignment" ? input.value : input.value === "" ? null : Number(input.value);
+            const image = imageRef(reference), marker = target.value || null, prior = marker ? permits.get(field + ":" + marker) : null;
+            const capturedEpoch = getEpoch();
+            const issuance = await issueEmbedded({ field, action: marker ? "replace" : "insert", image, markerId: marker, priorPermit: prior?.permit || null });
+            if (destroyed) return;
+            if (capturedEpoch !== getEpoch()) {
+              if (issuance) issuance.permit = "";
+              throw Object.assign(new Error("CHECK_CHANGED"), { code: "CHECK_CHANGED" });
+            }
+            if (!keys2(issuance, ["permit", "field", "action", "ids", "image"]) || typeof issuance.permit !== "string" || issuance.permit.length > 8192 || issuance.field !== field || !keys2(issuance.ids, IDKEYS) || IDKEYS.some((key) => !UUID.test(issuance.ids[key]))) fail();
+            imageRef(issuance.image);
+            editor.stageEmbedded(issuance);
+            permits.set(field + ":" + issuance.ids.markerId, { ...structuredClone(issuance), preview: { url: record.pending.mainUrl, thumbnailUrl: record.pending.previewUrl } });
+            record.pending = null;
+            pendingHost.replaceChildren();
+            list.replaceChildren();
+            invalidate();
+            refresh();
+            notice.textContent = "\u0418\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043B\u0435\u043D\u043E \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u043F\u0430\u043C\u044F\u0442\u0438. \u0412\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443, \u0437\u0430\u0442\u0435\u043C \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443 \u044F\u0432\u043D\u043E.";
+          });
+          confirm.dataset.editorEmbeddedAction = action;
+          pendingHost.append(confirm, button2("\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u044B\u0431\u043E\u0440", async () => {
+            record.pending = null;
+            pendingHost.replaceChildren();
+            invalidate();
+          }));
+        });
+        choose.dataset.editorEmbeddedAsset = item.assetId;
+        list.append(choose);
+      }
+    }
+    target.addEventListener("input", () => {
+      record.pending = null;
+      pendingHost.replaceChildren();
+      invalidate();
+    });
+    root.querySelector(`[data-editor-field="${field}"]`).append(section);
+    sections.push(section);
+  }
+  refresh();
+  return Object.freeze({
+    project(changes) {
+      const result = structuredClone(changes);
+      for (const field of ["intro_text", "main_text"]) if (typeof result[field] === "string" && [...permits.values()].some((value) => value.field === field)) {
+        if (new TextEncoder().encode(result[field]).length > 1048576) fail();
+        result[field] = result[field].replace(SPAN, (tag) => {
+          const value = permits.get(field + ":" + markerId(tag));
+          if (!value) return tag;
+          if (/\bdata-es-media-intent\s*=/iu.test(tag)) fail();
+          return tag.slice(0, -1) + ' data-es-media-intent="' + escape(value.permit) + '">';
+        });
+      }
+      return result;
+    },
+    capture(changes) {
+      return [...permits].filter(([, value]) => typeof changes[value.field] === "string" && [...changes[value.field].matchAll(SPAN)].some((match) => markerId(match[0]) === value.ids.markerId)).map(([key, value]) => ({ key, token: value.permit }));
+    },
+    acknowledge(snapshot) {
+      for (const item of snapshot || []) if (permits.get(item.key)?.permit === item.token) permits.delete(item.key);
+      refresh();
+    },
+    refresh,
+    valid() {
+      return ![...records.values()].some((record) => record.pending);
+    },
+    destroy() {
+      destroyed = true;
+      for (const section of sections) {
+        for (const img of section.querySelectorAll("img")) img.removeAttribute("src");
+        for (const input of section.querySelectorAll("input,textarea")) input.value = "";
+        section.replaceChildren();
+        section.remove();
+      }
+      for (const value of permits.values()) {
+        value.permit = "";
+        value.image.alt = "";
+      }
+      permits.clear();
+      for (const record of records.values()) record.pending = null;
+      records.clear();
+    }
+  });
+}
+
 // source/carrier-editor.mjs
 var FONTS = Object.freeze({ inter: "Inter,Arial,sans-serif", oswald: "Oswald,Arial,sans-serif", arial: "Arial,sans-serif", georgia: "Georgia,serif", "times-new-roman": '"Times New Roman",serif', "courier-new": '"Courier New",monospace' });
 var FORMAT = ["font", "size", "fg", "bg"];
@@ -22959,10 +23273,10 @@ function color(value, background = false) {
   if (!/^#[0-9a-f]{6}$/.test(value)) failure("EDITOR_FORMAT_INVALID");
   return value;
 }
-function validateAttrs(attrs, names) {
+function validateAttrs(attrs2, names) {
   const result = blank(names);
   for (const name of names) {
-    let value = attrs[name];
+    let value = attrs2[name];
     if (value === null || value === void 0) continue;
     if (name === "font") {
       if (!Object.hasOwn(FONTS, value)) failure("EDITOR_FORMAT_INVALID");
@@ -22978,16 +23292,16 @@ function validateAttrs(attrs, names) {
   }
   return result;
 }
-function carrierAttrs(attrs, names) {
-  const checked = validateAttrs(attrs, names), output = {};
+function carrierAttrs(attrs2, names) {
+  const checked = validateAttrs(attrs2, names), output = {};
   for (const name of names) if (checked[name] !== null) output[ATTR[name]] = checked[name];
   return output;
 }
-function htmlAttrs(attrs) {
-  return Object.entries(attrs).filter(([, value]) => value !== null && value !== void 0).sort(([a], [b]) => a.localeCompare(b, "en")).map(([name, value]) => " " + name + '="' + escapeAttr(value) + '"').join("");
+function htmlAttrs(attrs2) {
+  return Object.entries(attrs2).filter(([, value]) => value !== null && value !== void 0).sort(([a], [b]) => a.localeCompare(b, "en")).map(([name, value]) => " " + name + '="' + escapeAttr(value) + '"').join("");
 }
-function styleFacts(attrs, names) {
-  const checked = validateAttrs(attrs, names), facts = {};
+function styleFacts(attrs2, names) {
+  const checked = validateAttrs(attrs2, names), facts = {};
   if (checked.font) facts["font-family"] = FONTS[checked.font];
   if (checked.size) facts["font-size"] = checked.size + "px";
   if (checked.fg) facts.color = checked.fg;
@@ -23043,8 +23357,8 @@ var Rules = class {
     let nodes = 0;
     doc3.descendants((node) => {
       if (++nodes > 4e4) failure("EDITOR_NODE_BUDGET");
-      for (const [attrs, names] of [[node.attrs, BLOCK], ...node.marks.filter((mark) => mark.type.name === "esFormat").map((mark) => [mark.attrs, FORMAT])]) {
-        const facts = styleFacts(attrs, names);
+      for (const [attrs2, names] of [[node.attrs, BLOCK], ...node.type.name === "esProtectedSlot" ? [[node.attrs, FORMAT]] : [], ...node.marks.filter((mark) => mark.type.name === "esFormat").map((mark) => [mark.attrs, FORMAT])]) {
+        const facts = styleFacts(attrs2, names);
         if (!Object.keys(facts).length) continue;
         const key = this.key(facts);
         active.add(key);
@@ -23066,15 +23380,130 @@ var Rules = class {
   }
 };
 function attrsDefinition(names) {
-  return Object.fromEntries(names.map((name) => [name, { default: null, parseHTML: (element) => element.getAttribute(ATTR[name]), renderHTML: (attrs) => carrierAttrs(attrs, [name]) }]));
+  return Object.fromEntries(names.map((name) => [name, { default: null, parseHTML: (element3) => element3.getAttribute(ATTR[name]), renderHTML: (attrs2) => carrierAttrs(attrs2, [name]) }]));
 }
 function setNodeDom(dom, node, rules) {
-  const attrs = carrierAttrs(node.attrs, BLOCK), className = rules.ensure(styleFacts(node.attrs, BLOCK));
+  const attrs2 = carrierAttrs(node.attrs, BLOCK), className = rules.ensure(styleFacts(node.attrs, BLOCK));
   for (const attribute of Array.from(dom.attributes)) if (attribute.name.startsWith("data-es-")) dom.removeAttribute(attribute.name);
-  for (const [name, value] of Object.entries(attrs)) dom.setAttribute(name, value);
+  for (const [name, value] of Object.entries(attrs2)) dom.setAttribute(name, value);
   dom.className = className;
 }
-function extensionsFor({ owner, rules, approvedTables, requestHtml }) {
+function protectedDeleteBoundary(view, event) {
+  if (event.key !== "Backspace" && event.key !== "Delete") return false;
+  const direction = event.key === "Backspace" ? -1 : 1, selection = view.dom.ownerDocument.getSelection();
+  if (!selection?.rangeCount || !selection.anchorNode || !selection.focusNode || !view.dom.contains(selection.anchorNode) || !view.dom.contains(selection.focusNode)) return false;
+  const closest = (node, selector) => (node.nodeType === 1 ? node : node.parentElement)?.closest(selector);
+  const isProtected = (node) => node && ["esProtectedParent", "esProtectedSlot", "esProtected"].includes(node.type.name);
+  const containsProtected = (node) => {
+    if (!node) return false;
+    if (isProtected(node)) return true;
+    let found2 = false;
+    node.descendants((child) => {
+      if (isProtected(child)) {
+        found2 = true;
+        return false;
+      }
+      return !found2;
+    });
+    return found2;
+  };
+  const slotAt = (position) => {
+    const resolved = view.state.doc.resolve(position);
+    for (let depth = resolved.depth; depth > 0; depth--) {
+      const node = resolved.node(depth);
+      if (node.type.name === "esProtectedSlot") return { node, start: resolved.start(depth), end: resolved.end(depth), offset: position - resolved.start(depth) };
+    }
+    return null;
+  };
+  try {
+    const anchor = view.posAtDOM(selection.anchorNode, selection.anchorOffset, -1);
+    const focus2 = view.posAtDOM(selection.focusNode, selection.focusOffset, direction);
+    const anchorSlot = slotAt(anchor), focusSlot = slotAt(focus2);
+    if (!selection.isCollapsed) {
+      if (anchorSlot && focusSlot && anchorSlot.start === focusSlot.start) {
+        const a = closest(selection.anchorNode, "[data-editor-protected-slot]"), f = closest(selection.focusNode, "[data-editor-protected-slot]");
+        return !a || !f || a.dataset.editorProtectedSlot !== anchorSlot.node.attrs.slotId || f.dataset.editorProtectedSlot !== focusSlot.node.attrs.slotId;
+      }
+      let hazard = false;
+      view.state.doc.nodesBetween(Math.min(anchor, focus2), Math.max(anchor, focus2), (node) => {
+        if (isProtected(node)) {
+          hazard = true;
+          return false;
+        }
+        return !hazard;
+      });
+      return hazard || !!closest(selection.anchorNode, "[data-editor-protected-parent]") || !!closest(selection.focusNode, "[data-editor-protected-parent]");
+    }
+    if (focusSlot) {
+      const domSlot = closest(selection.focusNode, "[data-editor-protected-slot]");
+      if (domSlot && domSlot.dataset.editorProtectedSlot !== focusSlot.node.attrs.slotId) return true;
+      if (!domSlot && closest(selection.focusNode, "[data-editor-protected-parent]")) return true;
+      const boundary = direction < 0 ? focusSlot.offset === 0 : focusSlot.offset === focusSlot.node.content.size;
+      if (boundary) return true;
+      const domAnchorSlot = closest(selection.anchorNode, "[data-editor-protected-slot]");
+      if (anchor === focus2 && anchorSlot?.start === focusSlot.start && domSlot?.dataset.editorProtectedSlot === focusSlot.node.attrs.slotId && domAnchorSlot?.dataset.editorProtectedSlot === focusSlot.node.attrs.slotId && (view.state.selection.anchor !== anchor || view.state.selection.head !== focus2)) {
+        view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, anchor, focus2)));
+      }
+      return false;
+    }
+    const resolved = view.state.doc.resolve(focus2);
+    if (closest(selection.focusNode, "[data-editor-protected-parent]")) return true;
+    for (let depth = resolved.depth; depth > 0; depth--) if (isProtected(resolved.node(depth))) return true;
+    if (!resolved.parent.inlineContent) return containsProtected(resolved.nodeBefore) || containsProtected(resolved.nodeAfter);
+    if (direction < 0 ? resolved.parentOffset !== 0 : resolved.parentOffset !== resolved.parent.content.size) return false;
+    for (let depth = resolved.depth; depth > 0; depth--) {
+      const edge = view.state.doc.resolve(direction < 0 ? resolved.before(depth) : resolved.after(depth));
+      const neighbor = direction < 0 ? edge.nodeBefore : edge.nodeAfter;
+      if (neighbor) return containsProtected(neighbor);
+    }
+    return false;
+  } catch {
+    return !!closest(selection.focusNode, "[data-editor-protected-parent]") || !!closest(selection.anchorNode, "[data-editor-protected-parent]");
+  }
+}
+function commandSelection(view) {
+  const dom = view.dom.ownerDocument.getSelection();
+  if (!dom?.rangeCount || !dom.anchorNode || !dom.focusNode || !view.dom.contains(dom.anchorNode) || !view.dom.contains(dom.focusNode)) failure("EDITOR_SELECTION_UNSUPPORTED");
+  const closest = (node, selector) => (node.nodeType === 1 ? node : node.parentElement)?.closest(selector);
+  if (closest(dom.anchorNode, "[data-editor-embedded-marker],.es-opaque-table") || closest(dom.focusNode, "[data-editor-embedded-marker],.es-opaque-table")) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+  const anchor = view.posAtDOM(dom.anchorNode, dom.anchorOffset, 1);
+  const head = dom.isCollapsed ? anchor : view.posAtDOM(dom.focusNode, dom.focusOffset, 1);
+  const selection = TextSelection.create(view.state.doc, anchor, head);
+  if (!selection.$anchor.parent.inlineContent || !selection.$head.parent.inlineContent) failure("EDITOR_SELECTION_UNSUPPORTED");
+  for (const [point, node] of [[selection.$anchor, dom.anchorNode], [selection.$head, dom.focusNode]]) {
+    const slot = closest(node, "[data-editor-protected-slot]");
+    if (point.parent.type.name === "esProtectedSlot") {
+      if (!slot || slot.dataset.editorProtectedSlot !== point.parent.attrs.slotId) failure("EDITOR_SELECTION_UNSUPPORTED");
+      const parent = closest(node, "[data-editor-protected-parent]");
+      if (!parent || point.depth < 2 || parent.dataset.editorProtectedParent !== point.node(point.depth - 1).attrs.parentId) failure("EDITOR_SELECTION_UNSUPPORTED");
+    } else if (slot || closest(node, "[data-editor-protected-parent]")) failure("EDITOR_SELECTION_UNSUPPORTED");
+  }
+  return selection;
+}
+function candidateBudget(html) {
+  if (new TextEncoder().encode(html).length > 1048576) failure("EDITOR_CANDIDATE_LIMIT");
+  let nodes = 0, depth = 0, text = 0, last = 0;
+  const tags = /<\/?[a-z][^>]*>/gu;
+  const count = (value) => {
+    const decoded = value.replace(/&(amp|lt|gt|quot|apos|#x27);/gu, (entity) => ({ "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'", "&#x27;": "'" })[entity]);
+    for (const unused of decoded.replace(/\r\n?/gu, "\n").normalize("NFC")) {
+      if (++text > 2e5) failure("EDITOR_CANDIDATE_LIMIT");
+    }
+  };
+  for (const match of html.matchAll(tags)) {
+    count(html.slice(last, match.index));
+    last = match.index + match[0].length;
+    if (match[0][1] === "/") {
+      depth--;
+      continue;
+    }
+    if (++nodes > 2e4 || depth + 1 > 32) failure("EDITOR_CANDIDATE_LIMIT");
+    if (match[0] !== "<br>") depth++;
+  }
+  count(html.slice(last));
+  if (depth !== 0) failure("EDITOR_CANDIDATE_INVALID");
+}
+function extensionsFor({ owner, pageId, rules, approvedTables, requestHtml, embeddedMap, queueImage, embeddedSourceUrl, onBlocked }) {
   function blockNode(name, tag, content, extra = {}) {
     return Node2.create({
       name,
@@ -23102,7 +23531,7 @@ function extensionsFor({ owner, rules, approvedTables, requestHtml }) {
   const format = Mark2.create({
     name: "esFormat",
     addAttributes: () => attrsDefinition(FORMAT),
-    parseHTML: () => [{ tag: "span", getAttrs: (element) => FORMAT.some((name) => element.hasAttribute(ATTR[name])) ? {} : false }],
+    parseHTML: () => [{ tag: "span", getAttrs: (element3) => FORMAT.some((name) => element3.hasAttribute(ATTR[name])) ? {} : false }],
     renderHTML: ({ mark }) => ["span", carrierAttrs(mark.attrs, FORMAT), 0],
     addMarkView: () => ({ mark }) => {
       const dom = document.createElement("span");
@@ -23110,7 +23539,7 @@ function extensionsFor({ owner, rules, approvedTables, requestHtml }) {
       return { dom, contentDOM: dom };
     }
   });
-  const anchor = Mark2.create({ name: "esAnchor", inclusive: false, addAttributes: () => ({ label: { default: null } }), parseHTML: () => [{ tag: "span[data-es-anchor]", getAttrs: (element) => ({ label: element.getAttribute("data-es-anchor") }) }], renderHTML: ({ mark }) => ["span", { "data-es-anchor": mark.attrs.label }, 0] });
+  const anchor = Mark2.create({ name: "esAnchor", inclusive: false, addAttributes: () => ({ label: { default: null } }), parseHTML: () => [{ tag: "span[data-es-anchor]", getAttrs: (element3) => ({ label: element3.getAttribute("data-es-anchor") }) }], renderHTML: ({ mark }) => ["span", { "data-es-anchor": mark.attrs.label }, 0] });
   const link = Mark2.create({
     name: "esLink",
     inclusive: false,
@@ -23145,10 +23574,121 @@ function extensionsFor({ owner, rules, approvedTables, requestHtml }) {
       return { dom };
     }
   });
-  const safety = Extension.create({ name: "esNoDefaultPaste", addProseMirrorPlugins: () => [new Plugin({ props: { handleDOMEvents: { dragstart: (view, event) => {
-    event.preventDefault();
-    return true;
-  } } } })] });
+  const protectedParent = Node2.create({
+    name: "esProtectedParent",
+    group: "block",
+    content: "esProtectedSlot (esProtected esProtectedSlot)+",
+    defining: true,
+    isolating: true,
+    addAttributes: () => ({ ...attrsDefinition(BLOCK), parentId: { default: null }, tag: { default: "p" } }),
+    parseHTML: () => [],
+    renderHTML: () => ["div", {}, 0],
+    addNodeView: () => ({ node }) => {
+      const dom = document.createElement(node.attrs.tag);
+      dom.dataset.editorProtectedParent = node.attrs.parentId;
+      setNodeDom(dom, node, rules);
+      dom.classList.add("es-protected-parent");
+      return { dom, contentDOM: dom };
+    }
+  });
+  const protectedSlot = Node2.create({
+    name: "esProtectedSlot",
+    group: "block",
+    content: "inline*",
+    defining: true,
+    isolating: true,
+    addAttributes: () => ({ ...attrsDefinition(FORMAT), anchor: { default: null }, slotId: { default: null } }),
+    parseHTML: () => [],
+    renderHTML: () => ["span", {}, 0],
+    addNodeView: () => ({ node }) => {
+      let current = node;
+      const dom = document.createElement("span");
+      dom.dataset.editorProtectedSlot = node.attrs.slotId;
+      const update = (value) => {
+        dom.className = rules.ensure(styleFacts(value.attrs, FORMAT));
+        dom.classList.add("es-protected-slot");
+      };
+      update(node);
+      return { dom, contentDOM: dom, update(next) {
+        if (next.type !== current.type || next.attrs.slotId !== current.attrs.slotId) return false;
+        current = next;
+        update(next);
+        return true;
+      } };
+    }
+  });
+  const protectedImage = Node2.create({
+    name: "esProtected",
+    group: "block",
+    atom: true,
+    selectable: true,
+    draggable: false,
+    addAttributes: () => ({ markerId: { default: null }, imageId: { default: null }, reference: { default: null } }),
+    parseHTML: () => [],
+    renderHTML: () => ["span", {}],
+    addNodeView: () => ({ node }) => {
+      const item = embeddedMap.get(node.attrs.markerId);
+      if (!item || item.imageId !== node.attrs.imageId || JSON.stringify(item.reference) !== JSON.stringify(node.attrs.reference)) failure("EDITOR_EMBEDDED_MAPPING_INVALID");
+      const dom = document.createElement("span");
+      dom.contentEditable = "false";
+      dom.className = "es-embedded-atom es-embedded-align-" + item.reference.alignment;
+      dom.dataset.editorEmbeddedMarker = item.markerId;
+      dom.dataset.editorEmbeddedImageId = item.imageId;
+      const image = document.createElement("img");
+      image.alt = item.reference.alt;
+      image.decoding = "async";
+      dom.append(image);
+      for (const [key, attribute] of [["width_px", "width"], ["height_px", "height"]]) if (item.reference[key] !== null) image.setAttribute(attribute, String(item.reference[key]));
+      let destroyed = false, finish = () => {
+      };
+      if (item.thumbnailUrl) queueImage(() => new Promise((resolve) => {
+        if (destroyed) {
+          resolve();
+          return;
+        }
+        let timer;
+        finish = (failed) => {
+          clearTimeout(timer);
+          image.onload = null;
+          image.onerror = null;
+          if (failed && !destroyed) {
+            image.removeAttribute("src");
+            dom.append(document.createTextNode(" \u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D."));
+          }
+          ;
+          resolve();
+        };
+        image.onload = () => finish(false);
+        image.onerror = () => finish(true);
+        timer = setTimeout(() => finish(true), 1e4);
+        try {
+          let url = item.thumbnailUrl;
+          if (url.includes("/media/files/") && typeof embeddedSourceUrl === "function") url = embeddedSourceUrl(url);
+          const checked = approvedEmbedded([{ ...item, thumbnailUrl: url }], { pageId });
+          image.src = checked.get(item.markerId).thumbnailUrl;
+        } catch {
+          finish(true);
+        }
+      }));
+      else dom.append(document.createTextNode(" \u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D"));
+      return { dom, destroy() {
+        destroyed = true;
+        image.removeAttribute("src");
+        finish();
+      } };
+    }
+  });
+  const safety = Extension.create({ name: "esNoDefaultPaste", addProseMirrorPlugins: () => [new Plugin({
+    filterTransaction(transaction, state) {
+      if (!transaction.docChanged || protectedShape(transaction.doc) === protectedShape(state.doc)) return true;
+      onBlocked();
+      return false;
+    },
+    props: { handleDOMEvents: { dragstart: (view, event) => {
+      event.preventDefault();
+      return true;
+    } } }
+  })] });
   return [
     src_default.configure({ paragraph: false, heading: false, blockquote: false, bulletList: false, orderedList: false, listItem: false, bold: false, italic: false, underline: false, strike: false, link: false, code: false, codeBlock: false, horizontalRule: false, dropcursor: false, gapcursor: false, trailingNode: false }),
     blockNode("paragraph", "p", "inline*"),
@@ -23162,6 +23702,9 @@ function extensionsFor({ owner, rules, approvedTables, requestHtml }) {
     anchor,
     link,
     opaque,
+    protectedParent,
+    protectedSlot,
+    protectedImage,
     safety
   ];
 }
@@ -23184,19 +23727,18 @@ function approvedTableSlices(html) {
   if (stack.length || slices.some((value) => value === null)) failure("EDITOR_CANONICAL_TABLE_INVALID");
   return slices;
 }
-function approvedDocument(html, { owner, approvedTables }) {
+function approvedDocument(html, { owner, approvedTables, embeddedMap = /* @__PURE__ */ new Map() }) {
   if (typeof html !== "string" || new TextEncoder().encode(html).length > 1048576) failure("EDITOR_APPROVED_INPUT_REQUIRED");
   if (/<\/?(?:script|style|iframe|object|embed|img|svg|math|form|input|button|textarea|select|link|meta|base)\b/i.test(html)) failure("EDITOR_APPROVED_INPUT_REQUIRED");
   const documentValue = new DOMParser().parseFromString(html, "text/html");
   if (documentValue.querySelector("[style],[class],[id]")) failure("EDITOR_APPROVED_INPUT_REQUIRED");
-  if (documentValue.querySelector("[data-es-protected],[data-es-image],[data-es-parent],[data-es-slot]")) failure("EDITOR_PROTECTED_OR_UNSUPPORTED");
   const tables = approvedTableSlices(html);
   let tableIndex = 0;
   if (tables.length !== documentValue.querySelectorAll("table").length) failure("EDITOR_CANONICAL_TABLE_INVALID");
-  function readAttrs(element, names, extra = []) {
+  function readAttrs(element3, names, extra = []) {
     const allowed = /* @__PURE__ */ new Set([...names.map((name) => ATTR[name]), ...extra]);
-    for (const attribute of element.attributes) if (!allowed.has(attribute.name)) failure("EDITOR_APPROVED_ATTRIBUTE_UNSUPPORTED");
-    return validateAttrs(Object.fromEntries(names.map((name) => [name, element.getAttribute(ATTR[name])])), names);
+    for (const attribute of element3.attributes) if (!allowed.has(attribute.name)) failure("EDITOR_APPROVED_ATTRIBUTE_UNSUPPORTED");
+    return validateAttrs(Object.fromEntries(names.map((name) => [name, element3.getAttribute(ATTR[name])])), names);
   }
   function inline(nodes, marks = []) {
     const output = [];
@@ -23217,10 +23759,10 @@ function approvedDocument(html, { owner, approvedTables }) {
         if (node.attributes.length) failure("EDITOR_APPROVED_ATTRIBUTE_UNSUPPORTED");
         next.push({ type: TAG_MARK[tag] });
       } else if (tag === "span") {
-        const attrs = readAttrs(node, FORMAT, ["data-es-anchor"]);
-        if (Object.values(attrs).some((value) => value !== null)) {
+        const attrs2 = readAttrs(node, FORMAT, ["data-es-anchor"]);
+        if (Object.values(attrs2).some((value) => value !== null)) {
           const previous = next.find((mark) => mark.type === "esFormat");
-          const combined = { ...previous?.attrs || {}, ...Object.fromEntries(Object.entries(attrs).filter(([, value]) => value !== null)) };
+          const combined = { ...previous?.attrs || {}, ...Object.fromEntries(Object.entries(attrs2).filter(([, value]) => value !== null)) };
           next = next.filter((mark) => mark.type !== "esFormat");
           next.push({ type: "esFormat", attrs: combined });
         }
@@ -23232,10 +23774,10 @@ function approvedDocument(html, { owner, approvedTables }) {
       } else if (tag === "a") {
         const allowed = ["href", "title", "target", "rel", "data-es-target-field", "data-es-target-anchor"];
         readAttrs(node, [], allowed);
-        const attrs = Object.fromEntries(allowed.map((name) => [name, node.getAttribute(name)]));
-        if (attrs.target && !["_self", "_blank"].includes(attrs.target)) failure("EDITOR_LINK_UNSUPPORTED");
-        if (attrs["data-es-target-field"] && !["intro_text", "main_text"].includes(attrs["data-es-target-field"])) failure("EDITOR_LINK_UNSUPPORTED");
-        next.push({ type: "esLink", attrs });
+        const attrs2 = Object.fromEntries(allowed.map((name) => [name, node.getAttribute(name)]));
+        if (attrs2.target && !["_self", "_blank"].includes(attrs2.target)) failure("EDITOR_LINK_UNSUPPORTED");
+        if (attrs2["data-es-target-field"] && !["intro_text", "main_text"].includes(attrs2["data-es-target-field"])) failure("EDITOR_LINK_UNSUPPORTED");
+        next.push({ type: "esLink", attrs: attrs2 });
       }
       output.push(...inline(node.childNodes, next));
     }
@@ -23251,6 +23793,28 @@ function approvedDocument(html, { owner, approvedTables }) {
       }
     };
     for (const node of nodes) {
+      if (node.nodeType === 1 && node.hasAttribute("data-es-parent")) {
+        flush();
+        const tag2 = node.localName;
+        if (!["p", "h1", "h2", "h3", "blockquote"].includes(tag2) || tag2 === "h1" && !owner) failure("EDITOR_PROTECTED_OR_UNSUPPORTED");
+        const blockAttrs = readAttrs(node, BLOCK, ["data-es-parent"]), parentId = node.getAttribute("data-es-parent");
+        if (!/^[0-9a-f-]{36}$/u.test(parentId || "") || node.childNodes.length < 3 || node.childNodes.length % 2 !== 1) failure("EDITOR_PROTECTED_OR_UNSUPPORTED");
+        const children = [];
+        [...node.childNodes].forEach((child, index) => {
+          if (child.nodeType !== 1 || child.localName !== "span") failure("EDITOR_PROTECTED_OR_UNSUPPORTED");
+          if (index % 2 === 0) {
+            const slotId = child.getAttribute("data-es-slot");
+            if (!/^[0-9a-f-]{36}$/u.test(slotId || "")) failure("EDITOR_PROTECTED_OR_UNSUPPORTED");
+            const values = readAttrs(child, FORMAT, ["data-es-slot", "data-es-anchor"]);
+            children.push({ type: "esProtectedSlot", attrs: { ...values, slotId, anchor: child.getAttribute("data-es-anchor") }, content: inline(child.childNodes) });
+          } else {
+            if (!embeddedMap.has(child.getAttribute("data-es-protected"))) failure("EDITOR_PROTECTED_OR_UNSUPPORTED");
+            children.push({ type: "esProtected", attrs: readMarker(child, embeddedMap) });
+          }
+        });
+        output.push({ type: "esProtectedParent", attrs: { ...blockAttrs, parentId, tag: tag2 }, content: children });
+        continue;
+      }
       if (node.nodeType === 3 || node.nodeType === 1 && INLINE_TAGS.has(node.localName)) {
         pending.push(node);
         continue;
@@ -23266,22 +23830,23 @@ function approvedDocument(html, { owner, approvedTables }) {
         continue;
       }
       if (tag === "li") failure("EDITOR_LIST_CONTEXT_INVALID");
-      const attrs = readAttrs(node, BLOCK);
+      const attrs2 = readAttrs(node, BLOCK);
       if (tag === "p" || /^h[123]$/.test(tag)) {
         if (tag === "h1" && !owner) failure("EDITOR_OWNER_HEADING_REQUIRED");
-        output.push({ type: tag === "p" ? "paragraph" : "heading", attrs: { ...attrs, ...tag !== "p" ? { level: Number(tag[1]) } : {} }, content: inline(node.childNodes) });
-      } else if (tag === "blockquote") output.push({ type: "blockquote", attrs, content: blocks(node.childNodes) });
+        output.push({ type: tag === "p" ? "paragraph" : "heading", attrs: { ...attrs2, ...tag !== "p" ? { level: Number(tag[1]) } : {} }, content: inline(node.childNodes) });
+      } else if (tag === "blockquote") output.push({ type: "blockquote", attrs: attrs2, content: blocks(node.childNodes) });
       else {
         const items = [];
         for (const child of node.childNodes) {
           if (child.nodeType === 3 && !child.data.trim()) continue;
           if (child.nodeType !== 1 || child.localName !== "li" || child.attributes.length) failure("EDITOR_LIST_UNSUPPORTED");
           const content2 = blocks(child.childNodes, { allowUnwrapped: true });
+          if (content2[0]?.type === "esProtectedParent") failure("EDITOR_LIST_UNSUPPORTED");
           if (!content2.length || content2[0].type !== "paragraph") content2.unshift({ type: "paragraph", attrs: { esUnwrapped: true }, content: [] });
           items.push({ type: "listItem", content: content2 });
         }
         if (!items.length) failure("EDITOR_EMPTY_LIST_UNSUPPORTED");
-        output.push({ type: tag === "ul" ? "bulletList" : "orderedList", attrs, content: items });
+        output.push({ type: tag === "ul" ? "bulletList" : "orderedList", attrs: attrs2, content: items });
       }
     }
     flush();
@@ -23313,6 +23878,9 @@ function canonicalDocument(doc3, { owner, approvedTables }) {
     const name = node.type.name;
     if (name === "text") return wrapped(escapeText(node.text), node.marks);
     if (name === "hardBreak") return wrapped("<br>", node.marks);
+    if (name === "esProtected") return markerHtml(node.attrs);
+    if (name === "esProtectedSlot") return "<span" + htmlAttrs({ "data-es-slot": node.attrs.slotId, ...carrierAttrs(node.attrs, FORMAT), ...node.attrs.anchor ? { "data-es-anchor": node.attrs.anchor } : {} }) + ">" + content(node) + "</span>";
+    if (name === "esProtectedParent") return "<" + node.attrs.tag + htmlAttrs({ "data-es-parent": node.attrs.parentId, ...carrierAttrs(node.attrs, BLOCK) }) + ">" + content(node) + "</" + node.attrs.tag + ">";
     if (name === "esOpaqueTable") {
       if (!approvedTables.has(node.attrs.approvedHtml)) failure("EDITOR_APPROVED_TABLE_REQUIRED");
       return node.attrs.approvedHtml;
@@ -23321,26 +23889,27 @@ function canonicalDocument(doc3, { owner, approvedTables }) {
     if (name === "listItem") return "<li>" + content(node) + "</li>";
     const tag = { paragraph: "p", blockquote: "blockquote", bulletList: "ul", orderedList: "ol" }[name] || (name === "heading" ? "h" + node.attrs.level : null);
     if (!tag || name === "heading" && (![1, 2, 3].includes(node.attrs.level) || !owner && node.attrs.level === 1)) failure("EDITOR_NODE_UNSUPPORTED");
-    const attrs = carrierAttrs(node.attrs, BLOCK), body = content(node);
-    if (parent === "listItem" && name === "paragraph" && node.attrs.esUnwrapped && !Object.keys(attrs).length) return body;
-    return "<" + tag + htmlAttrs(attrs) + ">" + body + "</" + tag + ">";
+    const attrs2 = carrierAttrs(node.attrs, BLOCK), body = content(node);
+    if (parent === "listItem" && name === "paragraph" && node.attrs.esUnwrapped && !Object.keys(attrs2).length) return body;
+    return "<" + tag + htmlAttrs(attrs2) + ">" + body + "</" + tag + ">";
   }
   return serialize(doc3);
 }
-function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty = () => {
+function createEditor(element3, { approvedHtml, owner, field, pageId, approvedEmbedded: initialEmbedded = [], queueImage = (task) => task(), embeddedSourceUrl, styleSheet, onDirty = () => {
 }, onError = () => {
 }, onUntrustedInput = () => {
 } } = {}) {
-  if (!(element instanceof HTMLElement) || typeof owner !== "boolean" || !["intro_text", "main_text"].includes(field)) failure("EDITOR_CONTEXT_INVALID");
+  if (!(element3 instanceof HTMLElement) || typeof owner !== "boolean" || !["intro_text", "main_text"].includes(field)) failure("EDITOR_CONTEXT_INVALID");
   let editor = null, rules = null, mode = "visual", dirty = false, destroyed = false, viewBlocked = false, approvedBaseDoc = null, approvedCanonical = "";
   let approvedTables = /* @__PURE__ */ new Set();
+  let embeddedMap = approvedEmbedded(initialEmbedded, { pageId });
   const visual = document.createElement("div"), source = document.createElement("textarea");
   visual.className = "es-visual";
   source.className = "es-html-source";
   source.hidden = true;
   source.setAttribute("aria-label", "HTML \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u043C\u043E\u0433\u043E");
   source.spellcheck = false;
-  element.replaceChildren(visual, source);
+  element3.replaceChildren(visual, source);
   const report = (error) => {
     onError({ code: error.code || "EDITOR_OPERATION_FAILED", viewBlocked });
   };
@@ -23364,6 +23933,82 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
   function refresh() {
     if (editor && rules) rules.refresh(editor.state.doc);
   }
+  function dispatchCandidate(transaction) {
+    if (protectedShape(transaction.doc) !== protectedShape(editor.state.doc)) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+    candidateBudget(canonicalDocument(transaction.doc, { owner, approvedTables }));
+    editor.view.dispatch(transaction);
+    return true;
+  }
+  function clearSelectedFormatting(selection) {
+    const doc3 = editor.state.doc;
+    let protectedRange = false;
+    doc3.nodesBetween(selection.from, selection.to, (node) => {
+      if (["esProtectedParent", "esProtectedSlot", "esProtected", "esOpaqueTable"].includes(node.type.name)) protectedRange = true;
+    });
+    const slot = selection.$from.parent;
+    if (slot.type.name === "esProtectedSlot") {
+      if (selection.empty || !selection.$from.sameParent(selection.$to) || FORMAT.some((name) => slot.attrs[name] !== null && slot.attrs[name] !== void 0)) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+    } else if (protectedRange) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+    const transaction = editor.state.tr, names = ["esFormat", ...Object.keys(MARK_TAG)];
+    if (!selection.eq(editor.state.selection)) transaction.setSelection(selection);
+    for (const name of names) {
+      const type = editor.schema.marks[name];
+      if (selection.empty) transaction.removeStoredMark(type);
+      else transaction.removeMark(selection.from, selection.to, type);
+    }
+    const result = dispatchCandidate(transaction);
+    editor.view.focus();
+    return result;
+  }
+  function paragraphKey(view, event) {
+    if (!["Enter", "Backspace", "Delete"].includes(event.key) || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return false;
+    const selection = commandSelection(view), point = selection.$from;
+    const structuralHazard = (node) => ["esProtectedParent", "esProtectedSlot", "esProtected", "esOpaqueTable"].includes(node.type.name) || node.isAtom && !node.isInline;
+    if (event.key === "Enter" && !selection.empty) {
+      const withinSlot = point.parent.type.name === "esProtectedSlot" && point.sameParent(selection.$to);
+      let hazard2 = false;
+      view.state.doc.nodesBetween(selection.from, selection.to, (node) => {
+        if (structuralHazard(node) && !(withinSlot && ["esProtectedParent", "esProtectedSlot"].includes(node.type.name))) hazard2 = true;
+      });
+      if (hazard2) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+    }
+    if (!selection.empty || point.depth !== 1 || point.parent.type.name !== "paragraph") return false;
+    const index = point.index(0), doc3 = view.state.doc;
+    let lastProtected = -1;
+    doc3.forEach((node, offset, childIndex) => {
+      let found2 = node.type.name === "esProtectedParent";
+      node.descendants((child) => {
+        if (["esProtectedParent", "esProtectedSlot", "esProtected"].includes(child.type.name)) found2 = true;
+      });
+      if (found2) lastProtected = childIndex;
+    });
+    if (event.key === "Enter") {
+      if (index <= lastProtected) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+      const before = point.nodeBefore?.marks.find((mark) => mark.type.name === "esAnchor"), after = point.nodeAfter?.marks.find((mark) => mark.type.name === "esAnchor");
+      if (before && after && before.eq(after)) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+      const attrs2 = { ...point.parent.attrs, anchor: null }, types = [{ type: point.parent.type, attrs: attrs2 }];
+      if (!canSplit(doc3, point.pos, 1, types)) failure("EDITOR_SELECTION_UNSUPPORTED");
+      event.preventDefault();
+      return dispatchCandidate(view.state.tr.setSelection(selection).split(point.pos, 1, types));
+    }
+    const backward = event.key === "Backspace";
+    if (backward ? point.parentOffset !== 0 : point.parentOffset !== point.parent.content.size) return false;
+    const leftIndex = backward ? index - 1 : index, rightIndex = leftIndex + 1;
+    if (leftIndex < 0 || rightIndex >= doc3.childCount) return false;
+    const left = doc3.child(leftIndex), right = doc3.child(rightIndex);
+    const neighbor = backward ? left : right;
+    let hazard = structuralHazard(neighbor);
+    neighbor.descendants((node) => {
+      if (structuralHazard(node)) hazard = true;
+    });
+    if (hazard) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+    if (left.type.name !== "paragraph" || right.type.name !== "paragraph") return false;
+    if (leftIndex <= lastProtected || JSON.stringify(left.attrs) !== JSON.stringify(right.attrs) || right.attrs.anchor !== null && right.attrs.anchor !== void 0) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+    const position = backward ? point.before(1) : point.after(1);
+    if (!canJoin(doc3, position)) failure("EDITOR_SELECTION_UNSUPPORTED");
+    event.preventDefault();
+    return dispatchCandidate(view.state.tr.setSelection(selection).join(position));
+  }
   function visualCanonical(doc3 = editor?.state.doc, { forCheck = false } = {}) {
     if (!editor || !doc3) failure("EDITOR_VISUAL_UNAVAILABLE");
     if (viewBlocked) {
@@ -23373,14 +24018,16 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
     if (approvedBaseDoc && doc3.eq(approvedBaseDoc)) return approvedCanonical;
     return canonicalDocument(doc3, { owner, approvedTables });
   }
-  function build(html) {
+  function build(html, records = [...embeddedMap.values()]) {
+    const nextMap = approvedEmbedded(records, { pageId });
     const nextTables = /* @__PURE__ */ new Set();
-    const doc3 = approvedDocument(html, { owner, approvedTables: nextTables });
+    const doc3 = approvedDocument(html, { owner, approvedTables: nextTables, embeddedMap: nextMap });
     approvedBaseDoc = null;
     approvedCanonical = "";
     if (editor) editor.destroy();
     if (rules) rules.destroy();
     approvedTables = nextTables;
+    embeddedMap = nextMap;
     rules = new Rules(styleSheet, styleFailure);
     editor = new Editor({
       element: visual,
@@ -23388,7 +24035,7 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
       enableInputRules: false,
       enablePasteRules: false,
       content: doc3,
-      extensions: extensionsFor({ owner, rules, approvedTables, requestHtml: () => api.setMode("html") }),
+      extensions: extensionsFor({ owner, pageId, rules, approvedTables, embeddedMap, queueImage, embeddedSourceUrl, requestHtml: () => api.setMode("html"), onBlocked: () => report({ code: "EDITOR_PROTECTED_COMMAND_UNSUPPORTED" }) }),
       editorProps: {
         attributes: { class: "es-editor-surface", role: "textbox", "aria-label": "\u0422\u0435\u043A\u0441\u0442 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B" },
         handleDOMEvents: {
@@ -23413,6 +24060,29 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
             onUntrustedInput({ field, html: event.dataTransfer?.getData("text/html") || "", text: event.dataTransfer?.getData("text/plain") || "", intent: "drop" });
             return true;
           }
+        },
+        handleKeyDown(view, event) {
+          if (protectedDeleteBoundary(view, event)) {
+            event.preventDefault();
+            report({ code: "EDITOR_PROTECTED_COMMAND_UNSUPPORTED" });
+            return true;
+          }
+          try {
+            if (paragraphKey(view, event)) return true;
+          } catch (error) {
+            event.preventDefault();
+            report(error);
+            return true;
+          }
+          const selection = view.state.selection, slot = selection.$from.parent;
+          if (slot.type.name !== "esProtectedSlot") return false;
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (selection.$to.parent === slot) view.dispatch(view.state.tr.replaceSelectionWith(view.state.schema.nodes.hardBreak.create()));
+            else report({ code: "EDITOR_PROTECTED_COMMAND_UNSUPPORTED" });
+            return true;
+          }
+          return false;
         },
         handleClick(view, pos, event) {
           if (event.target.closest?.("a")) {
@@ -23460,9 +24130,9 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
   };
   visual.addEventListener("auxclick", stopLink);
   const api = {
-    validateApprovedHtml: (html) => guarded(() => {
+    validateApprovedHtml: (html, { approvedEmbedded: records = [...embeddedMap.values()] } = {}) => guarded(() => {
       try {
-        approvedDocument(html, { owner, approvedTables: /* @__PURE__ */ new Set() });
+        approvedDocument(html, { owner, approvedTables: /* @__PURE__ */ new Set(), embeddedMap: approvedEmbedded(records, { pageId }) });
         return { visual: true };
       } catch (error) {
         if (VISUAL_UNSUPPORTED.has(error.code)) return { visual: false, code: error.code };
@@ -23471,9 +24141,9 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
     }),
     getCanonicalHtml: () => guarded(() => visualCanonical()),
     getInput: () => guarded(() => ({ mode, html: mode === "html" ? source.value : visualCanonical(editor?.state.doc, { forCheck: true }) })),
-    setApprovedHtml: (html, { emitDirty = false } = {}) => guarded(() => {
+    setApprovedHtml: (html, { emitDirty = false, approvedEmbedded: records = [...embeddedMap.values()] } = {}) => guarded(() => {
       try {
-        build(html);
+        build(html, records);
         mode = "visual";
         source.hidden = true;
         visual.hidden = false;
@@ -23493,6 +24163,32 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
       visual.hidden = true;
       markDirty();
     }),
+    stageEmbedded: (issuance) => guarded(() => {
+      if (!owner || issuance.field !== field || viewBlocked) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+      if (mode === "html") {
+        api.setRawHtml(issuance.action === "insert" ? source.value + insertBlockHtml(issuance) : replaceMarkerInHtml(source.value, issuance));
+        return;
+      }
+      let candidate;
+      if (issuance.action === "insert") {
+        const json = editor.state.doc.toJSON(), index = editor.state.selection.$from.index(0);
+        if (json.content[index]?.type === "esProtectedParent") failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+        json.content.splice(index + 1, 0, { type: "esProtectedParent", attrs: { parentId: issuance.ids.parentId, tag: "p" }, content: [
+          { type: "esProtectedSlot", attrs: { slotId: issuance.ids.slotBeforeId } },
+          { type: "esProtected", attrs: { markerId: issuance.ids.markerId, imageId: issuance.ids.imageId, reference: issuance.image } },
+          { type: "esProtectedSlot", attrs: { slotId: issuance.ids.slotAfterId } }
+        ] });
+        candidate = editor.schema.nodeFromJSON(json);
+      } else {
+        let pos = null;
+        editor.state.doc.descendants((node, index) => {
+          if (node.type.name === "esProtected" && node.attrs.markerId === issuance.ids.markerId) pos = index;
+        });
+        if (pos === null) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+        candidate = editor.state.tr.setNodeMarkup(pos, void 0, { markerId: issuance.ids.markerId, imageId: issuance.ids.imageId, reference: issuance.image }).doc;
+      }
+      api.setRawHtml(canonicalDocument(candidate, { owner, approvedTables }));
+    }),
     setMode: (next) => guarded(() => {
       if (next === "html") {
         if (mode === "visual") source.value = visualCanonical(editor?.state.doc, { forCheck: true });
@@ -23507,7 +24203,33 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
     command: (name, value) => guarded(() => {
       if (viewBlocked) failure("EDITOR_VIEW_RECHECK_REQUIRED");
       if (mode !== "visual") failure("EDITOR_VISUAL_MODE_REQUIRED");
-      let chain = editor.chain().focus();
+      if (name === "clearFormatting") return clearSelectedFormatting(commandSelection(editor.view));
+      if (FORMAT.includes(name)) {
+        const attrs2 = validateAttrs({ [name]: value }, [name]), selection = commandSelection(editor.view);
+        const withinSlot = selection.$from.parent.type.name === "esProtectedSlot" && selection.$from.sameParent(selection.$to);
+        if (!withinSlot) {
+          let hazard = false;
+          editor.state.doc.nodesBetween(selection.from, selection.to, (node) => {
+            if (["esProtectedParent", "esProtectedSlot", "esProtected", "esOpaqueTable"].includes(node.type.name) || node.isAtom && !node.isInline) hazard = true;
+          });
+          if (hazard) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+        }
+        const shape = protectedShape(editor.state.doc);
+        let formatChain = editor.chain();
+        if (!selection.eq(editor.state.selection)) formatChain = formatChain.command(({ tr: tr2 }) => {
+          tr2.setSelection(selection);
+          return true;
+        });
+        const result = formatChain.setMark("esFormat", attrs2).command(({ tr: tr2 }) => {
+          if (protectedShape(tr2.doc) !== shape) failure("EDITOR_PROTECTED_COMMAND_UNSUPPORTED");
+          candidateBudget(canonicalDocument(tr2.doc, { owner, approvedTables }));
+          return true;
+        }).run();
+        editor.view.focus();
+        return result;
+      }
+      editor.view.focus();
+      let chain = editor.chain();
       if (Object.hasOwn(MARK_TAG, name)) return chain.toggleMark(name).run();
       if (name === "paragraph") return chain.setNode("paragraph").run();
       if (name === "heading") {
@@ -23521,39 +24243,30 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
         const allowed = ["href", "title", "target", "rel", "data-es-target-field", "data-es-target-anchor"];
         if (Object.keys(value).some((key) => !allowed.includes(key)) || Object.values(value).some((item) => item !== null && typeof item !== "string")) failure("EDITOR_LINK_UNSUPPORTED");
         if (editor.state.selection.empty) failure("EDITOR_SELECT_LINK_TEXT");
-        const attrs = Object.fromEntries(allowed.map((key) => [key, value[key] ?? null]));
-        const transaction = editor.state.tr.addMark(editor.state.selection.from, editor.state.selection.to, editor.schema.marks.esLink.create(attrs));
+        const attrs2 = Object.fromEntries(allowed.map((key) => [key, value[key] ?? null]));
+        const transaction = editor.state.tr.addMark(editor.state.selection.from, editor.state.selection.to, editor.schema.marks.esLink.create(attrs2));
         onUntrustedInput({ field, html: visualCanonical(transaction.doc), text: "", intent: "link" });
         return true;
       }
       if (name === "removeLink") return chain.unsetMark("esLink").run();
-      if (FORMAT.includes(name)) {
-        const attrs = validateAttrs({ [name]: value }, [name]);
-        return chain.setMark("esFormat", attrs).run();
-      }
       if (["align", "mt", "mr", "mb", "ml"].includes(name)) {
-        const attrs = validateAttrs({ [name]: value }, [name]);
+        const attrs2 = validateAttrs({ [name]: value }, [name]);
         const selected = editor.state.selection.$from.parent.type.name;
         if (!["paragraph", "heading", "blockquote", "bulletList", "orderedList"].includes(selected)) failure("EDITOR_SELECTION_UNSUPPORTED");
-        return chain.updateAttributes(selected, attrs).run();
-      }
-      if (name === "clearFormatting") {
-        chain = chain.unsetMark("esFormat");
-        for (const markName of Object.keys(MARK_TAG)) chain = chain.unsetMark(markName);
-        return chain.run();
+        return chain.updateAttributes(selected, attrs2).run();
       }
       if (name === "undo") return chain.undo().run();
       if (name === "redo") return chain.redo().run();
       failure("EDITOR_COMMAND_UNSUPPORTED");
     }),
-    focus: () => guarded(() => mode === "html" ? source.focus() : editor.commands.focus()),
+    focus: () => guarded(() => mode === "html" ? source.focus() : editor.view.focus()),
     destroy: () => {
       if (destroyed) return;
       destroyed = true;
       approvedBaseDoc = null;
       approvedCanonical = "";
       approvedHtml = "";
-      for (const node of element.querySelectorAll("textarea,input,pre")) {
+      for (const node of element3.querySelectorAll("textarea,input,pre")) {
         if ("value" in node) node.value = "";
         else node.textContent = "";
       }
@@ -23567,7 +24280,9 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
       approvedHtml = "";
       source.value = "";
       visual.replaceChildren();
-      element.replaceChildren();
+      element3.replaceChildren();
+      embeddedMap.clear();
+      initialEmbedded = [];
       onDirty = () => {
       };
       onError = () => {
@@ -23586,12 +24301,270 @@ function createEditor(element, { approvedHtml, owner, field, styleSheet, onDirty
   return Object.freeze(api);
 }
 
+// source/media-editor.mjs
+var FIELDS = { main_image: "\u0413\u043B\u0430\u0432\u043D\u043E\u0435 \u0444\u043E\u0442\u043E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B", preview_image: "\u041F\u0440\u0435\u0432\u044C\u044E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B" };
+var UUID2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
+var KEYS = ["asset_id", "alt", "alignment", "width_px", "height_px"];
+function ref(value) {
+  if (value === null) return null;
+  if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== [...KEYS].sort().join() || !UUID2.test(value.asset_id) || typeof value.alt !== "string" || [...value.alt].length > 300 || !["left", "center", "right"].includes(value.alignment) || ["width_px", "height_px"].some((key) => value[key] !== null && (!Number.isSafeInteger(value[key]) || value[key] <= 0))) throw new Error("EDITOR_MEDIA_INVALID");
+  return structuredClone(value);
+}
+function element2(tag, text) {
+  const node = document.createElement(tag);
+  if (text !== void 0) node.textContent = text;
+  return node;
+}
+function mountMediaControls({ root, before, initial, run: run3, listMedia, sourceUrl, invalidate, canEdit, queueImage }) {
+  const sections = [], records = /* @__PURE__ */ new Map(), urls = /* @__PURE__ */ new Map();
+  let destroyed = false, chain = Promise.resolve();
+  const prefix = `/manage/pages/${encodeURIComponent(initial.pageId)}/edit/media/`;
+  function safeUrl(value) {
+    if (typeof value !== "string" || !value.startsWith(prefix)) return null;
+    const url = new URL(value, location.origin), suffix = url.pathname.slice(prefix.length);
+    if (url.origin !== location.origin || url.hash || !/^(?:files|picker-files)\/[0-9a-f-]{36}\/$/u.test(suffix)) return null;
+    if (!UUID2.test(suffix.split("/")[1])) return null;
+    return url.pathname + url.search;
+  }
+  function remember(assetId, mainUrl, previewUrl) {
+    if (!UUID2.test(assetId)) throw new Error("EDITOR_MEDIA_INVALID");
+    const old = urls.get(assetId) || {};
+    urls.set(assetId, { mainUrl: safeUrl(mainUrl) || old.mainUrl || null, previewUrl: safeUrl(previewUrl) || old.previewUrl || null });
+  }
+  function picture(host, value) {
+    const image = element2("img");
+    image.alt = value.alt;
+    image.loading = "eager";
+    image.decoding = "async";
+    const state = urls.get(value.asset_id), url = state?.previewUrl || state?.mainUrl;
+    if (!url) {
+      host.append(element2("p", "\u041F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0444\u0430\u0439\u043B \u043F\u0435\u0440\u0435\u0434 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435\u043C."));
+      return;
+    }
+    host.append(image);
+    const task = () => new Promise((resolve) => {
+      if (destroyed || !image.isConnected) {
+        resolve();
+        return;
+      }
+      let timer;
+      const finish = (failed) => {
+        clearTimeout(timer);
+        image.onload = null;
+        image.onerror = null;
+        if (failed && image.isConnected) {
+          image.removeAttribute("src");
+          image.replaceWith(element2("p", "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u043F\u0440\u0435\u0434\u043F\u0440\u043E\u0441\u043C\u043E\u0442\u0440. \u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0432\u044B\u0431\u043E\u0440 \u0444\u043E\u0442\u043E \u0437\u0430\u043D\u043E\u0432\u043E \u0434\u043B\u044F \u043F\u043E\u0432\u0442\u043E\u0440\u043D\u043E\u0439 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438."));
+        }
+        resolve();
+      };
+      image.onload = () => finish(false);
+      image.onerror = () => finish(true);
+      let actualUrl;
+      try {
+        actualUrl = url.startsWith(prefix + "files/") && typeof sourceUrl === "function" ? safeUrl(sourceUrl(url)) : url;
+      } catch {
+        finish(true);
+        return;
+      }
+      if (!actualUrl) {
+        finish(true);
+        return;
+      }
+      timer = setTimeout(() => finish(true), 1e4);
+      image.src = actualUrl;
+    });
+    if (typeof queueImage === "function") queueImage(task);
+    else chain = chain.then(task);
+  }
+  function button2(label, callback) {
+    const node = element2("button", label);
+    node.type = "button";
+    node.addEventListener("click", run3(callback));
+    return node;
+  }
+  function current(field) {
+    return ref(initial.owner ? initial.values[field] : initial.media?.[field]?.reference ?? null);
+  }
+  function render2(record) {
+    const { field, display, metadata, notice, pendingHost } = record;
+    for (const img of display.querySelectorAll("img")) img.removeAttribute("src");
+    display.replaceChildren();
+    let value;
+    try {
+      value = current(field);
+      record.invalid = false;
+    } catch {
+      record.invalid = true;
+      notice.textContent = "\u042D\u0442\u043E \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u0435 \u043F\u043E\u043A\u0430 \u043D\u0435\u043B\u044C\u0437\u044F \u0431\u0435\u0437\u043E\u043F\u0430\u0441\u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0435.";
+      return;
+    }
+    display.append(element2("h4", "\u0421\u0435\u0439\u0447\u0430\u0441 \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0435"));
+    if (value) picture(display, value);
+    else display.append(element2("p", "\u0424\u043E\u0442\u043E \u043D\u0435 \u0432\u044B\u0431\u0440\u0430\u043D\u043E."));
+    for (const [key, input] of Object.entries(metadata)) {
+      input.value = value?.[key] ?? "";
+      input.disabled = !value;
+    }
+    pendingHost.replaceChildren();
+    if (record.pending) {
+      pendingHost.append(element2("h4", "\u041D\u043E\u0432\u043E\u0435 \u0444\u043E\u0442\u043E"));
+      picture(pendingHost, record.pending);
+      pendingHost.append(button2(value ? "\u0417\u0430\u043C\u0435\u043D\u0438\u0442\u044C \u0437\u0434\u0435\u0441\u044C" : "\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0437\u0434\u0435\u0441\u044C", async () => {
+        if (!canEdit()) return;
+        initial.values[field] = ref(record.pending);
+        record.pending = null;
+        record.list.replaceChildren();
+        invalidate();
+        notice.textContent = "\u0412\u044B\u0431\u043E\u0440 \u0438\u0437\u043C\u0435\u043D\u0451\u043D \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u044D\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0435. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443.";
+        render2(record);
+      }), button2("\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u044B\u0431\u043E\u0440", async () => {
+        record.pending = null;
+        invalidate();
+        render2(record);
+      }));
+    }
+  }
+  for (const [field, label] of Object.entries(FIELDS)) {
+    if (!initial.media || !Object.hasOwn(initial.media, field)) continue;
+    const source = initial.media[field];
+    if (source?.reference) {
+      remember(source.reference.asset_id, field === "main_image" ? source.url : null, source.thumbnailUrl || source.url);
+    }
+    const section = element2("section");
+    section.dataset.editorMedia = field;
+    section.className = "es-media";
+    section.append(element2("h3", label));
+    root.insertBefore(section, before);
+    sections.push(section);
+    const display = element2("div"), notice = element2("p"), pendingHost = element2("div");
+    notice.setAttribute("role", "status");
+    const record = { field, display, notice, pendingHost, metadata: {}, pending: null, invalid: false, list: element2("div") };
+    records.set(field, record);
+    section.append(display, notice);
+    if (initial.owner && typeof listMedia === "function") {
+      const controls = element2("div");
+      controls.className = "es-media-controls";
+      const folder = element2("input");
+      folder.type = "text";
+      folder.setAttribute("aria-label", label + ": \u043F\u0430\u043F\u043A\u0430");
+      const query = element2("input");
+      query.type = "search";
+      query.setAttribute("aria-label", label + ": \u043F\u043E\u0438\u0441\u043A");
+      const folderLabel = element2("label", "\u041F\u0430\u043F\u043A\u0430 "), queryLabel = element2("label", "\u041F\u043E\u0438\u0441\u043A \u0444\u043E\u0442\u043E ");
+      folderLabel.append(folder);
+      queryLabel.append(query);
+      let after = null;
+      async function browse(cursor = null) {
+        const result = await listMedia({ folder: folder.value, q: query.value, after: cursor });
+        if (destroyed) return;
+        if (!result || !Array.isArray(result.items) || result.items.length > 50 || result.nextAfter !== null && !UUID2.test(result.nextAfter)) throw new Error("EDITOR_MEDIA_INVALID");
+        record.list.replaceChildren();
+        after = result.nextAfter;
+        for (const item of result.items) {
+          if (!item || !UUID2.test(item.assetId) || !UUID2.test(item.mainFileId) || !UUID2.test(item.previewFileId) || typeof item.label !== "string" || typeof item.folder !== "string" || item.mainUrl !== prefix + "picker-files/" + item.mainFileId + "/" || item.previewUrl !== prefix + "picker-files/" + item.previewFileId + "/") throw new Error("EDITOR_MEDIA_INVALID");
+          remember(item.assetId, item.mainUrl, item.previewUrl);
+          const choose = button2("\u0412\u044B\u0431\u0440\u0430\u0442\u044C " + item.label, async () => {
+            if (!canEdit()) return;
+            if (record.invalid) {
+              notice.textContent = "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0438\u0441\u043F\u0440\u0430\u0432\u044C\u0442\u0435 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0438 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u043E\u0433\u043E \u0444\u043E\u0442\u043E.";
+              return;
+            }
+            const previous = current(field);
+            record.pending = { ...previous || { alt: "", alignment: "center", width_px: null, height_px: null }, asset_id: item.assetId };
+            invalidate();
+            notice.textContent = "\u0421\u0440\u0430\u0432\u043D\u0438\u0442\u0435 \u043F\u0440\u0435\u0436\u043D\u0435\u0435 \u0438 \u043D\u043E\u0432\u043E\u0435 \u0444\u043E\u0442\u043E, \u0437\u0430\u0442\u0435\u043C \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u0437\u0430\u043C\u0435\u043D\u0443 \u0437\u0434\u0435\u0441\u044C.";
+            render2(record);
+          });
+          choose.dataset.editorMediaAsset = item.assetId;
+          record.list.append(choose);
+        }
+        if (!result.items.length) record.list.append(element2("p", "\u041F\u043E\u0434\u0445\u043E\u0434\u044F\u0449\u0438\u0445 \u0433\u043E\u0442\u043E\u0432\u044B\u0445 \u0444\u043E\u0442\u043E \u043D\u0435\u0442."));
+        more.hidden = after === null;
+        notice.textContent = "\u0412\u044B\u0431\u043E\u0440 \u0438\u0437 \u043C\u0435\u0434\u0438\u0430\u0442\u0435\u043A\u0438 \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u044F\u0435\u0442 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443 \u0434\u043E \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F \u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F.";
+      }
+      const more = button2("\u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0435 \u0444\u043E\u0442\u043E", () => browse(after));
+      more.hidden = true;
+      const open = button2("\u0412\u044B\u0431\u0440\u0430\u0442\u044C \u0444\u043E\u0442\u043E", () => browse());
+      open.dataset.editorMediaAction = "open";
+      controls.append(folderLabel, queryLabel, open, more, button2("\u0423\u0431\u0440\u0430\u0442\u044C \u0441\u043E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B", async () => {
+        if (!canEdit()) return;
+        initial.values[field] = null;
+        record.pending = null;
+        record.list.replaceChildren();
+        invalidate();
+        render2(record);
+        notice.textContent = "\u0421\u0441\u044B\u043B\u043A\u0430 \u0443\u0431\u0440\u0430\u043D\u0430 \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0435. \u0421\u0430\u043C \u0444\u0430\u0439\u043B \u0438 \u0438\u0441\u0442\u043E\u0440\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F.";
+      }));
+      section.append(controls, record.list, pendingHost);
+      for (const [key, text] of [["alt", "\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0444\u043E\u0442\u043E (alt)"], ["alignment", "\u0412\u044B\u0440\u0430\u0432\u043D\u0438\u0432\u0430\u043D\u0438\u0435"], ["width_px", "\u0428\u0438\u0440\u0438\u043D\u0430, px"], ["height_px", "\u0412\u044B\u0441\u043E\u0442\u0430, px"]]) {
+        const wrapper = element2("label", text + " "), input = element2(key === "alignment" ? "select" : "input");
+        input.setAttribute("aria-label", label + ": " + text);
+        input.dataset.editorMediaField = key;
+        if (key === "alignment") {
+          for (const [value, title] of [["left", "\u0421\u043B\u0435\u0432\u0430"], ["center", "\u041F\u043E \u0446\u0435\u043D\u0442\u0440\u0443"], ["right", "\u0421\u043F\u0440\u0430\u0432\u0430"]]) {
+            const option = element2("option", title);
+            option.value = value;
+            input.append(option);
+          }
+        } else input.type = key === "alt" ? "text" : "number";
+        input.addEventListener("input", () => {
+          if (!canEdit()) return;
+          invalidate();
+          try {
+            const changed = current(field);
+            if (changed === null) throw new Error("EDITOR_MEDIA_INVALID");
+            for (const [name, control] of Object.entries(record.metadata)) {
+              if (name === "alt" || name === "alignment") changed[name] = control.value;
+              else {
+                if (control.validity.badInput || control.value !== "" && !/^[1-9][0-9]*$/u.test(control.value)) throw new Error("EDITOR_MEDIA_INVALID");
+                changed[name] = control.value === "" ? null : Number(control.value);
+              }
+            }
+            initial.values[field] = ref(changed);
+            record.invalid = false;
+            notice.textContent = "\u041E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u043E \u0432 \u043F\u0430\u043C\u044F\u0442\u0438. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0438 \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u0435 \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443.";
+          } catch {
+            record.invalid = true;
+            notice.textContent = "\u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0438 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u0444\u043E\u0442\u043E. \u0421\u0442\u0440\u0430\u043D\u0438\u0446\u0430 \u0441 \u044D\u0442\u0438\u043C \u0432\u0432\u043E\u0434\u043E\u043C \u043D\u0435 \u0431\u0443\u0434\u0435\u0442 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0430.";
+          }
+        });
+        record.metadata[key] = input;
+        wrapper.append(input);
+        section.append(wrapper);
+      }
+    }
+    render2(record);
+  }
+  return Object.freeze({
+    valid() {
+      return ![...records.values()].some((record) => record.invalid || record.pending);
+    },
+    refresh() {
+      for (const record of records.values()) render2(record);
+    },
+    destroy() {
+      destroyed = true;
+      for (const section of sections) {
+        for (const img of section.querySelectorAll("img")) img.removeAttribute("src");
+        section.replaceChildren();
+        section.remove();
+      }
+      for (const record of records.values()) {
+        record.pending = null;
+      }
+      records.clear();
+      urls.clear();
+    }
+  });
+}
+
 // source/editor.mjs
 var LABELS = { intro_text: "\u0412\u0432\u043E\u0434\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442", main_text: "\u041E\u0441\u043D\u043E\u0432\u043D\u043E\u0439 \u0442\u0435\u043A\u0441\u0442" };
 var FONTS2 = [["inter", "Inter"], ["oswald", "Oswald"], ["arial", "Arial"], ["georgia", "Georgia"], ["times-new-roman", "Times New Roman"], ["courier-new", "Courier New"]];
 var STATUS = { SESSION_ENDED: "\u0421\u0435\u0441\u0441\u0438\u044F \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430. \u0412\u043E\u0439\u0434\u0438\u0442\u0435 \u0441\u043D\u043E\u0432\u0430, \u0437\u0430\u0442\u0435\u043C \u043F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u0440\u0430\u0432\u0430 \u0438 \u0432\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442.", PERMISSION_DENIED: "\u0414\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E. \u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438.", BASE_CHANGED: "\u0421\u0442\u0440\u0430\u043D\u0438\u0446\u0430 \u0443\u0436\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430. \u0421\u0440\u0430\u0432\u043D\u0438\u0442\u0435 \u043F\u0440\u0430\u0432\u043A\u0438 \u0441 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u043E\u0439 \u0440\u0435\u0434\u0430\u043A\u0446\u0438\u0435\u0439.", CHECK_CHANGED: "\u0412\u0432\u043E\u0434 \u0438\u0437\u043C\u0435\u043D\u0438\u043B\u0441\u044F \u043F\u043E\u0441\u043B\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0438. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0435\u0433\u043E \u0435\u0449\u0451 \u0440\u0430\u0437.", UNKNOWN_RESULT: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u043F\u043E\u043A\u0430 \u043D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u0435\u043D. \u041D\u0435 \u043F\u043E\u0432\u0442\u043E\u0440\u044F\u0439\u0442\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043A\u0443 \u0441 \u043D\u043E\u0432\u044B\u043C \u043D\u0430\u043C\u0435\u0440\u0435\u043D\u0438\u0435\u043C.", CSRF_FAILED: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C \u0437\u0430\u0449\u0438\u0442\u0443 \u0437\u0430\u043F\u0440\u043E\u0441\u0430. \u0412\u043E\u0439\u0434\u0438\u0442\u0435 \u0441\u043D\u043E\u0432\u0430 \u0438 \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443 \u044F\u0432\u043D\u043E." };
 var STATUS_ALIASES = Object.freeze({ EDITOR_SESSION_ENDED: "SESSION_ENDED", EDITOR_FIELDS_FORBIDDEN: "PERMISSION_DENIED", EDITOR_BASE_CONFLICT: "BASE_CHANGED" });
-function fail(code2) {
+function fail2(code2) {
   const error = new Error(code2);
   error.code = code2;
   throw error;
@@ -23604,29 +24577,30 @@ function uuid2() {
   return hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) + "-" + hex.slice(16, 20) + "-" + hex.slice(20);
 }
 function button(label, handler) {
-  const element = document.createElement("button");
-  element.type = "button";
-  element.textContent = label;
-  element.addEventListener("click", handler);
-  return element;
+  const element3 = document.createElement("button");
+  element3.type = "button";
+  element3.textContent = label;
+  element3.addEventListener("click", handler);
+  return element3;
 }
 function select(label, options, handler) {
-  const wrapper = document.createElement("label"), element = document.createElement("select");
-  wrapper.append(document.createTextNode(label + " "), element);
-  element.setAttribute("aria-label", label);
+  const wrapper = document.createElement("label"), element3 = document.createElement("select");
+  wrapper.append(document.createTextNode(label + " "), element3);
+  element3.setAttribute("aria-label", label);
   for (const [value, text] of options) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = text;
-    element.append(option);
+    element3.append(option);
   }
-  element.addEventListener("change", () => handler(element.value));
+  element3.addEventListener("change", () => handler(element3.value));
   return wrapper;
 }
-function mountEditorPage({ root, initialState, styleSheet, check, save, draft, reauth } = {}) {
-  if (!(root instanceof HTMLElement) || !initialState || typeof initialState.owner !== "boolean" || !Array.isArray(initialState.fields) || !initialState.values || typeof check !== "function") fail("EDITOR_MOUNT_INVALID");
+function mountEditorPage({ root, initialState, styleSheet, check, save, draft, cancelDraft, reauth, listMedia, mediaSourceUrl, issueEmbedded } = {}) {
+  if (!(root instanceof HTMLElement) || !initialState || typeof initialState.owner !== "boolean" || !Array.isArray(initialState.fields) || !initialState.values || typeof check !== "function") fail2("EDITOR_MOUNT_INVALID");
   const editors = /* @__PURE__ */ new Map(), owned = [], viewErrors = /* @__PURE__ */ new Set();
-  let epoch = 0, busy = false, pending = null, accepted = null, applying = false, destroyed = false, uncertain = null, identityChanged = false;
+  let epoch = 0, cleanEpoch = 0, busy = false, pending = null, accepted = null, applying = false, destroyed = false, uncertain = null, identityChanged = false;
+  const imageQueue = createImageQueue();
   const status = root.querySelector("[data-editor-status]") || document.createElement("p");
   if (!status.parentNode) {
     status.dataset.editorStatus = "";
@@ -23703,16 +24677,18 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     };
   }
   function acceptChecked(result, capturedEpoch) {
-    if (epoch !== capturedEpoch) fail("CHECK_CHANGED");
-    if (!result || !result.normalisedChanges || typeof result.checkReceipt !== "string") fail("EDITOR_CHECK_RESPONSE_INVALID");
+    if (epoch !== capturedEpoch) fail2("CHECK_CHANGED");
+    if (!result || !result.normalisedChanges || typeof result.checkReceipt !== "string") fail2("EDITOR_CHECK_RESPONSE_INVALID");
+    const nextMaps = result.embeddedMedia ?? initialState.embeddedMedia ?? { intro_text: [], main_text: [] };
     for (const [field, editor] of editors) {
-      if (typeof result.normalisedChanges[field] !== "string") fail("EDITOR_CHECK_RESPONSE_INVALID");
-      editor.validateApprovedHtml(result.normalisedChanges[field]);
+      if (typeof result.normalisedChanges[field] !== "string") fail2("EDITOR_CHECK_RESPONSE_INVALID");
+      approvedEmbedded(nextMaps[field] || [], { pageId: initialState.pageId });
+      editor.validateApprovedHtml(result.normalisedChanges[field], { approvedEmbedded: nextMaps[field] || [] });
     }
     const previous = inputs();
     applying = true;
     try {
-      for (const [field, editor] of editors) editor.setApprovedHtml(result.normalisedChanges[field], { emitDirty: false });
+      for (const [field, editor] of editors) editor.setApprovedHtml(result.normalisedChanges[field], { emitDirty: false, approvedEmbedded: nextMaps[field] || [] });
     } catch (exception) {
       for (const [field, editor] of editors) editor.setRawHtml(previous[field].html);
       throw exception;
@@ -23721,6 +24697,9 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     }
     viewErrors.clear();
     Object.assign(initialState.values, structuredClone(result.normalisedChanges));
+    initialState.embeddedMedia = structuredClone(nextMaps);
+    embeddedControls.refresh();
+    mediaControls.refresh();
     accepted = { result, epoch };
     pending = null;
     review.hidden = true;
@@ -23753,7 +24732,7 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     }
     review.append(button("\u041F\u0440\u0438\u043D\u044F\u0442\u044C \u043F\u0440\u043E\u0432\u0435\u0440\u0435\u043D\u043D\u044B\u0439 \u0432\u0430\u0440\u0438\u0430\u043D\u0442", () => {
       try {
-        if (!pending) fail("CHECK_CHANGED");
+        if (!pending) fail2("CHECK_CHANGED");
         acceptChecked(pending.result, pending.epoch);
         show("\u041F\u0440\u043E\u0432\u0435\u0440\u0435\u043D\u043D\u044B\u0439 \u0432\u0430\u0440\u0438\u0430\u043D\u0442 \u043F\u043E\u0434\u0441\u0442\u0430\u0432\u043B\u0435\u043D. \u041E\u043D \u0435\u0449\u0451 \u043D\u0435 \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D.");
       } catch (exception) {
@@ -23850,11 +24829,22 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
       }
     }));
   }
+  const mediaControls = mountMediaControls({
+    root,
+    before: actions,
+    initial: initialState,
+    run: guarded,
+    listMedia,
+    sourceUrl: mediaSourceUrl,
+    invalidate,
+    queueImage: imageQueue,
+    canEdit: () => !destroyed && !identityChanged
+  });
   for (const state of initialState.fields) {
     const field = state?.name;
-    if (!Object.hasOwn(LABELS, field) || editors.has(field) || !state || typeof state.rawHtml !== "string" || state.approvedHtml !== null && typeof state.approvedHtml !== "string") fail("EDITOR_MOUNT_INVALID");
+    if (!Object.hasOwn(LABELS, field) || editors.has(field) || !state || typeof state.rawHtml !== "string" || state.approvedHtml !== null && typeof state.approvedHtml !== "string") fail2("EDITOR_MOUNT_INVALID");
     const host = root.querySelector('[data-editor-field="' + field + '"]');
-    if (!host) fail("EDITOR_FIELD_MISSING");
+    if (!host) fail2("EDITOR_FIELD_MISSING");
     let mount = host.querySelector("[data-editor-mount]");
     if (!mount) {
       mount = document.createElement("div");
@@ -23862,7 +24852,7 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
       host.append(mount);
       owned.push(mount);
     }
-    const editor = createEditor(mount, { approvedHtml: state.approvedHtml ?? "", owner: initialState.owner, field, styleSheet, onDirty: invalidate, onError: (exception) => adapterFailure(field, exception), onUntrustedInput: stageUntrusted });
+    const editor = createEditor(mount, { approvedHtml: state.approvedHtml ?? "", owner: initialState.owner, field, pageId: initialState.pageId, approvedEmbedded: initialState.embeddedMedia?.[field] || [], queueImage: imageQueue, embeddedSourceUrl: mediaSourceUrl, styleSheet, onDirty: invalidate, onError: (exception) => adapterFailure(field, exception), onUntrustedInput: stageUntrusted });
     editors.set(field, editor);
     controls(host, editor, field);
     if (state.approvedHtml === null) {
@@ -23874,18 +24864,46 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
       }
     }
   }
-  if (!editors.size) fail("EDITOR_FIELDS_REQUIRED");
+  if (!editors.size) fail2("EDITOR_FIELDS_REQUIRED");
+  const embeddedControls = mountEmbeddedControls({
+    root,
+    initial: initialState,
+    editors,
+    run: guarded,
+    listMedia,
+    issueEmbedded,
+    queueImage: imageQueue,
+    getEpoch: () => epoch,
+    invalidate,
+    canEdit: () => !destroyed && !identityChanged && !uncertain && !initialState.draftCancelled
+  });
   async function prepare(intent) {
+    if (!embeddedControls.valid()) {
+      show("\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u0438\u043B\u0438 \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u0435 \u0432\u044B\u0431\u043E\u0440 \u0438\u0437\u043E\u0431\u0440\u0430\u0436\u0435\u043D\u0438\u044F \u0432\u043D\u0443\u0442\u0440\u0438 \u0442\u0435\u043A\u0441\u0442\u0430 \u043F\u0435\u0440\u0435\u0434 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u043E\u0439.");
+      return null;
+    }
+    if (!mediaControls.valid()) {
+      show("\u041F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u0438\u043B\u0438 \u043E\u0442\u043C\u0435\u043D\u0438\u0442\u0435 \u0432\u044B\u0431\u043E\u0440 \u0444\u043E\u0442\u043E \u0438 \u0438\u0441\u043F\u0440\u0430\u0432\u044C\u0442\u0435 \u0435\u0433\u043E \u043E\u043F\u0438\u0441\u0430\u043D\u0438\u0435 \u0438 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043F\u0435\u0440\u0435\u0434 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u043E\u0439.");
+      return null;
+    }
+    if (initialState.draftCancelled) {
+      show("\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u043E\u0442\u043C\u0435\u043D\u0451\u043D. \u0412\u0432\u043E\u0434 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u0432 \u043F\u0430\u043C\u044F\u0442\u0438. \u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u0443\u044E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u043C \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435\u043C.");
+      return null;
+    }
+    if (initialState.rebase === true && !root.querySelector("[data-editor-rebase-confirm]")?.checked) {
+      show("\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0441\u0440\u0430\u0432\u043D\u0438\u0442\u0435 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u0441 \u0442\u0435\u043A\u0443\u0449\u0435\u0439 \u0432\u0435\u0440\u0441\u0438\u0435\u0439 \u0438 \u044F\u0432\u043D\u043E \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u043F\u0435\u0440\u0435\u043D\u043E\u0441 \u043E\u0441\u043D\u043E\u0432\u044B \u0431\u0435\u0437 \u043E\u0431\u044A\u0435\u0434\u0438\u043D\u0435\u043D\u0438\u044F.");
+      return null;
+    }
     const capturedEpoch = epoch, data = changes();
     let result;
     try {
-      result = await check(data);
+      result = await check(embeddedControls.project(data));
     } catch (exception) {
       if (exception?.code === "EDITOR_IDENTITY_CHANGED") scrub(data);
       throw exception;
     }
-    if (capturedEpoch !== epoch) fail("CHECK_CHANGED");
-    if (!result || !result.normalisedChanges) fail("EDITOR_CHECK_RESPONSE_INVALID");
+    if (capturedEpoch !== epoch) fail2("CHECK_CHANGED");
+    if (!result || !result.normalisedChanges) fail2("EDITOR_CHECK_RESPONSE_INVALID");
     const changed = [...editors.keys()].some((field) => result.normalisedChanges[field] !== data[field]);
     if (result.normalisationChanged || changed) {
       showReview(result, capturedEpoch);
@@ -23904,15 +24922,47 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
   async function submitIntent(intent) {
     const response = await intent.callback(structuredClone(intent.body));
     const uuid3 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
-    if (!response || response.operation_id !== intent.body.operationId || !uuid3.test(response.result_id || "") || typeof response.result_code !== "string" || !response.result_code || typeof response.replay !== "boolean" || typeof response.gone !== "boolean") fail("UNKNOWN_RESULT");
+    if (!response || response.operation_id !== intent.body.operationId || !uuid3.test(response.result_id || "") || typeof response.result_code !== "string" || !response.result_code || typeof response.replay !== "boolean" || typeof response.gone !== "boolean") fail2("UNKNOWN_RESULT");
     uncertain = null;
     retryButton.hidden = true;
+    if (!response.gone) {
+      embeddedControls.acknowledge(intent.embeddedTokens);
+      scrub(intent.embeddedTokens);
+    }
+    accepted = null;
+    pending = null;
+    review.hidden = true;
+    if (intent.name === "draft" && !response.gone) {
+      const expectedRevision = intent.body.context.draftBasis ? intent.body.context.draftBasis.revision + 1 : 1;
+      if (!response.draftBasis || response.draftBasis.id !== response.result_id || response.draftBasis.revision !== expectedRevision || !uuid3.test(response.baseRevisionId || "")) fail2("UNKNOWN_RESULT");
+      Object.assign(initialState, { baseRevisionId: response.baseRevisionId, editingFrom: "owner-draft", draftBasis: structuredClone(response.draftBasis), stageId: null, rebase: false, targetCurrentId: null });
+    } else if (intent.name === "save" && !response.gone) {
+      Object.assign(initialState, { baseRevisionId: response.result_id, currentRevisionId: response.result_id, editingFrom: "current", draftBasis: null, stageId: null, rebase: false, targetCurrentId: null });
+    } else if (intent.name === "cancel-draft") initialState.draftCancelled = true;
+    if (initialState.rebase !== true) {
+      const comparison = root.querySelector("[data-editor-rebase-comparison]");
+      if (comparison) comparison.hidden = true;
+    }
+    const sourceLabel = root.querySelector("[data-editor-source-label]");
+    if (sourceLabel && !response.gone) sourceLabel.textContent = intent.name === "draft" ? "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u043B\u0438\u0447\u043D\u044B\u0439 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A. \u041F\u0443\u0431\u043B\u0438\u0447\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430." : intent.name === "cancel-draft" ? "\u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u043E\u0442\u043C\u0435\u043D\u0451\u043D. \u0412\u0432\u043E\u0434 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u044D\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0435." : "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u044B.";
+    for (const anchor of root.querySelectorAll("[data-editor-rebase-link]")) anchor.hidden = true;
+    for (const anchor of root.querySelectorAll("[data-editor-draft-link]")) {
+      if (intent.name === "draft" && !response.gone) {
+        const query = new URLSearchParams({ source: "owner-draft", draftId: response.draftBasis.id, draftRevision: String(response.draftBasis.revision) });
+        anchor.href = `/manage/pages/${encodeURIComponent(initialState.pageId)}/edit/?${query}`;
+      } else if (intent.name === "cancel-draft" || intent.body.context.editingFrom === "owner-draft" && intent.name === "save") anchor.hidden = true;
+    }
+    if (intent.name === "cancel-draft") {
+      dirty.textContent = "\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u043E\u0442\u043C\u0435\u043D\u0451\u043D. \u041D\u0435\u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0432\u0432\u043E\u0434 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u043E\u0442\u043A\u0440\u044B\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0435.";
+      show("\u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u0443\u0434\u0430\u043B\u0451\u043D. \u041F\u0443\u0431\u043B\u0438\u0447\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430. \u0414\u043B\u044F \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0435\u043D\u0438\u044F \u043E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u0443\u044E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443.");
+      return;
+    }
     if (intent.epoch !== epoch) {
       show("\u041F\u0440\u0435\u0436\u043D\u044F\u044F \u043E\u043F\u0435\u0440\u0430\u0446\u0438\u044F \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0430. \u041D\u043E\u0432\u044B\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u043E\u0441\u0442\u0430\u044E\u0442\u0441\u044F \u0432 \u043E\u0442\u043A\u0440\u044B\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0435 \u0438 \u0435\u0449\u0451 \u043D\u0435 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B.");
       return;
     }
-    accepted = null;
-    pending = null;
+    if (intent.name !== "cancel-draft" && !response.gone) mediaControls.refresh();
+    cleanEpoch = epoch;
     dirty.textContent = intent.name === "draft" ? "\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u043E \u043E\u0442 \u0441\u0430\u0439\u0442\u0430." : "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u043E.";
     show(response.gone ? "\u041E\u043F\u0435\u0440\u0430\u0446\u0438\u044F \u043E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u0430. \u0421\u043D\u0438\u043C\u043E\u043A \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0445\u0440\u0430\u043D\u0438\u0442\u0441\u044F." : intent.name === "draft" ? "\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D. \u041F\u0443\u0431\u043B\u0438\u0447\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430." : "\u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B.");
   }
@@ -23922,6 +24972,7 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     } catch (exception) {
       if (exception?.code === "EDITOR_IDENTITY_CHANGED") {
         scrub(intent.body);
+        scrub(intent.embeddedTokens);
         throw exception;
       }
       if (exception?.outcomeKnown === true && [400, 401, 403, 404, 408, 409, 411, 413, 415].includes(exception.status)) {
@@ -23941,7 +24992,15 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
   }));
   for (const [label, name, callback] of [["\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C", "save", save], ["\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A", "draft", draft]]) {
     if (typeof callback !== "function") continue;
-    const action = button(label, guarded(async () => {
+    const action = button(name === "draft" && initialState.rebase === true ? "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u043F\u0435\u0440\u0435\u043D\u043E\u0441 \u043E\u0441\u043D\u043E\u0432\u044B \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430" : label, guarded(async () => {
+      if (initialState.draftCancelled) {
+        show("\u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u043E\u0442\u043C\u0435\u043D\u0451\u043D. \u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u0430\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u0443\u044E \u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0443 \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u043C \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435\u043C; \u0432\u0432\u043E\u0434 \u043F\u043E\u043A\u0430 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u0432 \u043F\u0430\u043C\u044F\u0442\u0438.");
+        return;
+      }
+      if (name === "save" && initialState.rebase === true) {
+        show("\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u044F\u0432\u043D\u043E \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u0435 \u043F\u0435\u0440\u0435\u043D\u043E\u0441 \u043E\u0441\u043D\u043E\u0432\u044B \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430. \u0421\u0442\u0440\u0430\u043D\u0438\u0446\u0430 \u0435\u0449\u0451 \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430.");
+        return;
+      }
       if (uncertain) {
         show(STATUS.UNKNOWN_RESULT);
         return;
@@ -23952,8 +25011,8 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
       }
       const result = accepted?.epoch === epoch ? accepted.result : await prepare(name);
       if (!result) return;
-      const context = Object.fromEntries(["pageId", "generation", "baseRevisionId", "editingFrom", "draftBasis", "stageId"].map((key) => [key, initialState[key] ?? null]));
-      const intent = { name, callback, epoch, body: structuredClone({ changes: result.normalisedChanges, checkReceipt: result.checkReceipt, operationId: uuid2(), context }) };
+      const context = Object.fromEntries(["pageId", "generation", "baseRevisionId", "editingFrom", "draftBasis", "stageId", "rebase", "targetCurrentId"].map((key) => [key, initialState[key] ?? null]));
+      const intent = { name, callback, epoch, embeddedTokens: embeddedControls.capture(result.normalisedChanges), body: structuredClone({ changes: result.normalisedChanges, checkReceipt: result.checkReceipt, operationId: uuid2(), context }) };
       await transmitIntent(intent);
     }));
     action.dataset.editorAction = name;
@@ -23961,8 +25020,25 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
   }
   if (initialState.owner && typeof draft !== "function") {
     const note = document.createElement("p");
-    note.textContent = "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430 \u043D\u0430 \u044D\u0442\u043E\u043C \u044D\u043A\u0440\u0430\u043D\u0435 \u043F\u043E\u043A\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E.";
+    note.textContent = initialState.editingFrom === "restore-stage" ? "\u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043B\u0435\u043D\u043D\u043E\u0435 \u0432\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043C\u043E\u0436\u043D\u043E \u043F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u043E\u0442\u0434\u0435\u043B\u044C\u043D\u044B\u043C \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435\u043C. \u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0435\u0433\u043E \u043A\u043E\u043F\u0438\u0438 \u0432 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A \u043D\u0430 \u044D\u0442\u043E\u043C \u044D\u043A\u0440\u0430\u043D\u0435 \u043F\u043E\u043A\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E." : "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430 \u043D\u0430 \u044D\u0442\u043E\u043C \u044D\u043A\u0440\u0430\u043D\u0435 \u043F\u043E\u043A\u0430 \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E.";
     actions.append(note);
+  }
+  if (initialState.owner && typeof cancelDraft === "function") {
+    const cancelButton = button("\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A", guarded(async () => {
+      if (!initialState.draftBasis || initialState.draftCancelled) {
+        show("\u041D\u0430 \u044D\u0442\u043E\u043C \u044D\u043A\u0440\u0430\u043D\u0435 \u043D\u0435\u0442 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u044E\u0449\u0435\u0433\u043E \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0430 \u0434\u043B\u044F \u043E\u0442\u043C\u0435\u043D\u044B.");
+        return;
+      }
+      if (uncertain) {
+        show(STATUS.UNKNOWN_RESULT);
+        return;
+      }
+      if (!window.confirm("\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0438\u043C\u0435\u043D\u043D\u043E \u044D\u0442\u043E\u0442 \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0447\u0435\u0440\u043D\u043E\u0432\u0438\u043A? \u041F\u0443\u0431\u043B\u0438\u0447\u043D\u0430\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u0441\u044F. \u0412\u0432\u043E\u0434 \u043E\u0441\u0442\u0430\u043D\u0435\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u043E\u0442\u043A\u0440\u044B\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0435.")) return;
+      const context = structuredClone(Object.fromEntries(["pageId", "generation", "baseRevisionId", "editingFrom", "draftBasis", "stageId", "rebase", "targetCurrentId"].map((key) => [key, initialState[key] ?? null])));
+      await transmitIntent({ name: "cancel-draft", callback: cancelDraft, epoch, body: { operationId: uuid2(), context } });
+    }));
+    cancelButton.dataset.editorAction = "cancel-draft";
+    actions.append(cancelButton);
   }
   if (typeof save !== "function") show("\u0412\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u0430\u044F \u043F\u0440\u0430\u0432\u043A\u0430 \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u043F\u043E\u043A\u0430 \u043D\u0435 \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0435\u043D\u043E.");
   else show("\u0412\u0432\u043E\u0434 \u043E\u0441\u0442\u0430\u0451\u0442\u0441\u044F \u0432 \u043F\u0430\u043C\u044F\u0442\u0438 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 \u0434\u043E \u044F\u0432\u043D\u043E\u0433\u043E \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F.");
@@ -23977,13 +25053,18 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
   }
   function clearOwnedCopies() {
     scrub(uncertain?.body);
+    scrub(uncertain?.embeddedTokens);
     scrub(accepted?.result);
     scrub(pending?.result);
     scrub(initialState.values);
     initialState.values = {};
     scrub(initialState.fields);
     initialState.fields = [];
-    for (const name of ["pageId", "generation", "baseRevisionId", "editingFrom", "draftBasis", "stageId", "checkReceipt"]) {
+    scrub(initialState.media);
+    initialState.media = {};
+    scrub(initialState.embeddedMedia);
+    initialState.embeddedMedia = {};
+    for (const name of ["pageId", "generation", "baseRevisionId", "currentRevisionId", "editingFrom", "draftBasis", "stageId", "rebase", "targetCurrentId", "checkReceipt", "draftCancelled"]) {
       scrub(initialState[name]);
       initialState[name] = null;
     }
@@ -23993,6 +25074,9 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     }
   }
   function changedIdentity() {
+    embeddedControls.destroy();
+    imageQueue.destroy();
+    mediaControls.destroy();
     identityChanged = true;
     clearOwnedCopies();
     uncertain = null;
@@ -24017,7 +25101,7 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
       }
       throw exception;
     }
-    if (!response || typeof response !== "object" || typeof response.sameUser !== "boolean") fail("EDITOR_REAUTH_INCOMPLETE");
+    if (!response || typeof response !== "object" || typeof response.sameUser !== "boolean") fail2("EDITOR_REAUTH_INCOMPLETE");
     if (response.sameUser === false) {
       changedIdentity();
       return;
@@ -24031,6 +25115,21 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     if (!event.target.closest?.("[data-editor-field]") && !review.contains(event.target)) invalidate();
   };
   root.addEventListener("input", externalInput);
+  const sourceNavigation = (event) => {
+    const anchor = event.target.closest?.("a[data-editor-source-link]");
+    if (!anchor || !root.contains(anchor)) return;
+    if (identityChanged || busy) {
+      event.preventDefault();
+      return;
+    }
+    if (uncertain) {
+      event.preventDefault();
+      show(STATUS.UNKNOWN_RESULT);
+      return;
+    }
+    if ((epoch !== cleanEpoch || accepted || pending || !review.hidden) && !window.confirm("\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0434\u0440\u0443\u0433\u043E\u0439 \u0438\u0441\u0442\u043E\u0447\u043D\u0438\u043A? \u041D\u0435\u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0432\u0432\u043E\u0434 \u044D\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0438 \u0431\u0443\u0434\u0435\u0442 \u043F\u043E\u0442\u0435\u0440\u044F\u043D.")) event.preventDefault();
+  };
+  root.addEventListener("click", sourceNavigation);
   return Object.freeze({
     editors,
     getInputs: inputs,
@@ -24039,11 +25138,15 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, r
     destroy() {
       if (destroyed) return;
       destroyed = true;
+      embeddedControls.destroy();
+      imageQueue.destroy();
+      mediaControls.destroy();
       clearOwnedCopies();
       uncertain = null;
       accepted = null;
       pending = null;
       root.removeEventListener("input", externalInput);
+      root.removeEventListener("click", sourceNavigation);
       for (const editor of editors.values()) editor.destroy();
       editors.clear();
       review.replaceChildren();

@@ -28,8 +28,27 @@ class ProtectedBinding:
 
 
 @dataclass(frozen=True)
+class ProtectedAncestor:
+    tag: str
+    attributes: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True)
+class ProtectedParent:
+    parent_id: str
+    layout_id: str
+    path: tuple[int, ...]
+    ancestors: tuple[ProtectedAncestor, ...]
+    sequence: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True)
 class ProtectedContext:
     nodes: tuple[ProtectedBinding, ...] = ()
+    scope_id: str | None = None
+    field: str | None = None
+    source_sha256: str | None = None
+    parents: tuple[ProtectedParent, ...] = ()
 
 
 @dataclass(frozen=True)

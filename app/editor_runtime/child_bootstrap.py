@@ -78,7 +78,10 @@ def main():
         # Fixed project path only. It is never supplied by input or environment.
         project = Path(__file__).resolve().parent.parent
         sys.path.insert(0, str(project))
-        from page_editor.normalizer_child import normalize
+        if context.get('processor') == 'shared-editor-v1':
+            from shared_content.normalizer import normalize
+        else:
+            from page_editor.normalizer_child import normalize
         result = normalize(raw, context)
         if type(result) is not dict:
             raise TypeError()
