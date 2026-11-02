@@ -19,6 +19,9 @@ def exact_target(value):
 
 def new_target(value):
     exact_target(value)
+    from request_guard.paths import classify_path
+    if classify_path(value) is not None:
+        raise ValidationError('ROUTE_RESERVED_SCAN_TARGET')
     if value == '/':
         return
     if '?' in value or any(not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', part)

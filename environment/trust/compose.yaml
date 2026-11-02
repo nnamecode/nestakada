@@ -1,0 +1,143 @@
+# D-374: isolated TRUST; no host ports. Tools replace the API during preparation.
+name: nestakada-trust-test
+x-api: &api
+  logging: &bounded_logs
+    driver: json-file
+    options: {max-size: '1m', max-file: '2'}
+  image: ${TRUST_PYTHON_IMAGE:?required}
+  pull_policy: never
+  user: '10001:10001'
+  read_only: true
+  working_dir: /trust
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 256m
+  memswap_limit: 256m
+  cpus: 0.5
+  pids_limit: 64
+  restart: 'no'
+  tmpfs: ['/tmp:rw,nosuid,nodev,noexec,size=32m,uid=10001,gid=10001,mode=1777']
+  labels: {nestakada.scope: trust-test}
+  networks: [api, db]
+  environment: &env
+    DJANGO_SETTINGS_MODULE: trust_service.settings
+    PYTHONDONTWRITEBYTECODE: '1'
+    PSYCOPG_IMPL: c
+    TRUST_DB_NAME: estakada_trust
+    TRUST_DB_HOST: trust-db
+    TRUST_DB_USER: trust_runtime
+    TRUST_DB_PASSWORD_FILE: /run/secrets/database-password
+    TRUST_DB_CA: /run/secrets/database-ca
+    TRUST_CREDENTIALS_FILE: /run/secrets/credentials.json
+    TRUST_IDENTITY_FILE: /run/secrets/identity-pin
+    TRUST_DJANGO_SECRET_FILE: /run/secrets/django-secret
+    TRUST_ALLOWED_HOSTS: trust-api,trust-ingress
+    TRUST_WRITE_PROFILE: ${TRUST_WRITE_MODE:-disabled}
+    TRUST_WRITE_PERMIT_FILE: /run/secrets/write-profile.json
+    TRUST_RUNTIME_ID: ${TRUST_RUNTIME_ID:?required}
+  volumes:
+    - {type: bind, source: '${TRUST_SOURCE:?required}', target: /trust, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/runtime-password', target: /run/secrets/database-password, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/ingress-ca', target: /run/secrets/ingress-ca, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/django-secret', target: /run/secrets/django-secret, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/credentials.json', target: /run/secrets/credentials.json, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/identity-pin', target: /run/secrets/identity-pin, read_only: true}
+    - {type: bind, source: '${TRUST_PRIVATE:?required}/write-profile.json', target: /run/secrets/write-profile.json, read_only: true}
+services:
+  db:
+    logging: *bounded_logs
+    image: ${TRUST_POSTGRES_IMAGE:?required}
+    pull_policy: never
+    container_name: nestakada-trust-test-db
+    read_only: true
+    entrypoint: [/bin/sh, /tools/db-start.sh]
+    command: [postgres, -c, listen_addresses=*, -c, max_connections=16, -c, shared_buffers=64MB, -c, max_wal_size=128MB, -c, min_wal_size=32MB, -c, fsync=on, -c, synchronous_commit=on, -c, full_page_writes=on, -c, hba_file=/run/secrets/trust-hba.conf, -c, log_statement=none, -c, log_min_error_statement=panic, -c, log_error_verbosity=terse, -c, ssl=on, -c, ssl_cert_file=/run/secrets/database-ca, -c, ssl_key_file=/var/run/postgresql/server.key, -c, ssl_min_protocol_version=TLSv1.2]
+    environment:
+      POSTGRES_DB: estakada_trust
+      POSTGRES_PASSWORD_FILE: /run/secrets/bootstrap-password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    networks:
+      db: {aliases: [trust-db]}
+    volumes:
+      - {type: volume, source: dbdata, target: /var/lib/postgresql}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/bootstrap-password', target: /run/secrets/bootstrap-password, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/database-server-key', target: /run/secrets/database-server-key, read_only: true}
+      - {type: bind, source: '${TRUST_DB_START:?required}', target: /tools/db-start.sh, read_only: true}
+      - {type: bind, source: '${TRUST_HBA_CONFIG:?required}', target: /run/secrets/trust-hba.conf, read_only: true}
+    tmpfs: ['/var/run/postgresql:rw,nosuid,nodev,noexec,size=16m,uid=999,gid=999,mode=3775', '/tmp:rw,nosuid,nodev,noexec,size=32m,mode=1777']
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    memswap_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    restart: 'no'
+    labels: {nestakada.scope: trust-test}
+  api:
+    <<: *api
+    container_name: nestakada-trust-test-api
+    command: [python, manage.py, runserver, '0.0.0.0:8000', --noreload]
+    networks:
+      api: {aliases: [trust-api]}
+      db: {}
+  ingress:
+    logging: *bounded_logs
+    image: ${TRUST_NGINX_IMAGE:?required}
+    pull_policy: never
+    container_name: nestakada-trust-test-ingress
+    user: '101:10001'
+    read_only: true
+    entrypoint: [nginx]
+    command: [-c, /preflight/nginx.conf, -g, 'daemon off;']
+    networks:
+      client: {aliases: [trust-ingress]}
+      api: {aliases: [trust-ingress]}
+    volumes:
+      - {type: bind, source: '${TRUST_NGINX_CONFIG:?required}', target: /preflight/nginx.conf, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/ingress-ca', target: /run/secrets/ingress-ca, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/ingress-server-key', target: /run/secrets/ingress-server-key, read_only: true}
+    tmpfs: ['/tmp:rw,nosuid,nodev,noexec,size=16m,uid=101,gid=101,mode=1777']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    memswap_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    restart: 'no'
+    labels: {nestakada.scope: trust-test}
+  migrate:
+    <<: *api
+    profiles: [tools]
+    command: [python, manage.py, migrate, --noinput]
+    networks: [db]
+    environment:
+      <<: *env
+      TRUST_DB_USER: trust_migrator
+      TRUST_DB_PASSWORD_FILE: /run/secrets/migrator-password
+    volumes:
+      - {type: bind, source: '${TRUST_SOURCE:?required}', target: /trust, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/migrator-password', target: /run/secrets/migrator-password, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/django-secret', target: /run/secrets/django-secret, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/credentials.json', target: /run/secrets/credentials.json, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/identity-pin', target: /run/secrets/identity-pin, read_only: true}
+  init:
+    <<: *api
+    profiles: [tools]
+    command: [python, /tools/trust_db_init.py]
+    networks: [db]
+    volumes:
+      - {type: bind, source: '${TRUST_DB_INIT:?required}', target: /tools/trust_db_init.py, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/bootstrap-password', target: /run/secrets/bootstrap-password, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/migrator-password', target: /run/secrets/migrator-password, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/runtime-password', target: /run/secrets/runtime-password, read_only: true}
+      - {type: bind, source: '${TRUST_PRIVATE:?required}/database-ca', target: /run/secrets/database-ca, read_only: true}
+networks:
+  client: {name: nestakada-trust-test-client, internal: true, labels: {nestakada.scope: trust-test}}
+  api: {name: nestakada-trust-test-api, internal: true, labels: {nestakada.scope: trust-test}}
+  db: {name: nestakada-trust-test-db, internal: true, labels: {nestakada.scope: trust-test}}
+volumes:
+  dbdata: {name: nestakada-trust-test-dbdata, labels: {nestakada.scope: trust-test}}

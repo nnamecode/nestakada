@@ -148,6 +148,9 @@ class Route(IdentityModel):
 
     def clean(self):
         from django.conf import settings
+        from request_guard.paths import classify_target
+        if classify_target(self.target) is not None:
+            raise ValidationError('ROUTE_RESERVED_SCAN_TARGET')
         prefix = getattr(settings,'PRIVATE_ROUTE_PREFIX','/manage/')
         path = self.target.split('?',1)[0]
         if self.kind != self.Kind.SYSTEM and (path == prefix.rstrip('/') or path.startswith(prefix)):

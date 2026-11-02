@@ -28,6 +28,7 @@ def credential(variable, purpose, default):
 
 INSTALLED_APPS = ['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','audit.apps.AuditConfig','content.apps.ContentConfig','accounts.apps.AccountsConfig','media_library.apps.MediaLibraryConfig','page_versions.apps.PageVersionsConfig','shared_content.apps.SharedContentConfig','page_editor']
 MIDDLEWARE = [
+    'request_guard.middleware.ScannerMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -94,8 +95,9 @@ CONTENT_SECURITY_POLICY_REPORT_ONLY = {'DIRECTIVES':{
     'base-uri':["'self'"],'frame-ancestors':["'none'"],'form-action':["'self'"],
 }}
 LOGGING = {'version':1,'disable_existing_loggers':False,
+    'filters':{'scanner_noise':{'()':'request_guard.noise.ExpectedScanner404Filter'}},
     'formatters':{'safe':{'()':'audit.formatters.SafeJsonFormatter'}},
-    'handlers':{'safe':{'class':'logging.StreamHandler','formatter':'safe'}},
+    'handlers':{'safe':{'class':'logging.StreamHandler','formatter':'safe','filters':['scanner_noise']}},
     'root':{'handlers':['safe'],'level':'INFO'},
     'loggers':{'django':{'handlers':['safe'],'level':'WARNING','propagate':False},
                'django.server':{'handlers':['safe'],'level':'WARNING','propagate':False}}}

@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-cleanup','shared-cancel','shared-public','shared-calibration','unicode','parser','entity','editor','all')][string]$Suite='save')
+param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-cleanup','shared-cancel','shared-public','shared-calibration','unicode','parser','entity','editor','all')][string]$Suite='save')
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=Join-Path $repo 'work/foundation/test'
@@ -30,6 +30,15 @@ if($Suite -in @('shared-reservation','shared-cleanup','shared-cancel','shared-pu
         '--env',"ESTAKADA_SHARED_CALIBRATION_ROOT=/rc-state/rc-q351/$quotaRun")
     if($Suite -eq 'shared-calibration'){$quotaArgs+=@('--env','ESTAKADA_RUN_SHARED_CALIBRATION=1')}
 }
+$guardArgs=@()
+if($Suite -in @('guard','all')){
+    foreach($entry in @(@('routes','docs/analytics-route-map.csv','DEV20_ROUTES_SHA256'),@('media','docs/analytics-media-evidence.csv','DEV20_MEDIA_SHA256'))){
+        $registry=[IO.Path]::GetFullPath((Join-Path $repo $entry[1]))
+        if((Get-Item -LiteralPath $registry).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Registry link rejected'}
+        $registryHash=(Get-FileHash -LiteralPath $registry -Algorithm SHA256).Hash.ToLowerInvariant()
+        $guardArgs+=@('--mount',"type=bind,source=$registry,target=/legacy-docs/$($entry[0]).csv,readonly",'--env',"$($entry[2])=$registryHash")
+    }
+}
 $private=Join-Path $root 'private'
 $dockerArgs=@('run','--rm','--name',"nestakada-editor-tests-$Suite",'--network','nestakada-foundation-test-db',
     '--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','10001:10001',
@@ -41,7 +50,7 @@ $dockerArgs=@('run','--rm','--name',"nestakada-editor-tests-$Suite",'--network',
     '--mount','type=volume,source=nestakada-foundation-test-media-exchange,target=/exchange',
     '--workdir','/app','--env','DJANGO_SETTINGS_MODULE=estakada.settings.local_http',
     '--env','ESTAKADA_LOCAL_ENV=test','--env','ESTAKADA_DB_NAME=estakada_foundation_unit',
-    '--env','ESTAKADA_DB_USER=app_migrator','--env','PYTHONDONTWRITEBYTECODE=1') + $quotaArgs + @(
+    '--env','ESTAKADA_DB_USER=app_migrator','--env','PYTHONDONTWRITEBYTECODE=1') + $quotaArgs + $guardArgs + @(
     $image,'python','-B','manage.py','test')
 if($Suite -eq 'save'){$dockerArgs+=@('page_editor.test_save_http')}
 elseif($Suite -eq 'draft'){$dockerArgs+=@('page_editor.test_draft_restore_http','page_editor.test_draft_cancel_admission')}
@@ -63,6 +72,8 @@ elseif($Suite -eq 'shared-journal'){$dockerArgs+=@('shared_content.test_shared_j
 elseif($Suite -eq 'shared-reservation'){$dockerArgs+=@('shared_content.test_shared_reservation','--failfast')}
 elseif($Suite -eq 'shared-cleanup'){$dockerArgs+=@('shared_content.test_shared_cleanup.SharedCleanupStorageTests','shared_content.test_shared_cleanup.SharedCleanupTests','--failfast')}
 elseif($Suite -eq 'shared-cancel'){$dockerArgs+=@('shared_content.test_shared_cancel','--failfast')}
+elseif($Suite -eq 'final-media'){$dockerArgs+=@('page_editor.test_final_media_http','--failfast')}
+elseif($Suite -eq 'guard'){$dockerArgs+=@('request_guard.tests','audit','content','accounts','foundation_tests','--failfast')}
 elseif($Suite -eq 'shared-public'){$dockerArgs+=@('shared_content.test_shared_public','--failfast')}
 elseif($Suite -eq 'price-gui'){$dockerArgs+=@('page_editor.test_price_gui_http','--failfast')}
 elseif($Suite -eq 'table-gui'){$dockerArgs+=@('page_editor.test_table_gui_http','--failfast')}
@@ -73,7 +84,7 @@ elseif($Suite -eq 'unicode'){$dockerArgs+=@('page_editor.test_unicode_admission'
 elseif($Suite -eq 'parser'){$dockerArgs+=@('page_editor.test_html_parser','--failfast')}
 elseif($Suite -eq 'entity'){$dockerArgs+=@('page_editor.test_entity_http','--failfast')}
 elseif($Suite -eq 'editor'){$dockerArgs+=@('page_editor','--failfast')}
-else{$dockerArgs+=@('audit','content','accounts','media_library','page_versions','foundation_tests','editor_runtime','page_editor','shared_content','--failfast')}
+else{$dockerArgs+=@('request_guard.tests','audit','content','accounts','media_library','page_versions','foundation_tests','editor_runtime','page_editor','shared_content','--failfast')}
 $dockerArgs+=@('--keepdb','--noinput','--verbosity','2')
 & docker.exe @dockerArgs
 if($LASTEXITCODE -ne 0){throw 'Editor tests failed; inspect evidence before any retry'}

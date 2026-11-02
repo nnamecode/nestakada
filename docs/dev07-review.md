@@ -1,4 +1,12 @@
-# DEV-07 — независимое ревью, работа продолжается
+# DEV-07 — независимое ревью локального компонента
+
+## DEV07-CLOSE-04: итог, 2026-11-02
+
+Независимый итог положительный: DEV07 и CLOSE04 можно закрыть в согласованной локальной области. Лично сверены CF006/007 actual PASS/real permit+loaded bytes/actorzeroPOST/retained handles/draft403/domain unchanged, MAX four bounds/HMAC/wire2097509B/response2098658B/8824ms, apppeak250945536/805306368 и browser925413376/1073741824 безOOM. Retention PASS/sharedquota799744B, Page counts8/4/4/3/2/1 и Header/Footer3+3, Stop подтверждён.
+
+Проверены232host/frozenSHA/source8374 и config/QA drift0. Prior SHA3ec3b028… действительно содержит четыре PASS и поздний CF006 FAIL; configs cohorts совпадают. CF001 честно source-bound prefix+readonly tail, unitCF005 отдельно1PASS6.501s. Reuse18строк independently badRows0 по E3/CM manifests42c0faa8…/8631fa33…; изменённые browser/carrier/bootstrap/html_policy не выданы за слепой unchanged proof. RP231→current232 добавляет только unit QA, шесть RP PNG допустимы к reuse.
+
+Обязательных открытых локальных блокеров по completion-audit не обнаружено. E/F/SH-BLOB закрываются локально, не как все26/28/24варианта PASS; FR004/005 ссылаются на реальный NET/NH результат. Mass orphan sweep/forceUNKNOWN не добавляются к разрешённой fail-closed политике. [Факты и границы](dev07-final-results.md). DEV08/09/15/20/29, TEST08/09/10/public/import214/real browsers/production и весь этап8 остаются открытыми. DEV20 — следующий eligible, здесь не начат.
 
 ## DEV07-CLOSE-03: мобильная ширина, 2026-11-01
 
