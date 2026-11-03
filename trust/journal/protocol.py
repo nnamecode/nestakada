@@ -61,20 +61,26 @@ def validate(value, phase):
     for item in policies:
         closed(item, {'target','objectId','policy','redirectTarget'})
         key = target(item['target']); uid(item['objectId'])
-        if key in seen or item['policy'] not in ('HIDDEN','DELETED','REDIRECT'):
+        if key in seen or item['policy'] not in ('HIDDEN','DELETED','REDIRECT','LIVE_NO_SET'):
             raise Fault('INPUT_REJECTED',400)
         seen.add(key)
         if item['policy']=='REDIRECT': target(item['redirectTarget'])
         elif item['redirectTarget'] is not None: raise Fault('INPUT_REJECTED',400)
     if phase=='prepare':
         uid(value['objectId'])
-        if value['kind'] not in ('route_restriction','request_tombstone') or type(value['basis']) is not str or not re.fullmatch('[0-9a-f]{64}',value['basis']):
+        if value['kind'] not in ('route_restriction','request_tombstone','route_publication') or type(value['basis']) is not str or not re.fullmatch('[0-9a-f]{64}',value['basis']):
             raise Fault('INPUT_REJECTED',400)
         ids=value['requestIds']
         if type(ids) is not list or len(ids)>256 or len(ids)!=len(set(map(str,ids))): raise Fault('INPUT_REJECTED',400)
         for item in ids: uid(item)
         if value['kind']=='request_tombstone' and (not ids or policies): raise Fault('INPUT_REJECTED',400)
         if value['kind']=='route_restriction' and (not policies or ids): raise Fault('INPUT_REJECTED',400)
+        if value['kind']=='route_restriction' and any(item['policy']=='LIVE_NO_SET' for item in policies):
+            raise Fault('INPUT_REJECTED',400)
+        if value['kind']=='route_publication' and (len(policies)!=1 or ids
+            or policies[0]['objectId']!=value['objectId']
+            or policies[0]['policy'] not in ('HIDDEN','LIVE_NO_SET')):
+            raise Fault('INPUT_REJECTED',400)
     else:
         if value['outcome'] not in ('unknown','committed','aborted'): raise Fault('INPUT_REJECTED',400)
         if value['outcome']=='unknown':

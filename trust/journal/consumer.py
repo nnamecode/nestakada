@@ -160,7 +160,8 @@ def _item(item,head_generation):
         closed(item,{'type','key','target','object_id','generation','policy','redirect_target'})
         hex_digest(item['key']);exact_target(item['target']);uuid_value(item['object_id'])
         reject(sha(item['target'].encode('utf-8'))==item['key'])
-        reject(type(item['policy']) is str and item['policy'] in ('PENDING_DENY','HIDDEN','DELETED','REDIRECT'))
+        # LIVE_NO_SET is valid journal data, never evidence of HTML admission.
+        reject(type(item['policy']) is str and item['policy'] in ('PENDING_DENY','HIDDEN','DELETED','REDIRECT','LIVE_NO_SET'))
         if item['policy']=='REDIRECT': exact_target(item['redirect_target'])
         else: reject(item['redirect_target'] is None)
         order=(0,item['key'])
