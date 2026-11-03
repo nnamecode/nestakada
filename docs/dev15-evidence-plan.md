@@ -1,0 +1,15 @@
+# DEV-15: пакет проверенных результатов перед локальным допуском
+
+2026-11-02, продолжение после D-386/LG15. DEV-15 около96%, этап8 около28%. Владелец поручил собрать проверенные результаты и провести независимое ревью. Здесь создаётся пакет evidence; MAINactivation/runlease/native/DEV-29/старыйсайт/VPS не выполняются.
+
+EV15-001: сохранить существующие изменения, проверить gitstatus/source30/014efc…/schema4fb746…/точныеCAPS. Сверить реальные входные SHA/HMAC и связи принятых131preview, capacityA/B, TLS, RA, LGassessment/review/smoke/finalpreservation. Старыеattempt/FAIL/source сохраняются, нет сбросов или переименования старогоFAIL вPASS.
+
+EV15-002: составить три закрытых manifest в формате существующего B._completed_evidence: только kind/status/sourceFingerprint/schemaFingerprint/caps/checks. Unit — RP15-001–007 в областиunit/integration; calibration — RP15-008–012 в принятыхобластях; review — CODE/QA/CAPACITY. Никакого ослабления validator или изменения продукта. Полный формат и ограничения фиксируются отдельным provenance-index, потому что закрытаяформа manifest не допускает произвольных дополнительныхполей.
+
+EV15-003: индекс явно связывает каждую проверку с настоящими исходными raw/artifacts и SHA, принятыми review и границей измерения. Oldcapacity5fbc не становится новымruntime-прогоном014efc: отдельно доказывается неизменность29serverfiles, новый131 иTLS/LG на014efc. LG — semanticPASS+preservationPASS+wrapperSmokePASS, originalhostFAIL2 иcontrollerAfterFixNOTRUN сохраняются явно. RP010 — разрешённаяinjection64МиБ, не физический retained64МиБ. RP012 — observedbeforeStop/reserves, неhardquota. НативныеRP013–019 послеактивации и внешниеREADY/production не включаются вPASS этихmanifests.
+
+EV15-004: одноразовая сборка после code-review; входы/списокфайлов/manifestSHA/индекс/producerSHA/отдельныйattempt сохраняются. Пакет не содержит ключей, privatecredentials, verifier/payloadexports, дампов или сырыхлогов. Для воспроизводимойпроверки допустимы точные копии безопасныхmetadata/report безполейчувствительныхданных, либо inventoryсSHA и контролируемыми путями. Reparse/неизвестныепути/изменённыеinput/подпись/source/caps — отказ; partialattempt не сбрасывается.
+
+EV15-005: валидировать точные собранные файлы настоящим B._completed_evidence в прежнемPythonimage/networknone/readonly256МиБ/.5CPU/PIDs64, безБД/секретов/новыхпрограмм. Unit-calibrationbypass выключен, SQLне требуется. Проверить положительныйпакет и ограниченныеотрицательные варианты SHA/closedshape/coverage/source/schema/caps/status, сохраняя исходныеартефакты. Отдельный validationreport не выдаётся за новую131unit/калибровкуилиактивацию.
+
+EV15-006: независимое result-review всехцепочек/provenance/ограничений и границыдопуска;0owned/stopped/disabled/permit{},source/configdrift0/privateACLWinPS5.1. Старые отчёты неизменны, секреты/новые рабочиеартефакты внеGit. Положительный пакет является только входом будущего точного ActivationIntent/операторскогоgate по принятомуD-380порядку. Он сам не меняетpolicy/Head/lease/сайт и не разрешает production.

@@ -1,0 +1,20 @@
+# DEV-15: отрицательные TLS-контроли
+
+2026-11-03, продолжение D-380/D-392 по поручению владельца «Продолжай». RP15-017 / SC15-014. DEV-15 около 97%, этап 8 около 28%. Это план до исполнения, не PASS.
+
+Проверяется неизменный Nginx `environment/trust/nginx.conf` и неизменный fixed worker `trust/journal/consumer.py`. Используются существующие pinned Python/Nginx images, существующая внутренняя API-сеть и два прежних слота api/ingress: 256/128 МиБ, 0.5/0.25 CPU, без host ports, новых сетей/томов/программ. PostgreSQL не запускается и не монтируется. Python-slot содержит только тестовый HTTP head server и TLS-клиент; это транспортная fixture, не Django API и не доказательство SQL0 действующего API. Ключи/данные MAIN не требуются. Оба слота запускаются только при нулевом исходном числе контейнеров TRUST, с закрытыми точными именами/labels/IDs и проверкой принадлежности перед cleanup.
+
+Временная тестовая CA и серверные сертификаты создаются имеющимся OpenSSL внутри ограниченного Python-slot. Ключи остаются в его tmpfs либо защищённом ignored work; Windows trust store, системные часы и настоящие сертификаты не меняются. Подписываются valid, wrong-name и expired leaf с фиксированными датами; контроль срока выполняется до handshake. В Nginx mount сертификатной fixture занимает прежний путь secrets; сам nginx.conf побайтно прежний. После каждого варианта удаляется только проверенный собственный ingress CID; общий API-slot остаётся тем же. Для worker CA path передаётся штатным аргументом, источник не патчится.
+
+| ID | Контроль и требуемое свидетельство |
+| --- | --- |
+| TN15-001 | Known CA/name: реальный TLS1.2/1.3 handshake и GET через точный Nginx к synthetic head; fixed worker возвращает ожидаемый head. Это только transport positive control. |
+| TN15-002 | Wrong CA: тот же fixed worker отвергает сервер через штатный изолированный subprocess; прямой клиент подтверждает CERTIFICATE_VERIFY_FAILED. |
+| TN15-003 | Wrong name: trusted CA и сертификат с другим SAN, прямой TLS-клиент того же runtime фиксирует hostname mismatch; positive с правильным именем отделяет ошибку сертификата/соединения. |
+| TN15-004 | Expired: та же CA/name, notAfter в прошлом; прямой клиент фиксирует verify code certificate expired. Неверная CA/hostname не выдаётся за expired. |
+| TN15-005 | Downgrade TLS1.0/1.1: клиент с пониженным security level должен реально отправить ClientHello; захваченные в памяти outgoing handshake bytes/version и server alert показывают server protocol rejection. Локальный NO_PROTOCOLS/NO_CIPHERS — FAIL/не доказано, не PASS. Затем positive TLS1.2 восстанавливается. |
+| TN15-006 | Final Stop: 0 своих контейнеров, пустой исходный permit, SHA исходников/config/EV63/прежнего final-result неизменны; приватные fixture не в Git. БД не открывалась, её свежий SQL snapshot этим не заявляется. |
+
+До native: сохранить все существующие изменения, preflight Engine/точный context/image/OpenSSL, source/config SHA, независимое code-review точных SHA, syntax и сертификатная генерация. Проверить private ACL до записи ключей, SHA настоящих cert/key до/после, принадлежность и отсутствие посторонних участников API-сети. Если прежний Stop удалил сеть, допускается восстановить только прежнюю согласованную internal API-сеть с точными именем/labels; сохранить новый ID, после удалить только свою пустую сеть. Первый preflight действительно остановился на отсутствующей сети до создания контейнеров; последующий inventory подтвердил отсутствие всех TRUST-сетей. Подписанный intent/закрытый code-gate до запуска; не менять прежний lease controller с baselineHead10. Текущая принятая MAIN остаётся Head13/v2 b42ec…; для этого no-DB transport набора новый writer context не выдаётся. Отдельное дальнейшее использование MAIN потребует актуального подписанного контекста.
+
+Временные ключи не печатать. Наружу только безопасные codes/counts/SHA/время/версия протокола; raw Docker stderr сохранять в ignored work. Ошибки фиксировать, однотипную третью попытку не делать. Независимое result-review обязательно. RP15-015/016/018/007/019 и полный DEV-15 остаются открытыми. Старый сайт/VPS/APP/DEV-29/production не входят.

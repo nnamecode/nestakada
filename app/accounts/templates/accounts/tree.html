@@ -1,0 +1,13 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Страницы и разделы — Эстакада{% endblock %}
+{% block content %}
+<section class="card page-tree" data-page-tree>
+<h1>Страницы и разделы</h1>
+{% if can_create %}<p><a href="{% url 'accounts:page-create' %}{% if parent_id %}?parent={{ parent_id }}{% endif %}">Создать неопубликованную страницу</a></p>{% endif %}
+<nav aria-label="Путь в дереве"><a href="{% url 'accounts:page-tree' %}">Все разделы</a>{% for item in ancestry %} / <a href="{% url 'accounts:page-tree' %}?parent={{ item.id }}">{{ item.name }}</a>{% endfor %}</nav>
+<p>Здесь показан один уровень дерева. Порядок в этом списке — по названию; публичный порядок указан отдельно.</p>
+<p>Откройте нужную страницу для просмотра содержимого. Название, раздел и место можно изменить отдельными командами в строке страницы.</p>
+<div class="tree-table-wrap"><table><caption>Страницы выбранного раздела</caption><thead><tr><th scope="col">Название</th><th scope="col">Адрес</th><th scope="col">Публикация</th><th scope="col">Публичный порядок</th><th scope="col">Вложенные страницы</th></tr></thead>
+<tbody>{% for page in pages %}<tr data-page-id="{{ page.pk }}"><th scope="row"><a href="{% url 'accounts:page-access' page.pk %}">{{ page.name }}</a><p><a href="{% url 'accounts:tree-command' page.pk 'rename' %}">Название</a> · <a href="{% url 'accounts:tree-command' page.pk 'move' %}">Переместить</a> · <a href="{% url 'accounts:tree-command' page.pk 'reorder' %}">Порядок</a></p></th><td>{% if page.primary_target %}<code>{{ page.primary_target }}</code>{% else %}Адрес ещё не назначен{% endif %}</td><td>{% if page.is_published %}Опубликована{% else %}Скрыта{% endif %}</td><td>{{ page.position|add:1 }}</td><td>{% if page.child_count %}<a href="{% url 'accounts:page-tree' %}?parent={{ page.pk }}">Открыть · {{ page.child_count }}</a>{% else %}Нет{% endif %}</td></tr>{% empty %}<tr><td colspan="5">В этом разделе пока нет страниц.</td></tr>{% endfor %}</tbody></table>
+</div></section>
+{% endblock %}

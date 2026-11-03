@@ -231,6 +231,14 @@ if ($Action -eq 'Stop') {
     Write-Output 'Foundation stopped; private files and named volumes retained.'
     return
 }
+$unitAdmission = Join-Path $private 'cmd29-unit-admission.json'
+if ($Environment -eq 'test' -and $Action -in @('Start','UnitTests') -and (Test-Path -LiteralPath $unitAdmission)) {
+    Reject-Link $unitAdmission
+    $admission = Get-Content -Raw -LiteralPath $unitAdmission | ConvertFrom-Json
+    if ($admission.authority -ne 'D-406' -or $admission.state -ne 'CLOSED') {
+        throw 'DEV29 UNIT admission is not closed; recover isolated HTTP profile before Start/UnitTests.'
+    }
+}
 if ($Action -eq 'UnitTests') {
     if ($Environment -ne 'test') { throw 'UnitTests requires the isolated test environment.' }
     $m = Read-Manifest

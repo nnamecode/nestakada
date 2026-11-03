@@ -244,7 +244,9 @@ class JournalTests(JournalFixture):
         body=self.prepare_body('/'+'q'*2047)
         self.mutate(body); self.mutate(self.report_body(body),'report')
         after=S.physical_facts()
-        self.assertEqual(len(after['relations']),6)
+        self.assertEqual(set(after['relations']),{'journal_head','journal_credential',
+            'journal_operation','journal_routepolicy','journal_requesttombstone',
+            'journal_recoveryreceipt','journal_admissionpolicy'})
         self.assertGreater(after['relationBytes'],0)
         self.assertGreaterEqual(after['databaseBytes'],after['relationBytes'])
         self.assertFalse(after['profileVerified'])

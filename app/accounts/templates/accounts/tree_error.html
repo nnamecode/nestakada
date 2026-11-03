@@ -1,0 +1,2 @@
+{% extends 'accounts/base.html' %}
+{% block content %}<section class="card"><h1>Не удалось открыть раздел</h1><p>{% if missing %}Этот раздел больше недоступен. Обновите дерево страниц.{% else %}Проверьте адрес раздела и повторите переход из дерева страниц.{% endif %}</p><a href="{% url 'accounts:page-tree' %}">Вернуться к дереву страниц</a></section>{% endblock %}

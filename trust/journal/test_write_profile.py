@@ -9,11 +9,28 @@ from unittest.mock import patch
 from django.db import connection, transaction, DatabaseError
 from django.test import override_settings
 from . import auth, profile as P, recovery as R, services as S
-from .models import Head, Credential, Operation, RoutePolicy, RequestTombstone, RecoveryReceipt
+from .models import AdmissionPolicy, Head, Credential, Operation, RoutePolicy, RequestTombstone, RecoveryReceipt
 from .protocol import canonical, digest, Fault
 from .tests import JournalFixture
 
 class WriteProfileTests(JournalFixture):
+    def test_rp004_applied_policy_retires_valid_trial_before_locked_membership(self):
+        AdmissionPolicy.objects.create(id=uuid.uuid4(),epoch=1,previous_digest=None,
+            legacy_seal='a'*64,policy={'scope':'LOCAL_TRUST_BOUNDED_WRITER'},
+            policy_digest='b'*64,action_id=uuid.uuid4(),intent_digest='c'*64,
+            state_digest_version=2,prior_state={},receipt={},logical_bytes=4096)
+        before=R.state_digest(Head.objects.get(pk=1))
+        # The fixture's genuinely signed legacy envelope passes preflight.
+        envelope=P.check(self.writer,self.body,'prepare',S.semantic(self.body,self.writer))
+        with patch.object(P,'check',side_effect=AssertionError('membership reached')):
+            with transaction.atomic():
+                head=S.locked(self.writer,self.identity)
+                self.fault('WRITE_TRIAL_RETIRED',lambda:P.check_locked(envelope,self.writer,
+                    self.body,'prepare',S.semantic(self.body,self.writer),head))
+        self.fault('WRITE_TRIAL_RETIRED',lambda:S.mutate(self.writer,self.body,'prepare'))
+        self.assertEqual(R.state_digest(Head.objects.get(pk=1)),before)
+        self.assertEqual(Operation.objects.count(),0)
+
     def setUp(self):
         super().setUp()
         token=S._test_mode.set(False); self.addCleanup(S._test_mode.reset,token)

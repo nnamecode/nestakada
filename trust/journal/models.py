@@ -69,3 +69,37 @@ class RecoveryReceipt(models.Model):
     logical_bytes = models.PositiveIntegerField()
     class Meta:
         constraints = [models.CheckConstraint(condition=Q(action__in=['fence','activate'],logical_bytes__lte=16384),name='trust_recovery_shape')]
+
+class AdmissionPolicy(models.Model):
+    """Append-only operator admission history; inserting a row alone grants no lease.
+
+    The operator must serialize activation with Head and validate the complete
+    signed intent, contiguous epoch, canonical charge and sixteen-row budget.
+    """
+    id = models.UUIDField(primary_key=True)
+    epoch = models.PositiveBigIntegerField(unique=True)
+    previous_digest = models.CharField(max_length=64, null=True)
+    legacy_seal = models.CharField(max_length=64, null=True)
+    policy = models.JSONField()
+    policy_digest = models.CharField(max_length=64, unique=True)
+    action_id = models.UUIDField(unique=True)
+    intent_digest = models.CharField(max_length=64)
+    state_digest_version = models.PositiveSmallIntegerField(default=2)
+    prior_state = models.JSONField()
+    receipt = models.JSONField()
+    logical_bytes = models.PositiveIntegerField()
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=Q(epoch__gte=1, state_digest_version=2,
+                logical_bytes__gte=1, logical_bytes__lte=32768), name='trust_admission_shape'),
+            models.CheckConstraint(condition=(
+                Q(epoch=1, previous_digest__isnull=True, legacy_seal__isnull=False)
+                | Q(epoch__gt=1, previous_digest__isnull=False, legacy_seal__isnull=True)
+            ), name='trust_admission_predecessor'),
+            models.CheckConstraint(condition=(
+                Q(policy_digest__regex=r'^[0-9a-f]{64}$', intent_digest__regex=r'^[0-9a-f]{64}$')
+                & (Q(previous_digest__isnull=True) | Q(previous_digest__regex=r'^[0-9a-f]{64}$'))
+                & (Q(legacy_seal__isnull=True) | Q(legacy_seal__regex=r'^[0-9a-f]{64}$'))
+            ), name='trust_admission_digests'),
+        ]

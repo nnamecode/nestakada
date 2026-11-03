@@ -14,3 +14,9 @@ CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
 AUTH_TRUSTED_PROXY_HOST = "ingress"
+
+# D-408: opt-in local preparation only. Publication/TRUST admission is separate.
+if os.environ.get('ESTAKADA_DEV29_CREATE', '') == '1':
+    if ENVIRONMENT != 'test':
+        raise ImproperlyConfigured('Page creation is limited to the isolated test profile')
+    DEV29_LOCAL_CREATE_ENABLED = True

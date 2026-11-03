@@ -34,7 +34,7 @@ def state_digest(head):
 def validate(body,action):
     closed(body,{'actionId','incarnation','expectedGeneration','writerEpoch','scope','previousCredentialId','newCredentialId','fenceActionId','reconciliationDigest'})
     uid(body['actionId']); uid(body['incarnation']); integer(body['expectedGeneration']); integer(body['writerEpoch'])
-    if body['scope']!='LOCAL_TRUST_TEST_ONLY': raise Fault('INPUT_REJECTED',400)
+    if body['scope'] not in ('LOCAL_TRUST_TEST_ONLY','LOCAL_TRUST_BOUNDED_WRITER'): raise Fault('INPUT_REJECTED',400)
     if type(body['previousCredentialId']) is not str or not re.fullmatch('[A-Za-z0-9_-]{1,64}',body['previousCredentialId']): raise Fault('INPUT_REJECTED',400)
     if action=='fence':
         if any(body[key] is not None for key in ('newCredentialId','fenceActionId','reconciliationDigest')): raise Fault('INPUT_REJECTED',400)
@@ -46,6 +46,10 @@ def validate(body,action):
 def mutate(actor,body,action):
     from .profile import check, check_locked
     validate(body,action)
+    expected_scope={'local-test-permit':'LOCAL_TRUST_TEST_ONLY',
+        'local-bounded-writer':'LOCAL_TRUST_BOUNDED_WRITER'}.get(settings.TRUST_WRITE_PROFILE)
+    if expected_scope is not None and body['scope']!=expected_scope:
+        raise Fault('INPUT_REJECTED',400)
     fingerprint=S.semantic(body,actor)
     permit=check(actor,body,action,fingerprint)
     with transaction.atomic():
@@ -69,15 +73,24 @@ def mutate(actor,body,action):
         else:
             proof=payload['reconciliation']
             if type(proof) is not dict: raise Fault('RECOVERY_PRECONDITION_FAILED')
-            closed(proof,{'fenceActionId','fenceReceiptDigest','head','stateDigest','runtimeId','credentialConfigSha256','exclusion'})
+            working=body['scope']=='LOCAL_TRUST_BOUNDED_WRITER'
+            proof_fields={'fenceActionId','fenceReceiptDigest','head','stateDigest','runtimeId','credentialConfigSha256','exclusion'}
+            closed(proof,proof_fields|({'stateDigestVersion'} if working else set()))
+            if working and (type(proof['stateDigestVersion']) is not int or proof['stateDigestVersion']!=2):
+                raise Fault('RECOVERY_PRECONDITION_FAILED')
             fence=RecoveryReceipt.objects.filter(pk=body['fenceActionId'],action='fence').first()
             if head.mode!='FROZEN' or previous.active or fence is None or fence.receipt['previousCredentialId']!=previous.pk:
                 raise Fault('RECOVERY_PRECONDITION_FAILED')
             if Credential.objects.filter(role='writer',active=True).exists(): raise Fault('RECOVERY_PRECONDITION_FAILED')
-            actual=state_digest(head)
-            if proof!={'fenceActionId':body['fenceActionId'],'fenceReceiptDigest':receipt_digest(fence.receipt),
+            if working:
+                from .state_v2 import state_digest as state_digest_v2
+                actual=state_digest_v2(head)
+            else: actual=state_digest(head)
+            expected_proof={'fenceActionId':body['fenceActionId'],'fenceReceiptDigest':receipt_digest(fence.receipt),
                 'head':S.head_dict(head),'stateDigest':actual,'runtimeId':settings.TRUST_RUNTIME_ID,
-                'credentialConfigSha256':payload['credentialConfigSha256'],'exclusion':proof['exclusion']} or body['reconciliationDigest']!=actual:
+                'credentialConfigSha256':payload['credentialConfigSha256'],'exclusion':proof['exclusion']}
+            if working: expected_proof['stateDigestVersion']=2
+            if proof!=expected_proof or body['reconciliationDigest']!=actual:
                 raise Fault('RECOVERY_PRECONDITION_FAILED')
             if proof['exclusion']['previousRuntimeId']!=fence.receipt['runtimeId'] or proof['exclusion']['newRuntimeId']!=settings.TRUST_RUNTIME_ID: raise Fault('RECOVERY_PRECONDITION_FAILED')
             if settings.TRUST_RUNTIME_ID==fence.receipt['runtimeId']: raise Fault('RECOVERY_PRECONDITION_FAILED')
@@ -85,15 +98,19 @@ def mutate(actor,body,action):
             if item is None or item['role']!='writer' or Credential.objects.filter(pk=item['id']).exists(): raise Fault('RECOVERY_PRECONDITION_FAILED')
             verifier=hashlib.sha256(item['secret'].encode('ascii')).hexdigest()
             if verifier==previous.verifier: raise Fault('RECOVERY_PRECONDITION_FAILED')
+            if working and Credential.objects.count()>=payload['caps']['maxCredentials']:
+                raise Fault('CREDENTIAL_COUNT_CAP',503)
             Credential.objects.create(id=item['id'],principal=item['principal'],role='writer',verifier=verifier,writer_epoch=head.writer_epoch,active=True)
             head.mode='ACTIVE'
         head.generation+=1
         head.digest=digest({'previous':head.digest,'generation':str(head.generation),'phase':fingerprint})
         receipt={'actionId':body['actionId'],'action':action,'fingerprint':fingerprint,'head':S.head_dict(head),
             'previousCredentialId':body['previousCredentialId'],'newCredentialId':body['newCredentialId'],
-            'runtimeId':settings.TRUST_RUNTIME_ID,'scope':'LOCAL_TRUST_TEST_ONLY','workflowComplete':False}
+            'runtimeId':settings.TRUST_RUNTIME_ID,'scope':body['scope'],'workflowComplete':False}
         size=len(canonical(receipt))+1024
         if size>16384 or head.logical_bytes+size>S.LOGICAL_CAP: raise Fault('BUDGET_EXHAUSTED',503)
+        if body['scope']=='LOCAL_TRUST_BOUNDED_WRITER' and head.logical_bytes+head.reserved_bytes+size>S.LOGICAL_CAP:
+            raise Fault('BUDGET_EXHAUSTED',503)
         RecoveryReceipt.objects.create(id=body['actionId'],credential_id=actor['id'],principal=actor['principal'],
             action=action,fingerprint=fingerprint,receipt=receipt,logical_bytes=size)
         head.logical_bytes+=size; head.save()

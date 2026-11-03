@@ -165,3 +165,20 @@ def employee_grant(request,user_id):
 @require_GET
 def stylesheet(request):
     return private(HttpResponse((Path(__file__).parent/'assets/manage.css').read_text(encoding='utf-8'),content_type='text/css'))
+
+
+@require_GET
+@gate(owner=True)
+def page_tree(request):
+    from content.admin_tree import parent_key, branch
+    try:
+        context = branch(parent_key(request.GET))
+    except (ValueError, TypeError, AttributeError):
+        return render(request, 'accounts/tree_error.html', {'owner': True}, status=400)
+    except Page.DoesNotExist:
+        return render(request, 'accounts/tree_error.html', {'owner': True, 'missing': True}, status=404)
+    except ValidationError:
+        return render(request, 'accounts/unavailable.html', status=503)
+    from django.conf import settings
+    return render(request, 'accounts/tree.html', {'owner': True, **context,
+        'can_create': settings.DEV29_LOCAL_CREATE_ENABLED is True and settings.ENVIRONMENT == 'test'})

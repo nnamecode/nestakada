@@ -3,10 +3,11 @@ import contextvars
 import hashlib
 import os
 from contextlib import contextmanager
+from django.conf import settings
 from django.db import connection, transaction
 from . import auth
-from .models import Head, Credential, Operation, RoutePolicy, RequestTombstone, RecoveryReceipt
-from .protocol import Fault, MAX_INT, canonical, digest, validate
+from .models import AdmissionPolicy, Head, Credential, Operation, RoutePolicy, RequestTombstone, RecoveryReceipt
+from .protocol import Fault, MAX_BODY, MAX_INT, canonical, digest, validate
 
 LOGICAL_CAP=64*1024*1024
 COMPLETION_CAP=16*1024*1024
@@ -22,6 +23,9 @@ def calibration_mode():
     finally: _test_mode.reset(token)
 
 def write_gate(actor,body,phase,fingerprint):
+    if settings.TRUST_WRITE_PROFILE=='local-bounded-writer':
+        from .profile import check
+        return check(actor,body,phase,fingerprint)
     if _test_mode.get() and connection.settings_dict['NAME']=='test_estakada_trust': return None
     from .profile import check
     return check(actor,body,phase,fingerprint)
@@ -54,7 +58,7 @@ def bootstrap(incarnation):
     with transaction.atomic():
         with connection.cursor() as cursor:
             cursor.execute('SELECT pg_advisory_xact_lock(374001)')
-        if any(model.objects.exists() for model in (Head,Credential,Operation,RoutePolicy,RequestTombstone,RecoveryReceipt)):
+        if any(model.objects.exists() for model in (Head,Credential,Operation,RoutePolicy,RequestTombstone,RecoveryReceipt,AdmissionPolicy)):
             raise Fault('BOOTSTRAP_NOT_EMPTY',409)
         durability()
         Head.objects.create(incarnation=incarnation,digest=digest({'incarnation':incarnation,'generation':'0'}))
@@ -79,14 +83,17 @@ def result(op, head, phase, replay):
 
 def mutate(actor, body, phase):
     validate(body,phase)
+    if settings.TRUST_WRITE_PROFILE=='local-bounded-writer' and len(canonical(body))>MAX_BODY:
+        raise Fault('BODY_TOO_LARGE',413)
     fingerprint=semantic(body,actor)
     permit_phase='prepare' if phase=='prepare' else body['outcome']
     permit=write_gate(actor,body,permit_phase,fingerprint)
     with transaction.atomic():
         head=locked(actor,body['incarnation'],body['writerEpoch']); durability()
+        admission=None
         if permit is not None:
             from .profile import check_locked
-            check_locked(permit,actor,body,permit_phase,fingerprint,head)
+            admission=check_locked(permit,actor,body,permit_phase,fingerprint,head)
         op=Operation.objects.filter(pk=body['operationId']).first()
         phase_key='prepare' if phase=='prepare' else body['outcome']
         if op:
@@ -120,9 +127,19 @@ def mutate(actor, body, phase):
             with connection.cursor() as cursor:
                 cursor.execute("SELECT COALESCE(sum(jsonb_array_length(payload->'policies')),0) FROM journal_operation")
                 reference_count=int(cursor.fetchone()[0])
-            if Operation.objects.count()>=10000 or RequestTombstone.objects.count()+len(body['requestIds'])>10000 or reference_count+len(targets)>50000:
+            caps=admission['caps'] if admission is not None and 'policy' in admission else {
+                'maxOperations':10000,'maxTombstones':10000,'maxHistoricalReferences':50000}
+            if (Operation.objects.count()>=caps['maxOperations']
+                or RequestTombstone.objects.count()+len(body['requestIds'])>caps['maxTombstones']
+                or reference_count+len(targets)>caps['maxHistoricalReferences']):
                 raise Fault('COUNT_CAP_REACHED',503)
             if head.logical_bytes+size>LOGICAL_CAP or head.reserved_bytes+reserve>COMPLETION_CAP: raise Fault('BUDGET_EXHAUSTED',503)
+            # Working admission promises the future completion charge too.
+            # Moving an accepted reserve into logical bytes must never make
+            # later exact replays or remaining completions exceed the policy.
+            if (admission is not None and 'policy' in admission
+                and head.logical_bytes+head.reserved_bytes+size+reserve>LOGICAL_CAP):
+                raise Fault('BUDGET_EXHAUSTED',503)
             advance(head,body,fingerprint)
             op=Operation.objects.create(id=body['operationId'],credential_id=actor['id'],principal=actor['principal'],
                 writer_epoch=head.writer_epoch,kind=body['kind'],object_id=body['objectId'],prepare_fingerprint=fingerprint,
@@ -213,7 +230,7 @@ def snapshot(actor, generation=None, cursor=0):
 
 def physical_facts():
     """Measured PG relations including indexes/TOAST; not logical-budget proof."""
-    roots=[model._meta.db_table for model in (Head,Credential,Operation,RoutePolicy,RequestTombstone,RecoveryReceipt)]
+    roots=[model._meta.db_table for model in (Head,Credential,Operation,RoutePolicy,RequestTombstone,RecoveryReceipt,AdmissionPolicy)]
     with connection.cursor() as cursor:
         cursor.execute('SELECT name,pg_total_relation_size(name::regclass) FROM unnest(%s::text[]) AS name',[roots])
         relations={name:int(size) for name,size in cursor.fetchall()}

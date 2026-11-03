@@ -7,7 +7,7 @@ from pathlib import Path
 from django.conf import settings
 from django.db import connection
 from . import auth
-from .models import Operation, RoutePolicy, RequestTombstone, RecoveryReceipt
+from .models import AdmissionPolicy, Operation, RoutePolicy, RequestTombstone, RecoveryReceipt
 from .protocol import Fault, canonical, closed, digest, integer, parse, uid
 
 CAPS={'logicalBytes':67108864,'completionBytes':16777216,'maxOperations':16,
@@ -18,7 +18,7 @@ DEPLOYMENT={'api':{'memoryBytes':268435456,'nanoCpus':500000000,'pids':64},
     'db':{'memoryBytes':536870912,'nanoCpus':500000000,'pids':128},
     'ingress':{'memoryBytes':134217728,'nanoCpus':250000000,'pids':64}}
 TABLES=('journal_head','journal_credential','journal_operation','journal_routepolicy',
-    'journal_requesttombstone','journal_recoveryreceipt')
+    'journal_requesttombstone','journal_recoveryreceipt','journal_admissionpolicy')
 
 def source_files():
     rows=[]
@@ -44,7 +44,7 @@ def runtime_resource_facts():
     except (OSError,UnicodeError,ValueError): raise Fault('WRITE_PROFILE_RESOURCE_MISMATCH',503) from None
 
 def schema_fingerprint():
-    """Full named six-table catalog, trigger function bodies and migration ledger."""
+    """Full named catalog, trigger function bodies and migration ledger."""
     with connection.cursor() as cursor:
         cursor.execute('''SELECT c.relname,n.nspname,a.attnum,a.attname,
             format_type(a.atttypid,a.atttypmod),a.attnotnull,pg_get_expr(d.adbin,d.adrelid)
@@ -71,7 +71,7 @@ def schema_fingerprint():
         triggers=cursor.fetchall()
         cursor.execute("SELECT app,name FROM django_migrations ORDER BY app,name")
         migrations=cursor.fetchall()
-    if {row[0] for row in columns}!=set(TABLES) or migrations!=[('journal','0001_initial'),('journal','0002_local_test_recovery')]:
+    if {row[0] for row in columns}!=set(TABLES) or migrations!=[('journal','0001_initial'),('journal','0002_local_test_recovery'),('journal','0003_admission_policy')]:
         raise Fault('PERMIT_SCHEMA_MISMATCH',503)
     return digest({'columns':columns,'constraints':constraints,'indexes':indexes,'triggers':triggers,'migrations':migrations})
 
@@ -151,6 +151,9 @@ def _read():
         raise Fault('WRITE_PERMIT_REJECTED',503) from None
 
 def check(actor,body,phase,fingerprint):
+    if settings.TRUST_WRITE_PROFILE=='local-bounded-writer':
+        from .bounded import check as bounded_check
+        return bounded_check(actor,body,phase,fingerprint)
     if settings.TRUST_WRITE_PROFILE!='local-test-permit': raise Fault('WRITE_PROFILE_DISABLED',503)
     envelope=_read(); payload=envelope['payload']
     operation_id=body.get('operationId',body.get('actionId'))
@@ -159,6 +162,11 @@ def check(actor,body,phase,fingerprint):
     return envelope
 
 def check_locked(envelope,actor,body,phase,fingerprint,head):
+    if settings.TRUST_WRITE_PROFILE=='local-bounded-writer':
+        from .bounded import check_locked as bounded_check_locked
+        return bounded_check_locked(envelope,actor,body,phase,fingerprint,head)
+    # The caller already holds Head: no mode/file downgrade revives the trial.
+    if AdmissionPolicy.objects.exists(): raise Fault('WRITE_TRIAL_RETIRED',503)
     fresh=check(actor,body,phase,fingerprint)
     if canonical(fresh)!=canonical(envelope): raise Fault('WRITE_PERMIT_CHANGED',503)
     payload=fresh['payload']

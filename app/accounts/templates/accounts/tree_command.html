@@ -1,0 +1,15 @@
+{% extends 'accounts/base.html' %}
+{% block title %}{{ label }} — Эстакада{% endblock %}
+{% block content %}<section class="card"><h1>{{ label }}</h1>
+{% if prepared %}<p>Страница: <strong>{{ prepared.page.name }}</strong>. Раздел: {{ prepared.parent_name }}. Публичный порядок: {{ prepared.page.position|add:1 }}.</p>{% if prepared.primary_target %}<p>Адрес: <code>{{ prepared.primary_target }}</code></p>{% endif %}{% endif %}
+{% if message %}<p class="error" role="alert">{{ message }}</p>{% endif %}
+{% if action == 'move' and not error_mode %}<form method="get" action="{% url 'accounts:tree-command' page_id action %}"><label>Раздел назначения<select name="parent"><option value=""{% if not values.parent_id %} selected{% endif %}>Верхний уровень</option>{% for choice in prepared.parent_choices %}<option value="{{ choice.pk }}"{% if values.parent_id == choice.pk|stringformat:'s' %} selected{% endif %}>{{ choice.name }}</option>{% endfor %}</select></label><button type="submit" class="quiet">Показать места в этом разделе</button></form>{% endif %}
+<form method="post" action="{% url 'accounts:tree-command' page_id action %}">{% csrf_token %}
+<input type="hidden" name="operation_id" value="{{ values.operation_id }}"><input type="hidden" name="token" value="{{ values.token }}">
+{% if action == 'rename' %}<label>Новое название<input name="name" maxlength="200" value="{{ values.name }}" required></label>{% else %}<input type="hidden" name="parent_id" value="{{ values.parent_id }}">
+{% if error_mode %}<input type="hidden" name="before_id" value="{{ values.before_id }}"><p>Выбранные параметры сохранены для повтора той же команды.</p>{% else %}<label>Публичное место<select name="before_id"><option value="">В конец раздела</option>{% for choice in prepared.before_choices %}<option value="{{ choice.pk }}">Перед «{{ choice.name }}» (сейчас {{ choice.position|add:1 }})</option>{% endfor %}</select></label>{% endif %}{% endif %}
+<button type="submit">{% if error_mode %}Повторить ту же команду{% else %}Применить{% endif %}</button>
+</form>
+{% if error_mode %}<p>Сохраните нужный ввод перед переходом к актуальной форме. Её применение будет отдельным действием.</p><p><a href="{% url 'accounts:tree-command' page_id action %}">Открыть актуальную форму</a></p>{% endif %}
+<p><a href="{% url 'accounts:page-tree' %}">Вернуться к дереву страниц</a></p>
+</section>{% endblock %}

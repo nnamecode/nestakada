@@ -1,16 +1,9 @@
 """Bounded reader/startup primitive. No Django, write access or HTML admission."""
-import hashlib
 import http.client
 import json
 import re
 import ssl
-import subprocess
 import sys
-import time
-import uuid
-from dataclasses import dataclass
-from pathlib import Path
-from types import MappingProxyType
 
 MAX_RESPONSE=1048576
 MAX_SNAPSHOT=64*1024*1024
@@ -125,6 +118,27 @@ def _http_worker(request):
         return parse(raw)
     finally: connection.close()
 
+if __name__=='__main__':
+    try:
+        reject(sys.argv[1:]==['--trust-snapshot-http-worker'])
+        raw=sys.stdin.buffer.read(16385);reject(len(raw)<=16384)
+        value=_http_worker(parse(raw))
+        encoded=canonical({'ok':True,'value':value})
+        reject(len(encoded)<=MAX_RESPONSE+128,'SNAPSHOT_RESPONSE_BOUND')
+        sys.stdout.buffer.write(encoded)
+    except Exception:
+        sys.stdout.buffer.write(b'{"ok":false,"value":null}')
+        raise SystemExit(1) from None
+    raise SystemExit(0)
+
+import hashlib
+import subprocess
+import time
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+from types import MappingProxyType
+
 @dataclass(frozen=True)
 class VerifiedSnapshot:
     head: object
@@ -218,14 +232,3 @@ def startup_check(transport,expected_incarnation,expected_head):
     except Exception:
         return StartupResult(False,False,False,'SNAPSHOT_NOT_READY')
 
-if __name__=='__main__':
-    try:
-        reject(sys.argv[1:]==['--trust-snapshot-http-worker'])
-        raw=sys.stdin.buffer.read(16385);reject(len(raw)<=16384)
-        value=_http_worker(parse(raw))
-        encoded=canonical({'ok':True,'value':value})
-        reject(len(encoded)<=MAX_RESPONSE+128,'SNAPSHOT_RESPONSE_BOUND')
-        sys.stdout.buffer.write(encoded)
-    except Exception:
-        sys.stdout.buffer.write(b'{"ok":false,"value":null}')
-        raise SystemExit(1) from None

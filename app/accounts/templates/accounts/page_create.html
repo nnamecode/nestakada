@@ -1,0 +1,28 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Новая страница — Эстакада{% endblock %}
+{% block content %}
+<section class="card" data-page-create>
+<h1>Новая неопубликованная страница</h1>
+<p>Локальная подготовка. Эта команда не публикует страницу на сайте или в резервной HTML-версии.</p>
+{% if message %}<p role="status">{{ message }}</p>{% endif %}
+<form method="post" action="{% url 'accounts:page-create' %}">
+{% csrf_token %}
+<input type="hidden" name="operation_id" value="{{ values.operation_id }}">
+<input type="hidden" name="page_id" value="{{ values.page_id }}">
+<input type="hidden" name="token" value="{{ values.token }}">
+<p><label>Название <input name="name" value="{{ values.name }}" maxlength="200" required></label></p>
+<p><label>Тип <select name="kind">{% for value,label in kind_choices %}<option value="{{ value }}"{% if value == values.kind %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></p>
+<p><label>Родитель <select name="parent_id"><option value="">Корень</option>{% if prepared %}{% for parent in prepared.parents %}<option value="{{ parent.id }}"{% if parent.id|stringformat:'s' == values.parent_id|stringformat:'s' %} selected{% endif %}>{{ parent.name }}</option>{% endfor %}{% elif values.parent_id %}<option value="{{ values.parent_id }}" selected>Выбранный раздел: {{ values.parent_id }}</option>{% endif %}</select></label></p>
+<p><label>Постоянный адрес <input name="url" value="{{ values.url }}" maxlength="2048" aria-describedby="url-help"></label></p>
+<p id="url-help">Проверьте полный путь. Он не изменится автоматически после переименования или переноса.</p>
+{% if metadata_ready %}
+<p><label>H1 <input name="h1" value="{{ values.h1 }}" maxlength="255"></label></p>
+<p><label>SEO-title <input name="title" value="{{ values.title }}" maxlength="255"></label></p>
+{% endif %}
+<button name="step" value="preview" type="submit">Проверить страницу</button>
+{% if metadata_ready %}<button name="step" value="save" type="submit">Сохранить черновик</button>{% endif %}
+<a href="{% url 'accounts:page-tree' %}">Отмена</a>
+</form>
+<p><a href="{% url 'accounts:page-create' %}">Открыть новую форму явно</a></p>
+</section>
+{% endblock %}
