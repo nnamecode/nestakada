@@ -1,0 +1,44 @@
+# DEV-29: возобновление P29-A после успешной диагностики Docker
+
+2026-11-04. BOUND29-RUNTIME-RESUME-002 / DEV29-Q021 — предложение, пока не разрешение. Текущий этап8 «Разработка сайта» около31%, DEV-29 около35%. Цель — завершить ещё не выполненные INIT/C/T в изолированном PostgreSQL, а не продолжать бесконечную диагностику интерфейса.
+
+## Основание и неизменяемая история
+
+После двух CONTAINER_LIST timeout внутри единственного Q016 root7a0fbaff… задача остановлена владельцу. [Q016 postmortem](dev29-bounded-resume-results.md) остаётся FAIL/HOST_CLEANUP_UNPROVEN; aggregate false не меняется на PASS. Q020 по снимку и явному подтверждению Engine running выполнил другой formatted read-only query: exit0/164мс/16 IDs, report004 SHA00322f07468b0f98c8283d3ffba79f683e96a2597421ad95be64093c31bc285a, независимое ACTUAL-RESULT APPROVED. Это изменившееся свидетельство доступности, не доказательство причины прежних ошибок и не SQL authority.
+
+Q014/Q016 старые roots/once receipts не переиспользуются. После сохранения Git чистый на49decbf; public prepared plan2f369a4949659851bc91b572d1b3a92de4723d5141c9815457bbea9cc6e43768 и report004 присутствуют с прежними hashes. Новый runtime/package/private пока не создавались.
+
+## Ровно одно новое разрешение
+
+Предлагается разрешить весь один ограниченный lifecycle: подготовку новой append-only копии, необходимые offline checks и независимые code/Prepare/dispatch/start/payload/result reviews, один Prepare и один условный Run с INIT→C→T, bounded owned cleanup и сохранением результата. Фазовые независимые reviews — технические gates, не новые вопросы владельцу при неизменном согласованном плане. Любое расширение scope/повтор/root/лимитов или новая эквивалентная ошибка требует отдельного решения. До ответа Q021 только документы и read-only файловое ревью, без Docker/UI/SQL/keys/новой копии.
+
+Новый root7ead868c-8fe8-4096-97c5-641d4c72efa3; prefix nestakada-bound29-7ead868c; public work/dev29-bounded-20261104-resume002/; private work/dev15-20261102/private/bound29-7ead868c-real/. Fresh synthetic credentials/identity/host key/receipts штатными средствами, без копирования прежних секретов; прежние TLS inputs только readonly. Никаких ACL исправлений вслепую. Private значения не выводить/Git не отправлять; независимый рецензент не читает ключи. Отказ штатного доступа — STOP, не обход.
+
+Основа — принятый36-input package594e33205f32ef2bc416aed37e5e9452eb180af37b20615b917cda0988ee4b84 в work/dev29-bounded-20261104-resume001/. В новую копию только public исходные inputs, не старые results/keys/admissions. Изменения только fresh root/prefix/namespace/authority/proposal/source hashes/ancestry и привязки guards, synthetic markers/HBA identity и производные SQL hashes без изменения SQL semantics/assertions. Failure trace реализация сохраняется. Запрещено менять product source31, protocol/consumer/tests, старый local_trust runner, Docker query/timeouts/assertions/TTL/лимиты. Если требуется иной functional fix, этот план не разрешает его runtime до нового рассмотрения.
+
+## Наследуемые проверяемые ограничения
+
+Применяются все ограничения [Q014](dev29-bounded-sandbox-proposal.md), rawSHAbf9633c9afef1cad5a0b742b1c04ac6c66a39dd4c5e868e1598cfd75d4b2577b, и [Q016](dev29-bounded-runtime-resume.md), rawSHA3de6c955fa6436720b04ae3f09fbf78e03aaa966eb46a9b8a08121de07725e63, с единственной разрешённой заменой root/package/authority bindings на новые. Исторические фразы «не утверждено» в исходных предложениях трактуются вместе с D-434/D-440, не как текущее разрешение старого run.
+
+- Имеющиеся pinned PG/Python images и Desktop Linux npipe/expected engine; no pull/build/install/WSL/settings/restart. Старый volume только два bounded RO volume-nocopy UID999 inspector до/после, без SQL и запуска исходного кластера. Новый DB не получает старый volume/архивы.
+- Новый DB в tmpfs parent PGDATA512MiB/run16/tmp32/shm16; memory=swap1GiB/CPU0,5/PIDs128. Helper256MiB/CPU0,5/PIDs64/tmp32/shm16. rootfsRO/CAPdropALL/no-new-privileges/noports/loggingnone/restartno/internal network. Нет внешних запросов/боевого сайта/VPS.
+- VM MemAvailable≥2GiB; conservative persistent budget<2GiB; новые artifacts≤32MiB; streams≤1MiB. Retained roots = все roots прежнего prepared plan + весь старый bounded public package + resume001 целиком + новые public/private roots, nested roots без double-count, без исключения старого корпуса. Учитывать volume allocation/reserve и свежие before/after measurements. Недостаток/неизвестность => NOT_RUN, не удаление старого/увеличение budget.
+- Once/TTL≤900с без renewal; C start remaining≥850с/T≥490с; total host C620/T260/audit90 с последними30с на cleanup; INIT≤90с; phase reviews hard120с до start clock/fresh admissions. Run не dispatch, если обязательные reviews/admissions не успели или не совпали hashes.
+- Полная закрытая failure-trace схема Q016, sanitized argv, partial output hashes, raw0, нормализованные ошибки, ≤8KiB, HMAC/plan/package/source/engine/callNo bindings, trace в32MiB и исходном deadline. Сбой trace блокирует новые SQL/фазы, но не уже необходимый safety cleanup. Не делать retry failed mutation/trace и не печатать secrets/raw output.
+
+## Последовательность и приёмка до runtime
+
+1. Метаданные/публичные hashes старого checkpoint и source31: неизменны; complete retained-root set. Не считать это новым Docker preflight. Зафиксировать oldFAIL ancestry и Q020 evidence отдельно от authority.
+2. После ответа владельца создать новую копию/свежие inputs только штатным доступом; offline R016-AC01–04 плюс существующие protocol/once/guard/TTL/budget tests, независимый code/delta review. Проверки идут последовательно: следующая только после успешной предыдущей. Не переносить исторические86 PASS в новый результат без выполнения нужных checks.
+3. Один Prepare с fresh hashes/once scopes и независимое prepared-result/dispatch review. Старый plan/ledger/output не менять, старые root/authority reject. Signed evidence проверяет только назначенная роль штатными средствами; отсутствие доступного доказательства не подменяется manual bypass.
+4. Fresh actual same-engine preflight/лимиты/source/images/no-conflicts/retained budget и original RO-before в контроллере. Успешный Q020 не заменяет ни один gate. Отдельный formatted readiness query в Q021 не включён: preflight уже делает info≤45с и существующий quiet inventory≤9с. Успех другого формата Q020 не гарантирует успех quiet query; риск нового раннего timeout сохраняется. Таймауты/формат контроллера не изменяются, отказ завершает новую попытку без повтора. При отказе не повторять Run; функциональные фазы остаются NOT_RUN.
+5. INIT→C→T только после собственных START/INIT/PAYLOAD-C/C/PAYLOAD-T/T independent gates по exact hashes. C — настоящие1000/1001 с outer rollback. T — исходные139 без skip/замены assertions, guarded existing-new-UNIT. Старые5+8 service probes не повторять. После send два независимых последовательных witnesses, реальные DB/result/cleanup proofs.
+6. При PASS либо отказе — только оставшийся bounded exact owned safety cleanup; failed dispatched mutation не повторять. Затем RO-after и terminal same-engine exact-label zero-inventory, итоговый budget/retained/source witnesses. Signed result+trace сохраняются append-only, независимое result review. PASS только если все требуемые proofs получены; cleanupUnproven/originalUnproven честно остаются FAIL/NOT PROVEN.
+
+R021-AC01: fresh scope rejects old roots/once/authority, old package/report/source SHA не меняются. R021-AC02: no admission при drift/истёкшем review/TTL/дефиците memory/budget/source или original witness. R021-AC03: C/T не подменены offline tests, ошибки/rollback/двойные witnesses и физические limits подтверждены. R021-AC04: failure/trace failure не вызывает второй Run/не расширяет cleanup; terminal result честно связывает unknown/failed evidence. Это новые scope-level criteria поверх исходных functional Q014/Q016 scenarios, не замена assertions.
+
+Остановка: первая ошибка соответствующего gate блокирует зависимые действия; controller выполняет лишь уже предусмотренный bounded safety cleanup/terminal proof. На доступной границе координатор проверяет loop rule AGENTS.md; повтор той же ошибки во внутреннем opaque call не даёт права на новый инструмент/Run после возврата. Не обещать мгновенное прерывание внутри opaque вызова. UI automation исключена. SQL/Run начинать только после явного ответа Q021 и всех независимых gates; разрешение не означает прохождение проверок.
+
+## Вопрос владельцу
+
+DEV29-Q021: разрешить новую изолированную копию и ровно один условный INIT/C/T lifecycle по этому плану с независимыми reviews, rollback, проверкой сохранности и остановкой временного стенда? Старый сайт/VPS/исходный DB/runner вне разрешения. Альтернатива — оставить функциональный runtime на паузе. После принятого результата продолжение P29-B/C/D/E планируется отдельно, общий этап9 после этапа8.

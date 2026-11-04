@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "scope": "NETQUAL29-NORMALIZED-OBSERVATION-FIXTURES",
+  "derivedFromResultSha256": "d7385d94d7a5a568ab602cd5c80bc09577c71ac1ff530fa85966a23ac2468833",
+  "normalization": "All IDs/name are synthetic fixed placeholders preserving equality/empty relations; no runtime IDs.",
+  "limits": [
+    "Selected network fields only; not full container profile or P29 admission",
+    "One engine/image/lifecycle observation; EXITED is not universal policy",
+    "Production guard and PostgreSQL execution remain unapproved"
+  ],
+  "fixtures": [
+    {
+      "stage": "CREATED",
+      "container": {
+        "State": {
+          "Status": "created",
+          "Running": false
+        },
+        "HostConfig": {
+          "NetworkMode": "owned-normalized-network"
+        },
+        "NetworkSettings": {
+          "Networks": {
+            "owned-normalized-network": {
+              "NetworkID": "",
+              "EndpointID": ""
+            }
+          }
+        }
+      },
+      "network": {
+        "Id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "Name": "owned-normalized-network",
+        "Internal": true,
+        "Containers": {}
+      }
+    },
+    {
+      "stage": "RUNNING",
+      "container": {
+        "State": {
+          "Status": "running",
+          "Running": true
+        },
+        "HostConfig": {
+          "NetworkMode": "owned-normalized-network"
+        },
+        "NetworkSettings": {
+          "Networks": {
+            "owned-normalized-network": {
+              "NetworkID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "EndpointID": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+            }
+          }
+        }
+      },
+      "network": {
+        "Id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "Name": "owned-normalized-network",
+        "Internal": true,
+        "Containers": {
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": {
+            "EndpointID": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          }
+        }
+      }
+    },
+    {
+      "stage": "EXITED",
+      "container": {
+        "State": {
+          "Status": "exited",
+          "Running": false
+        },
+        "HostConfig": {
+          "NetworkMode": "owned-normalized-network"
+        },
+        "NetworkSettings": {
+          "Networks": {
+            "owned-normalized-network": {
+              "NetworkID": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "EndpointID": ""
+            }
+          }
+        }
+      },
+      "network": {
+        "Id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "Name": "owned-normalized-network",
+        "Internal": true,
+        "Containers": {}
+      }
+    }
+  ]
+}
