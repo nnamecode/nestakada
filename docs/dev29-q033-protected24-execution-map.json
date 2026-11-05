@@ -1,0 +1,220 @@
+{
+  "scope": "Q033-PROTECTED24-EXECUTION-MAP",
+  "authority": "VALIDATION_METADATA_ONLY",
+  "parentMap": {
+    "path": "docs/dev29-q033-protected24-map.json",
+    "rawSha256": "b3c25cc5268f0e8e7975f0e7fdd178e90d9bd556b8a535a91981312fe001c2a8"
+  },
+  "checkpoint": {
+    "path": "work/dev29-bounded-20261105-resume008/baseline-checkpoint/manifest.json",
+    "rawSha256": "df4543a0f9b08b140f9e940fa61a49b8ecb4f4d65147fdd57aacd2b1d7d6bb6b"
+  },
+  "rows": [
+    {
+      "canonicalPath": "key-stage/helper-test.py",
+      "parentRegistryKey": "../key-stage/helper-test.py",
+      "checkpointPath": "key-stage/helper-test.py",
+      "candidateRelativePath": "key-stage/helper-test.py",
+      "beforeRawSha256": "1fe457faf26c7b84cd8672c5ba7ebab532651c2e8f670481130ec6576fb03344"
+    },
+    {
+      "canonicalPath": "key-stage/reader.py",
+      "parentRegistryKey": "../key-stage/reader.py",
+      "checkpointPath": "key-stage/reader.py",
+      "candidateRelativePath": "key-stage/reader.py",
+      "beforeRawSha256": "a0ef773720dfa1741b68d2aef4ea7420216848fdd205893175a3798e95ee34dc"
+    },
+    {
+      "canonicalPath": "key-stage/writer.py",
+      "parentRegistryKey": "../key-stage/writer.py",
+      "checkpointPath": "key-stage/writer.py",
+      "candidateRelativePath": "key-stage/writer.py",
+      "beforeRawSha256": "822e38dc723c155c4da25a16adc35f4702f0476b7fb9c782f1c767446bc279e9"
+    },
+    {
+      "canonicalPath": "original-inspector.sh",
+      "parentRegistryKey": "../original-inspector.sh",
+      "checkpointPath": "original-inspector.sh",
+      "candidateRelativePath": "original-inspector.sh",
+      "beforeRawSha256": "5cb6736f051857def52a4ca750bfaca9fffbe3fee6baccbe4f921ccf406d5f79"
+    },
+    {
+      "canonicalPath": "qa-resume-001/bootstrap.hba",
+      "parentRegistryKey": "../qa-resume-001/bootstrap.hba",
+      "checkpointPath": "qa-resume-001/bootstrap.hba",
+      "candidateRelativePath": "qa-resume-001/bootstrap.hba",
+      "beforeRawSha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed"
+    },
+    {
+      "canonicalPath": "qa-resume-001/bootstrap.sql",
+      "parentRegistryKey": "../qa-resume-001/bootstrap.sql",
+      "checkpointPath": "qa-resume-001/bootstrap.sql",
+      "candidateRelativePath": "qa-resume-001/bootstrap.sql",
+      "beforeRawSha256": "e51dc9ae885548056d2e74bf2dd6cfe9fb2d9ad14b8920bed0720a14130bc0c3"
+    },
+    {
+      "canonicalPath": "qa-resume-001/bound-db-supervisor.sh",
+      "parentRegistryKey": "../qa-resume-001/bound-db-supervisor.sh",
+      "checkpointPath": "qa-resume-001/bound-db-supervisor.sh",
+      "candidateRelativePath": "qa-resume-001/bound-db-supervisor.sh",
+      "beforeRawSha256": "326a351332b67898eefebf542e38fccf549da71629bd473476364e44dac9e8d2"
+    },
+    {
+      "canonicalPath": "qa-resume-001/runtime.hba",
+      "parentRegistryKey": "../qa-resume-001/runtime.hba",
+      "checkpointPath": "qa-resume-001/runtime.hba",
+      "candidateRelativePath": "qa-resume-001/runtime.hba",
+      "beforeRawSha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b"
+    },
+    {
+      "canonicalPath": "real-host/audit-test.py",
+      "parentRegistryKey": "audit-test.py",
+      "checkpointPath": "real-host/audit-test.py",
+      "candidateRelativePath": "real-host/audit-test.py",
+      "beforeRawSha256": "307745a3bab190689006ff1a56e0d7da34ef71afb1d9a547a9734d68da9f21e4"
+    },
+    {
+      "canonicalPath": "real-host/audit.py",
+      "parentRegistryKey": "audit.py",
+      "checkpointPath": "real-host/audit.py",
+      "candidateRelativePath": "real-host/audit.py",
+      "beforeRawSha256": "fff986ba2df18565aa36069788c5a7fc132c1b897f613c8770069e4ae90e1cac"
+    },
+    {
+      "canonicalPath": "real-host/matrix-test.py",
+      "parentRegistryKey": "matrix-test.py",
+      "checkpointPath": "real-host/matrix-test.py",
+      "candidateRelativePath": "real-host/matrix-test.py",
+      "beforeRawSha256": "98786bff51fbf8db277eaa79f24c01adac6747aa25ffcf7135311214b0deacca"
+    },
+    {
+      "canonicalPath": "real-host/matrix.py",
+      "parentRegistryKey": "matrix.py",
+      "checkpointPath": "real-host/matrix.py",
+      "candidateRelativePath": "real-host/matrix.py",
+      "beforeRawSha256": "a38b47854b977f6c5b27a1221c9ff1e7614d640348350e71eaaae82b5cc3ee6d"
+    },
+    {
+      "canonicalPath": "real-host/preflight.py",
+      "parentRegistryKey": "preflight.py",
+      "checkpointPath": "real-host/preflight.py",
+      "candidateRelativePath": "real-host/preflight.py",
+      "beforeRawSha256": "8d12b709fe0ce650897fff2cf040261498897effa7e565d0b97ca906f116cc4f"
+    },
+    {
+      "canonicalPath": "real/bootstrap-test.py",
+      "parentRegistryKey": "../real/bootstrap-test.py",
+      "checkpointPath": "real/bootstrap-test.py",
+      "candidateRelativePath": "real/bootstrap-test.py",
+      "beforeRawSha256": "dbd135f0057e6302dbbb536582ce997fbb53e0366fd19f33a2428e20a1f1d5cb"
+    },
+    {
+      "canonicalPath": "real/bootstrap.hba",
+      "parentRegistryKey": "../real/bootstrap.hba",
+      "checkpointPath": "real/bootstrap.hba",
+      "candidateRelativePath": "real/bootstrap.hba",
+      "beforeRawSha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed"
+    },
+    {
+      "canonicalPath": "real/bootstrap.sql",
+      "parentRegistryKey": "../real/bootstrap.sql",
+      "checkpointPath": "real/bootstrap.sql",
+      "candidateRelativePath": "real/bootstrap.sql",
+      "beforeRawSha256": "c8f24375f0ad82790a710141bbf3f7ff6b672697449642e5b295d8dda3bffecb"
+    },
+    {
+      "canonicalPath": "real/bootstrap_spec.py",
+      "parentRegistryKey": "../real/bootstrap_spec.py",
+      "checkpointPath": "real/bootstrap_spec.py",
+      "candidateRelativePath": "real/bootstrap_spec.py",
+      "beforeRawSha256": "4c6cf9c7bbc91714e4bbe9f531f5b730e89a3b05a8f018333b0dd5ba261ef0e5"
+    },
+    {
+      "canonicalPath": "real/bound-db-supervisor.sh",
+      "parentRegistryKey": "../real/bound-db-supervisor.sh",
+      "checkpointPath": "real/bound-db-supervisor.sh",
+      "candidateRelativePath": "real/bound-db-supervisor.sh",
+      "beforeRawSha256": "1cb28f5fb9aae64b5d4944ea378f15450cf396bb81d10f744e6260b8c4cd18a8"
+    },
+    {
+      "canonicalPath": "real/capacity-test.py",
+      "parentRegistryKey": "../real/capacity-test.py",
+      "checkpointPath": "real/capacity-test.py",
+      "candidateRelativePath": "real/capacity-test.py",
+      "beforeRawSha256": "2b3cc3e2d56e8f20815bd56f7059850915f685a321ec22d45eba9e3258e707b3"
+    },
+    {
+      "canonicalPath": "real/capacity.py",
+      "parentRegistryKey": "../real/capacity.py",
+      "checkpointPath": "real/capacity.py",
+      "candidateRelativePath": "real/capacity.py",
+      "beforeRawSha256": "d3f9257675b59aa4c3be77ad63833622eee951cd11f91425c8be7a57357fe58e"
+    },
+    {
+      "canonicalPath": "real/helper-test.py",
+      "parentRegistryKey": "../real/helper-test.py",
+      "checkpointPath": "real/helper-test.py",
+      "candidateRelativePath": "real/helper-test.py",
+      "beforeRawSha256": "54e2f9bcaa4b67055ce06ca02b0c160113794cfe06c21b726d978a6c781834fa"
+    },
+    {
+      "canonicalPath": "real/runtime.hba",
+      "parentRegistryKey": "../real/runtime.hba",
+      "checkpointPath": "real/runtime.hba",
+      "candidateRelativePath": "real/runtime.hba",
+      "beforeRawSha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b"
+    },
+    {
+      "canonicalPath": "real/suite-runner.py",
+      "parentRegistryKey": "../real/suite-runner.py",
+      "checkpointPath": "real/suite-runner.py",
+      "candidateRelativePath": "real/suite-runner.py",
+      "beforeRawSha256": "311d513725bbc4744a3944745dcc773baf8bdf1bb158f2296f84d6c954a6009e"
+    },
+    {
+      "canonicalPath": "real/unit_init.py",
+      "parentRegistryKey": "../real/unit_init.py",
+      "checkpointPath": "real/unit_init.py",
+      "candidateRelativePath": "real/unit_init.py",
+      "beforeRawSha256": "fa23caeeaa6fcb2ea40b03c55542021eb6e5ea679ed5a8543e1bd6540be51e9b"
+    }
+  ],
+  "canonicalCount": 24,
+  "preservedLegacyPaths": [
+    "guards.mjs",
+    "original-inspector.sh",
+    "original-proof.mjs",
+    "qa-resume-001/bootstrap.hba",
+    "qa-resume-001/bootstrap.sql",
+    "qa-resume-001/bound-db-supervisor.sh",
+    "qa-resume-001/guards.mjs",
+    "qa-resume-001/qa-paths.mjs",
+    "qa-resume-001/qa-protocol.mjs",
+    "qa-resume-001/runtime.hba",
+    "real/bootstrap-test.py",
+    "real/bootstrap.hba",
+    "real/bootstrap.sql",
+    "real/bootstrap_spec.py",
+    "real/bound-db-supervisor.sh",
+    "real/capacity-test.py",
+    "real/capacity.py",
+    "real/helper-contract.txt",
+    "real/helper-test.py",
+    "real/runtime.hba",
+    "real/suite-runner.py",
+    "real/unit_init.py"
+  ],
+  "preservedLegacyCount": 22,
+  "additionalLegacyPaths": [
+    "guards.mjs",
+    "original-proof.mjs",
+    "qa-resume-001/guards.mjs",
+    "qa-resume-001/qa-paths.mjs",
+    "qa-resume-001/qa-protocol.mjs",
+    "real/helper-contract.txt"
+  ],
+  "unionCount": 30,
+  "currentCandidateBytesValidated": false,
+  "executorResumed": false,
+  "runtimeAuthorized": false
+}

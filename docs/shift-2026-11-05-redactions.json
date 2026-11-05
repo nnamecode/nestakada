@@ -1,0 +1,35 @@
+{
+  "scope": "PUBLIC_DOCUMENT_PATH_REDACTIONS",
+  "historicalPinsReferToLocalOriginals": true,
+  "originalsPreservedLocally": true,
+  "changes": [
+    {
+      "path": "docs/dev29-db-key-probe-plan.md",
+      "originalRawSha256": "1c41207483be3972741f43b60140af55fb6558b2738e90d9598d4486bb5164eb",
+      "publishedRawSha256": "5b6435f11bf70233283a879a9ca3422bfb1e90b3f490ec28cfcb026118d50bdc",
+      "localOriginal": "work/shift-save-20261105/original-docs/dev29-db-key-probe-plan.md",
+      "reason": "Replace full local private/environment path only"
+    },
+    {
+      "path": "docs/dev29-key-pg-prepare002-failure-review.md",
+      "originalRawSha256": "4d20421a1143994e69c26583e2cb0d89bb7f07b16a34dc3c7c14a296cb1090ee",
+      "publishedRawSha256": "225ab0545df725ab3850466413c659d9772fe983b5764f3e85c34d1635cdded3",
+      "localOriginal": "work/shift-save-20261105/original-docs/dev29-key-pg-prepare002-failure-review.md",
+      "reason": "Replace full local private/environment path only"
+    },
+    {
+      "path": "docs/dev29-key-staging-proposal.md",
+      "originalRawSha256": "149b77d0acc3b38605594c859ffa6af81173f78087dff73a0a7114a3f93045f7",
+      "publishedRawSha256": "31fa7c05d31ba6ee8abe09df877014e08ab0c97b08ca0d03ff8430cedc3a7608",
+      "localOriginal": "work/shift-save-20261105/original-docs/dev29-key-staging-proposal.md",
+      "reason": "Replace full local private/environment path only"
+    },
+    {
+      "path": "docs/dev29-acl-module-cycle-dispatch-review.md",
+      "originalRawSha256": "6337a3b7276b944861f9c7bf7f0573ab4ea963a41d1d488a32471b82895d416f",
+      "publishedRawSha256": "80bbedb4a26a4a3b6cb809e10b393e30ba46221ff7fbcd29d155447252610b8f",
+      "localOriginal": "work/shift-save-20261105/original-docs/dev29-acl-module-cycle-dispatch-review.md",
+      "reason": "Replace full local private/environment path only"
+    }
+  ]
+}

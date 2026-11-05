@@ -1,0 +1,5 @@
+# Bind fix — offline результат
+
+Итог D-521 (2026-11-04): offlinebindfixcandidate work/dev29-key-staging-20261104-002 frozen8package80755384e7c750fd8e2b4c11e970a271398203050ea7e92c2558588af1a9be20/run1052d6a0-bbbc-4541-8413-205c421d79fb. Измененытолькоspec/runner/test,5sourcebyteidentical. Syntax7/staticPASS; focused6→fullNode19PASSskip0(19distinct, не25). Python11baselinePASSreused3identicalpy/currentPythonexecutions0. Ошибок0/native0. Rootnew8/old8/7/7/42SHA иoldQ029/Q028resultsMATCH; manifest3f2e80be4fb73b834ee3cc4896a4e780f37cc6139dadac5234a7b82b8863ca6f. Независимыйcode reviewначат; candidatePrepare/RunждутfutureownerQ030, которогоещёнет. Ключ/privateDirне тронуты; SQL/PG/старыйсайт/VPSисключены. DEV-29 около35%, этап8 около31%.
+
+Триdelta: strictdefaultnormalization, closedbindfacts/predicate иfutureQ030authority. KEY29-A01–A11/KEY30-A01–A05. СтарыйfailedQ029predicateUNKNOWN. Тестысdummy/mockedданными; actualkeyне открывался. Rootсверилsource/resultSHA иclosedtestsummary, повторнотестыне запускал. НикакойPrepare/Run доfutureQ030, дажееслиcode reviewдалеебудетAPPROVED.

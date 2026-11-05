@@ -1,0 +1,152 @@
+{
+  "scope": "Q033_INDEPENDENT_DEPENDENCY_AUTHORITY_SUPPLEMENT",
+  "reviewer": "q026_result_auditor",
+  "date": "2026-11-05",
+  "packageSha256": "c281f40640f200c71e7ce084a3ded3885f49bb06728b373482c0f91ffdcbee44",
+  "currentManifestRawSha256": "fb0b49e0ed0e9173441b1a6457d5f71e49dc6fe51782706882f932d47cc0585f",
+  "frozenCorrectedReportRawSha256": "9fc3948ecaf2fe80e7ba0a2739511f412a4859d67979c6ce992c419b13c84905",
+  "frozenInputsModified": false,
+  "authority": {
+    "publicPreparedPlanPath": "work/dev29-bounded-20261104-resume003/real-host/run/plan.json",
+    "rawSha256": "faa3a6d67f5bb6ab033e7b67742d7d38a747c7c99ec09cab272777f29a3faec3",
+    "runId": "651e6a45-b963-4703-8263-93aec7d41a67",
+    "packageSha256": "78cc127f04887321a28fad68bcdbeb8115fa5e74afd208308b95f56bd64e2c8a",
+    "pinSource": "immutable approved parent/current controller ANCESTRY.preparedPlanRawSha256/packageSha256",
+    "cryptographicReauthenticationPerformed": false
+  },
+  "method": "Static relative-import paths from registered mjs roots over exact38 reported modules; no module evaluation. All ten raw hashes match actual bytes and pinned public plan packageFiles. Only host-test reaches them.",
+  "bindings": [
+    {
+      "path": "work/dev29-bounded-20261104-resume003/real-host/spec.mjs",
+      "rawSha256": "1681d9f037f9311f4f75500dfcfd19801867f23bb757aa0d1919f04a9a1f09a9",
+      "historicalRegistryKey": "spec.mjs",
+      "pinnedRegistrySha256": "1681d9f037f9311f4f75500dfcfd19801867f23bb757aa0d1919f04a9a1f09a9",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/spec.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/guards.mjs",
+      "rawSha256": "242b54812dba77d536c6cbbe9c0eaeadc9d90d5631069c01075580a94426662a",
+      "historicalRegistryKey": "../guards.mjs",
+      "pinnedRegistrySha256": "242b54812dba77d536c6cbbe9c0eaeadc9d90d5631069c01075580a94426662a",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/spec.mjs",
+        "work/dev29-bounded-20261104-resume003/guards.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+      "rawSha256": "289d29a5af3f5b5650cdb2be511f824faa4fb3475078c93f533bf018bdbbc0cf",
+      "historicalRegistryKey": "controller.mjs",
+      "pinnedRegistrySha256": "289d29a5af3f5b5650cdb2be511f824faa4fb3475078c93f533bf018bdbbc0cf",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/real-host/failure-trace.mjs",
+      "rawSha256": "c1deadb369aa8868e936ff988e45b69352e9951c66a2e8f7a9693e593bbad540",
+      "historicalRegistryKey": "failure-trace.mjs",
+      "pinnedRegistrySha256": "c1deadb369aa8868e936ff988e45b69352e9951c66a2e8f7a9693e593bbad540",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/failure-trace.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/real-host/failure-host.mjs",
+      "rawSha256": "bd6c6642215988ef7cc5b4904aa2261efb55aaf4043300c0512a0dfcf3e41452",
+      "historicalRegistryKey": "failure-host.mjs",
+      "pinnedRegistrySha256": "bd6c6642215988ef7cc5b4904aa2261efb55aaf4043300c0512a0dfcf3e41452",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/failure-host.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/qa-resume-001/qa-protocol.mjs",
+      "rawSha256": "c2556d7dc56bb170ed48edba1d220d624208cc0f6ac37846ee3e84f4f5bdd2e7",
+      "historicalRegistryKey": "../qa-resume-001/qa-protocol.mjs",
+      "pinnedRegistrySha256": "c2556d7dc56bb170ed48edba1d220d624208cc0f6ac37846ee3e84f4f5bdd2e7",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/qa-resume-001/qa-protocol.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/qa-resume-001/guards.mjs",
+      "rawSha256": "242b54812dba77d536c6cbbe9c0eaeadc9d90d5631069c01075580a94426662a",
+      "historicalRegistryKey": "../qa-resume-001/guards.mjs",
+      "pinnedRegistrySha256": "242b54812dba77d536c6cbbe9c0eaeadc9d90d5631069c01075580a94426662a",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/qa-resume-001/qa-protocol.mjs",
+        "work/dev29-bounded-20261104-resume003/qa-resume-001/guards.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/real-host/flow.mjs",
+      "rawSha256": "4b82295342621e3d41d2a96255fad7feaaa14df6fecc4f67adfab0b0de159c08",
+      "historicalRegistryKey": "flow.mjs",
+      "pinnedRegistrySha256": "4b82295342621e3d41d2a96255fad7feaaa14df6fecc4f67adfab0b0de159c08",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/flow.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/qa-resume-001/qa-paths.mjs",
+      "rawSha256": "85f764ec8f0e3e9239186de8090b96c5d60abfb8f3b62612de7bacfeca69c925",
+      "historicalRegistryKey": "../qa-resume-001/qa-paths.mjs",
+      "pinnedRegistrySha256": "85f764ec8f0e3e9239186de8090b96c5d60abfb8f3b62612de7bacfeca69c925",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/qa-resume-001/qa-paths.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume003/original-proof.mjs",
+      "rawSha256": "fdc573c28420dc38b21c1b932051c03c810e64011d610b57415bd1af7bd99054",
+      "historicalRegistryKey": "../original-proof.mjs",
+      "pinnedRegistrySha256": "fdc573c28420dc38b21c1b932051c03c810e64011d610b57415bd1af7bd99054",
+      "reachingRoot": "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+      "reachingImportPath": [
+        "work/dev29-bounded-20261105-resume008/real-host/host-test.mjs",
+        "work/dev29-bounded-20261104-resume003/real-host/controller.mjs",
+        "work/dev29-bounded-20261104-resume003/original-proof.mjs"
+      ],
+      "reviewClassification": "PINNED_HISTORICAL_TEST_DEPENDENCY"
+    }
+  ],
+  "unresolvedCount": 0,
+  "actualModes": 0,
+  "testsExecutedByReviewer": 0
+}

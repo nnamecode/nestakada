@@ -1,0 +1,813 @@
+{
+  "scope": "SHIFT_PUBLIC_SOURCE_CHECKPOINT_NOT_RUNTIME_NOT_CODE_APPROVED",
+  "date": "2026-11-05",
+  "currentSourceCount": 63,
+  "currentPackageSha256": "d615898c0c25e125a53f7bd60ccb3c621436da0328731dd09b680bfe36a80963",
+  "parentSourceCount": 59,
+  "parentPackageSha256": "c281f40640f200c71e7ce084a3ded3885f49bb06728b373482c0f91ffdcbee44",
+  "historicalSourceCount": 10,
+  "files": [
+    {
+      "group": "current009",
+      "path": "current009/key-stage/timing-fixture.mjs",
+      "sha256": "ed0f43f1d1d5a1009d204ef775fbb276bf16ec3dd7cbb6de7e697f40eb4f78c9",
+      "bytes": 4917
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/timing-observer.mjs",
+      "sha256": "bff93e0a4dfab2b8327d8467831fa681a70b4d5cb3f55826f30170454927cf70",
+      "bytes": 6180
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/timing-extractor.mjs",
+      "sha256": "1b427b2d023b4b233618c8bc0cf751016b7da0bb3306343b0d93185ee5cd7889",
+      "bytes": 1871
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/timing-test.mjs",
+      "sha256": "bde4877a6c0a593b47b7b8b3c5e4dcf419e37117b68747c7316f2536000cd921",
+      "bytes": 11413
+    },
+    {
+      "group": "current009",
+      "path": "current009/tests/acl-module/vm-fixture.mjs",
+      "sha256": "c978731620db036bde992b747af187c6e305577dea55699b60560e8762b2fe6d",
+      "bytes": 3106
+    },
+    {
+      "group": "current009",
+      "path": "current009/tests/acl-module/proposal-test.mjs",
+      "sha256": "e6c3e3ff686577f0e4adf3305218bfb70ce44b5562b322491ac4c05137933196",
+      "bytes": 6768
+    },
+    {
+      "group": "current009",
+      "path": "current009/tests/acl-module/baseline/key-host.mjs",
+      "sha256": "5e1cd8fa78e570f6e5996f2aebb05795e45a8ee89abca8877707cbcbfdf1d191",
+      "bytes": 5399
+    },
+    {
+      "group": "current009",
+      "path": "current009/tests/acl-module/entry-contract.json",
+      "sha256": "4b06236eb0c7addb8906c24bcc5e981589e9f0e066cfadb744ee4ea5e6503220",
+      "bytes": 450
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/key-origin.mjs",
+      "sha256": "ab70c4c410c476755022300880ad238719324aa1a0a88c50a967cba8e7d84bea",
+      "bytes": 7710
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/key-host.mjs",
+      "sha256": "56e1af9c4d8b00dc1be6b8c63d82b1443ecbe1bb2cec743ad2bcb1d7ceb68520",
+      "bytes": 5720
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/key-lease.mjs",
+      "sha256": "1a2e16e7cb3f0c2e5da1cfac114ddce32185f5fa308548ad5263a9bb874523ab",
+      "bytes": 3613
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/keypg-test.mjs",
+      "sha256": "6be1bffa28ece85bf2adec7316a73f5384c992a5f1e746a38a446d2e27a48b79",
+      "bytes": 29607
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/spec.mjs",
+      "sha256": "5f210822a973d3ec6cbe9124622bd16f78a53f6a3e1a61db0f87f38a594c697e",
+      "bytes": 14477
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/runner.mjs",
+      "sha256": "38b0b49b879e3e16d871021c711b9e8647cd1c565305918272c40f33b4e502c2",
+      "bytes": 21594
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/capture.mjs",
+      "sha256": "eb28a0a1a521946fe603a027bb1968ea6ff8af8a1a693c6fab9c9cf3aa0ff08d",
+      "bytes": 5397
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/writer.py",
+      "sha256": "822e38dc723c155c4da25a16adc35f4702f0476b7fb9c782f1c767446bc279e9",
+      "bytes": 2639
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/reader.py",
+      "sha256": "a0ef773720dfa1741b68d2aef4ea7420216848fdd205893175a3798e95ee34dc",
+      "bytes": 1439
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/reader-pg.py",
+      "sha256": "92edaea9c8bef3a2a81b118a89a91d3471d354ccc287400d30f9175d420ac5c0",
+      "bytes": 1540
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/test.mjs",
+      "sha256": "9182b1bc62dec7ce67c2e76bd95f8a9f8a320a9f81ff57ee2b425c6b9a5336b5",
+      "bytes": 17866
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/helper-test.py",
+      "sha256": "1fe457faf26c7b84cd8672c5ba7ebab532651c2e8f670481130ec6576fb03344",
+      "bytes": 5516
+    },
+    {
+      "group": "current009",
+      "path": "current009/key-stage/capture-origin.json",
+      "sha256": "5849c04200db72de99fd2350d30b92e422a2da49473482fa284dda309e7cbf5c",
+      "bytes": 300
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/review-handoff.json",
+      "sha256": "5839617423436497bf8c85d7f063caab6fda44a96f183f1b1694eca86e6cb518",
+      "bytes": 5200
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/review-contract.mjs",
+      "sha256": "dd53783b106a79e6b55a8e1cb8415e6162ad5be4d7a14368d1bcb383c407d5c5",
+      "bytes": 13499
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/review-facts.mjs",
+      "sha256": "e3631968344b1831d99c5984bf9743d335b0c6d3b765bac2c6505ddf901c178a",
+      "bytes": 28829
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/review-test.mjs",
+      "sha256": "3ff5a6f49e14a54edd63d4510b150c9847db9ae4fec3660c1f94f4b97f1785c7",
+      "bytes": 21704
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/stage-test.mjs",
+      "sha256": "819d4564ec747c4ab7c5c375e3b80774c11092b6cec813bd22c250e5401b79a6",
+      "bytes": 10071
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/network-stage-fixtures.json",
+      "sha256": "743bb4a093b8b35a8722eb370e8a831565b541832bba28a251a593794086dae3",
+      "bytes": 2869
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/spec.mjs",
+      "sha256": "139060131d6c80e8822d2bf4b8956c7e1527a62cff6330fc0cdfef86bc2be4db",
+      "bytes": 13058
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/flow.mjs",
+      "sha256": "ba02a56b27ba63e8e6ed9992cd3454623c4b4f0164d0c4b57430ecfc9d7f8831",
+      "bytes": 8598
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/controller.mjs",
+      "sha256": "bad377f63eae4de243b753a8df1adbaa5234e7d9b4582a4c27f61486e69c6dd2",
+      "bytes": 86648
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/preflight.py",
+      "sha256": "8d12b709fe0ce650897fff2cf040261498897effa7e565d0b97ca906f116cc4f",
+      "bytes": 2042
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/audit.py",
+      "sha256": "b9caf36bfe757174e82cbc0c26386d8a57f9e94894ccaffb23306a77129b93f7",
+      "bytes": 14047
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/audit-test.py",
+      "sha256": "307745a3bab190689006ff1a56e0d7da34ef71afb1d9a547a9734d68da9f21e4",
+      "bytes": 9719
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/matrix.py",
+      "sha256": "a38b47854b977f6c5b27a1221c9ff1e7614d640348350e71eaaae82b5cc3ee6d",
+      "bytes": 5378
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/matrix-test.py",
+      "sha256": "98786bff51fbf8db277eaa79f24c01adac6747aa25ffcf7135311214b0deacca",
+      "bytes": 5229
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/audit-contract.txt",
+      "sha256": "7ec9d9f7d271fc6eb13192520bc52388d599a52793ac849a8edd5efe2f5b8bf9",
+      "bytes": 5035
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/host-test.mjs",
+      "sha256": "e4b31353ce2e520df38e437620fafdf1534940ccdf63a75c9ed4deca1a65aa0a",
+      "bytes": 36734
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/failure-trace.mjs",
+      "sha256": "c1deadb369aa8868e936ff988e45b69352e9951c66a2e8f7a9693e593bbad540",
+      "bytes": 10928
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/failure-trace-test.mjs",
+      "sha256": "88f317d53fd1d39be0f1c35af8f7556f0c20f7088d8e7d2c4e778e84c33a7cf7",
+      "bytes": 8560
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/failure-host.mjs",
+      "sha256": "bd6c6642215988ef7cc5b4904aa2261efb55aaf4043300c0512a0dfcf3e41452",
+      "bytes": 4659
+    },
+    {
+      "group": "current009",
+      "path": "current009/real-host/failure-host-test.mjs",
+      "sha256": "c5a57be780d3693389b97efa36d2884bafc16541279a5e9e449244867cf5d5ad",
+      "bytes": 9957
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/bootstrap-test.py",
+      "sha256": "dbd135f0057e6302dbbb536582ce997fbb53e0366fd19f33a2428e20a1f1d5cb",
+      "bytes": 2433
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/bootstrap.hba",
+      "sha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed",
+      "bytes": 272
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/bootstrap.sql",
+      "sha256": "a72b7931b62441772ca7a9a47a254708ac60997bc146e2cbbb20f128cdabe12d",
+      "bytes": 1861
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/bootstrap_spec.py",
+      "sha256": "4c6cf9c7bbc91714e4bbe9f531f5b730e89a3b05a8f018333b0dd5ba261ef0e5",
+      "bytes": 2046
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/bound-db-supervisor.sh",
+      "sha256": "51131647f569267c4296a9fe8a4d0119ace341c77bdbe569e70619b78b26c244",
+      "bytes": 11716
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/capacity-test.py",
+      "sha256": "2b3cc3e2d56e8f20815bd56f7059850915f685a321ec22d45eba9e3258e707b3",
+      "bytes": 4862
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/capacity.py",
+      "sha256": "d3f9257675b59aa4c3be77ad63833622eee951cd11f91425c8be7a57357fe58e",
+      "bytes": 15127
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/helper-contract.txt",
+      "sha256": "ebdd6b27e7a5bdca0340cd76fee531970ec7148aa15011a7547a50a5867beec1",
+      "bytes": 7240
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/helper-test.py",
+      "sha256": "54e2f9bcaa4b67055ce06ca02b0c160113794cfe06c21b726d978a6c781834fa",
+      "bytes": 14623
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/runtime.hba",
+      "sha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b",
+      "bytes": 703
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/suite-runner.py",
+      "sha256": "311d513725bbc4744a3944745dcc773baf8bdf1bb158f2296f84d6c954a6009e",
+      "bytes": 9204
+    },
+    {
+      "group": "current009",
+      "path": "current009/real/unit_init.py",
+      "sha256": "10871cd7f03bb8beba02082bbf31d794353bb37009ccb84a1d3f8e3ca7d116cc",
+      "bytes": 14701
+    },
+    {
+      "group": "current009",
+      "path": "current009/guards.mjs",
+      "sha256": "ddd9d22c55e4d00f145ea31ce43b47e468e04eb1eb32eeb094320db2853b29a0",
+      "bytes": 7145
+    },
+    {
+      "group": "current009",
+      "path": "current009/original-inspector.sh",
+      "sha256": "5cb6736f051857def52a4ca750bfaca9fffbe3fee6baccbe4f921ccf406d5f79",
+      "bytes": 1880
+    },
+    {
+      "group": "current009",
+      "path": "current009/original-proof.mjs",
+      "sha256": "fdc573c28420dc38b21c1b932051c03c810e64011d610b57415bd1af7bd99054",
+      "bytes": 2141
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/qa-paths.mjs",
+      "sha256": "85f764ec8f0e3e9239186de8090b96c5d60abfb8f3b62612de7bacfeca69c925",
+      "bytes": 2863
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/qa-protocol.mjs",
+      "sha256": "c2556d7dc56bb170ed48edba1d220d624208cc0f6ac37846ee3e84f4f5bdd2e7",
+      "bytes": 2870
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/guards.mjs",
+      "sha256": "5394d94e5adaefcf872662448248945b9bc0ddbd162e1cc1c4c5c46e874e582f",
+      "bytes": 7145
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/bootstrap.sql",
+      "sha256": "e51dc9ae885548056d2e74bf2dd6cfe9fb2d9ad14b8920bed0720a14130bc0c3",
+      "bytes": 1608
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/bound-db-supervisor.sh",
+      "sha256": "326a351332b67898eefebf542e38fccf549da71629bd473476364e44dac9e8d2",
+      "bytes": 11716
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/bootstrap.hba",
+      "sha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed",
+      "bytes": 272
+    },
+    {
+      "group": "current009",
+      "path": "current009/qa-resume-001/runtime.hba",
+      "sha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b",
+      "bytes": 703
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/tests/acl-module/vm-fixture.mjs",
+      "sha256": "c978731620db036bde992b747af187c6e305577dea55699b60560e8762b2fe6d",
+      "bytes": 3106
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/tests/acl-module/proposal-test.mjs",
+      "sha256": "e6c3e3ff686577f0e4adf3305218bfb70ce44b5562b322491ac4c05137933196",
+      "bytes": 6768
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/tests/acl-module/baseline/key-host.mjs",
+      "sha256": "5e1cd8fa78e570f6e5996f2aebb05795e45a8ee89abca8877707cbcbfdf1d191",
+      "bytes": 5399
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/tests/acl-module/entry-contract.json",
+      "sha256": "afd0097dd21f243dcd769a11b4b7c7238ddb466dacb78650b2b62d6c70577d88",
+      "bytes": 450
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/key-origin.mjs",
+      "sha256": "ab70c4c410c476755022300880ad238719324aa1a0a88c50a967cba8e7d84bea",
+      "bytes": 7710
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/key-host.mjs",
+      "sha256": "56e1af9c4d8b00dc1be6b8c63d82b1443ecbe1bb2cec743ad2bcb1d7ceb68520",
+      "bytes": 5720
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/key-lease.mjs",
+      "sha256": "1a2e16e7cb3f0c2e5da1cfac114ddce32185f5fa308548ad5263a9bb874523ab",
+      "bytes": 3613
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/keypg-test.mjs",
+      "sha256": "912da8ef0d4654dcbba4f910298ed11fea63d77c4a190db4d3d677cd1af27133",
+      "bytes": 29607
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/spec.mjs",
+      "sha256": "ccbe8d709e5d0675939a384aff7eff600b710a88b37c88a1e15755960fd75b52",
+      "bytes": 14477
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/runner.mjs",
+      "sha256": "c0c0b34ebb317a7af66211842c54f0ea5174d8a383261704b28b4f4d11ed1fc4",
+      "bytes": 20308
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/capture.mjs",
+      "sha256": "eb28a0a1a521946fe603a027bb1968ea6ff8af8a1a693c6fab9c9cf3aa0ff08d",
+      "bytes": 5397
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/writer.py",
+      "sha256": "822e38dc723c155c4da25a16adc35f4702f0476b7fb9c782f1c767446bc279e9",
+      "bytes": 2639
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/reader.py",
+      "sha256": "a0ef773720dfa1741b68d2aef4ea7420216848fdd205893175a3798e95ee34dc",
+      "bytes": 1439
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/reader-pg.py",
+      "sha256": "92edaea9c8bef3a2a81b118a89a91d3471d354ccc287400d30f9175d420ac5c0",
+      "bytes": 1540
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/test.mjs",
+      "sha256": "8047f6c437dc07101ae7b2a19c9f8ed072fa19fb0525d0edf7fb8e27bfbe6f7b",
+      "bytes": 17736
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/helper-test.py",
+      "sha256": "1fe457faf26c7b84cd8672c5ba7ebab532651c2e8f670481130ec6576fb03344",
+      "bytes": 5516
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/key-stage/capture-origin.json",
+      "sha256": "5849c04200db72de99fd2350d30b92e422a2da49473482fa284dda309e7cbf5c",
+      "bytes": 300
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/review-handoff.json",
+      "sha256": "aa4ab79997a18f9c5c08c599181a1c5a04e2c6e88394c51838ff443d5f500f25",
+      "bytes": 5200
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/review-contract.mjs",
+      "sha256": "dd53783b106a79e6b55a8e1cb8415e6162ad5be4d7a14368d1bcb383c407d5c5",
+      "bytes": 13499
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/review-facts.mjs",
+      "sha256": "e3631968344b1831d99c5984bf9743d335b0c6d3b765bac2c6505ddf901c178a",
+      "bytes": 28829
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/review-test.mjs",
+      "sha256": "3ff5a6f49e14a54edd63d4510b150c9847db9ae4fec3660c1f94f4b97f1785c7",
+      "bytes": 21704
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/stage-test.mjs",
+      "sha256": "819d4564ec747c4ab7c5c375e3b80774c11092b6cec813bd22c250e5401b79a6",
+      "bytes": 10071
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/network-stage-fixtures.json",
+      "sha256": "743bb4a093b8b35a8722eb370e8a831565b541832bba28a251a593794086dae3",
+      "bytes": 2869
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/spec.mjs",
+      "sha256": "8e0b21bf1cdb25297808865bb58b25d131f89fef260efe7b71fc3e349193e402",
+      "bytes": 13058
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/flow.mjs",
+      "sha256": "ba02a56b27ba63e8e6ed9992cd3454623c4b4f0164d0c4b57430ecfc9d7f8831",
+      "bytes": 8598
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/controller.mjs",
+      "sha256": "acd225b1e79d8b8d59a4034f27b393541388e2ab41545d67eff55ad40d0a82f4",
+      "bytes": 85730
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/preflight.py",
+      "sha256": "8d12b709fe0ce650897fff2cf040261498897effa7e565d0b97ca906f116cc4f",
+      "bytes": 2042
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/audit.py",
+      "sha256": "7608e6e3735b58c2ecbce8b8bcf387113c0ddbf86d196fe150b1970102afb18c",
+      "bytes": 14047
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/audit-test.py",
+      "sha256": "307745a3bab190689006ff1a56e0d7da34ef71afb1d9a547a9734d68da9f21e4",
+      "bytes": 9719
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/matrix.py",
+      "sha256": "a38b47854b977f6c5b27a1221c9ff1e7614d640348350e71eaaae82b5cc3ee6d",
+      "bytes": 5378
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/matrix-test.py",
+      "sha256": "98786bff51fbf8db277eaa79f24c01adac6747aa25ffcf7135311214b0deacca",
+      "bytes": 5229
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/audit-contract.txt",
+      "sha256": "36de44ced39557b370c0c5f2581a4cd278d4675c107a0a1d75d2f4ed6c93d41d",
+      "bytes": 5035
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/host-test.mjs",
+      "sha256": "e3d01c61a40c1ec185f079d0aa72e91fe932233b62e3c4f8d4add53e041770da",
+      "bytes": 34919
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/failure-trace.mjs",
+      "sha256": "c1deadb369aa8868e936ff988e45b69352e9951c66a2e8f7a9693e593bbad540",
+      "bytes": 10928
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/failure-trace-test.mjs",
+      "sha256": "88f317d53fd1d39be0f1c35af8f7556f0c20f7088d8e7d2c4e778e84c33a7cf7",
+      "bytes": 8560
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/failure-host.mjs",
+      "sha256": "bd6c6642215988ef7cc5b4904aa2261efb55aaf4043300c0512a0dfcf3e41452",
+      "bytes": 4659
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real-host/failure-host-test.mjs",
+      "sha256": "c5a57be780d3693389b97efa36d2884bafc16541279a5e9e449244867cf5d5ad",
+      "bytes": 9957
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/bootstrap-test.py",
+      "sha256": "dbd135f0057e6302dbbb536582ce997fbb53e0366fd19f33a2428e20a1f1d5cb",
+      "bytes": 2433
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/bootstrap.hba",
+      "sha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed",
+      "bytes": 272
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/bootstrap.sql",
+      "sha256": "0cd9d9ce2251f5bed6ad1c85b4eca50d15e22e237e7d9de9acf106d038a092e3",
+      "bytes": 1861
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/bootstrap_spec.py",
+      "sha256": "4c6cf9c7bbc91714e4bbe9f531f5b730e89a3b05a8f018333b0dd5ba261ef0e5",
+      "bytes": 2046
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/bound-db-supervisor.sh",
+      "sha256": "9dc94bdd15f744934808dc924ac9930f51cc659064ba077adfb6cb5e20caa535",
+      "bytes": 11716
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/capacity-test.py",
+      "sha256": "2b3cc3e2d56e8f20815bd56f7059850915f685a321ec22d45eba9e3258e707b3",
+      "bytes": 4862
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/capacity.py",
+      "sha256": "d3f9257675b59aa4c3be77ad63833622eee951cd11f91425c8be7a57357fe58e",
+      "bytes": 15127
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/helper-contract.txt",
+      "sha256": "27fca9dd58e57191c6da72f9fab66e611b73023f03d045eae042ad7d56779787",
+      "bytes": 7240
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/helper-test.py",
+      "sha256": "54e2f9bcaa4b67055ce06ca02b0c160113794cfe06c21b726d978a6c781834fa",
+      "bytes": 14623
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/runtime.hba",
+      "sha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b",
+      "bytes": 703
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/suite-runner.py",
+      "sha256": "311d513725bbc4744a3944745dcc773baf8bdf1bb158f2296f84d6c954a6009e",
+      "bytes": 9204
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/real/unit_init.py",
+      "sha256": "cbf7521c1dc42be724ac587389fe8779eeca545bf1e9c3b221b24b7914a8ade4",
+      "bytes": 14701
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/guards.mjs",
+      "sha256": "e4036949963e6b50e173fb4bba99404b781edbffc569769c798d70fab98f6901",
+      "bytes": 7145
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/original-inspector.sh",
+      "sha256": "5cb6736f051857def52a4ca750bfaca9fffbe3fee6baccbe4f921ccf406d5f79",
+      "bytes": 1880
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/original-proof.mjs",
+      "sha256": "fdc573c28420dc38b21c1b932051c03c810e64011d610b57415bd1af7bd99054",
+      "bytes": 2141
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/qa-paths.mjs",
+      "sha256": "85f764ec8f0e3e9239186de8090b96c5d60abfb8f3b62612de7bacfeca69c925",
+      "bytes": 2863
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/qa-protocol.mjs",
+      "sha256": "c2556d7dc56bb170ed48edba1d220d624208cc0f6ac37846ee3e84f4f5bdd2e7",
+      "bytes": 2870
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/guards.mjs",
+      "sha256": "52be5465d7c4780e03017695dd6731939f9072db98c60178563bd058131eba9e",
+      "bytes": 7145
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/bootstrap.sql",
+      "sha256": "e51dc9ae885548056d2e74bf2dd6cfe9fb2d9ad14b8920bed0720a14130bc0c3",
+      "bytes": 1608
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/bound-db-supervisor.sh",
+      "sha256": "326a351332b67898eefebf542e38fccf549da71629bd473476364e44dac9e8d2",
+      "bytes": 11716
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/bootstrap.hba",
+      "sha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed",
+      "bytes": 272
+    },
+    {
+      "group": "parent008",
+      "path": "parent008/qa-resume-001/runtime.hba",
+      "sha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b",
+      "bytes": 703
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/real-host/spec.mjs",
+      "sha256": "1681d9f037f9311f4f75500dfcfd19801867f23bb757aa0d1919f04a9a1f09a9",
+      "bytes": 10646
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/guards.mjs",
+      "sha256": "242b54812dba77d536c6cbbe9c0eaeadc9d90d5631069c01075580a94426662a",
+      "bytes": 7145
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/real-host/controller.mjs",
+      "sha256": "289d29a5af3f5b5650cdb2be511f824faa4fb3475078c93f533bf018bdbbc0cf",
+      "bytes": 42320
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/real-host/failure-trace.mjs",
+      "sha256": "c1deadb369aa8868e936ff988e45b69352e9951c66a2e8f7a9693e593bbad540",
+      "bytes": 10928
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/real-host/failure-host.mjs",
+      "sha256": "bd6c6642215988ef7cc5b4904aa2261efb55aaf4043300c0512a0dfcf3e41452",
+      "bytes": 4659
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/qa-resume-001/qa-protocol.mjs",
+      "sha256": "c2556d7dc56bb170ed48edba1d220d624208cc0f6ac37846ee3e84f4f5bdd2e7",
+      "bytes": 2870
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/qa-resume-001/guards.mjs",
+      "sha256": "242b54812dba77d536c6cbbe9c0eaeadc9d90d5631069c01075580a94426662a",
+      "bytes": 7145
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/real-host/flow.mjs",
+      "sha256": "4b82295342621e3d41d2a96255fad7feaaa14df6fecc4f67adfab0b0de159c08",
+      "bytes": 6881
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/qa-resume-001/qa-paths.mjs",
+      "sha256": "85f764ec8f0e3e9239186de8090b96c5d60abfb8f3b62612de7bacfeca69c925",
+      "bytes": 2863
+    },
+    {
+      "group": "historical003",
+      "path": "historical003/original-proof.mjs",
+      "sha256": "fdc573c28420dc38b21c1b932051c03c810e64011d610b57415bd1af7bd99054",
+      "bytes": 2141
+    }
+  ],
+  "knownBlocker": "Extractor CLI public-path containment and summary-size boundary unresolved",
+  "codeApproved": false,
+  "runtimeAllowed": false,
+  "logsReceiptsDumpsKeysPhotosIncluded": 0,
+  "archive": {
+    "path": "source-only.zip",
+    "sha256": "be6803a4bb68229e82f18c81ce9e1da39fb4f21e0a9dc11c199ee254829fccf1",
+    "bytes": 447159,
+    "readbackFilesMatched": 132
+  }
+}

@@ -1,0 +1,11 @@
+# Q029 — фактический результат
+
+ОдинPrepareexit0/PREPARED, одинRunexit1/FAIL KEY29_BIND. Run56958949-c2ff-4e53-b1f2-220cdd5d569d, package2a7d25669478d0f4c8671209187bde6abc96309401452639db0cca49cea9b5a2; resultSHA2565bed9539aeae8093db68e233f105c3e49e0a35b0d402f0e6b53beb08475ac4c1. Rootнаблюдалexit1.
+
+Независимый /root/q026_result_auditor: RESULT AUDIT APPROVED какзавершённыйFAIL, неqualificationPASS. Writerсоздан, meta/code0/code1/hostпроверены; локальныйbindguardотказалдоstart. Writerудалён, readerне создавался. Helperкоднеисполнялся, sourcebytesнечитались/копияне создавалась.
+
+ВсеDockerкомандыcomplete/exit0, ошибкаguardлокальная. KEY29_BIND объединяетнесколькопредикатов; hostresponseсохранёнтолькоhash, точныйотказавшийпредикатнеустановлен. Ниошибочныйmount, ниmissing/defaultfieldподтвержденыотдельно.
+
+Sameengineinfohashes; create/removeoutputhashesсовпали. Terminalcontainer/network/volumeinventoryпусты. File/directoryabsence=true, sourceunchanged=true, cleanup3718.9346мс, lifecycle29201.1202мс; capsсоблюдены. Before/aftercoremetadataACLfingerprintfb4d03406db88fdca1b2e6a5b95b81366ec4a827d5535c90f2607feb560ffa2aсовпал; observedatimeтакжесовпал. Этонеbyteimmutability; отдельныемetadata/absence snapshotsне сохранены, выполненныепроцедурыподтвержденыfrozenrunner.
+
+Pins/attempt/result/frozen8 иold42/7/7source/Q028resultсохранены. Повторов/nativeприаудитенебыло. PG/SQL/старыйсайт/VPSне затрагивались. ОдноразовыйQ029завершён; новыйRunнеразрешён.

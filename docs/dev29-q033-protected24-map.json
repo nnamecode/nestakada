@@ -1,0 +1,164 @@
+{
+  "scope": "Q033-PROTECTED24-MAP",
+  "authority": "VALIDATION_METADATA_ONLY",
+  "canonicalEvidence": {
+    "path": "work/dev29-bounded-20261104-resume007/protected-equivalence.json",
+    "sha256": "3fdb922f869898480f07b66f5755054a09bf5302cabb1864fbda5dbf3c2c1cb6",
+    "selector": "files[].path",
+    "protectedFiles": 24
+  },
+  "chain": [
+    {
+      "path": "work/dev29-bounded-20261104-resume007/revision004/static-protected-equivalence.json",
+      "sha256": "5043b330a86d9baad739ac1e68ae363ba096ff027e138493c4e45416bcfbb6ba"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume007/revision003/static-protected-equivalence.json",
+      "sha256": "2310e70ab8bc8f81e4d80f798cb9394c3c5d8543927d6df8578c8dbb46b2c275"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume007/revision002/static-protected-equivalence.json",
+      "sha256": "08f8f6c41bc3dd398e096b794997ba04370644f84805ee1714383e3e25128a04"
+    },
+    {
+      "path": "work/dev29-bounded-20261104-resume007/protected-equivalence.json",
+      "sha256": "3fdb922f869898480f07b66f5755054a09bf5302cabb1864fbda5dbf3c2c1cb6"
+    }
+  ],
+  "parentManifest": {
+    "path": "work/dev29-bounded-20261104-resume007/revision004/package-manifest.json",
+    "sha256": "0e3019819d46df35aa99edb4259b57a73c364467ffc656151866882cee7d367d",
+    "packageSha256": "efc7d76f8b76e1966ba958eb7d174671650140f251a8de170a8481832cb05460"
+  },
+  "pathBase": "parent suite root",
+  "registryBase": "real-host",
+  "mappingRule": "path.posix.relative(\"real-host\", slashNormalizedCanonicalPath)",
+  "canonicalSortedPathListSha256": "5a46dad4659360faa7c9dd1ee93bfaed0e600ca590143d905ce19f8c7e2e56a5",
+  "rowsSha256": "916efa74dc540bae79c840a4c00e9ec71332f32c7a3d9c2316718f485a693e21",
+  "count": 24,
+  "rows": [
+    {
+      "canonicalPath": "key-stage/helper-test.py",
+      "registryKey": "../key-stage/helper-test.py",
+      "parentRawSha256": "1fe457faf26c7b84cd8672c5ba7ebab532651c2e8f670481130ec6576fb03344"
+    },
+    {
+      "canonicalPath": "key-stage/reader.py",
+      "registryKey": "../key-stage/reader.py",
+      "parentRawSha256": "a0ef773720dfa1741b68d2aef4ea7420216848fdd205893175a3798e95ee34dc"
+    },
+    {
+      "canonicalPath": "key-stage/writer.py",
+      "registryKey": "../key-stage/writer.py",
+      "parentRawSha256": "822e38dc723c155c4da25a16adc35f4702f0476b7fb9c782f1c767446bc279e9"
+    },
+    {
+      "canonicalPath": "original-inspector.sh",
+      "registryKey": "../original-inspector.sh",
+      "parentRawSha256": "5cb6736f051857def52a4ca750bfaca9fffbe3fee6baccbe4f921ccf406d5f79"
+    },
+    {
+      "canonicalPath": "qa-resume-001/bootstrap.hba",
+      "registryKey": "../qa-resume-001/bootstrap.hba",
+      "parentRawSha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed"
+    },
+    {
+      "canonicalPath": "qa-resume-001/bootstrap.sql",
+      "registryKey": "../qa-resume-001/bootstrap.sql",
+      "parentRawSha256": "e51dc9ae885548056d2e74bf2dd6cfe9fb2d9ad14b8920bed0720a14130bc0c3"
+    },
+    {
+      "canonicalPath": "qa-resume-001/bound-db-supervisor.sh",
+      "registryKey": "../qa-resume-001/bound-db-supervisor.sh",
+      "parentRawSha256": "326a351332b67898eefebf542e38fccf549da71629bd473476364e44dac9e8d2"
+    },
+    {
+      "canonicalPath": "qa-resume-001/runtime.hba",
+      "registryKey": "../qa-resume-001/runtime.hba",
+      "parentRawSha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b"
+    },
+    {
+      "canonicalPath": "real-host/audit-test.py",
+      "registryKey": "audit-test.py",
+      "parentRawSha256": "307745a3bab190689006ff1a56e0d7da34ef71afb1d9a547a9734d68da9f21e4"
+    },
+    {
+      "canonicalPath": "real-host/audit.py",
+      "registryKey": "audit.py",
+      "parentRawSha256": "fff986ba2df18565aa36069788c5a7fc132c1b897f613c8770069e4ae90e1cac"
+    },
+    {
+      "canonicalPath": "real-host/matrix-test.py",
+      "registryKey": "matrix-test.py",
+      "parentRawSha256": "98786bff51fbf8db277eaa79f24c01adac6747aa25ffcf7135311214b0deacca"
+    },
+    {
+      "canonicalPath": "real-host/matrix.py",
+      "registryKey": "matrix.py",
+      "parentRawSha256": "a38b47854b977f6c5b27a1221c9ff1e7614d640348350e71eaaae82b5cc3ee6d"
+    },
+    {
+      "canonicalPath": "real-host/preflight.py",
+      "registryKey": "preflight.py",
+      "parentRawSha256": "8d12b709fe0ce650897fff2cf040261498897effa7e565d0b97ca906f116cc4f"
+    },
+    {
+      "canonicalPath": "real/bootstrap-test.py",
+      "registryKey": "../real/bootstrap-test.py",
+      "parentRawSha256": "dbd135f0057e6302dbbb536582ce997fbb53e0366fd19f33a2428e20a1f1d5cb"
+    },
+    {
+      "canonicalPath": "real/bootstrap.hba",
+      "registryKey": "../real/bootstrap.hba",
+      "parentRawSha256": "528cf35647c7df33b8366f51b1f49eaa07c6cdefc66ad179ea49bf13b437d0ed"
+    },
+    {
+      "canonicalPath": "real/bootstrap.sql",
+      "registryKey": "../real/bootstrap.sql",
+      "parentRawSha256": "c8f24375f0ad82790a710141bbf3f7ff6b672697449642e5b295d8dda3bffecb"
+    },
+    {
+      "canonicalPath": "real/bootstrap_spec.py",
+      "registryKey": "../real/bootstrap_spec.py",
+      "parentRawSha256": "4c6cf9c7bbc91714e4bbe9f531f5b730e89a3b05a8f018333b0dd5ba261ef0e5"
+    },
+    {
+      "canonicalPath": "real/bound-db-supervisor.sh",
+      "registryKey": "../real/bound-db-supervisor.sh",
+      "parentRawSha256": "1cb28f5fb9aae64b5d4944ea378f15450cf396bb81d10f744e6260b8c4cd18a8"
+    },
+    {
+      "canonicalPath": "real/capacity-test.py",
+      "registryKey": "../real/capacity-test.py",
+      "parentRawSha256": "2b3cc3e2d56e8f20815bd56f7059850915f685a321ec22d45eba9e3258e707b3"
+    },
+    {
+      "canonicalPath": "real/capacity.py",
+      "registryKey": "../real/capacity.py",
+      "parentRawSha256": "d3f9257675b59aa4c3be77ad63833622eee951cd11f91425c8be7a57357fe58e"
+    },
+    {
+      "canonicalPath": "real/helper-test.py",
+      "registryKey": "../real/helper-test.py",
+      "parentRawSha256": "54e2f9bcaa4b67055ce06ca02b0c160113794cfe06c21b726d978a6c781834fa"
+    },
+    {
+      "canonicalPath": "real/runtime.hba",
+      "registryKey": "../real/runtime.hba",
+      "parentRawSha256": "4c2aa75544a7b6ce52c4a9aa2d18836a607c8f4a148d334bef8df314778d891b"
+    },
+    {
+      "canonicalPath": "real/suite-runner.py",
+      "registryKey": "../real/suite-runner.py",
+      "parentRawSha256": "311d513725bbc4744a3944745dcc773baf8bdf1bb158f2296f84d6c954a6009e"
+    },
+    {
+      "canonicalPath": "real/unit_init.py",
+      "registryKey": "../real/unit_init.py",
+      "parentRawSha256": "fa23caeeaa6fcb2ea40b03c55542021eb6e5ea679ed5a8543e1bd6540be51e9b"
+    }
+  ],
+  "parentRawMatches": 24,
+  "childValidationPerformed": false,
+  "runtimeAuthorized": false
+}

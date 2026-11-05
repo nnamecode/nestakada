@@ -1,0 +1,4 @@
+# Preserve exact bytes of hash-pinned DEV-29 documents.
+docs/dev29* -text
+tools/dev29/checkpoints/**/manifest.json -text
+tools/dev29/checkpoints/**/source-only.zip binary

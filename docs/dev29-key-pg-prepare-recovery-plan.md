@@ -1,0 +1,41 @@
+# DEV29-Q032 — предложение единственной дополнительной Prepare
+
+Статус: ПРЕДЛОЖЕНИЕ. Нужны независимое ревью этого плана и новый явный ответ владельца. До него дополнительная Prepare, Readiness и Run запрещены. Публичная проверка предпосылок и завершение уже разрешённого machine review выполняются без runtime.
+
+## Основание и неизменный scope
+
+D-528/Q031 и final plan SHA256 df2c00f148f581c6f4113ccfe2febf4c76d385bfd2e36ccca87b3c44be184311 остаются архитектурой. A10 прямо требует «onePrepare и atmostoneRun либо CancelPrepared». OPERATOR: «Prepare — at most once; stage absent; private origin tag; signed plan last; validity 900 seconds.» Исключение при precondition failure не согласовано.
+
+Единственная Prepare entry001 завершилась exit1/HOST_ENTRY_FAILED, stdout73bytes/stderr0, до private creation: первым qualification(REHEARSAL) требовал отсутствующий rehearsal-NOAUTHORITY/independent-review.json. Human aggregate audit был APPROVED, root ошибочно не завершил mandatory machine handoff. Invocation израсходована, хотя приватная подготовка не началась; отсутствие sideeffects не сбрасывает лимит.
+
+Forensic source/stat proof: ART work/dev29-bounded-20261104-resume007/real-host/run, PRIV work/dev15-20261102/private/bound29-35d97e6c-real, OUT work/dev15-20261102/private/key29-35d97e6c-8049-48c4-8ab2-0ea3bdce9ed1 отсутствуют. Tree/tag/plan/copy0, cleanup/unlink0; Readiness/Run/actualopinions0. Private bytes/hash/ACL не читались forensic аудитом. Отчёт: docs/dev29-key-pg-prepare-failure-review.md.
+
+Повторная архитектура, новая COW/RunId, изменение source/runner/ACL, новые образы и extra Run этим не предлагаются. Та же COW work/dev29-bounded-20261104-resume007, runId35d97e6c-8049-48c4-8ab2-0ea3bdce9ed1, current package55 efc7d76f8b76e1966ba958eb7d174671650140f251a8de170a8481832cb05460. Code APPROVED/R1–R7 CLOSED, 209distinctPASS. Active code-review SHA f6b9a0b62b5ad5dab8b02fa3d5a63b7521415d55a8ba320d494ec16a680bc3a4 сохраняется неизменным; owner line D528 не переписывать под Q032. Новый ответ владельца фиксирует только дополнительный entry grant.
+
+## Конкретные gates и порядок
+
+R32-P01 (до запроса и повторно после ответа). PUBLIC prerequisite validation без Prepare/Readiness/Run/Docker/private reads: current55/source package, code-review marker/hash, final plan/owner binding, result/ack raw hashes, точная machine-review schema/role/data. Повторный source-derived exists/stat только ART/PRIV/OUT: если появились неучтённые объекты — STOP, не удалять и не считать owned. Report выше должен подтвердить state0 и публичную готовность. Это не private/native execution.
+
+R32-P02. Завершённый собственный qualification handoff pinned reviewer q025_reviewer, не root и не q026 от его имени: rehearsal-NOAUTHORITY/independent-review.json, EXACT9 fields scope/authority/reviewer/status/runId/packageSha256/resultSha256/ackSha256/findings. Scope BOUND29-REHEARSAL-REVIEW, authority NOAUTHORITY, reviewer /root/q025_reviewer, status APPROVED после собственного result-review, findings[]. ResultSha256 RAW result9a963c58da7dedc8bcfe5fcd266e163b9b21f358f99769cfb43cf491dfad64a4; ackSha256 RAW recorder-ack4037a9d48b940f85347e770e0b996c8ca1627d05f50d93f1f3acd4bd8ab87038. Собственный wx/readback artifact SHA3553db20fd7f0c9672dc603e80f0b7c02a2d92c034b034fb4a568f06508d1753,420bytes; независимо проверить перед новым вопросом. Никаких signature/schemaVersion/observedExit extras или root-copy. Rehearsal не повторяется.
+
+R32-P03. Только после APPROVED этого плана и нового явного «Разрешаю DEV29-Q032» — ровно ОДНА дополнительная CLI Prepare тем же fixed Node и controller. Сохранить entry001 stdout/stderr; новые outputs root-prepare-002.stdout/stderr, без overwrite старых. Все FS/child launches штатно require_escalated, ACL оригиналов не менять. При FAIL нет второй попытки/смены пути/RunId/снятия guard; сохранить закрытый код/metadata и провести независимый result audit. Отсутствие sideeffects не даёт следующую invocation.
+
+R32-P04. Только Prepare exit0 + подписанный public plan опубликован последним: независимое prepared-result review (q026_result_auditor), при необходимости штатный read-only InspectPrepared. Он является metadata summary, а не одобрением; source не содержит prepared-review.json parser, такой файл не придумывать. Проверять plan/current pins, tag metadata32B/ACL/identity, stage absent, prospective8 binds/900signedUTC validity без публикации bytes/tag/tagHash/TLS content digest. Полный integrity guard сохраняется. До PREPARED review APPROVED следующий шаг закрыт.
+
+R32-P05. Один оставшийся Readiness по прежнему пределу whole-check≤10s, без новых настроек/образов/ресурсов/SQL. Результаты ART/readiness/transport-result.json и ART/readiness/recorder-ack.json — signed envelopes. Не повторять при timeout/FAIL, не увеличивать лимит и не подменять проверку ручным Docker loop.
+
+R32-P06. Независимый аудит Readiness, затем собственный machine handoff pinned q025_reviewer в ART/readiness/independent-review.json (EXACT те же9 keys, scope BOUND29-READINESS-REVIEW, authority NOAUTHORITY, reviewer /root/q025_reviewer, status APPROVED/findings[] только после фактов). resultSha256 и ackSha256 — RAW bytes соответствующих SIGNED envelopes, не payload/value hashes. Root/q026 не пишут мнение от чужого имени. Run первым qualification(READINESS) проверяет этот файл; отсутствие файла запрещает dispatch.
+
+R32-P07. Финальное независимое dispatch review и запись координатора — внешние gates. Source не содержит входного dispatch-review.json parser; лишнего файла не создавать вместо одобрения. Перед Run все прежние guards/pins/owner/validity/current facts и machine artifacts должны пройти. Prepare→Run≤900signedUTC без renew; actual recorder/reviewer warm READY до таймера. При непрохождении gates/истечении до RUN claim — один штатный CancelPrepared≤30s с cancellation marker перед owned tag unlink, signed exclusive lifecycle claim; не стирать unknown/foreign objects и не обещать crash autoerase. После RUN claim Cancel не пересекается с active Run.
+
+R32-P08. Максимум ОДИН исходный условный Run Q031, всё ещё unspent. Q032 НЕ добавляет новый Run сверх него. Fresh staging внутри Run до INIT mint/network/DB; full Prepare-time HMAC/host-key continuity и same qualified8 files обязательны. Copylease3600/work3000/cleanup600 и все прежние phase/admission/VM/resource/capture limits неизменны; никакого продления/runner bypass. Actual START/INIT/PAYLOAD-C/C/PAYLOAD-T/T — отдельные12-field OWN wx sources q025_reviewer/direct PublishReview,120s/parentwins. resultSha256 actual request VALUE, в отличие от RAW qualification hashes. OPINION_RECORDED не равно admission, root не копирует/не подписывает мнения.
+
+R32-P09. INIT/C/T (1000/1001 +139) только при полном успехе предыдущих допусков, обязательный rollback/последовательные UNIT/MAIN witnesses/RO original-after. Старые5+8 не повторяются. Terminal allintents/holders/original/budget/owned0 before qualified copy/tag unlink; pinned identity/unknown→UNPROVEN/retain. Остановка и независимый result/corpus/cleanup audit в любом исходе. Не выдавать bounded Run за завершение всех P29-A/leases/crash/APP.
+
+R32-P10. Корпус/MAIN/архивы/старые checkpoints/opinions/failed entry001 сохранить. Ни старого сайта, ни VPS, ни публикации продукта/Git push. При первой реальной ошибке сообщить и новое условие повтора; второй эквивалентный отказ→AGENTS STOP/no3. NAV_NOT_FOUND/EOF при нормальной навигации не превращать в аварии; known public source raw800/precheck1000, без индексов/JSON crop. Без нового owner reply runtime не начинать.
+
+## Приёмка предложения
+
+R32-A01: независимый forensic stat0/source-first-qualification proof; A02: own9field machine artifact complete и independently valid; A03: current55/code/plan unchanged; A04: новый entry grant только после ответа, extraPrepare count≤1; A05: typed remaining prepared/readiness/dispatch contracts учтены без фиктивных файлов; A06: сырой и VALUE domains различены; A07: новый Run не добавлен; A08:900/3600/600/120/10/30 и ресурсы без увеличения; A09: uncertain identity не удаляется; A10: исходные site/VPS/corpus/failed evidence unchanged.
+
+До owner approval допустимы только публичная валидация, документация и независимое ревью. Это конкретный ограниченный план восстановления handoff, не разрешение на retry.

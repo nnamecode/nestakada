@@ -1,0 +1,10 @@
+# Q029 — независимое code review
+
+KEY29-CODE-REVIEW CHANGES_REQUIRED
+
+Пакет7a0d2d627fb828bd6eef5175c73beee429da38c759cce1786535d552ab6f014a. 2026-11-04, /root/q026_result_auditor. Nativeдопускзакрыт, код/тесты22PASSне заменяютreview.
+
+- KEY29-R1/P2, runner.mjs:33/20: mkdir выполнен дополученияdiridentity; post-metadata/readdirthrow оставляетdirnull и finallyложноfileAbsent/directoryAbsent=true. Нуженdirectoryintentдоmkdir; неизвестнаяownership→actualabsenceproofлибоUNPROVEN, небезопасноеудалениезапрещено. Добавитьpost-mkdirfailurecase.
+- KEY29-R2/P1, runner.mjs:20: unresolvedcreateIntent+failedrecoverможетпривестикstageunlinkпослеemptyinventory. Incomplete/abandonedcreateможетзавершитьсяпоздно; inventoryне закрываетintent. Блокироватьhostunlink/даватьUNPROVENдодоказанногоисхода; безcreate/startповторов. Добавитьincompletecreate→failedrecover→emptyinventorycase.
+
+Writerboundedread/write/readback иprivatetransportпрочитаны, содержимоеключаневыводят. Доисправленияобоихcleanupblockersapprovalнет. Рецензентфайлынеменял, native/ключи/тестынезапускал. Старыйfrozenпакет долженостатьсяcheckpoint передfix; затемreviewтолькозатронутыхчастейиновыхhashes.

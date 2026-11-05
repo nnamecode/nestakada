@@ -1,0 +1,5 @@
+# Q029 — исправление замечаний
+
+Итог D-517 (2026-11-04): Q029R1/R2fixвыполнен, newfrozen8package2a7d25669478d0f4c8671209187bde6abc96309401452639db0cca49cea9b5a2. Измененытолькоrunner/test,6sourcebyteidentical. Checkpoint15manifestaceeb87eb6823ad1e3e7b43c7a0b5cfec54633b2213610c260dc52de608fa00c; rootсверил15checkpoint/8newSHA: MATCH. Current syntax2/static/Node13PASSskip0; Python11baselinePASSпереиспользованпонеизменнымbytes, не24новыхexecutions. ПервоеошибочноеsandboxmkdirEPERM исправленооднойштатнойrequire_escalatedпопыткойPASS, ACLнеменялись/третьейпопыткинете. Targetedindependentreviewожидается, nativeдопускещёзакрыт. Prepare/privateDir/keyreads/copy/native0; PG/SQL/старыйсайт/VPSисключены. DEV-29 около35%, этап8 около31%.
+
+KEY29-R1: directoryintentдоmkdir, unknownownershipнеудаляется, absenceтолькофактическаялибoUNPROVEN. KEY29-R2: unresolvedcreateIntentблокируетstageunlinkдажеприemptyinventory. НовыеnegativecasesвcurrentNode13. Profile/helper/captureкодне менялся. Независимыезамечанияисходногопакетасохраненывdev29-key-staging-review-findings-001.md. Currentapprovalещёнет.
