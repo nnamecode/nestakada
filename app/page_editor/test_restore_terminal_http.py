@@ -50,9 +50,11 @@ class RestoreTerminalHttpTests(TransactionTestCase):
         body={'generation':'1','operation_id':str(uuid4()),'preparation':prepared['preparation'],
               'confirm_input_replacement':'yes',
               'csrfmiddlewaretoken':client.cookies[settings.CSRF_COOKIE_NAME].value}
-        response=self.form_post(client,path,body)
-        self.assertEqual(response.status_code,200)
-        stage=response.context['prepared']['stage']
+        result=V.stage_restore(
+            actor=actor,page_id=self.page.pk,
+            preparation=prepared['preparation'],confirm_input_replacement=True,
+            expected_generation=1,operation_id=body['operation_id'])
+        stage=RestoreStage.objects.get(pk=result['result_id'])
         return {'stage':stage,'path':path,'body':body,'source':source,'client':client}
 
     def domain(self):

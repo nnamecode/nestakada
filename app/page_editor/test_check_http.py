@@ -13,7 +13,6 @@ from django.db import connection
 from django.test import Client, TransactionTestCase, override_settings
 from django.urls import include, path
 
-from accounts.models import AuthSession
 from accounts.services import bootstrap_owner, create_employee, set_grant, set_active, AUTH_LOCK
 from audit.constants import Result
 from audit.models import AuditEvent
@@ -193,11 +192,8 @@ class EditorCheckHttpTests(TransactionTestCase):
                 self.assert_error(self.post(self.employee_client, self.payload(changes)), 403, "EDITOR_FIELDS_FORBIDDEN")
         self.assertEqual(self.state(), before)
 
-    def test_repeated_forbidden_field_posts_increment_session_and_bound_audit(self):
+    def test_repeated_forbidden_field_posts_write_bounded_safe_audit(self):
         before = self.state()
-        session = AuthSession.objects.get(pk=self.employee_client.session.session_key)
-        initial_count = session.denied_page_count
-        self.assertEqual(initial_count, 0)
         events = AuditEvent.objects.filter(code="SEC_PERMISSION_DENIED", actor_id=self.employee.pk)
         initial_events = events.count()
         canary = "FORBIDDEN_FIELD_SYNTHETIC_INPUT_CANARY"
@@ -205,10 +201,7 @@ class EditorCheckHttpTests(TransactionTestCase):
             response = self.post(self.employee_client, self.payload({"title":canary}))
             self.assert_error(response, 403, "EDITOR_FIELDS_FORBIDDEN")
             self.assertNotIn("checkReceipt", response.json())
-            session.refresh_from_db()
-            self.assertEqual(session.denied_page_count, initial_count + index + 1)
-            self.assertFalse(session.denial_count_lower_bound)
-            self.assertEqual(events.count(), initial_events + 1)
+            self.assertEqual(events.count(), initial_events + index + 1)
         event = events.latest("id")
         self.assertEqual(event.occurrence_count, 1)
         self.assertFalse(event.count_is_lower_bound)

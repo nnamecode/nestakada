@@ -4,9 +4,9 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError
+from django.contrib.sessions.models import Session
 from django.db import connection
 from django.test import TransactionTestCase, override_settings
-from accounts.models import AuthSession
 from accounts.services import set_grant
 from page_versions import services as V
 from page_versions.models import PageRevision, VersionBasePin
@@ -120,7 +120,8 @@ class TerminalUiHttpTests(TransactionTestCase):
         for message in MESSAGES.values():self.assertNotIn(message.encode(),denied.content)
         self.assertEqual(self.domain(),before)
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=True)
-        AuthSession.objects.filter(pk=self.employee_client.session.session_key).delete()
+        Session.objects.filter(
+            pk=self.employee_client.session.session_key).delete()
         before=self.domain();ended=self.employee_client.get(self.stage_path(item['stage'].pk))
         self.assertEqual(ended.status_code,401);self.no_candidate(ended)
         self.assertEqual(self.domain(),before)

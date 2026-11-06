@@ -1,4 +1,4 @@
-"""Independent SH1 real-child HTTP checks; accepted writes remain gated."""
+"""Independent SH1 real-child HTTP checks for legacy and REF-3 paths."""
 import base64
 import hashlib
 import importlib
@@ -17,7 +17,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core import signing
-from django.db import connection, IntegrityError, transaction
+from django.db import connection, IntegrityError, models, transaction
 from django.db.migrations.loader import MigrationLoader
 from django.test import TransactionTestCase, override_settings
 
@@ -135,9 +135,11 @@ class SharedHttpTests(TransactionTestCase):
         self.assertEqual(len(slots), 1, 'SHARED_CANARY_SLOT_COUNT')
         self.assertEqual(''.join(slots[0].itertext()), expected)
 
-    def checked(self, kind, html=None):
+    def checked(self, kind, html=None, context=None):
         before = self.state()
         value = self.payload(kind, html)
+        if context is not None:
+            value.update(context)
         original_popen, children = subprocess.Popen, []
 
         def capture(*args, **kwargs):
@@ -289,7 +291,7 @@ class SharedHttpTests(TransactionTestCase):
             path.write_bytes(original)
         self.checked('footer')
 
-    def test_unknown_reservation_profile_denies_real_draft_and_apply_without_writes(self):
+    def test_simple_draft_does_not_require_legacy_reservation_profile(self):
         for kind in ('header', 'footer'):
             value, checked = self.checked(kind)
             if checked['normalisationChanged']:
@@ -297,16 +299,142 @@ class SharedHttpTests(TransactionTestCase):
                 self.assertFalse(checked['normalisationChanged'])
             value.update(html=checked['normalisedHtml'], checkReceipt=checked['checkReceipt'],
                          operationId=str(uuid4()))
-            for action in ('draft', 'apply'):
-                with self.subTest(kind=kind, action=action):
-                    before = self.state()
-                    response = self.post_shared(kind, action, value)
-                    self.assertEqual(response.status_code, 503, 'UNKNOWN_PROFILE_ALLOWED_WRITE')
-                    self.assertEqual(response.json()['code'], 'SHARED_BUDGET_PROFILE_UNAVAILABLE')
-                    self.assertNotIn(b'resultId', response.content)
-                    self.assert_private(response)
-                    self.assertEqual(self.state(), before, 'UNKNOWN_PROFILE_PARTIAL_MUTATION')
-                    self.checked(kind)
+            response = self.post_shared(kind, 'draft', value)
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            from shared_content.models import SharedDraft, SharedReceipt
+            row = SharedDraft.objects.get(pk=result['resultId'])
+            self.assertEqual(row.storage_kind, 'inline')
+            self.assertEqual(row.html, checked['normalisedHtml'])
+            self.assertFalse(SharedReceipt.objects.filter(pk=value['operationId']).exists())
+            self.assert_private(response)
+
+    def test_simple_apply_uses_inline_db_without_legacy_reservation_profile(self):
+        from shared_content.models import (SharedBlock, SharedIdentityReservation,
+                                           SharedReceipt, SharedRestoreStage,
+                                           SharedRevision)
+        rows = {}
+        for kind in ('header', 'footer'):
+            value, checked = self.checked(kind)
+            if checked['normalisationChanged']:
+                value, checked = self.checked(kind, checked['normalisedHtml'])
+            operation_id = str(uuid4())
+            value.update(html=checked['normalisedHtml'], checkReceipt=checked['checkReceipt'],
+                         operationId=operation_id)
+            response = self.post_shared(kind, 'apply', value)
+            self.assertEqual(response.status_code, 200)
+            result = response.json()
+            self.assertEqual(result['operationId'], operation_id)
+            self.assertEqual(result['resultCode'], 'applied')
+            row = SharedRevision.objects.get(pk=result['resultId'])
+            rows[kind] = row
+            self.assertEqual(row.storage_kind, 'inline')
+            self.assertEqual(row.html, checked['normalisedHtml'])
+            self.assertEqual(SharedBlock.objects.get(kind=kind).current_revision_id, row.pk)
+            self.assertFalse(SharedReceipt.objects.filter(pk=operation_id).exists())
+            self.assertTrue(SharedIdentityReservation.objects.filter(
+                pk=row.pk, kind='sharedrevision', block_id=row.block_id).exists())
+            self.assertEqual(AssetUsage.objects.filter(
+                kind='shared_block', consumer_id=row.pk).count(), 4 if kind == 'header' else 1)
+        from shared_content.public import HostContext, render_shared
+        rendered = render_shared(
+            capture_host=lambda: HostContext('0' * 64, ()),
+            media_url=lambda file_id: '/media/%s/' % file_id,
+            static_url=lambda name, digest: '/static/%s?digest=%s' % (name, digest),
+        )
+        self.assertIn('SHARED-CANARY', rendered.header_html)
+        self.assertIn('SHARED-CANARY', rendered.footer_html)
+
+        source = rows['header']
+        token = self.owner_client.cookies[settings.CSRF_COOKIE_NAME].value
+        restore_url = '/manage/shared/header/versions/%s/restore/' % source.pk
+        refused = self.owner_client.post(restore_url, {
+            'expectedCurrentId': str(source.pk), 'confirmed': 'no'},
+            HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(refused.status_code, 400)
+        self.assertEqual(SharedBlock.objects.get(kind='header').current_revision_id, source.pk)
+        restored_response = self.owner_client.post(restore_url, {
+            'expectedCurrentId': str(source.pk), 'confirmed': 'yes'},
+            HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(restored_response.status_code, 302)
+        restored = SharedRevision.objects.get(
+            pk=SharedBlock.objects.get(kind='header').current_revision_id)
+        self.assertNotEqual(restored.pk, source.pk)
+        self.assertEqual(restored.source_revision_id, source.pk)
+        self.assertEqual(restored.storage_kind, 'inline')
+        self.assertFalse(SharedRestoreStage.objects.exists())
+
+        from audit.models import AuditEvent
+        rejected_html = '<header>{{7*7}}</header>'
+        models.QuerySet(model=SharedRevision, using='default').filter(pk=source.pk).update(
+            html=rejected_html,
+            payload_hash=hashlib.sha256(rejected_html.encode()).hexdigest())
+        before = {
+            'current': SharedBlock.objects.get(kind='header').current_revision_id,
+            'revisions': SharedRevision.objects.count(),
+            'identities': SharedIdentityReservation.objects.count(),
+            'usages': AssetUsage.objects.count(),
+            'audit': AuditEvent.objects.count(),
+        }
+        rejected = self.owner_client.post(restore_url, {
+            'expectedCurrentId': str(restored.pk), 'confirmed': 'yes'},
+            HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(rejected.status_code, 400)
+        self.assertEqual({
+            'current': SharedBlock.objects.get(kind='header').current_revision_id,
+            'revisions': SharedRevision.objects.count(),
+            'identities': SharedIdentityReservation.objects.count(),
+            'usages': AssetUsage.objects.count(),
+            'audit': AuditEvent.objects.count(),
+        }, before)
+
+    def test_simple_current_supports_simple_draft_and_disables_new_legacy_stages(self):
+        from shared_content import profiles
+        from shared_content.models import SharedDraft, SharedReceipt
+
+        def simple(kind):
+            from shared_content.models import SharedBlock
+            current = SharedBlock.objects.get(kind=kind).current_revision_id
+            context = {'baseRevisionId': str(current) if current else None,
+                       'sourceMode': 'current', 'draftBasis': None, 'stageId': None}
+            value, checked = self.checked(kind, context=context)
+            if checked['normalisationChanged']:
+                value, checked = self.checked(kind, checked['normalisedHtml'], context=context)
+            value.update(html=checked['normalisedHtml'], checkReceipt=checked['checkReceipt'],
+                         operationId=str(uuid4()))
+            response = self.post_shared(kind, 'apply', value)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(SharedReceipt.objects.filter(pk=value['operationId']).exists())
+            return response.json(), checked['normalisedHtml']
+
+        with profiles.calibration_scope():
+            footer, _ = simple('footer')
+            draft_context = {'baseRevisionId': footer['resultId'], 'sourceMode': 'current',
+                             'draftBasis': None, 'stageId': None}
+            draft_value, checked = self.checked('footer', context=draft_context)
+            if checked['normalisationChanged']:
+                draft_value, checked = self.checked(
+                    'footer', checked['normalisedHtml'], context=draft_context)
+            draft_value.update(html=checked['normalisedHtml'], checkReceipt=checked['checkReceipt'],
+                               operationId=str(uuid4()))
+            draft_response = self.post_shared('footer', 'draft', draft_value)
+            self.assertEqual(draft_response.status_code, 200)
+            draft = SharedDraft.objects.get(pk=draft_response.json()['resultId'])
+            self.assertEqual(draft.storage_kind, 'inline')
+            self.assertFalse(SharedReceipt.objects.filter(pk=draft_value['operationId']).exists())
+            self.assertEqual(draft_value['baseRevisionId'], footer['resultId'])
+
+            before = self.state()
+
+            def forbidden_read(*args, **kwargs):
+                raise AssertionError('LEGACY_RESTORE_BODY_READ')
+
+            prepared = self.post_shared(
+                'header', 'restore/prepare', {}, read=forbidden_read)
+            self.assertEqual(prepared.status_code, 410)
+            self.assertEqual(prepared.json()['code'], 'SHARED_LEGACY_RESTORE_DISABLED')
+            self.assertTrue(prepared.json()['operationNotStarted'])
+            self.assertEqual(self.state(), before)
 
     def test_unknown_kind_not_a_third_shared_block(self):
         before = self.state()
@@ -314,16 +442,18 @@ class SharedHttpTests(TransactionTestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(self.state(), before)
 
-    def test_compatible_restore_prepare_unknown_profile_refuses_without_stage_or_publication(self):
-        source = self.seed_revision('header')
+    def test_legacy_restore_prepare_is_disabled_before_body_read_or_write(self):
         before = self.state()
-        response = self.post_shared('header', 'restore/prepare', {
-            'protocol': 'shared-editor-v1', 'generation': 1, 'baseRevisionId': None,
-            'sourceRevisionId': str(source.pk), 'operationId': str(uuid4()), 'confirmReplace': True})
-        self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.json()['code'], 'SHARED_BUDGET_PROFILE_UNAVAILABLE')
+
+        def forbidden_read(*args, **kwargs):
+            raise AssertionError('LEGACY_RESTORE_BODY_READ')
+
+        response = self.post_shared(
+            'header', 'restore/prepare', {}, read=forbidden_read)
+        self.assertEqual(response.status_code, 410)
+        self.assertEqual(response.json()['code'], 'SHARED_LEGACY_RESTORE_DISABLED')
+        self.assertTrue(response.json()['operationNotStarted'])
         self.assertEqual(self.state(), before)
-        self.checked('header')
 
     def seed_revision(self, kind, *, sequence=1, identity=None):
         from shared_content.models import SharedBlock, SharedRevision
@@ -487,7 +617,8 @@ class SharedHttpTests(TransactionTestCase):
                                 'BOUNDED_COUNT_FIXTURE_TOO_LARGE')
         self.assertEqual(SharedRevision.objects.count(), 10000)
 
-    def test_actual_10000_rows_count_full_refuses_10001_without_pruning_or_receipt(self):
+    def test_actual_10000_rows_do_not_gate_inline_apply_or_prune_history(self):
+        from shared_content.models import SharedReceipt, SharedRevision
         from shared_content import quota
         self.seed_count_full()
         measured = quota.measure()
@@ -495,19 +626,22 @@ class SharedHttpTests(TransactionTestCase):
         self.assertLess(measured['usedBytes'], 32 * 1024 * 1024,
                         'BOUNDED_COUNT_FIXTURE_TOO_LARGE')
         for kind in ('header', 'footer'):
+            before_count = SharedRevision.objects.count()
+            anchor = SharedRevision.objects.order_by('created_at', 'pk').values_list('pk', flat=True).first()
             value, checked = self.checked(kind)
             if checked['normalisationChanged']:
                 value, checked = self.checked(kind, checked['normalisedHtml'])
                 self.assertFalse(checked['normalisationChanged'])
+            operation_id = str(uuid4())
             value.update(html=checked['normalisedHtml'], checkReceipt=checked['checkReceipt'],
-                         operationId=str(uuid4()))
-            before = self.state()
-            # Exercise the count gate with the guarded unit-only candidate profile;
-            # ordinary unit runtime correctly refuses an unavailable profile first.
+                         operationId=operation_id)
+            # The approved inline path has no legacy quota/admission count gate.
             from shared_content import profiles
             with profiles.calibration_scope():
                 response = self.post_shared(kind, 'apply', value)
-            self.assertEqual(response.status_code, 409)
-            self.assertEqual(response.json()['code'], 'SHARED_HISTORY_COUNT_FULL')
-            self.assertEqual(self.state(), before)
-            self.assertEqual(quota.measure()['snapshotCount'], 10000)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['resultCode'], 'applied')
+            self.assertEqual(SharedRevision.objects.count(), before_count + 1)
+            self.assertTrue(SharedRevision.objects.filter(pk=anchor).exists())
+            self.assertFalse(SharedReceipt.objects.filter(pk=operation_id).exists())
+        self.assertEqual(quota.measure()['snapshotCount'], 10002)

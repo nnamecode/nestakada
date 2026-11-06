@@ -4,9 +4,9 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from django.db import DatabaseError
+from django.contrib.sessions.models import Session
 from django.test import TransactionTestCase, override_settings
 
-from accounts.models import AuthSession
 from accounts.services import set_grant
 from audit.models import AuditEvent
 from content.models import Route
@@ -73,8 +73,8 @@ class EditorSaveHttpTests(TransactionTestCase):
         self.assertNotIn("OWNER_DRAFT_PRIVATE_CANARY", row.payload["main_text"])
         self.assertEqual(list(OwnerDraft.objects.values()), drafts)
         self.assertEqual(list(Route.objects.values()), routes)
-        receipt = OperationReceipt.objects.get(pk=value["operationId"])
-        self.assertEqual(len(receipt.editor_request_fingerprint), 64)
+        self.assertFalse(OperationReceipt.objects.filter(
+            pk=value["operationId"]).exists())
         self.assertIn("no-store", response["Cache-Control"])
 
     def test_employee_real_text_save_keeps_owner_fields(self):
@@ -99,19 +99,18 @@ class EditorSaveHttpTests(TransactionTestCase):
         self.assertEqual(saved.payload["price"]["rows"][0]["cells"][0]["amount"], "12.5")
         self.assertEqual(saved.payload["price"]["rows"][0]["id"], row)
 
-    def test_exact_two_submit_replay_one_revision_receipt_audit(self):
+    def test_exact_two_submit_creates_one_revision_then_base_conflict(self):
         value = self.prepare()
         first = self.save(value)
         self.assertEqual(first.status_code, 200)
         before = self.state()
         audit = AuditEvent.objects.filter(code="VERSION_COMMIT_OWNER").count()
         second = self.save(value)
-        self.assertEqual(second.status_code, 200)
-        self.assertEqual(second.json(), {**first.json(), "replay":True})
+        self.assert_error(second, 409, "EDITOR_BASE_CONFLICT")
         self.assertEqual(self.state(), before)
         self.assertEqual(AuditEvent.objects.filter(code="VERSION_COMMIT_OWNER").count(), audit)
 
-    def test_json_order_and_whitespace_do_not_change_exact_replay(self):
+    def test_json_order_and_whitespace_repeat_still_conflicts_on_old_base(self):
         value = self.prepare(changes={"main_text":"<p>ORDER</p>","description":""})
         first = self.save(value)
         self.assertEqual(first.status_code, 200)
@@ -120,9 +119,7 @@ class EditorSaveHttpTests(TransactionTestCase):
         raw = json.dumps(reordered, ensure_ascii=False, indent=2).encode()
         before = self.state()
         second = self.save(value, raw=raw)
-        self.assertEqual(second.status_code, 200)
-        self.assertEqual(second.json()["result_id"], first.json()["result_id"])
-        self.assertTrue(second.json()["replay"])
+        self.assert_error(second, 409, "EDITOR_BASE_CONFLICT")
         self.assertEqual(self.state(), before)
 
     def test_changed_input_same_operation_conflicts(self):
@@ -132,10 +129,10 @@ class EditorSaveHttpTests(TransactionTestCase):
         for changed in ({**value,"changes":{"main_text":"<p>OTHER</p>"}},
                         {**value,"checkReceipt":value["checkReceipt"] + "x"},
                         {**value,"baseRevisionId":str(uuid4())}):
-            self.assert_error(self.save(changed), 409, "EDITOR_OPERATION_CONFLICT")
+            self.assert_error(self.save(changed), 409, "EDITOR_BASE_CONFLICT")
         self.assertEqual(self.state(), before)
 
-    def test_replay_after_later_save_does_not_rewind_current(self):
+    def test_repeat_after_later_save_conflicts_and_does_not_rewind_current(self):
         first_value = self.prepare()
         first = self.save(first_value).json()
         later_value = self.prepare(changes={"main_text":"<p>LATER</p>"})
@@ -143,12 +140,10 @@ class EditorSaveHttpTests(TransactionTestCase):
         self.assertEqual(later.status_code, 200)
         before = self.state()
         replay = self.save(first_value)
-        self.assertEqual(replay.status_code, 200)
-        self.assertEqual(replay.json()["result_id"], first["result_id"])
-        self.assertTrue(replay.json()["replay"])
+        self.assert_error(replay, 409, "EDITOR_BASE_CONFLICT")
         self.assertEqual(self.state(), before)
 
-    def test_pruned_result_remains_consumed_gone_not_reexecuted(self):
+    def test_pruned_simple_result_is_not_reexecuted(self):
         value = self.prepare()
         first = self.save(value)
         self.assertEqual(first.status_code, 200)
@@ -160,10 +155,7 @@ class EditorSaveHttpTests(TransactionTestCase):
         self.assertFalse(PageRevision.objects.filter(pk=result_id).exists())
         before = self.state()
         replay = self.save(value)
-        self.assertEqual(replay.status_code, 200)
-        self.assertEqual(replay.json()["result_id"], result_id)
-        self.assertTrue(replay.json()["gone"])
-        self.assertTrue(replay.json()["replay"])
+        self.assert_error(replay, 409, "EDITOR_BASE_CONFLICT")
         self.assertEqual(self.state(), before)
 
     def test_blank_legacy_commit_receipt_cannot_be_editor_replay(self):
@@ -220,15 +212,15 @@ class EditorSaveHttpTests(TransactionTestCase):
         self.assertNotIn("result_id", invalid_marker.json())
         self.assertEqual(self.state(), before)
 
-    def test_atomic_fault_after_real_ledger_audit_rolls_back_everything(self):
+    def test_atomic_fault_after_real_audit_rolls_back_everything(self):
         value = self.prepare()
         before = self.state()
         audit_count = AuditEvent.objects.count()
-        actual = E.finish
+        actual = E.event
         def after_sql(*args, **kwargs):
             actual(*args, **kwargs)
-            raise DatabaseError("synthetic post-ledger fault")
-        with patch("page_versions.engine.finish", side_effect=after_sql):
+            raise DatabaseError("synthetic post-audit fault")
+        with patch("page_versions.engine.event", side_effect=after_sql):
             response = self.save(value)
         self.assertEqual(response.status_code, 503)
         self.assertEqual(self.state(), before)
@@ -242,7 +234,7 @@ class EditorSaveHttpTests(TransactionTestCase):
         session_key = self.owner_client.session.session_key
         def logout(payload):
             evidence = actual(payload)
-            AuthSession.objects.filter(pk=session_key).delete()
+            Session.objects.filter(pk=session_key).delete()
             return evidence
         with patch("page_versions.engine.preflight", side_effect=logout):
             response = self.save(value)

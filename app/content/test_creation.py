@@ -14,10 +14,11 @@ from uuid import UUID, uuid4
 from django.apps import apps
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.contrib.sessions.models import Session
 from django.db import connection, close_old_connections, DatabaseError, models, transaction
 from django.test import TransactionTestCase, override_settings
 from accounts import services as auth
-from accounts.models import AuthSession, UserProfile
+from accounts.models import UserProfile
 from accounts.tests import FAST_HASHERS, PASSWORD, client, login
 from page_versions import engine, schema
 from page_versions.models import (PageRevision, RevisionMetadata, PageContentState, OwnerDraft,
@@ -330,7 +331,7 @@ class PageCreationTests(TransactionTestCase):
                     if mode == 'role':
                         UserProfile.objects.filter(user=self.owner).update(role='employee')
                     else:
-                        AuthSession.objects.filter(pk=self.key).delete()
+                        Session.objects.filter(pk=self.key).delete()
                 self.assertEqual(future.result(timeout=5), 'denied' if mode == 'role' else 'TREE_SESSION_ENDED')
         finally:
             pool.shutdown(wait=True)

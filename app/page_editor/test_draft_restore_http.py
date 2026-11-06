@@ -4,14 +4,14 @@ from urllib.parse import urlencode
 from uuid import uuid4
 
 from django.db import DatabaseError
+from django.contrib.sessions.models import Session
 from django.test import TransactionTestCase, override_settings
 
-from accounts.models import AuthSession
 from accounts.services import set_grant
 from audit.models import AuditEvent
 from page_versions import engine as E, services as V, schema as S
 from page_versions.models import (PageRevision, PageContentState, OwnerDraft,
-                                  RestoreStage, VersionBasePin)
+                                  RestoreStage, VersionBasePin, OperationReceipt)
 from page_editor import test_check_http as H
 from page_editor.input_policy import fingerprint
 
@@ -118,6 +118,27 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
                       "x=" + "a" * 255):
             self.assertEqual(self.owner_client.get(self.path("state") + "?" + query).status_code,400)
 
+    def test_current_owner_save_uses_simple_commit_and_preserves_private_draft(self):
+        draft = self.draft()
+        base = self.current()
+        value, selector, _ = self.checked(
+            {"main_text":"<p>SIMPLE CURRENT SAVE</p>"})
+        receipt_count = OperationReceipt.objects.count()
+        response = self.send("save", value, selector=selector)
+        self.assertEqual(response.status_code, 200)
+        result = response.json()
+        row = PageRevision.objects.get(pk=result["result_id"])
+        self.assertEqual(row.source_revision_id, base)
+        self.assertEqual(row.payload["main_text"], "<p>SIMPLE CURRENT SAVE</p>")
+        self.assertEqual(self.current(), row.pk)
+        self.assertFalse(OperationReceipt.objects.filter(
+            pk=value["operationId"]).exists())
+        self.assertEqual(OperationReceipt.objects.count(), receipt_count)
+        self.assertTrue(OwnerDraft.objects.filter(pk=draft.pk).exists())
+        self.assertTrue(VersionBasePin.objects.filter(
+            holder_kind="owner_draft", holder_id=draft.pk,
+            revision_id=base).exists())
+
     def test_new_owner_draft_creates_no_automatic_or_current_mutation(self):
         self.remove_initial_draft()
         value, selector, _ = self.checked({"main_text":"<p>NEW DRAFT</p>"})
@@ -130,9 +151,12 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.assertEqual(response.json()["draftBasis"], {"id":str(draft.pk),"revision":1})
         self.assertEqual(self.current(), current)
         self.assertEqual(PageRevision.objects.count(), count)
-        self.assertTrue(VersionBasePin.objects.filter(holder_kind="owner_draft",holder_id=draft.pk,revision_id=current).exists())
+        self.assertFalse(VersionBasePin.objects.filter(
+            holder_kind="owner_draft", holder_id=draft.pk).exists())
+        self.assertFalse(OperationReceipt.objects.filter(
+            pk=value["operationId"]).exists())
 
-    def test_owner_draft_update_and_exact_replay_do_not_increment_twice(self):
+    def test_owner_draft_update_then_repeat_conflicts_without_second_increment(self):
         draft = self.draft()
         value, selector, _ = self.checked({"main_text":"<p>UPDATED DRAFT</p>"}, draft=draft)
         count, current = PageRevision.objects.count(), self.current()
@@ -143,14 +167,89 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.assertEqual(changed.revision, draft.revision + 1)
         before = self.state()
         replay = self.send("draft", {**value,"rebase":False}, selector=selector)
-        self.assertEqual(replay.status_code, 200)
-        self.assertTrue(replay.json()["replay"])
-        self.assertEqual(replay.json()["draftBasis"], first.json()["draftBasis"])
+        self.reject(replay)
         self.assertEqual(self.state(), before)
         self.assertEqual(self.current(), current)
         self.assertEqual(PageRevision.objects.count(), count)
+        self.assertFalse(OperationReceipt.objects.filter(
+            pk=value["operationId"]).exists())
+        self.assertFalse(VersionBasePin.objects.filter(
+            holder_kind="owner_draft", holder_id=draft.pk).exists())
 
-    def test_edited_draft_publish_atomic_consume_and_exact_replay(self):
+    def test_legacy_save_draft_receipt_replays_through_simple_routing(self):
+        draft = self.draft()
+        value, selector, _ = self.checked(
+            {"main_text":"<p>LEGACY SAVE DRAFT</p>"}, draft=draft)
+        request_value = {**value, "rebase":False}
+        payload = {**draft.payload, **value["changes"]}
+        original = E.save_owner_draft(
+            actor=self.owner, page_id=self.page.pk,
+            base_revision=draft.base_revision_id,
+            snapshot=S.Snapshot.trusted(payload, self.page.kind),
+            expected_generation=1, operation_id=value["operationId"],
+            draft_revision=draft.revision, draft_id=draft.pk,
+            expected_draft_hash=S.digest(draft.payload),
+            expected_draft_base=draft.base_revision_id,
+            editor_request_fingerprint=fingerprint({
+                "input":request_value,
+                "source":{
+                    "editingFrom":"owner-draft",
+                    "draftBasis":{"id":str(draft.pk), "revision":draft.revision},
+                    "stageId":None, "rebase":False, "targetCurrentId":None,
+                },
+            }),
+            editor_session_key=self.owner_client.session.session_key)
+        before = self.state()
+        audit = list(AuditEvent.objects.order_by("id").values())
+        response = self.send("draft", request_value, selector=selector)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["replay"])
+        self.assertEqual(response.json()["result_id"], original["result_id"])
+        self.assertEqual(response.json()["draftBasis"], {
+            "id":original["result_id"], "revision":draft.revision + 1})
+        self.assertEqual(response.json()["baseRevisionId"],
+                         str(draft.base_revision_id))
+        self.assertEqual(self.state(), before)
+        self.assertEqual(list(AuditEvent.objects.order_by("id").values()), audit)
+
+    def test_legacy_rebase_draft_receipt_replays_through_simple_routing(self):
+        draft = self.draft()
+        target = self.advance("LEGACY REBASE TARGET")
+        value, selector, _ = self.checked(
+            {"main_text":"<p>LEGACY REBASE DRAFT</p>"},
+            draft=draft, target=target)
+        request_value = {**value, "rebase":True}
+        payload = {**draft.payload, **value["changes"]}
+        original = E.save_owner_draft(
+            actor=self.owner, page_id=self.page.pk,
+            base_revision=target,
+            snapshot=S.Snapshot.trusted(payload, self.page.kind),
+            expected_generation=1, operation_id=value["operationId"],
+            draft_revision=draft.revision, rebase=True, draft_id=draft.pk,
+            expected_draft_hash=S.digest(draft.payload),
+            expected_draft_base=draft.base_revision_id,
+            editor_request_fingerprint=fingerprint({
+                "input":request_value,
+                "source":{
+                    "editingFrom":"owner-draft",
+                    "draftBasis":{"id":str(draft.pk), "revision":draft.revision},
+                    "stageId":None, "rebase":True, "targetCurrentId":str(target),
+                },
+            }),
+            editor_session_key=self.owner_client.session.session_key)
+        before = self.state()
+        audit = list(AuditEvent.objects.order_by("id").values())
+        response = self.send("draft", request_value, selector=selector)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["replay"])
+        self.assertEqual(response.json()["result_id"], original["result_id"])
+        self.assertEqual(response.json()["draftBasis"], {
+            "id":original["result_id"], "revision":draft.revision + 1})
+        self.assertEqual(response.json()["baseRevisionId"], str(target))
+        self.assertEqual(self.state(), before)
+        self.assertEqual(list(AuditEvent.objects.order_by("id").values()), audit)
+
+    def test_edited_draft_publish_atomic_consume_and_repeat_conflicts(self):
         draft = self.draft()
         value, selector, _ = self.checked({"main_text":"<p>EDITED BEFORE PUBLISH</p>"}, draft=draft)
         count = PageRevision.objects.count()
@@ -163,14 +262,45 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.assertEqual(PageRevision.objects.count(), count + 1)
         self.assertFalse(OwnerDraft.objects.filter(pk=draft.pk).exists())
         self.assertFalse(VersionBasePin.objects.filter(holder_id=draft.pk).exists())
+        self.assertFalse(OperationReceipt.objects.filter(
+            pk=value["operationId"]).exists())
         before = self.state()
         missing = self.owner_client.get(self.path("state", selector))
         self.reject(missing)
         replay = self.send("save", value, selector=selector)
-        self.assertEqual(replay.status_code, 200)
-        self.assertTrue(replay.json()["replay"])
-        self.assertEqual(replay.json()["result_id"], result["result_id"])
+        self.reject(replay)
         self.assertEqual(self.state(), before)
+
+    def test_legacy_draft_publish_receipt_replays_through_simple_routing(self):
+        draft = self.draft()
+        value, selector, _ = self.checked(
+            {"main_text":"<p>LEGACY PUBLISH</p>"}, draft=draft)
+        request_fingerprint = fingerprint({
+            "input":value,
+            "source":{
+                "editingFrom":"owner-draft",
+                "draftBasis":{"id":str(draft.pk), "revision":draft.revision},
+                "stageId":None, "rebase":False, "targetCurrentId":None,
+            },
+        })
+        payload = {**draft.payload, **value["changes"]}
+        original = E.commit_owner(
+            actor=self.owner, page_id=self.page.pk,
+            base_revision=draft.base_revision_id,
+            snapshot=S.Snapshot.trusted(payload, self.page.kind),
+            expected_generation=1, operation_id=value["operationId"],
+            draft_id=draft.pk, draft_revision=draft.revision,
+            expected_draft_hash=S.digest(draft.payload),
+            editor_request_fingerprint=request_fingerprint,
+            editor_session_key=self.owner_client.session.session_key)
+        before = self.state()
+        audit = list(AuditEvent.objects.order_by("id").values())
+        response = self.send("save", value, selector=selector)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["replay"])
+        self.assertEqual(response.json()["result_id"], original["result_id"])
+        self.assertEqual(self.state(), before)
+        self.assertEqual(list(AuditEvent.objects.order_by("id").values()), audit)
 
     def test_actual_draft_revision_change_conflicts_with_old_checked_publish(self):
         draft = self.draft()
@@ -204,7 +334,8 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.assertEqual(changed.revision,draft.revision+1)
         self.assertEqual(str(self.current()),str(target))
         self.assertEqual(PageRevision.objects.count(),count)
-        self.assertTrue(VersionBasePin.objects.filter(holder_id=draft.pk,revision_id=target).exists())
+        self.assertFalse(VersionBasePin.objects.filter(
+            holder_kind="owner_draft", holder_id=draft.pk).exists())
 
     def test_rebase_target_change_after_compare_is_conflict(self):
         draft = self.draft()
@@ -215,7 +346,7 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.reject(self.send("draft",{**value,"rebase":True},selector=selector))
         self.assertEqual(self.state(),before)
 
-    def test_cancel_draft_stale_revision_then_actual_cancel_replay(self):
+    def test_cancel_draft_stale_revision_then_actual_cancel_repeat_conflicts(self):
         draft = self.draft()
         V.save_owner_draft(actor=self.owner,page_id=self.page.pk,base_revision=draft.base_revision_id,
             snapshot=S.snapshot_v1(self.page.kind,main_text="NEXT DRAFT"),draft_revision=draft.revision,
@@ -230,8 +361,7 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.assertFalse(OwnerDraft.objects.filter(pk=draft.pk).exists())
         before=self.state()
         replay=self.send("draft/cancel",value)
-        self.assertEqual(replay.status_code,200)
-        self.assertTrue(replay.json()["replay"])
+        self.reject(replay)
         self.assertEqual(self.state(),before)
 
     def test_stage_selected_load_check_do_not_publish(self):
@@ -279,14 +409,14 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         self.reject(self.send("save",value,selector=selector,client=self.employee_client),403)
         self.assertEqual(self.state(),before)
 
-    def test_draft_finish_fault_rolls_back_payload_refs_pins_receipt_audit(self):
+    def test_draft_audit_fault_rolls_back_payload_refs_and_legacy_pin(self):
         draft=self.draft()
         value,selector,_=self.checked({"main_text":"<p>FAULT DRAFT</p>"},draft=draft)
-        before=self.state();audit=AuditEvent.objects.count();actual=E.finish
+        before=self.state();audit=AuditEvent.objects.count();actual=E.event
         def fault(*args,**kwargs):
             actual(*args,**kwargs)
-            raise DatabaseError("synthetic draft post-ledger fault")
-        with patch("page_versions.engine.finish",side_effect=fault):
+            raise DatabaseError("synthetic draft post-audit fault")
+        with patch("page_versions.engine.event",side_effect=fault):
             response=self.send("draft",{**value,"rebase":False},selector=selector)
         self.assertEqual(response.status_code,503)
         self.assertEqual(self.state(),before)
@@ -310,7 +440,7 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         before=self.state();actual=E.preflight;key=self.owner_client.session.session_key
         def logout(payload):
             evidence=actual(payload)
-            AuthSession.objects.filter(pk=key).delete()
+            Session.objects.filter(pk=key).delete()
             return evidence
         with patch("page_versions.engine.preflight",side_effect=logout):
             response=self.send("draft",{**value,"rebase":False},selector=selector)

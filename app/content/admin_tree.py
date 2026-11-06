@@ -29,7 +29,11 @@ def branch(parent_id):
         row = parents[current]
         ancestry.append(row)
         current = row['parent_id']
-    primary = Route.objects.filter(page_id=OuterRef('pk'), kind=Route.Kind.PRIMARY).values('target')[:1]
+    primary_rows = Route.objects.filter(
+        page_id=OuterRef('pk'), kind=Route.Kind.PRIMARY)
+    primary = primary_rows.values('target')[:1]
+    primary_legacy = primary_rows.values('is_legacy')[:1]
     pages = list(Page.objects.filter(parent_id=parent_id).annotate(
-        child_count=Count('children'), primary_target=Subquery(primary)).order_by('name', 'id'))
+        child_count=Count('children'), primary_target=Subquery(primary),
+        primary_is_legacy=Subquery(primary_legacy)).order_by('name', 'id'))
     return {'pages': pages, 'ancestry': list(reversed(ancestry)), 'parent_id': parent_id}

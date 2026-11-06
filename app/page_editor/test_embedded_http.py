@@ -50,6 +50,7 @@ class EmbeddedEditorHttpTests(TransactionTestCase):
     assert_image=M.EditorMediaHttpTests.assert_image
     stage=M.EditorMediaHttpTests.stage
     physical=M.EditorMediaHttpTests.physical
+    version_form=M.EditorMediaHttpTests.version_form
 
     def issue(self,*,field='main_text',image=None,action='insert',marker=None,prior=None,
               client=None,draft=None,stage=None,changes=None,csrf=True):
@@ -275,6 +276,44 @@ class EmbeddedEditorHttpTests(TransactionTestCase):
         self.assertEqual(self.current(),current);self.assertEqual(self.send('save',value,selector=selector).status_code,200)
         self.assertEqual(self.payload_now()['embedded_images'][0]['id'],mint['ids']['imageId'])
 
+    def test_direct_employee_restore_preserves_protected_embedded_layout(self):
+        mint,_,_,_,saved=self.publish()
+        source=PageRevision.objects.get(pk=saved['result_id'])
+        source_payload=copy.deepcopy(source.payload)
+        current_html=self.block(
+            mint,permit=False,before='EMPLOYEE CURRENT BEFORE',
+            after='EMPLOYEE CURRENT AFTER')
+        value,selector,_=self.checked(
+            {'main_text':current_html},client=self.employee_client)
+        changed=self.send('save',value,selector=selector,client=self.employee_client)
+        self.assertEqual(changed.status_code,200)
+        current_payload=copy.deepcopy(self.payload_now())
+        self.assertNotEqual(current_payload['main_text'],source_payload['main_text'])
+        self.assertEqual(current_payload['layout'],source_payload['layout'])
+        self.assertEqual(current_payload['embedded_images'],source_payload['embedded_images'])
+
+        prepared=self.version_form(
+            self.employee_client,source.pk,'prepare',{'generation':1})
+        self.assertEqual(prepared.status_code,200)
+        before=self.state();audit=list(AuditEvent.objects.order_by('id').values())
+        response=self.version_form(self.employee_client,source.pk,'apply',{
+            'generation':1,'operation_id':str(uuid4()),
+            'preparation':prepared.context['prepared']['preparation'],
+            'confirm_input_replacement':'yes'})
+        self.assertEqual(response.status_code,200)
+        restored=self.payload_now()
+        self.assertEqual(restored['main_text'],source_payload['main_text'])
+        self.assertEqual(restored['layout'],current_payload['layout'])
+        self.assertEqual(restored['embedded_images'],current_payload['embedded_images'])
+        self.assertEqual(restored['h1'],current_payload['h1'])
+        self.assertTrue(AssetUsage.objects.filter(
+            kind='current_page',consumer_id=self.page.pk,
+            slot='embedded:'+mint['ids']['imageId'],asset=self.a).exists())
+        self.assertEqual(len(self.state()['stages']),len(before['stages']))
+        self.assertEqual(len(self.state()['operations']),len(before['operations']))
+        self.assertEqual(len(self.state()['pins']),len(before['pins']))
+        self.assertEqual(len(AuditEvent.objects.order_by('id')),len(audit)+1)
+
     def test_current_embedded_bytes_membership_employee_and_original_privacy(self):
         mint,*_=self.publish();response=self.employee_client.get(self.path(''));self.assertEqual(response.status_code,200)
         item=response.context['initial_state']['embeddedMedia']['main_text'][0]
@@ -282,19 +321,20 @@ class EmbeddedEditorHttpTests(TransactionTestCase):
         self.assertEqual(self.other_client.get(item['thumbnailUrl']).status_code,403);self.assertEqual(self.visitor.get(item['thumbnailUrl']).status_code,401)
         self.assertEqual(self.owner_client.get(self.path('media/files/'+str(self.file(self.a,'private-source').pk))).status_code,404)
 
-    def test_exact_permanent_replay_before_missing_embedded_file(self):
+    def test_repeated_simple_save_conflicts_before_missing_embedded_file(self):
         _,value,selector,_,saved=self.publish();file=self.file(self.a);path=self.physical(file);data=path.read_bytes();path.unlink()
         try:
             before=self.state();audit=AuditEvent.objects.count();response=self.send('save',value,selector=selector)
-            self.assertEqual(response.status_code,200);self.assertTrue(response.json()['replay']);self.assertEqual(response.json()['result_id'],saved['result_id'])
+            self.assertEqual(response.status_code,409);self.assertEqual(response.json()['code'],'EDITOR_BASE_CONFLICT')
+            self.assertNotIn('result_id',response.json())
             self.assertEqual(self.state(),before);self.assertEqual(AuditEvent.objects.count(),audit)
         finally:path.write_bytes(data)
 
     def test_post_real_sql_fault_rolls_back_embedded_layout_refs_and_receipt(self):
-        mint=self.minted();value,selector,_=self.checked({'main_text':self.block(mint)});before=self.state();audit=AuditEvent.objects.count();actual=E.finish
+        mint=self.minted();value,selector,_=self.checked({'main_text':self.block(mint)});before=self.state();audit=AuditEvent.objects.count();actual=E.event
         physical=[MediaStorage().manifest(file.key) for file in self.a.files.order_by('key')]
-        def fault(*args,**kwargs):actual(*args,**kwargs);raise DatabaseError('synthetic embedded post-ledger fault')
-        with patch('page_versions.engine.finish',side_effect=fault):response=self.send('save',value,selector=selector)
+        def fault(*args,**kwargs):actual(*args,**kwargs);raise DatabaseError('synthetic embedded post-audit fault')
+        with patch('page_versions.engine.event',side_effect=fault):response=self.send('save',value,selector=selector)
         self.assertEqual(response.status_code,503);self.assertEqual(self.state(),before);self.assertEqual(AuditEvent.objects.count(),audit)
         self.assertEqual([MediaStorage().manifest(file.key) for file in self.a.files.order_by('key')],physical)
 

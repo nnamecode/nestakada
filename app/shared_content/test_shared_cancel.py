@@ -123,7 +123,7 @@ class SharedCancelTests(R.ReservationFixture, TransactionTestCase):
             self.assertEqual(foreign.status_code,403)
 
     def test_sc07_003_roles_csrf_and_closed_dto_preserve_stage(self):
-        from accounts.models import AuthSession
+        from django.contrib.sessions.models import Session
         with self.candidate():
             stage, _ = self.prepare()
             value = self.cancel_body(); before = self.state()
@@ -141,7 +141,7 @@ class SharedCancelTests(R.ReservationFixture, TransactionTestCase):
             self.assertEqual(self.owner_client.get(path).status_code,405)
             self.assertEqual(self.state(),before)
             session_key=self.owner_client.cookies[settings.SESSION_COOKIE_NAME].value
-            AuthSession.objects.filter(session_key=session_key).delete()
+            Session.objects.filter(session_key=session_key).delete()
             self.assertEqual(self.cancel('header',stage,value).status_code,401)
             self.assertEqual(self.state(),before)
             self.owner_client=self.login('nesadmin',H.OWNER_PASSWORD)

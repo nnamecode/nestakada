@@ -66,6 +66,20 @@ def _check_preparation(data,actor,page,profile,fields,owner,state):
     return candidate
 
 
+def get_prepared_restore(*, actor, page_id, preparation, expected_generation):
+    """Read and revalidate a signed restore preview without creating a stage."""
+    E.outside()
+    data = load_ticket(preparation, 'restore')
+    with transaction.atomic():
+        page, profile, fields, owner, state = E.enter(
+            actor, page_id, expected_generation)
+        candidate = _check_preparation(
+            data, actor, page, profile, fields, owner, state)
+        source = E.revision(page, data['source'])
+        current = E.revision(page, state.current_revision_id)
+        return {**candidate, 'source': source, 'current': current}
+
+
 def stage_restore(*,actor,page_id,preparation,confirm_input_replacement,expected_generation,operation_id):
     E.outside()
     if confirm_input_replacement is not True:raise ValidationError('VERSIONS_CONFIRM_INPUT_REPLACEMENT')

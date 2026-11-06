@@ -3,7 +3,7 @@ from functools import wraps
 from pathlib import Path
 from uuid import uuid4
 from django.core.exceptions import PermissionDenied,ValidationError,ObjectDoesNotExist
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.http import HttpResponse,FileResponse,Http404
 from django.shortcuts import render
 from django.views.decorators.http import require_GET,require_POST,require_http_methods
@@ -12,7 +12,7 @@ from accounts.views import gate
 from accounts.services import note_denial
 from media_library.models import AssetFile,AssetUsage
 from media_library.storage import MediaStorage
-from . import services as V,engine as E,schema as S
+from . import services as V,engine as E,schema as S,simple_commands as C
 from .models import PageRevision,RevisionMetadata,RevisionProtection,VersionBasePin,OwnerDraft,RestoreStage
 from .reads import timestamp
 
@@ -34,6 +34,7 @@ def protected(view):
             codes=str(exc)
             incompatible=any(code in codes for code in ['INCOMPATIBLE','INVALID_SNAPSHOT','COMPONENT_','BLOCK_REMOVED','PROTECTED_MEDIA','MEDIA_UNAVAILABLE'])
             return error(request,page_id,'Версия несовместима. Ничего не применено; проверьте схему, защищённые блоки и доступность изображений.' if incompatible else 'Действие не выполнено. Обновите показанные данные и проверьте ввод.',409)
+        except DatabaseError:return error(request,page_id,'Ошибка хранения. Ничего не применено.',503)
         except (ValueError,TypeError,KeyError):return error(request,page_id,'Некорректные поля запроса. Ничего не применено.',400)
         except OSError:return error(request,page_id,'Не удалось проверить файл. Ничего не применено.',409)
     return guarded
@@ -153,8 +154,11 @@ def manual_prepare(request,page_id):
 @protected
 def manual_create(request,page_id):
     data=form(request,['generation','operation_id','confirmation','name','comment','manual_date'])
-    result=V.create_manual(actor=request.user,page_id=page_id,confirmation=data.get('confirmation',''),expected_generation=generation(request,data),
-        operation_id=operation(data),name=data.get('name',''),comment=data.get('comment',''),manual_date=data.get('manual_date') or None)
+    operation_id=operation(data)
+    from .models import OperationReceipt
+    service=V.create_manual if OperationReceipt.objects.filter(pk=operation_id).exists() else C.create_manual
+    result=service(actor=request.user,page_id=page_id,confirmation=data.get('confirmation',''),expected_generation=generation(request,data),
+        operation_id=operation_id,name=data.get('name',''),comment=data.get('comment',''),manual_date=data.get('manual_date') or None)
     return result_page(request,page_id,result)
 
 
@@ -168,8 +172,11 @@ def metadata_edit(request,page_id,version_id):
         context['manual_date_value']=context['metadata'].manual_date.isoformat() if context['metadata'].manual_date else ''
         return render(request,'page_versions/metadata.html',context)
     data=form(request,['generation','operation_id','metadata_generation','name','comment','manual_date'])
-    result=V.edit_manual_metadata(actor=request.user,page_id=page_id,version_id=version_id,metadata_generation=int(data.get('metadata_generation','')),
-        expected_generation=generation(request,data),operation_id=operation(data),name=data.get('name',''),comment=data.get('comment',''),manual_date=data.get('manual_date') or None)
+    operation_id=operation(data)
+    from .models import OperationReceipt
+    service=V.edit_manual_metadata if OperationReceipt.objects.filter(pk=operation_id).exists() else C.edit_manual_metadata
+    result=service(actor=request.user,page_id=page_id,version_id=version_id,metadata_generation=int(data.get('metadata_generation','')),
+        expected_generation=generation(request,data),operation_id=operation_id,name=data.get('name',''),comment=data.get('comment',''),manual_date=data.get('manual_date') or None)
     return result_page(request,page_id,result)
 
 
@@ -177,8 +184,11 @@ def metadata_edit(request,page_id,version_id):
 @protected
 def stable_set(request,page_id,version_id):
     data=form(request,['generation','operation_id','view_receipt'])
-    return result_page(request,page_id,V.set_stable(actor=request.user,page_id=page_id,version_id=version_id,view_receipt=data.get('view_receipt',''),
-        expected_generation=generation(request,data),operation_id=operation(data)))
+    operation_id=operation(data)
+    from .models import OperationReceipt
+    service=V.set_stable if OperationReceipt.objects.filter(pk=operation_id).exists() else C.set_stable
+    return result_page(request,page_id,service(actor=request.user,page_id=page_id,version_id=version_id,view_receipt=data.get('view_receipt',''),
+        expected_generation=generation(request,data),operation_id=operation_id))
 
 
 @require_GET
@@ -196,8 +206,11 @@ def demote(request,page_id,version_id):
     # Confirmation embeds the exact target; URL must match it too.
     from .operations import load_ticket
     if E.uid(load_ticket(data.get('confirmation',''),'demote')['target'])!=version_id:raise ValueError()
-    return result_page(request,page_id,V.demote_stable(actor=request.user,page_id=page_id,confirmation=data.get('confirmation',''),password=data.get('password',''),
-        expected_generation=generation(request,data),operation_id=operation(data)))
+    operation_id=operation(data)
+    from .models import OperationReceipt
+    service=V.demote_stable if OperationReceipt.objects.filter(pk=operation_id).exists() else C.demote_stable
+    return result_page(request,page_id,service(actor=request.user,page_id=page_id,confirmation=data.get('confirmation',''),password=data.get('password',''),
+        expected_generation=generation(request,data),operation_id=operation_id))
 
 
 @require_GET
@@ -217,8 +230,11 @@ def delete(request,page_id,version_id):
     data=form(request,['generation','operation_id','confirmation'])
     from .operations import load_ticket
     if E.uid(load_ticket(data.get('confirmation',''),'delete')['target'])!=version_id:raise ValueError()
-    return result_page(request,page_id,V.delete_revision(actor=request.user,page_id=page_id,confirmation=data.get('confirmation',''),
-        expected_generation=generation(request,data),operation_id=operation(data)))
+    operation_id=operation(data)
+    from .models import OperationReceipt
+    service=V.delete_revision if OperationReceipt.objects.filter(pk=operation_id).exists() else C.delete_revision
+    return result_page(request,page_id,service(actor=request.user,page_id=page_id,confirmation=data.get('confirmation',''),
+        expected_generation=generation(request,data),operation_id=operation_id))
 
 
 @require_GET
@@ -247,6 +263,9 @@ def restore_stage(request,page_id,version_id):
     data=form(request,['generation','operation_id','preparation','confirm_input_replacement'])
     from .operations import load_ticket
     if E.uid(load_ticket(data.get('preparation',''),'restore')['source'])!=version_id:raise ValueError()
+    from .models import OperationReceipt
+    if not OperationReceipt.objects.filter(pk=operation(data),action='stage_restore').exists():
+        return error(request,page_id,'Создание новых промежуточных восстановлений отключено.',410)
     result=V.stage_restore(actor=request.user,page_id=page_id,preparation=data.get('preparation',''),confirm_input_replacement=data.get('confirm_input_replacement')=='yes',
         expected_generation=generation(request,data),operation_id=operation(data))
     try:context=stage_context(request,page_id,result['result_id'])
@@ -260,6 +279,78 @@ def restore_stage(request,page_id,version_id):
         return render(request,'page_versions/result.html',{'page_id':page_id,'result':result,'terminal_status':terminal_status})
     context['result']=result
     return render(request,'page_versions/stage.html',context)
+
+
+def _normalised_restore(request,page_id,prepared):
+    """Re-run a historical candidate through today's isolated editor policy."""
+    import json
+    from editor_runtime.guards import EditorSlot, EditorFault
+    from editor_runtime.processing import normalize_input
+    from page_editor.checks import (CheckFault, check_worker_result,
+                                    inspect_context, restore_context)
+    from page_editor.input_policy import OWNER_FIELDS
+    from page_editor import embedded, media
+
+    try:
+        with EditorSlot():
+            current = inspect_context(
+                actor=request.user, page_id=page_id,
+                generation=request.auth_generation,
+                origin=request.build_absolute_uri('/').rstrip('/'))
+            context = restore_context(
+                current, prepared['payload'], prepared['source'].pk)
+            changes = {
+                field: prepared['payload'][field]
+                for field in prepared['fields'] if field in OWNER_FIELDS
+            }
+            raw = json.dumps({
+                'protocol': 'page-editor-v1',
+                'generation': request.auth_generation,
+                'baseRevisionId': str(prepared['current'].pk),
+                'editingFrom': 'current', 'draftBasis': None,
+                'stageId': None, 'changes': changes,
+            }, ensure_ascii=False, allow_nan=False,
+                separators=(',', ':')).encode('utf-8')
+            result = check_worker_result(
+                normalize_input(raw, context.child), raw=raw, context=context)
+            if result['changed']:
+                raise ValidationError('VERSIONS_RESTORE_NORMALIZATION_REQUIRED')
+            if 'derived' in result:
+                payload, _map_hash = embedded.validate_derived(
+                    context, result, save=True)
+            else:
+                payload = {**context.payload, **result['changes']}
+            if payload != prepared['payload']:
+                raise ValidationError('VERSIONS_RESTORE_STALE')
+            media.prepare(
+                context, result['changes'], derived=result.get('derived'))
+            return S.Snapshot.trusted(payload, payload['page_kind'])
+    except (EditorFault, CheckFault) as exc:
+        raise ValidationError(
+            getattr(exc, 'code', 'VERSIONS_RESTORE_NORMALIZER_FAILED')) from None
+
+
+@require_POST
+@protected
+def restore_apply(request,page_id,version_id):
+    data=form(request,['generation','operation_id','preparation','confirm_input_replacement'])
+    from .operations import load_ticket
+    prepared_data=load_ticket(data.get('preparation',''),'restore')
+    if E.uid(prepared_data['source'])!=version_id:raise ValueError()
+    if data.get('confirm_input_replacement')!='yes':
+        raise ValidationError('VERSIONS_CONFIRM_INPUT_REPLACEMENT')
+    expected_generation=generation(request,data)
+    prepared=V.get_prepared_restore(
+        actor=request.user,page_id=page_id,preparation=data.get('preparation',''),
+        expected_generation=expected_generation)
+    snapshot=_normalised_restore(request,page_id,prepared)
+    from . import simple_commands
+    result=simple_commands.restore_prepared(
+        actor=request.user,page_id=page_id,preparation=data.get('preparation',''),
+        snapshot=snapshot,expected_generation=expected_generation,
+        operation_id=operation(data),expected_fields=prepared['fields'],
+        editor_session_key=request.session.session_key)
+    return result_page(request,page_id,result)
 
 
 def stage_context(request,page_id,stage_id):

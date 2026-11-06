@@ -157,14 +157,17 @@ function Protect-Private {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     # Edit only the DACL. A newly constructed owner/security descriptor can ask
     # Set-Acl for SeSecurityPrivilege on an existing directory during restart.
-    $acl = [IO.Directory]::GetAccessControl($private, [Security.AccessControl.AccessControlSections]::Access)
+    $directory = [IO.DirectoryInfo]::new($private)
+    $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+        $directory, [Security.AccessControl.AccessControlSections]::Access)
     $acl.SetAccessRuleProtection($true,$false)
-    foreach ($rule in @($acl.Access)) { $acl.RemoveAccessRuleSpecific($rule) }
+    $rules = $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])
+    foreach ($rule in @($rules)) { $acl.RemoveAccessRuleSpecific($rule) }
     foreach ($sid in @($identity.User,(New-Object Security.Principal.SecurityIdentifier('S-1-5-18')))) {
         $rule = New-Object Security.AccessControl.FileSystemAccessRule($sid,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
         $acl.AddAccessRule($rule)
     }
-    [IO.Directory]::SetAccessControl($private, $acl)
+    [IO.FileSystemAclExtensions]::SetAccessControl($directory, $acl)
 }
 function Prepare-Secrets([string]$Image) {
     New-Item -ItemType Directory -Force -Path $private | Out-Null
@@ -172,10 +175,13 @@ function Prepare-Secrets([string]$Image) {
     Protect-Private
     foreach ($file in Get-ChildItem -LiteralPath $private -File -Force) {
         Reject-Link $file.FullName
-        $acl = [IO.File]::GetAccessControl($file.FullName, [Security.AccessControl.AccessControlSections]::Access)
+        $fileInfo = [IO.FileInfo]::new($file.FullName)
+        $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+            $fileInfo, [Security.AccessControl.AccessControlSections]::Access)
         $acl.SetAccessRuleProtection($false,$true)
-        foreach ($rule in @($acl.Access | Where-Object { !$_.IsInherited })) { $acl.RemoveAccessRuleSpecific($rule) }
-        [IO.File]::SetAccessControl($file.FullName, $acl)
+        $rules = $acl.GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier])
+        foreach ($rule in @($rules)) { $acl.RemoveAccessRuleSpecific($rule) }
+        [IO.FileSystemAclExtensions]::SetAccessControl($fileInfo, $acl)
     }
     foreach ($name in @('bootstrap-password','migrator-password','runtime-password','django-secret','deployment-django-secret')) {
         $path = Join-Path $private $name
@@ -202,10 +208,13 @@ function Prepare-Secrets([string]$Image) {
     Docker ($helper + @('x509','-in','/private/database-ca','-checkend','3600','-noout')) | Out-Null
     # Inherited restrictions also replace any explicit broad ACL on existing files.
     foreach ($file in Get-ChildItem -LiteralPath $private -File -Force) {
-        $acl = Get-Acl -LiteralPath $file.FullName
+        $fileInfo = [IO.FileInfo]::new($file.FullName)
+        $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+            $fileInfo, [Security.AccessControl.AccessControlSections]::Access)
         $acl.SetAccessRuleProtection($false,$true)
-        foreach ($rule in @($acl.Access | Where-Object { !$_.IsInherited })) { $acl.RemoveAccessRuleSpecific($rule) }
-        Set-Acl -LiteralPath $file.FullName -AclObject $acl
+        $rules = $acl.GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier])
+        foreach ($rule in @($rules)) { $acl.RemoveAccessRuleSpecific($rule) }
+        [IO.FileSystemAclExtensions]::SetAccessControl($fileInfo, $acl)
     }
 }
 

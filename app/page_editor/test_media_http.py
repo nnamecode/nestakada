@@ -8,12 +8,12 @@ from urllib.parse import urlencode
 from uuid import uuid4
 
 from django.conf import settings
+from django.contrib.sessions.models import Session
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError
 from django.test import TransactionTestCase, override_settings
 
-from accounts.models import AuthSession
 from accounts.services import set_grant
 from audit.models import AuditEvent
 from content.models import Page, Route
@@ -21,7 +21,7 @@ from media_library.models import AssetFile, AssetUsage
 from media_library.storage import MediaStorage
 from media_library.uploads import upload
 from media_library.services import prepare_cleanup
-from page_versions import services as V, schema as S, engine as E
+from page_versions import services as V, schema as S, engine as E, simple_commands as C
 from page_versions.models import PageRevision, RestoreStage
 from page_editor import test_check_http as H
 from page_editor import test_draft_restore_http as D
@@ -108,6 +108,11 @@ class EditorMediaHttpTests(TransactionTestCase):
         self.assertTrue(path.is_relative_to(root))
         return path
 
+    def version_form(self,client,source,action,body):
+        data={**body,'csrfmiddlewaretoken':client.cookies[settings.CSRF_COOKIE_NAME].value}
+        path='/manage/pages/%s/versions/%s/restore/%s/'%(self.page.pk,source,action)
+        return client.post(path,data=urlencode(data),content_type='application/x-www-form-urlencoded')
+
     def stage(self,actor,source):
         prepared=V.prepare_restore(actor=actor,page_id=self.page.pk,version_id=source,expected_generation=1)
         result=V.stage_restore(actor=actor,page_id=self.page.pk,preparation=prepared['preparation'],
@@ -172,6 +177,34 @@ class EditorMediaHttpTests(TransactionTestCase):
             self.assertEqual(response.status_code,403)
         self.assertEqual(self.state(),before)
 
+    def test_direct_restore_media_evidence_failure_rolls_back_everything(self):
+        source=V.commit_owner(
+            actor=self.owner,page_id=self.page.pk,base_revision=self.current(),
+            snapshot=S.snapshot_v1(
+                self.page.kind,main_text='<p>RESTORE MEDIA SOURCE</p>',
+                main_image=self.ref(self.a)),expected_generation=1,
+            operation_id=uuid4())['result_id']
+        V.commit_owner(
+            actor=self.owner,page_id=self.page.pk,base_revision=self.current(),
+            snapshot=S.snapshot_v1(
+                self.page.kind,main_text='<p>RESTORE MEDIA CURRENT</p>'),
+            expected_generation=1,operation_id=uuid4())
+        prepared=self.version_form(
+            self.owner_client,source,'prepare',{'generation':1})
+        self.assertEqual(prepared.status_code,200)
+        values={'generation':1,'operation_id':str(uuid4()),
+                'preparation':prepared.context['prepared']['preparation'],
+                'confirm_input_replacement':'yes'}
+        before=self.state();audit=list(AuditEvent.objects.order_by('id').values())
+        manifests=[MediaStorage().manifest(file.key) for file in self.a.files.order_by('key')]
+        with patch('page_versions.engine.check_evidence',
+                   side_effect=ValidationError('VERSIONS_MEDIA_UNAVAILABLE')):
+            response=self.version_form(self.owner_client,source,'apply',values)
+        self.assertEqual(response.status_code,409)
+        self.assertEqual(self.state(),before)
+        self.assertEqual(list(AuditEvent.objects.order_by('id').values()),audit)
+        self.assertEqual([MediaStorage().manifest(file.key) for file in self.a.files.order_by('key')],manifests)
+
     def test_current_context_membership_and_private_source(self):
         self.commit({'main_image':self.ref(self.a),'preview_image':self.ref(self.b)})
         for client in (self.owner_client,self.employee_client):
@@ -215,6 +248,24 @@ class EditorMediaHttpTests(TransactionTestCase):
         self.assertTrue(AssetUsage.objects.filter(kind='stable_version',consumer_id=first['result_id'],asset=self.a).exists())
         self.assertFalse(AssetUsage.objects.filter(kind='current_page',consumer_id=self.page.pk,asset=self.a).exists())
 
+    def test_simple_stable_demote_delete_moves_usage_and_keeps_files(self):
+        _,_,saved=self.commit({'main_image':self.ref(self.a)})
+        row=PageRevision.objects.get(pk=saved['result_id'])
+        manifests=[MediaStorage().manifest(file.key) for file in self.a.files.order_by('key')]
+        viewed=V.view_version(actor=self.owner,page_id=self.page.pk,version_id=row.pk,expected_generation=1)
+        C.set_stable(actor=self.owner,page_id=self.page.pk,version_id=row.pk,view_receipt=viewed['view_receipt'],expected_generation=1,operation_id=uuid4())
+        self.assertTrue(AssetUsage.objects.filter(kind='stable_version',consumer_id=row.pk,asset=self.a).exists())
+        self.assertFalse(AssetUsage.objects.filter(kind='ordinary_version',consumer_id=row.pk,asset=self.a).exists())
+        prepared=V.prepare_demote(actor=self.owner,page_id=self.page.pk,version_id=row.pk,expected_generation=1)
+        C.demote_stable(actor=self.owner,page_id=self.page.pk,confirmation=prepared['confirmation'],password=H.OWNER_PASSWORD,expected_generation=1,operation_id=uuid4())
+        self.assertFalse(AssetUsage.objects.filter(kind='stable_version',consumer_id=row.pk,asset=self.a).exists())
+        self.assertTrue(AssetUsage.objects.filter(kind='ordinary_version',consumer_id=row.pk,asset=self.a).exists())
+        V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='advance before delete'),expected_generation=1,operation_id=uuid4())
+        deletion=V.prepare_delete(actor=self.owner,page_id=self.page.pk,version_id=row.pk,expected_generation=1)
+        C.delete_revision(actor=self.owner,page_id=self.page.pk,confirmation=deletion['confirmation'],expected_generation=1,operation_id=uuid4())
+        self.assertFalse(AssetUsage.objects.filter(kind='ordinary_version',consumer_id=row.pk,asset=self.a).exists())
+        self.assertEqual([MediaStorage().manifest(file.key) for file in self.a.files.order_by('key')],manifests)
+
     def test_draft_context_uses_actual_private_reference(self):
         self.commit({'main_image':self.ref(self.a)})
         draft=self.draft();value,selector,_=self.checked({'main_image':self.ref(self.b)},draft=draft)
@@ -250,13 +301,14 @@ class EditorMediaHttpTests(TransactionTestCase):
         self.assertEqual(response.status_code,409)
         self.assertEqual(self.state(),before)
 
-    def test_exact_permanent_replay_precedes_new_file_availability(self):
+    def test_repeated_simple_save_conflicts_before_new_file_availability(self):
         value,selector,result=self.commit({'main_image':self.ref(self.a)})
         path=self.physical(self.file(self.a));data=path.read_bytes();path.unlink()
         try:
             before=self.state();audit=AuditEvent.objects.count();response=self.send('save',value,selector=selector)
-            self.assertEqual(response.status_code,200);self.assertTrue(response.json()['replay'])
-            self.assertEqual(response.json()['result_id'],result['result_id'])
+            self.assertEqual(response.status_code,409)
+            self.assertEqual(response.json()['code'],'EDITOR_BASE_CONFLICT')
+            self.assertNotIn('result_id',response.json())
             self.assertEqual(self.state(),before);self.assertEqual(AuditEvent.objects.count(),audit)
         finally:path.write_bytes(data)
 
@@ -290,17 +342,17 @@ class EditorMediaHttpTests(TransactionTestCase):
     def test_late_picker_session_revoke_closes_verified_file(self):
         actual=MediaStorage.open_verified;opened=[];key=self.owner_client.session.session_key
         def revoke(storage,*args,**kwargs):
-            file=actual(storage,*args,**kwargs);opened.append(file);AuthSession.objects.filter(pk=key).delete();return file
+            file=actual(storage,*args,**kwargs);opened.append(file);Session.objects.filter(pk=key).delete();return file
         with patch('media_library.storage.MediaStorage.open_verified',new=revoke):
             response=self.owner_client.get(self.media_url(self.file(self.a),picker=True))
         self.assertEqual(response.status_code,401);self.assertTrue(opened);self.assertTrue(all(file.closed for file in opened))
 
     def test_actual_media_commit_post_ledger_fault_rolls_back_refs_and_bytes(self):
         value,selector,_=self.checked({'main_image':self.ref(self.a),'preview_image':self.ref(self.b)})
-        before=self.state();audit=AuditEvent.objects.count();actual=E.finish
+        before=self.state();audit=AuditEvent.objects.count();actual=E.event
         manifests=[MediaStorage().manifest(file.key) for file in AssetFile.objects.order_by('id')]
         def fault(*args,**kwargs):
-            actual(*args,**kwargs);raise DatabaseError('synthetic media post-ledger fault')
-        with patch('page_versions.engine.finish',side_effect=fault):response=self.send('save',value,selector=selector)
+            actual(*args,**kwargs);raise DatabaseError('synthetic media post-audit fault')
+        with patch('page_versions.engine.event',side_effect=fault):response=self.send('save',value,selector=selector)
         self.assertEqual(response.status_code,503);self.assertEqual(self.state(),before);self.assertEqual(AuditEvent.objects.count(),audit)
         self.assertEqual([MediaStorage().manifest(file.key) for file in AssetFile.objects.order_by('id')],manifests)

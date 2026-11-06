@@ -6,17 +6,17 @@ from uuid import UUID
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse, FileResponse, Http404
 from django.db import DatabaseError
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from accounts.views import gate
 from accounts.services import require_session
 from editor_runtime.guards import EditorFault, EditorSlot, InputProfile, input_profile, read_json_bytes
 from editor_runtime.processing import normalize_input, strict_json, ProcessingRejected
-from . import services as S, commands as C, quota
+from . import services as S, commands as C
 from .faults import SharedFault
 from .models import SharedRevision, SharedReceipt
 from .policy import PROTOCOL, canonical_uuid
-from .content import content_html
+from .content import content_html, descriptor_for
 
 
 def guarded(view):
@@ -148,6 +148,42 @@ def restore_content(request, kind, value):
     return before
 
 
+def validated_restore_source(request, kind, source_id, expected_current_id):
+    """Revalidate a historical revision against today's policy and media."""
+    import json
+    before = inspect(request, kind)
+    expected = canonical_uuid(expected_current_id) if expected_current_id is not None else None
+    if expected != before.current_id:
+        raise SharedFault('SHARED_CONTEXT_CONFLICT')
+    source = SharedRevision.objects.get(pk=UUID(canonical_uuid(str(source_id))),
+                                        block_id=before.block_id)
+    if source.schema_version != kind + '-v1':
+        raise SharedFault('SHARED_VERSION_INCOMPATIBLE')
+    descriptor = descriptor_for(source)
+    candidate = {
+        'protocol': PROTOCOL, 'generation': before.generation,
+        'baseRevisionId': before.current_id, 'sourceMode': 'current',
+        'draftBasis': None, 'stageId': None, 'html': content_html(descriptor),
+    }
+    wire = json.dumps(candidate, ensure_ascii=False).encode()
+    result = S.validate_result(normalize_input(wire, before.child), wire)
+    if result['changed']:
+        raise SharedFault('SHARED_NORMALIZATION_REQUIRED')
+    media_stamp = S.asset_evidence(result['bindings'])
+    from media_library.models import AssetUsage
+    stored = [
+        {'assetId': str(asset_id), 'slot': slot}
+        for asset_id, slot in AssetUsage.objects.filter(
+            kind=AssetUsage.Kind.SHARED_BLOCK, consumer_id=source.pk
+        ).order_by('slot').values_list('asset_id', 'slot')
+    ]
+    if sorted(stored, key=lambda item: item['slot']) != sorted(
+            result['bindings'], key=lambda item: item['slot']):
+        raise SharedFault('SHARED_MEDIA_UNAVAILABLE')
+    late_context(request, kind, before, media_stamp, result)
+    return before, source, descriptor, result
+
+
 def selector(request):
     if any(len(request.GET.getlist(key)) != 1 for key in request.GET):
         raise ValueError()
@@ -220,16 +256,96 @@ def write(request, kind, action):
     return operation_response(value)
 
 
+@before_book
+def simple_write_input(request, kind):
+    """Parse a current/inline-draft write without legacy operation books."""
+    generation = request.auth_generation
+    S.inspect_admission(actor=request.user, kind=kind, generation=generation)
+    selected = selector(request)
+    if selected['source_mode'] not in ('current', 'owner-draft'):
+        raise SharedFault('SHARED_INPUT_REJECTED', 400)
+    raw = read_json_bytes(request, input_profile(owner=True, shared=True))
+    value = C.parse_write_request(raw)
+    if (value['generation'] != generation
+            or value['sourceMode'] != selected['source_mode']
+            or value['draftBasis'] != selected['draft_basis']
+            or value['stageId'] is not None):
+        raise SharedFault('SHARED_INPUT_REJECTED', 400)
+    return selected, raw, value
+
+
+def simple_write(request, kind, action):
+    """REF-3 current/inline-draft write with the existing safe normalizer."""
+    with EditorSlot():
+        selected, raw, value = simple_write_input(request, kind)
+        before, result, media_stamp = write_content(request, kind, selected, raw, value)
+        from .simple_commands import (commit_normalized_current,
+                                      commit_normalized_draft,
+                                      save_normalized_draft)
+        common = {
+            'actor': request.user, 'kind': kind,
+            'expected_generation': before.generation,
+            'session_key': request.session.session_key,
+            'expected_current_id': before.current_id,
+            'html': result['html'], 'bindings': result['bindings'],
+        }
+        basis = selected['draft_basis']
+        if action == 'draft':
+            row = save_normalized_draft(
+                **common,
+                draft_id=basis['id'] if basis else None,
+                draft_revision=basis['revision'] if basis else None)
+            editor_context = {
+                'baseRevisionId': str(row.base_revision_id) if row.base_revision_id else None,
+                'sourceMode': 'owner-draft',
+                'draftBasis': {'id': str(row.pk), 'revision': row.revision},
+                'stageId': None,
+            }
+        elif action == 'apply' and basis is not None:
+            row = commit_normalized_draft(
+                **common, draft_id=basis['id'], draft_revision=basis['revision'])
+            editor_context = {'baseRevisionId': str(row.pk), 'sourceMode': 'current',
+                              'draftBasis': None, 'stageId': None}
+        elif action == 'apply':
+            row = commit_normalized_current(**common)
+            editor_context = {'baseRevisionId': str(row.pk), 'sourceMode': 'current',
+                              'draftBasis': None, 'stageId': None}
+        else:
+            raise SharedFault('SHARED_INPUT_REJECTED', 400)
+    return operation_response({
+        'ok': True,
+        'operationId': value['operationId'],
+        'resultId': str(row.pk),
+        'resultCode': 'applied',
+        'replay': False,
+        'gone': False,
+        'editorContext': editor_context,
+    })
+
+
+def legacy_selected(request):
+    """Keep pre-REF-3 file drafts/stages usable until their data migration."""
+    selected = selector(request)
+    if selected['source_mode'] == 'restore-stage':
+        return True
+    if selected['source_mode'] != 'owner-draft':
+        return False
+    from .models import SharedDraft
+    basis = selected['draft_basis']
+    return SharedDraft.objects.filter(
+        pk=basis['id'], revision=basis['revision'], storage_kind='file').exists()
+
+
 @require_POST
 @guarded
 def draft(request, kind):
-    return write(request, kind, 'draft')
+    return write(request, kind, 'draft') if legacy_selected(request) else simple_write(request, kind, 'draft')
 
 
 @require_POST
 @guarded
 def apply(request, kind):
-    return write(request, kind, 'apply')
+    return write(request, kind, 'apply') if legacy_selected(request) else simple_write(request, kind, 'apply')
 
 
 @require_POST
@@ -254,16 +370,9 @@ def cancel_input(request, kind):
 @require_POST
 @guarded
 def restore_prepare(request, kind):
-    with EditorSlot():
-        generation, value, replay = restore_input(request, kind)
-        if replay is not None:
-            replay = C.reconcile_replay(actor=request.user, generation=generation,
-                session_key=request.session.session_key, value=replay)
-            return operation_response(replay)
-        before = restore_content(request, kind, value)
-        return operation_response(C.prepare_restore(actor=request.user, kind=kind, generation=before.generation,
-            before=before, source_id=value['sourceRevisionId'], operation_id=value['operationId'],
-            confirmed=value['confirmReplace'], session_key=request.session.session_key))
+    # New restores use restore_version().  Keep the URL closed so no new
+    # legacy stages/files can appear while existing terminal history remains.
+    raise SharedFault('SHARED_LEGACY_RESTORE_DISABLED', 410, operation_not_started=True)
 
 
 @require_GET
@@ -271,7 +380,7 @@ def restore_prepare(request, kind):
 def editor(request, kind):
     context = inspect(request, kind)
     return render(request, 'shared_content/editor.html', {'owner': True, 'context': context,
-        'budget': quota.measure(), 'base_id': context.child['baseRevisionId'] or ''})
+        'base_id': context.child['baseRevisionId'] or ''})
 
 
 @require_GET
@@ -298,6 +407,28 @@ def version(request, kind, version_id):
     return render(request, 'shared_content/version.html', {'owner': True, 'context': context, 'row': row,
         'saved_html': content_html(row),
         'compatible': row.schema_version == kind + '-v1'})
+
+
+@require_POST
+@guarded
+def restore_version(request, kind, version_id):
+    fields = set(request.POST)
+    if 'csrfmiddlewaretoken' in fields:
+        fields.remove('csrfmiddlewaretoken')
+    if (fields != {'expectedCurrentId', 'confirmed'}
+            or any(len(request.POST.getlist(key)) != 1 for key in request.POST)
+            or request.POST['confirmed'] != 'yes'):
+        raise SharedFault('SHARED_REPLACE_CONFIRMATION_REQUIRED', 400)
+    expected = request.POST['expectedCurrentId'] or None
+    before, source, descriptor, result = validated_restore_source(
+        request, kind, version_id, expected)
+    from .simple_commands import restore_normalized_current
+    restore_normalized_current(
+        actor=request.user, kind=kind, expected_generation=request.auth_generation,
+        session_key=request.session.session_key, expected_current_id=before.current_id,
+        source_revision_id=source.pk, source_descriptor=descriptor,
+        html=result['html'], bindings=result['bindings'])
+    return redirect('shared_content:editor', kind=kind)
 
 
 @require_GET

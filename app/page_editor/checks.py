@@ -5,7 +5,7 @@ import re
 from django.core import signing
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from page_versions import engine as E
+from page_versions import engine as E, schema as S
 from page_versions.models import PageRevision
 from content.models import Route
 from editor_runtime.guards import EditorFault, input_profile
@@ -55,6 +55,27 @@ class CheckContext:
     @property
     def profile(self):
         return input_profile(owner=self.child['owner'], can_price='price' in self.child['fields'])
+
+
+def restore_context(context, payload, source_revision_id):
+    """Build a closed normalizer context for an already authorised restore candidate."""
+    candidate = S.validate(payload, context.payload['page_kind'])
+    child = dict(context.child)
+    child['embedded_source'] = {
+        key: candidate[key]
+        for key in ('intro_text', 'main_text', 'layout', 'embedded_images')
+    }
+    stamp = fingerprint({
+        'child': child,
+        'sourceFacts': {
+            'restoreSource': str(source_revision_id),
+            'candidateHash': S.digest(candidate),
+        },
+        'permissions': context.permission_hash,
+        'policy': CHECK_POLICY,
+    })
+    return CheckContext(
+        context.actor_id, child, context.permission_hash, stamp, candidate)
 
 
 def inspect_admission(*, actor, page_id, generation):

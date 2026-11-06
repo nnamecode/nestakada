@@ -15,6 +15,7 @@ from django.core.management.base import CommandError
 from django.db import DatabaseError, close_old_connections, transaction
 from django.test import Client, RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from audit.models import AuditEvent
 from audit.constants import Category, Level, Result, Source
 from audit.services import record_event
@@ -133,19 +134,26 @@ class AccountTests(TestCase):
         self.assertFalse(LoginThrottle.objects.filter(pk='fe80::1').exists())
 
     def test_idle_boundaries_and_passive_status_does_not_keep_session_alive(self):
-        browser=self.signed();state=AuthSession.objects.get(user=self.employee)
+        browser=self.signed()
+        key=browser.session.session_key
         self.frozen.return_value=self.now+timedelta(seconds=1799)
         self.assertEqual(browser.get('/manage/session/').status_code,200)
-        state.refresh_from_db();self.assertEqual(state.last_seen,self.now)
+        data=Session.objects.get(pk=key).get_decoded()
+        self.assertEqual(data[services.SESSION_LAST_SEEN],self.now.isoformat())
         self.frozen.return_value=self.now+timedelta(seconds=1801)
         self.assertEqual(browser.get('/manage/').status_code,401)
-        self.assertEqual(AuthSession.objects.filter(user=self.employee).count(),0)
+        self.assertFalse(Session.objects.filter(pk=key).exists())
+        self.assertEqual(AuthSession.objects.count(),0)
         self.assertEqual(AuditEvent.objects.filter(code='AUTH_SESSION_EXPIRED').count(),1)
         browser.get('/manage/');self.assertEqual(AuditEvent.objects.filter(code='AUTH_SESSION_EXPIRED').count(),1)
 
     def test_absolute_limit_survives_regular_activity(self):
         browser=self.signed()
-        AuthSession.objects.filter(user=self.employee).update(last_seen=self.now+timedelta(seconds=43150))
+        session=browser.session
+        session[services.SESSION_LAST_SEEN]=(self.now+timedelta(seconds=43150)).isoformat()
+        session.save()
+        Session.objects.filter(pk=session.session_key).update(
+            expire_date=self.now+timedelta(seconds=44950))
         self.frozen.return_value=self.now+timedelta(seconds=43199)
         self.assertEqual(browser.get('/manage/').status_code,200)
         self.frozen.return_value=self.now+timedelta(seconds=43201)
@@ -187,7 +195,9 @@ class AccountTests(TestCase):
         browser=self.signed();self.assertEqual(browser.get('/manage/pages/'+str(a.pk)+'/').status_code,200)
         self.assertEqual(browser.get('/manage/pages/'+str(b.pk)+'/').status_code,403)
         services.set_grant(actor=self.owner,employee=self.employee,page=a,revoke=True)
-        self.assertEqual(browser.get('/manage/pages/'+str(a.pk)+'/').status_code,403)
+        self.assertEqual(browser.get('/manage/pages/'+str(a.pk)+'/').status_code,401)
+        fresh=self.signed()
+        self.assertEqual(fresh.get('/manage/pages/'+str(a.pk)+'/').status_code,403)
         self.assertFalse(PageGrant.objects.filter(user=self.employee,page=a).exists())
 
     def test_grants_reject_home_protected_fields_and_forged_types(self):
@@ -235,25 +245,27 @@ class AccountTests(TestCase):
         self.assertFalse(aggregate.count_is_lower_bound)
         self.assertNotIn('SYNTHETIC',str(list(AuditEvent.objects.values())))
 
-    def test_permission_denials_are_grouped_without_logging_anonymous_gets(self):
+    def test_permission_denials_are_bounded_events_without_anonymous_noise(self):
         before=AuditEvent.objects.count()
         for _ in range(3):client().get('/manage/employees/')
         self.assertEqual(AuditEvent.objects.count(),before)
         browser=self.signed()
         for _ in range(3):self.assertEqual(browser.get('/manage/employees/').status_code,403)
-        self.assertEqual(AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count(),1)
+        self.assertEqual(AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count(),3)
         browser.post('/manage/logout/',{},content_type='application/x-www-form-urlencoded')
-        self.assertEqual(AuditEvent.objects.get(code='SEC_PERMISSION_DENIED_AGGREGATE').occurrence_count,2)
+        self.assertFalse(AuditEvent.objects.filter(
+            code='SEC_PERMISSION_DENIED_AGGREGATE').exists())
 
     @override_settings(AUTH_SESSION_CAP=1)
-    def test_session_capacity_preserves_existing_session_and_recovers_after_logout(self):
+    def test_legacy_session_capacity_setting_is_not_a_runtime_dependency(self):
         first=self.signed(owner=True)
-        self.assertEqual(login(client()).status_code,200)
-        self.assertEqual(AuthSession.objects.count(),1)
+        second=client();self.assertEqual(login(second).status_code,303)
+        self.assertEqual(AuthSession.objects.count(),0)
+        self.assertEqual(Session.objects.count(),2)
         self.assertEqual(first.get('/manage/').status_code,200)
-        first.post('/manage/logout/',{},content_type='application/x-www-form-urlencoded')
-        self.assertEqual(login(client()).status_code,303)
-        self.assertEqual(AuditEvent.objects.filter(code='AUTH_CAPACITY_REACHED').count(),1)
+        self.assertEqual(second.get('/manage/').status_code,200)
+        self.assertFalse(AuthResourceState.objects.filter(kind='sessions').exists())
+        self.assertFalse(AuditEvent.objects.filter(code='AUTH_CAPACITY_REACHED').exists())
 
     @override_settings(AUTH_THROTTLE_CAP=1)
     def test_throttle_capacity_never_evicts_live_key_and_expiry_recovers(self):
@@ -341,8 +353,9 @@ class AccountConcurrencyTests(TransactionTestCase):
         owner=services.bootstrap_owner(PASSWORD)
         employee=services.create_employee(actor=owner,username='auth-employee',password=PASSWORD)
         browser=client();self.assertEqual(login(browser).status_code,303)
-        state=AuthSession.objects.get(user=employee)
-        initial=state.last_seen
+        key=browser.session.session_key
+        initial=parse_datetime(
+            Session.objects.get(pk=key).get_decoded()[services.SESSION_LAST_SEEN])
         times={'now':initial}
         entered,finished=Event(),Event()
         real_lock=services.lock_auth
@@ -359,7 +372,7 @@ class AccountConcurrencyTests(TransactionTestCase):
                     times['now']=initial+timedelta(seconds=1)
                 req=RequestFactory().get('/manage/')
                 req.user=get_user_model().objects.get(pk=employee.pk)
-                req.session=SessionStore(session_key=state.pk)
+                req.session=SessionStore(session_key=key)
                 result=services.require_session(req).pk
                 return result
             finally:
@@ -369,7 +382,11 @@ class AccountConcurrencyTests(TransactionTestCase):
             with ThreadPoolExecutor(max_workers=2) as pool:
                 a,b=pool.submit(request,'A'),pool.submit(request,'B')
                 self.assertEqual(a.result(),employee.pk);self.assertEqual(b.result(),employee.pk)
-        self.assertEqual(AuthSession.objects.filter(pk=state.pk).count(),1)
+        data=Session.objects.get(pk=key).get_decoded()
+        self.assertEqual(
+            parse_datetime(data[services.SESSION_LAST_SEEN]),
+            initial+timedelta(seconds=1))
+        self.assertEqual(AuthSession.objects.count(),0)
 
     def test_parallel_failures_do_not_lose_the_fifth_attempt(self):
         owner=services.bootstrap_owner(PASSWORD)

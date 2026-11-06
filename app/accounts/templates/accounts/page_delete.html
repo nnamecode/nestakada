@@ -1,0 +1,9 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Удалить страницу и историю — Эстакада{% endblock %}
+{% block content %}<section class="card"><h1>Удалить страницу и всю историю</h1>
+{% if prepared %}<p>Страница: <strong>{{ prepared.page.name }}</strong>.</p><p>Основной адрес: <code>{{ prepared.primary.target }}</code></p><p>Будут удалены маршруты: {{ prepared.counts.routes }}, версии: {{ prepared.counts.revisions }}, Stable: {{ prepared.counts.stable }}, черновики: {{ prepared.counts.drafts }}, операции восстановления: {{ prepared.counts.stages }}.</p><p>Дочерние страницы и общие файлы не удаляются. Операцию нельзя отменить.</p>{% endif %}
+{% if message %}<p class="error" role="alert">{{ message }}</p>{% endif %}
+{% if not error_mode or retry %}<form method="post" action="{% url 'accounts:page-delete' page_id %}">{% csrf_token %}<input type="hidden" name="operation_id" value="{{ values.operation_id }}"><input type="hidden" name="token" value="{{ values.token }}"><label>Точное название<input name="confirm_name" maxlength="200" value="{{ values.confirm_name }}" required></label><label>Точный основной адрес<input name="confirm_url" maxlength="2048" value="{{ values.confirm_url }}" required></label><label>Текущий пароль владельца<input type="password" name="password" maxlength="4096" autocomplete="current-password" required></label><button type="submit">Удалить страницу и все версии</button></form>{% endif %}
+{% if error_mode %}<p><a href="{% url 'accounts:page-delete' page_id %}">Открыть актуальное подтверждение</a></p>{% endif %}
+<p><a href="{% url 'accounts:page-tree' %}">Отмена — вернуться к дереву</a></p>
+</section>{% endblock %}

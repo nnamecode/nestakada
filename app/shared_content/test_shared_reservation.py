@@ -371,14 +371,15 @@ class SharedReservationTests(ReservationFixture, TransactionTestCase):
             self.report('RSV-006-real-partial-blob', evidence)
 
     def test_session_revocation_after_check_denies_before_new_reservation(self):
-        from accounts.models import AuthSession
+        from django.contrib.sessions.models import Session
         from .models import SharedReceipt, SharedBudget
         from .storage import SharedStorage
         with self.candidate() as evidence:
             value = self.intent('footer', self.fixture('footer', 'SESSION-INPUT'))
             before_db, before_fs = self.state(), SharedStorage().inventory()
             debt = SharedBudget.objects.get().retained_debt_bytes
-            AuthSession.objects.filter(user_id=self.owner.pk).delete()
+            Session.objects.filter(
+                pk=self.owner_client.session.session_key).delete()
             response = self.send('footer', 'apply', value)
             self.assertEqual(response.status_code, 401)
             self.assertFalse(SharedReceipt.objects.filter(pk=value['operationId']).exists())

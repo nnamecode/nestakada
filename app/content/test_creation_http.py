@@ -13,7 +13,7 @@ from page_versions import engine
 from page_versions.models import (PageRevision, PageContentState, OwnerDraft,
                                  OperationReceipt, IdentityReservation)
 from audit.models import AuditEvent
-from . import creation
+from . import creation, simple_creation
 from .models import Page
 
 
@@ -101,7 +101,7 @@ class CreationHttpTests(TransactionTestCase):
         self.assertEqual(Page.objects.count(),1)
 
     def test_uncertain_confirmation_after_independently_observed_commit_exact_retry(self):
-        proof=self.proof();values=self.values(proof);original=creation.apply
+        proof=self.proof();values=self.values(proof);original=simple_creation.apply
         def lost(**kwargs):
             original(**kwargs)
             self.assertFalse(connection.in_atomic_block)
@@ -112,9 +112,9 @@ class CreationHttpTests(TransactionTestCase):
                 self.assertEqual(observer.execute('SELECT count(*) FROM app.content_page WHERE id=%s',
                     [proof['page_id']]).fetchone()[0],1)
                 self.assertEqual(observer.execute('SELECT count(*) FROM app.page_versions_operationreceipt WHERE id=%s',
-                    [proof['operation_id']]).fetchone()[0],1)
+                    [proof['operation_id']]).fetchone()[0],0)
             raise DatabaseError('synthetic confirmation loss')
-        with patch('content.creation_views.creation.apply',side_effect=lost):
+        with patch('content.creation_views.simple.apply',side_effect=lost):
             response=self.post(values)
         self.assertEqual(response.status_code,503)
         self.assertEqual(response.context['values']['token'],proof['token'])

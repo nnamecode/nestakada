@@ -59,14 +59,14 @@ class FinalMediaConcurrencyTests(TransactionTestCase):
         before_other=PageRevision.objects.filter(page=self.page_b).values_list('pk','payload_hash').get()
         before_audit=AuditEvent.objects.filter(code__startswith='VERSION_').count()
         reached,release=Event(),Event();save_pid=Queue(maxsize=1);cleanup_pid=Queue(maxsize=1);hits=[]
-        actual_finish=E.finish
+        actual_event=E.event
 
-        def hold_after_real_finish(*args,**kwargs):
-            result=actual_finish(*args,**kwargs)
+        def hold_after_real_event(*args,**kwargs):
+            result=actual_event(*args,**kwargs)
             self.assertTrue(connection.in_atomic_block)
             self.assertTrue(AssetUsage.objects.filter(asset=self.a,kind='current_page',consumer_id=self.page.pk).exists())
-            self.assertTrue(OperationReceipt.objects.filter(pk=value['operationId']).exists())
-            hits.append('real_finish_inside_tx')
+            self.assertFalse(OperationReceipt.objects.filter(pk=value['operationId']).exists())
+            hits.append('real_event_inside_tx')
             save_pid.put(connection.connection.info.backend_pid)
             reached.set()
             if not release.wait(15):
@@ -93,7 +93,7 @@ class FinalMediaConcurrencyTests(TransactionTestCase):
                 connections.close_all()
 
         blocked=False
-        with patch('page_versions.engine.finish',side_effect=hold_after_real_finish),ThreadPoolExecutor(max_workers=2) as executor:
+        with patch('page_versions.engine.event',side_effect=hold_after_real_event),ThreadPoolExecutor(max_workers=2) as executor:
             saving=executor.submit(save_worker)
             deleting=None
             try:
@@ -120,14 +120,14 @@ class FinalMediaConcurrencyTests(TransactionTestCase):
             status,result=saving.result(timeout=15)
             cleanup=deleting.result(timeout=15)
 
-        self.assertEqual(hits,['real_finish_inside_tx'])
+        self.assertEqual(hits,['real_event_inside_tx'])
         self.assertEqual(status,200)
         self.assertTrue(cleanup['refused'])
         self.assertEqual(cleanup['messages'],['MEDIA_ASSET_RETAINED_OR_NOT_READY'])
         self.assertNotEqual(self.current(),before_current)
         self.assertEqual(str(self.current()),result['result_id'])
         self.assertEqual(PageRevision.objects.filter(page=self.page).count(),before_count+1)
-        self.assertEqual(OperationReceipt.objects.filter(pk=value['operationId']).count(),1)
+        self.assertEqual(OperationReceipt.objects.filter(pk=value['operationId']).count(),0)
         self.assertEqual(AuditEvent.objects.filter(code__startswith='VERSION_').count(),before_audit+1)
         self.assertEqual(PageRevision.objects.filter(page=self.page_b).values_list('pk','payload_hash').get(),before_other)
         self.assertEqual(Asset.objects.get(pk=self.a.pk).status,'ready')
@@ -136,4 +136,4 @@ class FinalMediaConcurrencyTests(TransactionTestCase):
         self.assertTrue(AssetUsage.objects.filter(asset=self.a,kind='ordinary_version',consumer_id=result['result_id']).exists())
         self.assertEqual({str(file.pk):MediaStorage().manifest(file.key) for file in self.a.files.all()},files)
         self.assertEqual({str(file.pk):MediaStorage().manifest(file.key) for file in self.b.files.all()},other_files)
-        print('{"scope":"CF07-005-framework-real-two-PG","saveWins":true,"actualBlockingPidWitness":true,"cleanupRefused":true,"oneVersionReceipt":true,"threePhysicalFilesIntact":true,"frameworkReaderSeam":true,"twoSocketProof":false}',flush=True)
+        print('{"scope":"CF07-005-framework-real-two-PG","saveWins":true,"actualBlockingPidWitness":true,"cleanupRefused":true,"noLegacyReceipt":true,"threePhysicalFilesIntact":true,"frameworkReaderSeam":true,"twoSocketProof":false}',flush=True)

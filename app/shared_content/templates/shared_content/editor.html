@@ -3,9 +3,6 @@
 <section data-shared-editor data-kind="{{ context.kind }}" data-generation="{{ context.generation }}" data-base="{{ base_id }}" data-source-mode="{{ context.child.sourceMode }}" data-stage-id="{{ context.child.stageId|default:'' }}" data-draft-id="{{ context.child.draftBasis.id|default:'' }}" data-draft-revision="{{ context.child.draftBasis.revision|default:'' }}">
 <h1>{% if context.kind == 'header' %}Header — общая шапка{% else %}Footer — общий подвал{% endif %}</h1>
 <p><a href="{% url 'shared_content:history' context.kind %}">История и сравнение</a></p>
-<p>Общий объём истории: {{ budget.usedBytes }} / {{ budget.limitBytes }} байт; снимков {{ budget.snapshotCount }} / {{ budget.snapshotLimit }}.</p>
-{% if budget.warning %}<p role="status">История занимает не менее 75% бюджета.</p>{% endif %}
-{% if not budget.profileAvailable %}<p>Проверка и просмотр доступны. Применение и сохранение пока недоступны: безопасный резерв места ещё проверяется.</p>{% endif %}
 <p>Меню строится по текущей структуре сайта. Контакты сохраняются буквально в версии блока.</p>
 <form data-editor-form>{% csrf_token %}<label for="shared-html">HTML общего блока</label><textarea id="shared-html" rows="22" spellcheck="false">{{ context.source_html }}</textarea>
 <p><button type="button" data-action="check">Проверить</button> <button type="button" data-action="draft">Сохранить черновик</button> <button type="button" data-action="apply">Применить к сайту</button></p>

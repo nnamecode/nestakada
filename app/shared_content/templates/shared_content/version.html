@@ -2,4 +2,8 @@
 <p>{{ row.created_at }} · Автор {{ row.author_id }} · Схема {{ row.schema_version }}</p>
 {% if not compatible %}<p>Версия несовместима. Сохранённые данные доступны для чтения; восстановление недоступно.</p>{% endif %}
 <p>Буквальные контакты относятся к этой версии. Меню строится по текущей структуре сайта; это не изображение прежнего экрана.</p><pre data-saved-html>{{ saved_html }}</pre>
+{% if compatible %}<form method="post" action="{% url 'shared_content:restore_version' context.kind row.id %}">{% csrf_token %}
+<input type="hidden" name="expectedCurrentId" value="{{ context.current_id|default:'' }}">
+<label><input type="checkbox" name="confirmed" value="yes" required> Заменить текущее содержимое новой версией на основе этой записи</label>
+<button type="submit">Восстановить эту версию</button></form>{% endif %}
 <a href="{% url 'shared_content:compare' context.kind %}?versionId={{ row.id }}">Сравнить с текущей</a>{% endblock %}

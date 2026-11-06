@@ -7,8 +7,10 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from accounts.views import gate, fields
+from page_versions.models import OperationReceipt
 from .models import Page
 from . import tree_commands as commands
+from . import simple_tree_commands as simple
 
 LABELS = {'rename': 'Изменить название', 'move': 'Переместить страницу', 'reorder': 'Изменить порядок'}
 MESSAGES = {
@@ -17,6 +19,7 @@ MESSAGES = {
     'TREE_INVALID_NAME': 'Введите непустое название до 200 символов, без управляющих символов.',
     'TREE_PARENT_CONFLICT': 'Проверьте выбранный раздел. Страницу нельзя переместить в саму себя или в её дочерний раздел.',
     'TREE_NEIGHBOUR_CONFLICT': 'Выбранная соседняя страница не относится к нужному разделу. Обновите форму.',
+    'TREE_ORDER_UNCHANGED': 'Порядок страниц уже соответствует выбранному месту. Изменения не требуются.',
 }
 
 
@@ -37,9 +40,22 @@ def command(request, page_id, action):
             if (set(request.GET) - ({'parent'} if action == 'move' else set())
                     or any(len(request.GET.getlist(key)) != 1 for key in request.GET)):
                 raise commands.TreeFault('TREE_INVALID_INPUT', 400)
-            prepared = commands.prepare(actor=request.user, page_id=page_id, action=action,
-                generation=request.auth_generation, session_key=request.session.session_key,
-                destination=request.GET.get('parent', 'current'))
+            if action == 'rename':
+                prepared = simple.prepare_rename(
+                    actor=request.user, page_id=page_id,
+                    generation=request.auth_generation,
+                    session_key=request.session.session_key)
+            elif action == 'reorder':
+                prepared = simple.prepare_reorder(
+                    actor=request.user, page_id=page_id,
+                    generation=request.auth_generation,
+                    session_key=request.session.session_key)
+            else:
+                prepared = simple.prepare_move(
+                    actor=request.user, page_id=page_id,
+                    generation=request.auth_generation,
+                    session_key=request.session.session_key,
+                    destination=request.GET.get('parent', 'current'))
             values = {'operation_id': prepared['operation_id'], 'token': prepared['token'],
                       'name': prepared['page'].name, 'parent_id': prepared['destination'], 'before_id': ''}
             return render(request, 'accounts/tree_command.html', {'owner': True, 'action': action,
@@ -50,10 +66,38 @@ def command(request, page_id, action):
         data = fields(request, allowed)
         if any(key not in data for key in allowed):
             raise commands.TreeFault('TREE_INVALID_INPUT', 400)
-        result = commands.apply(actor=request.user, page_id=page_id, action=action,
-            generation=request.auth_generation, session_key=request.session.session_key,
-            token=data['token'], operation_id=data['operation_id'], name=data.get('name'),
-            parent_id=data.get('parent_id'), before_id=data.get('before_id'))
+        operation_id = commands.uid(data['operation_id'])
+        if (action in ('rename', 'reorder', 'move')
+                and not OperationReceipt.objects.filter(
+                    pk=operation_id).exists()):
+            if action == 'rename':
+                result = simple.rename(
+                    actor=request.user, page_id=page_id,
+                    generation=request.auth_generation,
+                    session_key=request.session.session_key,
+                    token=data['token'], operation_id=operation_id,
+                    name=data.get('name'))
+            elif action == 'reorder':
+                result = simple.reorder(
+                    actor=request.user, page_id=page_id,
+                    generation=request.auth_generation,
+                    session_key=request.session.session_key,
+                    token=data['token'], operation_id=operation_id,
+                    parent_id=data.get('parent_id'),
+                    before_id=data.get('before_id'))
+            else:
+                result = simple.move(
+                    actor=request.user, page_id=page_id,
+                    generation=request.auth_generation,
+                    session_key=request.session.session_key,
+                    token=data['token'], operation_id=operation_id,
+                    parent_id=data.get('parent_id'),
+                    before_id=data.get('before_id'))
+        else:
+            result = commands.apply(actor=request.user, page_id=page_id, action=action,
+                generation=request.auth_generation, session_key=request.session.session_key,
+                token=data['token'], operation_id=operation_id, name=data.get('name'),
+                parent_id=data.get('parent_id'), before_id=data.get('before_id'))
         response = HttpResponse(status=303)
         response['Location'] = reverse('accounts:page-tree') + (
             '?' + urlencode({'parent': result['parent_id']}) if result['parent_id'] else '')

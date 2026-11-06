@@ -379,14 +379,16 @@ class TreeCommandTests(TransactionTestCase):
         self.assertEqual(response.status_code, 200); self.assertEqual(self.state(), before)
         proof = response.context['prepared']
         data = {'operation_id': proof['operation_id'], 'token': proof['token'], 'name': 'HTTP новое'}
+        receipts = self.tree_receipts()
         first = self.browser.post(path, data, content_type='application/x-www-form-urlencoded')
         self.assertEqual(first.status_code, 303); self.assertEqual(first['X-Tree-Result'], 'applied')
         snapshot = self.state()
         replay = self.browser.post(path, data, content_type='application/x-www-form-urlencoded')
-        self.assertEqual(replay.status_code, 303); self.assertEqual(replay['X-Tree-Result'], 'replay')
+        self.assertEqual(replay.status_code, 409)
         self.assertEqual(self.state()[Page._meta.db_table], snapshot[Page._meta.db_table])
+        self.assertEqual(self.tree_receipts(), receipts)
         fresh = self.browser.get(path).context['prepared']
-        self.apply(self.prep(page=self.b))
+        self.a.name = 'Changed after preview'; self.a.save()
         stale = self.browser.post(path, {'operation_id': fresh['operation_id'], 'token': fresh['token'],
             'name': '<b>Несохранённый ввод</b>'}, content_type='application/x-www-form-urlencoded')
         self.assertEqual(stale.status_code, 409)
@@ -407,7 +409,8 @@ class TreeCommandTests(TransactionTestCase):
         path = f'/manage/pages/{self.a.pk}/structure/rename/'
         proof = self.browser.get(path).context['prepared']
         data = {'operation_id': proof['operation_id'], 'token': proof['token'], 'name': 'Уже сохранено'}
-        original = commands.apply
+        from . import simple_tree_commands as simple
+        original = simple.rename
         observations = []
         def independent():
             close_old_connections()
@@ -425,17 +428,16 @@ class TreeCommandTests(TransactionTestCase):
             with ThreadPoolExecutor(max_workers=1) as pool:
                 observations.append(pool.submit(independent).result(timeout=5))
             raise DatabaseError('SYNTHETIC confirmation lost after COMMIT')
-        with patch.object(commands, 'apply', lost):
+        with patch.object(simple, 'rename', lost):
             response = self.browser.post(path, data, content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 503)
         self.assertContains(response, proof['operation_id'], status_code=503)
         self.assertContains(response, proof['token'], status_code=503)
         self.assertContains(response, 'Уже сохранено', status_code=503)
-        self.assertEqual(observations, [{'name': 'Уже сохранено', 'receipt': True, 'reservation': True, 'audit': 1}])
+        self.assertEqual(observations, [{'name': 'Уже сохранено', 'receipt': False, 'reservation': False, 'audit': 1}])
         committed = self.state()
         replay = self.browser.post(path, data, content_type='application/x-www-form-urlencoded')
-        self.assertEqual(replay.status_code, 303)
-        self.assertEqual(replay['X-Tree-Result'], 'replay')
+        self.assertEqual(replay.status_code, 409)
         self.assertEqual(self.state(), committed)
 
     def test_http_auth_csrf_closed_fields_and_error_retry_preserves_id(self):
@@ -452,10 +454,10 @@ class TreeCommandTests(TransactionTestCase):
         before = self.tree_receipts()
         self.assertEqual(strict.post(path, data, content_type='application/x-www-form-urlencoded').status_code, 403)
         self.assertEqual(self.tree_receipts(), before)
-        with patch('content.tree_commands.record_event', side_effect=OSError(28, 'SYNTHETIC')):
+        with patch('content.simple_tree_commands.record_event', side_effect=OSError(28, 'SYNTHETIC')):
             failed = self.browser.post(path, data, content_type='application/x-www-form-urlencoded')
         self.assertEqual(failed.status_code, 503)
         self.assertContains(failed, proof['operation_id'], status_code=503)
         retried = self.browser.post(path, data, content_type='application/x-www-form-urlencoded')
         self.assertEqual(retried.status_code, 303)
-        self.assertEqual(self.tree_receipts(), before + 1)
+        self.assertEqual(self.tree_receipts(), before)

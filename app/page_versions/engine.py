@@ -270,15 +270,10 @@ def initialize(*,actor,page_id,snapshot,expected_generation,operation_id):
 
 
 def check_editor_session(actor,generation,session_key):
-    from accounts.models import AuthSession
-    from accounts import clock
-    from accounts.services import IDLE,ABSOLUTE
-    if type(session_key) is not str or not session_key:
-        raise ValidationError('EDITOR_SESSION_ENDED')
-    session=AuthSession.objects.filter(pk=session_key,user_id=actor.pk,generation=generation).first()
-    instant=clock.now()
-    if (session is None or instant<session.issued_at or instant<session.last_seen
-            or instant-session.last_seen>IDLE or instant-session.issued_at>ABSOLUTE):
+    from accounts.services import check_session_identity
+    try:
+        check_session_identity(actor, generation, session_key)
+    except ValidationError:
         raise ValidationError('EDITOR_SESSION_ENDED')
 
 

@@ -10,18 +10,20 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction, connection
-from django.db.models import Q, F
 from django.utils.dateparse import parse_datetime
 from audit.constants import Category, Level, Result, Source
 from audit.services import record_event
 from content.models import Page, lock_content
 from . import clock
-from .models import UserProfile, PageGrant, AuthSession, LoginThrottle, AuthResourceState
+from .models import UserProfile, PageGrant, LoginThrottle, AuthResourceState
 
 AUTH_LOCK = 7342810301
 DUMMY_HASH = make_password(secrets.token_hex(32))
 IDLE = timedelta(minutes=30)
 ABSOLUTE = timedelta(hours=12)
+SESSION_GENERATION = 'estakada_auth_generation'
+SESSION_ISSUED_AT = 'estakada_auth_issued_at'
+SESSION_LAST_SEEN = 'estakada_auth_last_seen'
 
 class AuthUnavailable(Exception):
     pass
@@ -91,22 +93,11 @@ def capacity_state(kind, full):
               result=Result.FAILURE if full else Result.SUCCESS)
 
 def cleanup(now):
-    expired=AuthSession.objects.select_related('user').filter(
-        Q(last_seen__lt=now-IDLE)|Q(issued_at__lt=now-ABSOLUTE)|
-        Q(user__is_active=False)|~Q(generation=F('user__security_profile__generation')))
-    keys=[]
-    for state in expired:
-        flush_session_counts(state)
-        event('AUTH_SESSION_EXPIRED',actor=state.user)
-        keys.append(state.pk)
-    Session.objects.filter(session_key__in=keys).delete()
-    AuthSession.objects.filter(session_key__in=keys).delete()
     Session.objects.filter(expire_date__lt=now).delete()
     for row in LoginThrottle.objects.filter(expires_at__lte=now):
         flush_throttle_counts(row)
         row.delete()
     capacity_state('throttle',LoginThrottle.objects.count()>=settings.AUTH_THROTTLE_CAP)
-    capacity_state('sessions',AuthSession.objects.count()>=settings.AUTH_SESSION_CAP)
 
 def _owner(actor, expected_generation=None):
     profile = UserProfile.objects.select_related('user').filter(user_id=actor.pk).first()
@@ -157,12 +148,8 @@ def reset_password(*, actor, employee, password, expected_generation=None):
         event('AUTH_EMPLOYEE_PASSWORD_RESET', actor=actor, target=target.user)
 
 def invalidate(profile):
-    profile.generation += 1; profile.save(update_fields=['generation'])
-    states=list(AuthSession.objects.select_related('user').filter(user_id=profile.user_id))
-    for state in states:flush_session_counts(state)
-    keys=[state.pk for state in states]
-    Session.objects.filter(session_key__in=keys).delete()
-    AuthSession.objects.filter(user_id=profile.user_id).delete()
+    profile.generation += 1
+    profile.save(update_fields=['generation'])
 
 def set_active(*, actor, employee, active, expected_generation=None):
     if type(active) is not bool:
@@ -181,13 +168,24 @@ def set_grant(*, actor, employee, page, intro_text=False, main_text=False, price
         raise ValidationError('AUTH_INVALID_CAPABILITY')
     with transaction.atomic():
         lock_content('default'); lock_auth(); _owner(actor, expected_generation)
-        if not UserProfile.objects.filter(user_id=employee.pk,role='employee').exists():
+        profile = UserProfile.objects.select_related('user').filter(
+            user_id=employee.pk, role='employee').first()
+        if profile is None:
             raise PermissionDenied('AUTH_EMPLOYEE_REQUIRED')
+        changed = False
         if revoke:
-            PageGrant.objects.filter(user_id=employee.pk, page_id=page.pk).delete()
+            changed = bool(PageGrant.objects.filter(
+                user_id=employee.pk, page_id=page.pk).delete()[0])
         else:
-            grant, _ = PageGrant.objects.get_or_create(user_id=employee.pk,page_id=page.pk)
+            grant, created = PageGrant.objects.get_or_create(
+                user_id=employee.pk, page_id=page.pk)
+            changed = (not created and (
+                grant.intro_text != intro_text
+                or grant.main_text != main_text
+                or grant.price != price))
             grant.intro_text=intro_text;grant.main_text=main_text;grant.price=price;grant.save()
+        if changed:
+            invalidate(profile)
         event('AUTH_GRANT_REVOKED' if revoke else 'AUTH_GRANT_CHANGED', actor=actor, target=employee)
 
 def allowed_fields(user, page):
@@ -252,23 +250,17 @@ def _authenticate_request(request, username, password):
             row.expires_at=row.blocked_until or now+timedelta(seconds=600)
             row.save()
             return False
-        old_key=request.session.session_key
-        replacement=1 if old_key and AuthSession.objects.filter(pk=old_key).exists() else 0
-        if AuthSession.objects.count()-replacement >= settings.AUTH_SESSION_CAP:
-            capacity_state('sessions',True)
-            row.save()
-            return False
         flush_throttle_counts(row)
         row.failure_count_total=0;row.failure_count_lower_bound=False
         row.blocked_repeats=0;row.repeat_count_lower_bound=False
         row.failure_times=[];row.blocked_until=None;row.expires_at=now+timedelta(seconds=600);row.save()
         request.session.flush()
         django_login(request,current.user,backend='django.contrib.auth.backends.ModelBackend')
-        request.session.set_expiry(43200)
+        request.session[SESSION_GENERATION] = current.generation
+        request.session[SESSION_ISSUED_AT] = now.isoformat()
+        request.session[SESSION_LAST_SEEN] = now.isoformat()
+        request.session.set_expiry(int(IDLE.total_seconds()))
         request.session.save()
-        if old_key:AuthSession.objects.filter(pk=old_key).delete()
-        AuthSession.objects.create(session_key=request.session.session_key,user=current.user,
-                                   generation=current.generation,issued_at=now,last_seen=now)
         event('AUTH_LOGIN_SUCCESS',actor=current.user,source_ip=ip,request_id=rid)
         return True
 
@@ -284,6 +276,51 @@ def authenticate_request(request, username, password):
         request.user=original_user
         raise
 
+def _session_payload(actor, session_key, *, expected_generation=None,
+                     lock=False):
+    if (type(session_key) is not str or not session_key
+            or len(session_key) > 40
+            or (expected_generation is not None
+                and (type(expected_generation) is not int
+                     or expected_generation <= 0))):
+        raise ValidationError('AUTH_SESSION_INVALID')
+    sessions = Session.objects.select_for_update() if lock else Session.objects
+    row = sessions.filter(pk=session_key).first()
+    if row is None:
+        raise ValidationError('AUTH_SESSION_INVALID')
+    data = row.get_decoded()
+    generation = data.get(SESSION_GENERATION)
+    issued = parse_datetime(data.get(SESSION_ISSUED_AT, ''))
+    last_seen = parse_datetime(data.get(SESSION_LAST_SEEN, ''))
+    profile = UserProfile.objects.select_related('user').filter(
+        user_id=actor.pk).first()
+    role_ok = bool(profile and (
+        profile.role == UserProfile.Role.EMPLOYEE
+        or (profile.role == UserProfile.Role.OWNER
+            and profile.user.username == 'nesadmin')))
+    instant = clock.now()
+    if (type(data.get('_auth_user_id')) is not str
+            or data['_auth_user_id'] != str(actor.pk)
+            or type(generation) is not int or generation <= 0
+            or (expected_generation is not None
+                and generation != expected_generation)
+            or not role_ok or not profile.user.is_active
+            or generation != profile.generation
+            or issued is None or issued.tzinfo is None
+            or last_seen is None or last_seen.tzinfo is None
+            or instant < issued or instant < last_seen
+            or instant - last_seen > IDLE
+            or instant - issued > ABSOLUTE
+            or row.expire_date <= instant):
+        raise ValidationError('AUTH_SESSION_INVALID')
+    return row, data, profile, issued, last_seen, instant
+
+
+def check_session_identity(actor, generation, session_key):
+    _session_payload(
+        actor, session_key, expected_generation=generation, lock=False)
+
+
 def require_session(request, *, touch=True):
     key=request.session.session_key
     if not key or not request.user.is_authenticated:
@@ -291,49 +328,47 @@ def require_session(request, *, touch=True):
     expired=False
     with transaction.atomic():
         lock_auth()
-        now=clock.now()
-        state=AuthSession.objects.select_related('user__security_profile').filter(pk=key).first()
-        profile=UserProfile.objects.filter(user_id=state.user_id).first() if state else None
-        if (state is None or profile is None or state.user_id!=request.user.pk or not state.user.is_active
-                or state.generation!=profile.generation or now-state.last_seen>IDLE
-                or now-state.issued_at>ABSOLUTE or now<state.issued_at or now<state.last_seen):
-            if state:
-                flush_session_counts(state)
-                event('AUTH_SESSION_EXPIRED',actor=state.user)
-                state.delete();Session.objects.filter(pk=key).delete()
+        try:
+            row, data, profile, issued, _last_seen, now = _session_payload(
+                request.user, key, lock=True)
+        except ValidationError:
+            if Session.objects.filter(pk=key).exists():
+                event('AUTH_SESSION_EXPIRED', actor=request.user)
+                Session.objects.filter(pk=key).delete()
             expired=True
         else:
             if touch:
-                state.last_seen=now;state.save(update_fields=['last_seen'])
-            request.auth_generation=state.generation
+                data[SESSION_LAST_SEEN] = now.isoformat()
+                request.session.clear()
+                request.session.update(data)
+                remaining = max(
+                    1, int((issued + ABSOLUTE - now).total_seconds()))
+                request.session.set_expiry(min(
+                    int(IDLE.total_seconds()), remaining))
+                request.session.save()
+                request.session.modified = False
+            request.auth_generation=profile.generation
     if expired:
         request.session.flush()
         raise PermissionDenied('AUTH_SESSION_EXPIRED')
-    return state.user
+    return profile.user
 
 def note_denial(request, scope):
     if scope not in ('owner','page'):
         raise ValueError('AUTH_UNKNOWN_PERMISSION_SCOPE')
     with transaction.atomic():
         lock_auth()
-        state=AuthSession.objects.select_related('user').filter(pk=request.session.session_key).first()
-        if state is None or state.user_id!=request.user.pk:
-            return
-        field='denied_'+scope+'_count'
-        count=getattr(state,field)
-        if count==0:event('SEC_PERMISSION_DENIED',actor=state.user,result=Result.DENIED)
-        if count>=MAX_COUNT:state.denial_count_lower_bound=True
-        else:setattr(state,field,count+1)
-        state.save(update_fields=[field,'denial_count_lower_bound'])
+        check_session_identity(
+            request.user, request.auth_generation,
+            request.session.session_key)
+        event('SEC_PERMISSION_DENIED', actor=request.user,
+              result=Result.DENIED)
 
 def logout_request(request):
     with transaction.atomic():
         lock_auth()
-        key=request.session.session_key
-        if key:
-            state=AuthSession.objects.select_related('user').filter(pk=key).first()
-            if state:
-                flush_session_counts(state);event('AUTH_LOGOUT',actor=state.user);state.delete()
+        if request.user.is_authenticated:
+            event('AUTH_LOGOUT', actor=request.user)
         request.session.flush()
 
 

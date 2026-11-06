@@ -10,8 +10,9 @@ from urllib.parse import urlencode
 from accounts.views import gate, fields
 from .models import Page
 from . import creation
-from .tree_commands import TreeFault
-from page_versions.models import OwnerDraft
+from . import simple_creation as simple
+from .tree_commands import TreeFault, uid
+from page_versions.models import OperationReceipt, OwnerDraft
 
 INPUTS = ('step', 'operation_id', 'page_id', 'token', 'name', 'kind', 'parent_id', 'url', 'h1', 'title')
 KIND_LABELS = {'service_detail': 'Услуга', 'article': 'Статья', 'service_catalog': 'Каталог услуг',
@@ -30,7 +31,7 @@ def form(request, values, prepared=None, message=None, status=200):
     return render(request, 'accounts/page_create.html', {'owner': True, 'values': values,
         'prepared': prepared, 'message': message,
         'metadata_ready': 'h1' in values and 'title' in values,
-        'kind_choices': [(value, KIND_LABELS[value]) for value in creation.KINDS]}, status=status)
+        'kind_choices': [(value, KIND_LABELS[value]) for value in simple.KINDS]}, status=status)
 
 
 @require_http_methods(['GET', 'POST'])
@@ -45,8 +46,8 @@ def create_page(request):
         if request.method == 'GET':
             if set(request.GET) - {'parent', 'kind'} or any(len(request.GET.getlist(k)) != 1 for k in request.GET):
                 raise TreeFault('CREATE_INVALID_INPUT', 400)
-            prepared = creation.prepare(**common, parent_id=request.GET.get('parent') or None,
-                                        kind=request.GET.get('kind', 'article'))
+            prepared = simple.prepare(**common, parent_id=request.GET.get('parent') or None,
+                                      kind=request.GET.get('kind', 'article'))
             data = {key: prepared[key] for key in ('operation_id', 'page_id', 'token', 'parent_id', 'kind')}
             data.update(name='', url='')
             return form(request, data, prepared)
@@ -59,8 +60,8 @@ def create_page(request):
         if ('h1' in data) != ('title' in data):
             raise TreeFault('CREATE_INVALID_INPUT', 400)
         if data['step'] == 'preview':
-            prepared = creation.prepare(**common, parent_id=data['parent_id'] or None, kind=data['kind'],
-                                         operation_id=data['operation_id'], page_id=data['page_id'])
+            prepared = simple.prepare(**common, parent_id=data['parent_id'] or None, kind=data['kind'],
+                                      operation_id=data['operation_id'], page_id=data['page_id'])
             suggested = creation.preview(name=data['name'], parent_id=data['parent_id'] or None)
             values = data.dict()
             values['token'] = prepared['token']
@@ -73,8 +74,13 @@ def create_page(request):
                 'Автоматический адрес недоступен для этого названия или родителя. Введите полный путь вручную.')
         if not {'h1','title'} <= set(data):
             raise TreeFault('CREATE_INVALID_INPUT', 400)
-        result = creation.apply(**common, **{key:data[key] for key in
-            ('token','operation_id','page_id','parent_id','kind','name','url','h1','title')})
+        values = {key:data[key] for key in
+            ('token','operation_id','page_id','parent_id','kind','name','url','h1','title')}
+        operation_id = uid(data['operation_id'])
+        if OperationReceipt.objects.filter(pk=operation_id).exists():
+            result = creation.apply(**common, **values)
+        else:
+            result = simple.apply(**common, **values)
         if not result['exists']:
             return form(request, data, message='Команда выполнена ранее; созданная страница больше недоступна.', status=410)
         response = HttpResponse(status=303)

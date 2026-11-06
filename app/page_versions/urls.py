@@ -20,5 +20,6 @@ urlpatterns=[
     path('<uuid:version_id>/delete/prepare/',views.delete_prepare,name='delete_prepare'),
     path('<uuid:version_id>/delete/',views.delete,name='delete'),
     path('<uuid:version_id>/restore/prepare/',views.restore_prepare,name='restore_prepare'),
+    path('<uuid:version_id>/restore/apply/',views.restore_apply,name='restore_apply'),
     path('<uuid:version_id>/restore/stage/',views.restore_stage,name='restore_stage'),
 ]

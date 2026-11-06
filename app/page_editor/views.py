@@ -109,7 +109,7 @@ def write(request, page_id, *, action):
                 raise CheckFault('EDITOR_IDENTITY_CHANGED')
             committed = commit_checked(actor=current_actor, page_id=page_id, generation=generation,
                 origin=origin, before=before, raw=raw, result=result, session_key=request.session.session_key)
-            if action == 'draft':
+            if action == 'draft' and 'draftBasis' not in committed:
                 from page_versions.models import OperationReceipt
                 from page_versions import engine as E
                 meta = result['save_request']
@@ -134,7 +134,7 @@ def write(request, page_id, *, action):
 @gate(owner=True)
 def cancel_draft(request, page_id):
     from .input_policy import _pairs, _no_constant, identifier, fingerprint
-    from page_versions import engine as E
+    from page_versions import simple_commands
     import json
     try:
         if request.META.get('QUERY_STRING') or request.content_type != 'application/json':
@@ -151,7 +151,7 @@ def cancel_draft(request, page_id):
                 or type(value['draftRevision']) is not int or value['draftRevision'] <= 0):
             raise CheckFault('EDITOR_INPUT_REJECTED')
         identifier(value['draftId']); identifier(value['operationId'])
-        result = E.cancel_owner_draft(actor=request.user, page_id=page_id, draft_id=value['draftId'],
+        result = simple_commands.cancel_owner_draft(actor=request.user, page_id=page_id, draft_id=value['draftId'],
             draft_revision=value['draftRevision'], expected_generation=value['generation'],
             operation_id=value['operationId'], editor_request_fingerprint=fingerprint(value),
             editor_session_key=request.session.session_key)

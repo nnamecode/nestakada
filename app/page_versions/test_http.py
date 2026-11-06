@@ -3,13 +3,16 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlencode
 from uuid import uuid4
 from django.conf import settings
+from django.contrib.sessions.models import Session
 from django.test import Client,TransactionTestCase,override_settings
 from django.urls import reverse
 from accounts.services import bootstrap_owner,create_employee,set_grant
 from audit.models import AuditEvent
 from content.models import Page,Route
 from . import services as V,schema as S
-from .models import PageRevision,PageContentState,RestoreStage,OperationReceipt,VersionBasePin
+from media_library.models import AssetUsage
+from .models import (PageRevision,PageContentState,RestoreStage,OperationReceipt,
+                     VersionBasePin,OwnerDraft)
 
 PASSWORD='Versions-http-owner-current-password'
 EMPLOYEE_PASSWORD='Versions-http-employee-password'
@@ -49,6 +52,18 @@ class VersionHttpTests(TransactionTestCase):
 
     def current(self):return PageContentState.objects.get(page=self.page).current_revision_id
 
+    def domain(self):
+        return {
+            'current':str(self.current()),
+            'revisions':list(PageRevision.objects.order_by('id').values()),
+            'drafts':list(OwnerDraft.objects.order_by('id').values()),
+            'stages':list(RestoreStage.objects.order_by('id').values()),
+            'pins':list(VersionBasePin.objects.order_by('id').values()),
+            'receipts':list(OperationReceipt.objects.order_by('id').values()),
+            'usages':list(AssetUsage.objects.order_by('id').values()),
+            'audit':list(AuditEvent.objects.order_by('id').values()),
+        }
+
     def test_closed_history_roles_draft_privacy_and_escaped_read(self):
         V.save_owner_draft(actor=self.owner,page_id=self.page.pk,base_revision=self.initial,snapshot=S.snapshot_v1(self.page.kind,main_text='OWNER_DRAFT_SECRET_CANARY'),expected_generation=1,operation_id=uuid4())
         count=PageRevision.objects.count()
@@ -71,22 +86,33 @@ class VersionHttpTests(TransactionTestCase):
         prepared=self.owner_client.get(self.url('manual_prepare'));self.assertEqual(prepared.status_code,200)
         self.assertContains(prepared,f'data-manual-source="{self.initial}"')
         values={'generation':1,'operation_id':uuid4(),'confirmation':prepared.context['prepared']['confirmation'],'name':'HTTP manual','comment':'line1\r\nline2','manual_date':'1960-01-02T03:04:05+03:00'}
-        url=self.url('manual_create');before=PageRevision.objects.count()
+        url=self.url('manual_create');before=PageRevision.objects.count();receipts=OperationReceipt.objects.count()
         self.assertEqual(self.post(self.owner_client,url,values,csrf=False).status_code,403)
         self.assertEqual(self.post(self.employee_client,url,values).status_code,403)
         created=self.post(self.owner_client,url,values);self.assertEqual(created.status_code,200)
         result=created.context['result'];self.assertEqual(PageRevision.objects.count(),before+1)
+        self.assertEqual(result['result_id'],str(values['operation_id']))
         copied=PageRevision.objects.get(pk=result['result_id']);self.assertEqual(copied.payload,PageRevision.objects.get(pk=self.initial).payload)
         self.assertEqual(copied.metadata.comment,'line1\nline2');self.assertEqual(copied.metadata.manual_date.year,1960)
         self.assertEqual(str(self.current()),self.initial)
-        replay=self.post(self.owner_client,url,values);self.assertEqual(replay.status_code,200);self.assertTrue(replay.context['result']['replay'])
+        self.assertEqual(OperationReceipt.objects.count(),receipts)
+        replay=self.post(self.owner_client,url,values);self.assertEqual(replay.status_code,409)
         self.assertEqual(self.post(self.owner_client,url,{**values,'name':'changed'}).status_code,409)
         self.assertEqual(PageRevision.objects.count(),before+1)
 
-    def test_denied_authenticated_requests_aggregate_without_per_request_audit(self):
+        legacy_prepared=V.prepare_manual(actor=self.owner,page_id=self.page.pk,expected_generation=1)
+        legacy_values={'generation':1,'operation_id':uuid4(),'confirmation':legacy_prepared['confirmation'],'name':'Legacy manual','comment':'','manual_date':''}
+        legacy=V.create_manual(actor=self.owner,page_id=self.page.pk,confirmation=legacy_values['confirmation'],expected_generation=1,operation_id=legacy_values['operation_id'],name=legacy_values['name'])
+        legacy_count=PageRevision.objects.count()
+        replay=self.post(self.owner_client,url,legacy_values)
+        self.assertEqual(replay.status_code,200);self.assertTrue(replay.context['result']['replay'])
+        self.assertEqual(replay.context['result']['result_id'],legacy['result_id'])
+        self.assertEqual(PageRevision.objects.count(),legacy_count)
+
+    def test_denied_authenticated_requests_write_one_bounded_event_each(self):
         before=AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count()
         for _ in range(3):self.assertEqual(self.other_client.get(self.url('history')).status_code,403)
-        self.assertEqual(AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count(),before+1)
+        self.assertEqual(AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count(),before+3)
         before=AuditEvent.objects.count()
         for _ in range(3):self.assertEqual(self.visitor.get(self.url('history')).status_code,401)
         self.assertEqual(AuditEvent.objects.count(),before)
@@ -95,34 +121,73 @@ class VersionHttpTests(TransactionTestCase):
         prepared=V.prepare_manual(actor=self.owner,page_id=self.page.pk,expected_generation=1)
         result=V.create_manual(actor=self.owner,page_id=self.page.pk,confirmation=prepared['confirmation'],expected_generation=1,operation_id=uuid4(),name='Manual <script>name</script>')
         version=result['result_id'];row=PageRevision.objects.get(pk=version)
+        receipts=OperationReceipt.objects.count()
         response=self.post(self.owner_client,self.url('metadata_edit',version),{'generation':1,'operation_id':uuid4(),'metadata_generation':row.metadata.generation,'name':'Edited <b>name</b>','comment':'edited','manual_date':'2099-01-02T00:00:00+03:00'})
         self.assertEqual(response.status_code,200);self.assertContains(response,'Сведения о ручной версии сохранены')
+        self.assertEqual(OperationReceipt.objects.count(),receipts)
         unchanged=PageRevision.objects.get(pk=version);self.assertEqual(unchanged.created_at,row.created_at);self.assertEqual(unchanged.author_id,row.author_id)
         self.page.name='Page <b>name</b>';self.page.save()
         confirmation=self.owner_client.get(self.url('delete_prepare',version));self.assertEqual(confirmation.status_code,200)
         self.assertContains(confirmation,'Page &lt;b&gt;name&lt;/b&gt;');self.assertContains(confirmation,'/version-http/')
         self.assertContains(confirmation,'data-delete-kind');self.assertContains(confirmation,str(version));self.assertContains(confirmation,'Edited &lt;b&gt;name&lt;/b&gt;')
         self.assertNotContains(confirmation,'<b>name</b>')
+        deleted=self.post(self.owner_client,self.url('delete',version),{'generation':1,'operation_id':uuid4(),'confirmation':confirmation.context['prepared']['confirmation']})
+        self.assertEqual(deleted.status_code,200);self.assertFalse(PageRevision.objects.filter(pk=version).exists())
+        self.assertEqual(OperationReceipt.objects.count(),receipts)
 
     def test_stable_requires_exact_view_owner_and_repeated_current_password(self):
         viewed=self.owner_client.get(self.url('read',self.initial));proof=viewed.context['view_receipt']
+        receipts=OperationReceipt.objects.count()
         values={'generation':1,'operation_id':uuid4(),'view_receipt':proof}
+        denied=AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count()
         self.assertEqual(self.post(self.employee_client,self.url('stable_set',self.initial),values).status_code,403)
+        self.assertEqual(AuditEvent.objects.filter(code='SEC_PERMISSION_DENIED').count(),denied+1)
         self.assertEqual(self.post(self.owner_client,self.url('stable_set',self.initial),values).status_code,200)
+        self.assertEqual(OperationReceipt.objects.count(),receipts)
         prepared=self.owner_client.get(self.url('demote_prepare',self.initial));self.assertEqual(prepared.status_code,200)
         data={'generation':1,'operation_id':uuid4(),'confirmation':prepared.context['prepared']['confirmation'],'password':'incorrect-private-password'}
         failed=self.post(self.owner_client,self.url('demote',self.initial),data)
         self.assertEqual(failed.status_code,403);self.assertNotContains(failed,data['password'],status_code=403)
         data['password']=PASSWORD;self.assertEqual(self.post(self.owner_client,self.url('demote',self.initial),data).status_code,200)
+        self.assertEqual(OperationReceipt.objects.count(),receipts)
         self.assertEqual(self.post(self.owner_client,self.url('demote',self.initial),{**data,'password':'wrong-on-replay'}).status_code,403)
         self.assertNotIn(PASSWORD,str(list(OperationReceipt.objects.values())))
+
+    def test_legacy_history_receipts_replay_and_action_mismatch_is_consumed(self):
+        prepared=V.prepare_manual(actor=self.owner,page_id=self.page.pk,expected_generation=1)
+        create_operation=uuid4()
+        manual=V.create_manual(actor=self.owner,page_id=self.page.pk,confirmation=prepared['confirmation'],expected_generation=1,operation_id=create_operation,name='Legacy target')
+        row=PageRevision.objects.get(pk=manual['result_id'])
+
+        metadata_operation=uuid4();metadata_values={'generation':1,'operation_id':metadata_operation,'metadata_generation':row.metadata.generation,'name':'Legacy metadata','comment':'legacy','manual_date':''}
+        original=V.edit_manual_metadata(actor=self.owner,page_id=self.page.pk,version_id=row.pk,metadata_generation=row.metadata.generation,expected_generation=1,operation_id=metadata_operation,name='Legacy metadata',comment='legacy')
+        replay=self.post(self.owner_client,self.url('metadata_edit',row.pk),metadata_values)
+        self.assertEqual(replay.status_code,200);self.assertTrue(replay.context['result']['replay']);self.assertEqual(replay.context['result']['result_id'],original['result_id'])
+
+        mismatch=self.post(self.owner_client,self.url('metadata_edit',row.pk),{**metadata_values,'operation_id':create_operation,'metadata_generation':2})
+        self.assertEqual(mismatch.status_code,409)
+
+        viewed=V.view_version(actor=self.owner,page_id=self.page.pk,version_id=row.pk,expected_generation=1)
+        stable_operation=uuid4();stable=V.set_stable(actor=self.owner,page_id=self.page.pk,version_id=row.pk,view_receipt=viewed['view_receipt'],expected_generation=1,operation_id=stable_operation)
+        replay=self.post(self.owner_client,self.url('stable_set',row.pk),{'generation':1,'operation_id':stable_operation,'view_receipt':viewed['view_receipt']})
+        self.assertEqual(replay.status_code,200);self.assertTrue(replay.context['result']['replay']);self.assertEqual(replay.context['result']['result_id'],stable['result_id'])
+
+        demote_prepared=V.prepare_demote(actor=self.owner,page_id=self.page.pk,version_id=row.pk,expected_generation=1)
+        demote_operation=uuid4();demoted=V.demote_stable(actor=self.owner,page_id=self.page.pk,confirmation=demote_prepared['confirmation'],password=PASSWORD,expected_generation=1,operation_id=demote_operation)
+        replay=self.post(self.owner_client,self.url('demote',row.pk),{'generation':1,'operation_id':demote_operation,'confirmation':demote_prepared['confirmation'],'password':PASSWORD})
+        self.assertEqual(replay.status_code,200);self.assertTrue(replay.context['result']['replay']);self.assertEqual(replay.context['result']['result_id'],demoted['result_id'])
+
+        deletion=V.prepare_delete(actor=self.owner,page_id=self.page.pk,version_id=row.pk,expected_generation=1)
+        delete_operation=uuid4();deleted=V.delete_revision(actor=self.owner,page_id=self.page.pk,confirmation=deletion['confirmation'],expected_generation=1,operation_id=delete_operation)
+        replay=self.post(self.owner_client,self.url('delete',row.pk),{'generation':1,'operation_id':delete_operation,'confirmation':deletion['confirmation']})
+        self.assertEqual(replay.status_code,200);self.assertTrue(replay.context['result']['replay']);self.assertEqual(replay.context['result']['result_id'],deleted['result_id'])
 
     def prepare_stage(self):
         response=self.post(self.employee_client,self.url('restore_prepare',self.initial),{'generation':1})
         self.assertEqual(response.status_code,200)
         data={'generation':1,'operation_id':uuid4(),'preparation':response.context['prepared']['preparation'],'confirm_input_replacement':'yes'}
-        staged=self.post(self.employee_client,self.url('restore_stage',self.initial),data);self.assertEqual(staged.status_code,200)
-        return data,staged.context['prepared']['stage']
+        result=V.stage_restore(actor=self.employee,page_id=self.page.pk,preparation=data['preparation'],confirm_input_replacement=True,expected_generation=1,operation_id=data['operation_id'])
+        return data,RestoreStage.objects.get(pk=result['result_id'])
 
     def test_restore_stage_cancel_then_replay_has_terminal_receipt_without_payload(self):
         before=PageRevision.objects.count();data,stage=self.prepare_stage()
@@ -145,6 +210,81 @@ class VersionHttpTests(TransactionTestCase):
         response=self.post(self.employee_client,self.url('restore_prepare',self.initial),{'generation':1,'payload':'arbitrary'})
         self.assertEqual(response.status_code,400)
         prepared=self.post(self.employee_client,self.url('restore_prepare',self.initial),{'generation':1})
-        response=self.post(self.employee_client,self.url('restore_stage',self.initial),{'generation':1,'operation_id':uuid4(),'preparation':prepared.context['prepared']['preparation']})
+        response=self.post(self.employee_client,self.url('restore_apply',self.initial),{'generation':1,'operation_id':uuid4(),'preparation':prepared.context['prepared']['preparation']})
         self.assertEqual(response.status_code,409);self.assertEqual(RestoreStage.objects.count(),0)
+        closed=self.post(self.employee_client,self.url('restore_stage',self.initial),{'generation':1,'operation_id':uuid4(),'preparation':prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        self.assertEqual(closed.status_code,410);self.assertEqual(RestoreStage.objects.count(),0)
         self.assertEqual(self.post(self.owner_client,self.url('read',self.initial),{}).status_code,405)
+
+    def test_direct_employee_restore_preserves_protected_fields_without_stage_or_receipt(self):
+        safe_source=V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>safe source</p>',h1='Source protected'),expected_generation=1,operation_id=uuid4())['result_id']
+        V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>current</p>',h1='Current protected'),expected_generation=1,operation_id=uuid4())
+        prepared=self.post(self.employee_client,self.url('restore_prepare',safe_source),{'generation':1})
+        self.assertEqual(prepared.status_code,200);self.assertContains(prepared,'data-restore-apply')
+        before=(RestoreStage.objects.count(),OperationReceipt.objects.count(),VersionBasePin.objects.count(),PageRevision.objects.count())
+        values={'generation':1,'operation_id':uuid4(),'preparation':prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'}
+        self.assertEqual(self.post(self.employee_client,self.url('restore_apply',safe_source),values,csrf=False).status_code,403)
+        self.assertEqual((RestoreStage.objects.count(),OperationReceipt.objects.count(),VersionBasePin.objects.count(),PageRevision.objects.count()),before)
+        response=self.post(self.employee_client,self.url('restore_apply',safe_source),values)
+        self.assertEqual(response.status_code,200)
+        row=PageRevision.objects.get(pk=response.context['result']['result_id'])
+        self.assertEqual(str(row.source_revision_id),safe_source)
+        self.assertEqual(row.payload['main_text'],'<p>safe source</p>')
+        self.assertEqual(row.payload['h1'],'Current protected')
+        self.assertEqual(self.current(),row.pk)
+        self.assertEqual((RestoreStage.objects.count(),OperationReceipt.objects.count(),VersionBasePin.objects.count(),PageRevision.objects.count()),(before[0],before[1],before[2],before[3]+1))
+
+    def test_direct_restore_rejects_historical_content_changed_by_current_policy(self):
+        prepared=self.post(self.owner_client,self.url('restore_prepare',self.initial),{'generation':1})
+        self.assertEqual(prepared.status_code,200)
+        before=(self.current(),PageRevision.objects.count(),RestoreStage.objects.count(),OperationReceipt.objects.count())
+        response=self.post(self.owner_client,self.url('restore_apply',self.initial),{'generation':1,'operation_id':uuid4(),'preparation':prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        self.assertEqual(response.status_code,409)
+        self.assertEqual((self.current(),PageRevision.objects.count(),RestoreStage.objects.count(),OperationReceipt.objects.count()),before)
+
+    def test_direct_owner_restore_success_without_stage_or_receipt(self):
+        source=V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>owner source</p>',h1='Owner source heading'),expected_generation=1,operation_id=uuid4())['result_id']
+        V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>owner current</p>',h1='Owner current heading'),expected_generation=1,operation_id=uuid4())
+        prepared=self.post(self.owner_client,self.url('restore_prepare',source),{'generation':1})
+        self.assertEqual(prepared.status_code,200)
+        before=(PageRevision.objects.count(),RestoreStage.objects.count(),OperationReceipt.objects.count(),VersionBasePin.objects.count())
+        response=self.post(self.owner_client,self.url('restore_apply',source),{'generation':1,'operation_id':uuid4(),'preparation':prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        self.assertEqual(response.status_code,200)
+        row=PageRevision.objects.get(pk=response.context['result']['result_id'])
+        self.assertEqual(str(row.source_revision_id),source)
+        self.assertEqual(row.payload['main_text'],'<p>owner source</p>')
+        self.assertEqual(row.payload['h1'],'Owner source heading')
+        self.assertEqual((PageRevision.objects.count(),RestoreStage.objects.count(),OperationReceipt.objects.count(),VersionBasePin.objects.count()),(before[0]+1,before[1],before[2],before[3]))
+
+    def test_direct_restore_current_rights_and_session_stale_do_not_mutate(self):
+        source=V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>stale source</p>',h1='Protected heading'),expected_generation=1,operation_id=uuid4())['result_id']
+        V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>stale current</p>',h1='Protected heading'),expected_generation=1,operation_id=uuid4())
+
+        current_prepared=self.post(self.employee_client,self.url('restore_prepare',source),{'generation':1})
+        self.assertEqual(current_prepared.status_code,200)
+        V.commit_owner(actor=self.owner,page_id=self.page.pk,base_revision=self.current(),snapshot=S.snapshot_v1(self.page.kind,main_text='<p>advanced after preview</p>',h1='Protected heading'),expected_generation=1,operation_id=uuid4())
+        before=self.domain()
+        current_response=self.post(self.employee_client,self.url('restore_apply',source),{'generation':1,'operation_id':uuid4(),'preparation':current_prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        self.assertEqual(current_response.status_code,409);self.assertEqual(self.domain(),before)
+
+        rights_prepared=self.post(self.employee_client,self.url('restore_prepare',source),{'generation':1})
+        self.assertEqual(rights_prepared.status_code,200)
+        set_grant(actor=self.owner,employee=self.employee,page=self.page,revoke=True)
+        before=self.domain()
+        before_denials=sum(row['occurrence_count'] for row in before['audit']
+                           if row['code']=='SEC_PERMISSION_DENIED')
+        rights_response=self.post(self.employee_client,self.url('restore_apply',source),{'generation':1,'operation_id':uuid4(),'preparation':rights_prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        self.assertEqual(rights_response.status_code,401)
+        after=self.domain();before.pop('audit');after_audit=after.pop('audit')
+        self.assertEqual(after,before)
+        self.assertEqual(sum(row['occurrence_count'] for row in after_audit
+                             if row['code']=='SEC_PERMISSION_DENIED'),before_denials)
+
+        set_grant(actor=self.owner,employee=self.employee,page=self.page,main_text=True)
+        fresh_client=self.login(self.employee.username,EMPLOYEE_PASSWORD)
+        session_prepared=self.post(fresh_client,self.url('restore_prepare',source),{'generation':1})
+        self.assertEqual(session_prepared.status_code,200)
+        Session.objects.filter(pk=fresh_client.session.session_key).delete()
+        before=self.domain()
+        session_response=self.post(fresh_client,self.url('restore_apply',source),{'generation':1,'operation_id':uuid4(),'preparation':session_prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        self.assertEqual(session_response.status_code,401);self.assertEqual(self.domain(),before)

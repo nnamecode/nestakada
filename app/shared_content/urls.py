@@ -10,6 +10,7 @@ urlpatterns = [
     path('<str:kind>/apply/', views.apply, name='apply'),
     path('<str:kind>/history/', views.history, name='history'),
     path('<str:kind>/versions/<uuid:version_id>/', views.version, name='version'),
+    path('<str:kind>/versions/<uuid:version_id>/restore/', views.restore_version, name='restore_version'),
     path('<str:kind>/compare/', views.compare, name='compare'),
     path('<str:kind>/restore/prepare/', views.restore_prepare, name='restore_prepare'),
     path('<str:kind>/stages/<uuid:stage_id>/cancel/', views.restore_cancel, name='restore_cancel'),

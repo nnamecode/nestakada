@@ -1,0 +1,9 @@
+{% extends 'accounts/base.html' %}
+{% block title %}Изменить адрес страницы — Эстакада{% endblock %}
+{% block content %}<section class="card"><h1>Изменить адрес страницы</h1>
+{% if prepared %}<p>Страница: <strong>{{ prepared.page.name }}</strong>.</p><p>Текущий адрес: <code>{{ prepared.route.target }}</code></p><p>После изменения текущий адрес станет постоянным перенаправлением на новый. Адреса дочерних страниц не изменятся.</p>{% endif %}
+{% if message %}<p class="error" role="alert">{{ message }}</p>{% endif %}
+{% if not error_mode or retry %}<form method="post" action="{% url 'accounts:page-url-change' page_id %}">{% csrf_token %}<input type="hidden" name="operation_id" value="{{ values.operation_id }}"><input type="hidden" name="token" value="{{ values.token }}"><label>Новый адрес<input name="target" maxlength="2048" value="{{ values.target }}" required></label><button type="submit">Изменить адрес и создать перенаправление</button></form>{% endif %}
+{% if error_mode %}<p><a href="{% url 'accounts:page-url-change' page_id %}">Открыть актуальную форму</a></p>{% endif %}
+<p><a href="{% url 'accounts:page-tree' %}">Вернуться к дереву страниц</a></p>
+</section>{% endblock %}

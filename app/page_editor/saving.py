@@ -10,6 +10,12 @@ from . import media
 from . import embedded
 
 
+def simple_current(source, action):
+    return (action == 'save' and source['editingFrom'] == 'current'
+            and source['stageId'] is None and source['draftBasis'] is None
+            and source['rebase'] is False)
+
+
 def save_request(result):
     if type(result) is not dict or type(result.get('save_request')) is not dict:
         raise CheckFault('EDITOR_WORKER_PROTOCOL')
@@ -107,7 +113,8 @@ def commit_checked(*, actor, page_id, generation, origin, before, raw, result, s
             if meta['action'] == 'draft':
                 if source['editingFrom'] == 'restore-stage':
                     raise CheckFault('EDITOR_CAPABILITY_UNAVAILABLE')
-                return E.save_owner_draft(actor=actor, page_id=page_id,
+                from page_versions import simple_commands
+                return simple_commands.save_owner_draft(actor=actor, page_id=page_id,
                     base_revision=source['targetCurrentId'] if source['rebase'] else meta['baseRevisionId'],
                     snapshot=snapshot, expected_generation=generation, operation_id=meta['operationId'],
                     draft_revision=source['draftBasis']['revision'] if source['draftBasis'] else None,
@@ -115,15 +122,43 @@ def commit_checked(*, actor, page_id, generation, origin, before, raw, result, s
                     expected_draft_hash=S.digest(after.payload) if source['draftBasis'] else None,
                     expected_draft_base=meta['baseRevisionId'] if source['draftBasis'] else None,
                     editor_request_fingerprint=meta['fingerprint'], editor_session_key=session_key)
+            if simple_current(source, meta['action']):
+                from page_versions import simple_commands
+                return simple_commands.commit_owner(
+                    actor=actor, page_id=page_id,
+                    base_revision=meta['baseRevisionId'], snapshot=snapshot,
+                    expected_generation=generation,
+                    operation_id=meta['operationId'],
+                    editor_request_fingerprint=meta['fingerprint'],
+                    editor_session_key=session_key)
+            if source['editingFrom'] == 'owner-draft':
+                from page_versions import simple_commands
+                return simple_commands.publish_owner_draft(
+                    actor=actor, page_id=page_id,
+                    base_revision=meta['baseRevisionId'], snapshot=snapshot,
+                    expected_generation=generation,
+                    operation_id=meta['operationId'],
+                    draft_id=source['draftBasis']['id'],
+                    draft_revision=source['draftBasis']['revision'],
+                    expected_draft_hash=S.digest(after.payload),
+                    editor_request_fingerprint=meta['fingerprint'],
+                    editor_session_key=session_key)
             return E.commit_owner(actor=actor, page_id=page_id, base_revision=meta['baseRevisionId'],
                 snapshot=snapshot, expected_generation=generation, operation_id=meta['operationId'],
-                stage_id=source['stageId'],
-                draft_id=source['draftBasis']['id'] if source['draftBasis'] else None,
-                draft_revision=source['draftBasis']['revision'] if source['draftBasis'] else None,
-                expected_draft_hash=S.digest(after.payload) if source['draftBasis'] else None,
-                editor_request_fingerprint=meta['fingerprint'], editor_session_key=session_key)
+                stage_id=source['stageId'], editor_request_fingerprint=meta['fingerprint'],
+                editor_session_key=session_key)
+        patch = S.TextPricePatch(**worker['changes'])
+        if simple_current(source, meta['action']):
+            from page_versions import simple_commands
+            return simple_commands.commit_employee(
+                actor=actor, page_id=page_id,
+                base_revision=meta['baseRevisionId'], patch=patch,
+                expected_generation=generation,
+                operation_id=meta['operationId'],
+                editor_request_fingerprint=meta['fingerprint'],
+                editor_session_key=session_key)
         return E.commit_employee(actor=actor, page_id=page_id, base_revision=meta['baseRevisionId'],
-            patch=S.TextPricePatch(**worker['changes']), expected_generation=generation,
+            patch=patch, expected_generation=generation,
             operation_id=meta['operationId'], stage_id=source['stageId'],
             editor_request_fingerprint=meta['fingerprint'], editor_session_key=session_key)
     except ValidationError as exc:
