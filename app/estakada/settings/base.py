@@ -32,6 +32,7 @@ MIDDLEWARE = [
     'request_guard.middleware.ScannerMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'accounts.middleware.SessionPayloadMiddleware',
     'django.middleware.common.CommonMiddleware',
     'page_editor.middleware.EditorAdmissionMiddleware',
     'shared_content.middleware.SharedAdmissionMiddleware',

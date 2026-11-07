@@ -406,7 +406,9 @@ class DraftRestoreEditorHttpTests(TransactionTestCase):
         value,selector,_=self.checked({"intro_text":"","main_text":"<p>REVOKED</p>"},stage=stage,client=self.employee_client)
         set_grant(actor=self.owner,employee=self.employee,page=self.page,revoke=True)
         before=self.state()
-        self.reject(self.send("save",value,selector=selector,client=self.employee_client),403)
+        response=self.send("save",value,selector=selector,client=self.employee_client)
+        self.assertEqual(response.status_code,401)
+        self.assertIn("no-store",response["Cache-Control"])
         self.assertEqual(self.state(),before)
 
     def test_draft_audit_fault_rolls_back_payload_refs_and_legacy_pin(self):

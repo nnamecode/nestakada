@@ -5,12 +5,15 @@ import secrets
 import socket
 from uuid import UUID, uuid4
 from django.conf import settings
-from django.contrib.auth import get_user_model, login as django_login
+from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
+                                 SESSION_KEY, get_user_model,
+                                 login as django_login)
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction, connection
 from django.utils.dateparse import parse_datetime
+from django.utils.crypto import constant_time_compare
 from audit.constants import Category, Level, Result, Source
 from audit.services import record_event
 from content.models import Page, lock_content
@@ -288,10 +291,19 @@ def _session_payload(actor, session_key, *, expected_generation=None,
     row = sessions.filter(pk=session_key).first()
     if row is None:
         raise ValidationError('AUTH_SESSION_INVALID')
-    data = row.get_decoded()
-    generation = data.get(SESSION_GENERATION)
-    issued = parse_datetime(data.get(SESSION_ISSUED_AT, ''))
-    last_seen = parse_datetime(data.get(SESSION_LAST_SEEN, ''))
+    try:
+        data = row.get_decoded()
+        if type(data) is not dict:
+            raise TypeError()
+        generation = data.get(SESSION_GENERATION)
+        issued_raw = data.get(SESSION_ISSUED_AT)
+        last_seen_raw = data.get(SESSION_LAST_SEEN)
+        if type(issued_raw) is not str or type(last_seen_raw) is not str:
+            raise TypeError()
+        issued = parse_datetime(issued_raw)
+        last_seen = parse_datetime(last_seen_raw)
+    except (AttributeError, TypeError, ValueError):
+        raise ValidationError('AUTH_SESSION_INVALID') from None
     profile = UserProfile.objects.select_related('user').filter(
         user_id=actor.pk).first()
     role_ok = bool(profile and (
@@ -299,8 +311,14 @@ def _session_payload(actor, session_key, *, expected_generation=None,
         or (profile.role == UserProfile.Role.OWNER
             and profile.user.username == 'nesadmin')))
     instant = clock.now()
-    if (type(data.get('_auth_user_id')) is not str
-            or data['_auth_user_id'] != str(actor.pk)
+    auth_hash = data.get(HASH_SESSION_KEY)
+    if (type(data.get(SESSION_KEY)) is not str
+            or data[SESSION_KEY] != str(actor.pk)
+            or data.get(BACKEND_SESSION_KEY)
+                != 'django.contrib.auth.backends.ModelBackend'
+            or type(auth_hash) is not str
+            or not constant_time_compare(
+                auth_hash, actor.get_session_auth_hash())
             or type(generation) is not int or generation <= 0
             or (expected_generation is not None
                 and generation != expected_generation)
@@ -308,6 +326,7 @@ def _session_payload(actor, session_key, *, expected_generation=None,
             or generation != profile.generation
             or issued is None or issued.tzinfo is None
             or last_seen is None or last_seen.tzinfo is None
+            or last_seen < issued
             or instant < issued or instant < last_seen
             or instant - last_seen > IDLE
             or instant - issued > ABSOLUTE
@@ -358,9 +377,12 @@ def note_denial(request, scope):
         raise ValueError('AUTH_UNKNOWN_PERMISSION_SCOPE')
     with transaction.atomic():
         lock_auth()
-        check_session_identity(
-            request.user, request.auth_generation,
-            request.session.session_key)
+        try:
+            check_session_identity(
+                request.user, request.auth_generation,
+                request.session.session_key)
+        except ValidationError:
+            return
         event('SEC_PERMISSION_DENIED', actor=request.user,
               result=Result.DENIED)
 

@@ -42,18 +42,6 @@ class PageGrant(models.Model):
         self.full_clean(validate_unique=False, validate_constraints=False)
         return super().save(*args, **kwargs)
 
-class AuthSession(models.Model):
-    session_key = models.CharField(max_length=40, primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    generation = models.PositiveBigIntegerField()
-    issued_at = models.DateTimeField()
-    last_seen = models.DateTimeField(db_index=True)
-    denied_owner_count = models.PositiveBigIntegerField(default=0)
-    denied_page_count = models.PositiveBigIntegerField(default=0)
-    denial_count_lower_bound = models.BooleanField(default=False)
-    class Meta:
-        constraints = [models.CheckConstraint(condition=Q(generation__gte=1), name='accounts_session_generation')]
-
 class LoginThrottle(models.Model):
     ip_address = models.GenericIPAddressField(primary_key=True, unpack_ipv4=True)
     failure_times = models.JSONField(default=list)

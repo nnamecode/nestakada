@@ -15,6 +15,7 @@ $manifestPath = Join-Path $work 'manifest.json'
 $envFile = Join-Path $work 'compose.env'
 $composeFile = Join-Path $repo 'environment/foundation/compose.yaml'
 $utf8 = New-Object Text.UTF8Encoding($false)
+$script:foundationStateLock = $null
 function Write-Utf8([string]$Path, [string]$Value) { [IO.File]::WriteAllText($Path, $Value, $utf8) }
 function Docker {
     param([string[]]$Arguments)
@@ -36,6 +37,38 @@ function Save-Manifest($Manifest) { Write-Utf8 $manifestPath ($Manifest | Conver
 function Reject-Link([string]$Path) {
     $item = Get-Item -Force -LiteralPath $Path
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse point rejected: $Path" }
+}
+function Acquire-FoundationStateLock {
+    $backupRoot = Join-Path $work 'backups'
+    New-Item -ItemType Directory -Force -Path $backupRoot | Out-Null
+    Reject-Link $backupRoot
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $directory = [IO.DirectoryInfo]::new($backupRoot)
+    $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+        $directory,[Security.AccessControl.AccessControlSections]::Access)
+    $acl.SetAccessRuleProtection($true,$false)
+    $rules = $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])
+    foreach ($rule in @($rules)) { $acl.RemoveAccessRuleSpecific($rule) }
+    foreach ($sid in @($identity.User,(New-Object Security.Principal.SecurityIdentifier('S-1-5-18')))) {
+        $rule = New-Object Security.AccessControl.FileSystemAccessRule(
+            $sid,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
+        $acl.AddAccessRule($rule)
+    }
+    [IO.FileSystemAclExtensions]::SetAccessControl($directory,$acl)
+    $backupLockPath = Join-Path $backupRoot '.backup.lock'
+    if (Test-Path -LiteralPath $backupLockPath) { Reject-Link $backupLockPath }
+    try {
+        $script:foundationStateLock = [IO.File]::Open(
+            $backupLockPath,[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)
+    } catch {
+        throw 'Local backup is active; foundation state change rejected.'
+    }
+}
+function Release-FoundationStateLock {
+    if ($script:foundationStateLock) {
+        $script:foundationStateLock.Dispose()
+        $script:foundationStateLock = $null
+    }
 }
 function Check-OwnedResources {
     $ids = @(Docker @('ps','-aq','--filter',"label=com.docker.compose.project=$project"))
@@ -231,6 +264,8 @@ if ($Action -eq 'Status') {
     Compose @('ps','--all')
     return
 }
+Acquire-FoundationStateLock
+try {
 if ($Action -eq 'Stop') {
     $m = Read-Manifest
     Check-OwnedResources | Out-Null
@@ -376,3 +411,6 @@ if (!$ready) { throw 'Local ingress did not become ready; resources retained for
 $manifest.active = $true
 Save-Manifest $manifest
 Write-Output "Foundation $Environment ready at http://127.0.0.1:$port/; run $runId"
+} finally {
+    Release-FoundationStateLock
+}

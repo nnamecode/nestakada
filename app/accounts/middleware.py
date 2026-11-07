@@ -2,6 +2,25 @@ from django.utils.cache import patch_vary_headers
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from django.db import DatabaseError
+from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
+                                 SESSION_KEY)
+
+class SessionPayloadMiddleware:
+    """Reject malformed signed session containers before Django auth reads them."""
+    def __init__(self,get_response): self.get_response=get_response
+    def __call__(self,request):
+        try:
+            data=request.session.load()
+        except (AttributeError,TypeError,ValueError):
+            data=None
+        authenticated=type(data) is dict and SESSION_KEY in data
+        if (type(data) is not dict or (authenticated and (
+                type(data.get(SESSION_KEY)) is not str
+                or data.get(BACKEND_SESSION_KEY)
+                    != 'django.contrib.auth.backends.ModelBackend'
+                or type(data.get(HASH_SESSION_KEY)) is not str))):
+            request.session.flush()
+        return self.get_response(request)
 
 class PrivateCacheMiddleware:
     def __init__(self,get_response): self.get_response=get_response

@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from django.test import TransactionTestCase, override_settings
 from django.conf import settings
+from accounts.models import UserProfile
 from accounts.services import set_grant
 from page_versions import services as V, schema as S
 from page_versions.models import PageRevision, PageContentState, OwnerDraft, RestoreStage
@@ -27,6 +28,10 @@ class PriceGuiHttpTests(TransactionTestCase):
     def setUp(self):
         H.EditorCheckHttpTests.setUp(self)
         set_grant(actor=self.owner, employee=self.price_employee, page=self.page, price=True)
+        self.price_client = self.login(
+            self.price_employee.username, H.EMPLOYEE_PASSWORD)
+        self.price_generation = UserProfile.objects.get(
+            user=self.price_employee).generation
 
     def price(self, amount='0'):
         column, row = str(uuid4()), str(uuid4())
@@ -49,7 +54,9 @@ class PriceGuiHttpTests(TransactionTestCase):
         return (client or self.owner_client).get(url)
 
     def checked(self, price, client=None):
-        value = self.payload({'price': price}, baseRevisionId=str(self.current().pk))
+        generation = self.price_generation if client is self.price_client else 1
+        value = self.payload({'price': price}, baseRevisionId=str(self.current().pk),
+                             generation=generation)
         response = self.post(client or self.owner_client, value)
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -115,7 +122,7 @@ class PriceGuiHttpTests(TransactionTestCase):
         value, _ = self.checked(self.price('0'), self.price_client)
         set_grant(actor=self.owner, employee=self.price_employee, page=self.page, main_text=True, price=False)
         state = self.state()
-        self.assertEqual(self.save(value, self.price_client).status_code, 403)
+        self.assertEqual(self.save(value, self.price_client).status_code, 401)
         self.assertEqual(self.state(), state)
 
     def test_tp1_004_sparse_prices_and_invalid_amount_or_oversize_are_not_truncated(self):

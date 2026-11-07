@@ -63,8 +63,7 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
 
     def read_state(self):
         from django.contrib.sessions.models import Session
-        from accounts.models import AuthSession
-        return self.state(), SharedStorage().inventory(), Session.objects.count(), AuthSession.objects.count()
+        return self.state(), SharedStorage().inventory(), Session.objects.count()
 
     def test_pub001_current_literal_contacts_ready_media_and_nonpublic_sources_stay_private(self):
         with self.candidate():

@@ -25,6 +25,12 @@ x-django-env: &django-env
   PYTHONDONTWRITEBYTECODE: "1"
   PSYCOPG_IMPL: c
 
+x-bounded-logs: &bounded-logs
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     image: ${FOUNDATION_POSTGRES_IMAGE:?required}
@@ -68,6 +74,7 @@ services:
     cpus: 1.0
     pids_limit: 128
     restart: "no"
+    logging: *bounded-logs
     labels:
       nestakada.scope: foundation-${FOUNDATION_ENV:?required}
 
@@ -80,6 +87,7 @@ services:
       <<: *django-env
       ESTAKADA_DB_USER: app_runtime
     networks: [web, db]
+    logging: *bounded-logs
     volumes:
       - {type: bind, source: '${FOUNDATION_SOURCE:?required}', target: /app, read_only: true}
       - {type: bind, source: '${FOUNDATION_PRIVATE:?required}/runtime-password', target: /run/secrets/database-password, read_only: true}
@@ -89,6 +97,12 @@ services:
       - {type: volume, source: state, target: /var/lib/estakada}
 
       - {type: volume, source: media-exchange, target: /exchange}
+    healthcheck:
+      test: [CMD, python, -B, manage.py, readiness]
+      interval: 30s
+      timeout: 8s
+      start_period: 10s
+      retries: 3
 
   media-worker:
     image: ${FOUNDATION_WORKER_IMAGE:?required}
@@ -110,6 +124,7 @@ services:
     cpus: 1.0
     pids_limit: 64
     restart: "no"
+    logging: *bounded-logs
     labels:
       nestakada.scope: foundation-${FOUNDATION_ENV:?required}
 
@@ -132,6 +147,7 @@ services:
     cpus: 0.25
     pids_limit: 64
     restart: "no"
+    logging: *bounded-logs
     labels:
       nestakada.scope: foundation-${FOUNDATION_ENV:?required}
 

@@ -3,9 +3,9 @@ import os
 import subprocess
 import sys
 from django.conf import settings
-from django.test import Client, SimpleTestCase
+from django.test import Client, TestCase
 
-class FoundationConfigurationTests(SimpleTestCase):
+class FoundationConfigurationTests(TestCase):
     def test_actual_framework_headers_and_unknown_host(self):
         client=Client()
         good=client.get('/',HTTP_HOST='localhost')

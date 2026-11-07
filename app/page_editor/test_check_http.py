@@ -55,7 +55,8 @@ class EditorCheckHttpTests(TransactionTestCase):
         self.page = Page.objects.create(kind=Page.Kind.ARTICLE, name="Check fixture")
         Route.objects.create(page=self.page, kind=Route.Kind.PRIMARY, target="/services/check/")
         set_grant(actor=self.owner, employee=self.employee, page=self.page, intro_text=True, main_text=True)
-        set_grant(actor=self.owner, employee=self.price_employee, page=self.page, main_text=True, price=True)
+        set_grant(actor=self.owner, employee=self.price_employee, page=self.page,
+                  intro_text=True, main_text=True, price=True)
         self.initial = V.initialize(actor=self.owner, page_id=self.page.pk,
             snapshot=S.snapshot_v1(self.page.kind, main_text="<p>SAVED</p>", h1="Protected heading"),
             expected_generation=1, operation_id=uuid4())["result_id"]
@@ -112,9 +113,9 @@ class EditorCheckHttpTests(TransactionTestCase):
             "operations":list(OperationReceipt.objects.order_by("id").values()),
         }
 
-    def context(self, actor=None):
+    def context(self, actor=None, generation=1):
         return inspect_context(actor=actor or self.owner, page_id=self.page.pk,
-                               generation=1, origin="http://localhost")
+                               generation=generation, origin="http://localhost")
 
     def assert_error(self, response, status, code):
         self.assertEqual(response.status_code, status)
@@ -276,7 +277,7 @@ class EditorCheckHttpTests(TransactionTestCase):
         before = self.state()
         with patch("page_editor.views.normalize_input", side_effect=revoke):
             response = self.post(self.employee_client)
-        self.assert_error(response, 403, "EDITOR_FIELDS_FORBIDDEN")
+        self.assert_error(response, 401, "EDITOR_SESSION_ENDED")
         self.assertEqual(self.state(), before)
 
     def test_current_change_during_child_conflicts_without_check_mutation(self):
@@ -364,10 +365,14 @@ class EditorCheckHttpTests(TransactionTestCase):
     def test_old_receipt_fails_after_actual_grant_change(self):
         response = self.post(self.employee_client).json()
         set_grant(actor=self.owner, employee=self.employee, page=self.page, main_text=True, price=True)
+        self.employee.security_profile.refresh_from_db()
+        generation = self.employee.security_profile.generation
         with self.assertRaises(CheckFault):
-            verify_check_receipt(response["checkReceipt"], context=self.context(self.employee),
+            verify_check_receipt(response["checkReceipt"], context=self.context(self.employee, generation),
                                  changes=response["normalisedChanges"])
-        self.assertEqual(self.post(self.employee_client).status_code, 200)
+        self.assertEqual(self.post(self.employee_client).status_code, 401)
+        fresh_client = self.login(self.employee.username, EMPLOYEE_PASSWORD)
+        self.assertEqual(self.post(fresh_client, self.payload(generation=generation)).status_code, 200)
 
     def test_old_receipt_fails_after_semantic_policy_change(self):
         response = self.post(self.owner_client).json()

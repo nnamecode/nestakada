@@ -5,6 +5,7 @@ from content.creation_views import create_page
 from content.publication_views import page_publication
 from content.url_change_views import page_url_change
 from content.page_delete_views import delete_page
+from audit.views import events as audit_events
 app_name='accounts'
 urlpatterns=[
     path('',views.dashboard,name='dashboard'),
@@ -19,6 +20,7 @@ urlpatterns=[
     path('pages/<uuid:page_id>/delete/',delete_page,name='page-delete'),
     path('pages/<uuid:page_id>/structure/<str:action>/',tree_command,name='tree-command'),
     path('employees/',views.employees,name='employees'),
+    path('audit/',audit_events,name='audit-events'),
     path('employees/<int:user_id>/password/',views.employee_password,name='employee-password'),
     path('employees/<int:user_id>/active/',views.employee_active,name='employee-active'),
     path('employees/<int:user_id>/grants/',views.employee_grant,name='employee-grant'),

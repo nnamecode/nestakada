@@ -2,12 +2,15 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from io import StringIO
 from threading import Barrier, Event, current_thread
+from types import SimpleNamespace
 from urllib.parse import urlencode
 from unittest.mock import patch
 import re
 import subprocess
 import sys
-from django.contrib.auth import get_user_model
+from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
+                                 SESSION_KEY, get_user_model)
+from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.management import call_command
@@ -21,7 +24,7 @@ from audit.constants import Category, Level, Result, Source
 from audit.services import record_event
 from content.models import Page, Route
 from . import services
-from .models import UserProfile, PageGrant, AuthSession, LoginThrottle, AuthResourceState
+from .models import UserProfile, PageGrant, LoginThrottle, AuthResourceState
 
 FAST_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher','django.contrib.auth.hashers.PBKDF2PasswordHasher']
 PASSWORD='SYNTHETIC-password-only-for-tests'
@@ -55,6 +58,11 @@ class AccountTests(TestCase):
         browser=client();self.assertEqual(login(browser,'nesadmin' if owner else 'auth-employee').status_code,303)
         return browser
 
+    @staticmethod
+    def replace_session(key, payload):
+        Session.objects.filter(pk=key).update(
+            session_data=SessionStore().encode(payload))
+
     def test_anonymous_login_get_has_no_db_session_or_throttle(self):
         browser=client();response=browser.get('/manage/login/')
         self.assertEqual(response.status_code,200)
@@ -83,7 +91,7 @@ class AccountTests(TestCase):
             self.assertContains(response,'data-login-error')
             self.assertNotContains(response,PASSWORD)
             self.assertNotContains(response,'SYNTHETIC')
-        self.assertEqual(AuthSession.objects.count(),0)
+        self.assertEqual(Session.objects.count(),0)
 
     def test_five_failures_are_per_ip_across_accounts_and_not_global_login(self):
         a,b=client(),client()
@@ -143,7 +151,6 @@ class AccountTests(TestCase):
         self.frozen.return_value=self.now+timedelta(seconds=1801)
         self.assertEqual(browser.get('/manage/').status_code,401)
         self.assertFalse(Session.objects.filter(pk=key).exists())
-        self.assertEqual(AuthSession.objects.count(),0)
         self.assertEqual(AuditEvent.objects.filter(code='AUTH_SESSION_EXPIRED').count(),1)
         browser.get('/manage/');self.assertEqual(AuditEvent.objects.filter(code='AUTH_SESSION_EXPIRED').count(),1)
 
@@ -158,6 +165,64 @@ class AccountTests(TestCase):
         self.assertEqual(browser.get('/manage/').status_code,200)
         self.frozen.return_value=self.now+timedelta(seconds=43201)
         self.assertEqual(browser.get('/manage/').status_code,401)
+
+    def test_malformed_session_payloads_close_with_401_and_are_deleted(self):
+        canary='SESSION_PRIVATE_PAYLOAD_CANARY'
+        cases=(
+            ('container-list',lambda data:[canary]),
+            ('issued-type',lambda data:{**data,services.SESSION_ISSUED_AT:1}),
+            ('missing-generation',lambda data:{key:value for key,value in data.items()
+                                               if key!=services.SESSION_GENERATION}),
+            ('missing-issued',lambda data:{key:value for key,value in data.items()
+                                           if key!=services.SESSION_ISSUED_AT}),
+            ('missing-last-seen',lambda data:{key:value for key,value in data.items()
+                                             if key!=services.SESSION_LAST_SEEN}),
+            ('missing-backend',lambda data:{key:value for key,value in data.items()
+                                            if key!=BACKEND_SESSION_KEY}),
+            ('missing-hash',lambda data:{key:value for key,value in data.items()
+                                         if key!=HASH_SESSION_KEY}),
+            ('backend-type',lambda data:{**data,BACKEND_SESSION_KEY:['bad']}),
+            ('hash-type',lambda data:{**data,HASH_SESSION_KEY:1}),
+            ('foreign-user',lambda data:{**data,SESSION_KEY:str(self.owner.pk)}),
+            ('foreign-generation',lambda data:{**data,services.SESSION_GENERATION:2}),
+            ('clock-rollback',lambda data:{**data,
+                                           services.SESSION_ISSUED_AT:
+                                               (self.now+timedelta(seconds=1)).isoformat(),
+                                           services.SESSION_LAST_SEEN:
+                                               (self.now+timedelta(seconds=1)).isoformat()}),
+            ('last-seen-before-issued',lambda data:{**data,services.SESSION_LAST_SEEN:
+                                                    (self.now-timedelta(seconds=1)).isoformat()}),
+        )
+        for name,mutate in cases:
+            with self.subTest(name=name):
+                browser=self.signed();key=browser.session.session_key
+                data=Session.objects.get(pk=key).get_decoded()
+                self.replace_session(key,mutate(data))
+                response=browser.get('/manage/')
+                self.assertEqual(response.status_code,401)
+                self.assertIn('no-store',response['Cache-Control'])
+                self.assertNotContains(response,canary,status_code=401)
+                self.assertNotContains(response,'Traceback',status_code=401)
+                self.assertFalse(Session.objects.filter(pk=key).exists())
+
+    def test_unknown_role_and_renamed_owner_sessions_close_with_401(self):
+        employee_browser=self.signed();employee_key=employee_browser.session.session_key
+        invalid_profile=SimpleNamespace(
+            role='unknown',generation=1,user=self.employee)
+        with patch('accounts.services.UserProfile.objects.select_related') as profiles:
+            profiles.return_value.filter.return_value.first.return_value=invalid_profile
+            response=employee_browser.get('/manage/')
+        self.assertEqual(response.status_code,401)
+        self.assertFalse(Session.objects.filter(pk=employee_key).exists())
+
+        owner_browser=self.signed(owner=True);owner_key=owner_browser.session.session_key
+        get_user_model().objects.filter(pk=self.owner.pk).update(username='renamed-owner')
+        try:
+            response=owner_browser.get('/manage/')
+            self.assertEqual(response.status_code,401)
+            self.assertFalse(Session.objects.filter(pk=owner_key).exists())
+        finally:
+            get_user_model().objects.filter(pk=self.owner.pk).update(username='nesadmin')
 
     def test_password_reset_revokes_old_sessions_and_old_password(self):
         browser=self.signed()
@@ -220,14 +285,14 @@ class AccountTests(TestCase):
         response=browser.post('/manage/login/',{'username':'nesadmin','password':PASSWORD,'csrfmiddlewaretoken':token})
         self.assertEqual(response.status_code,200);self.assertContains(response,'data-login-error')
         self.assertEqual(LoginThrottle.objects.count(),0)
-        self.assertEqual(AuthSession.objects.count(),0)
+        self.assertEqual(Session.objects.count(),0)
 
     def test_duplicate_or_unexpected_form_fields_do_not_authenticate(self):
         browser=client()
         response=browser.post('/manage/login/','username=nesadmin&username=other&password=anything',content_type='application/x-www-form-urlencoded')
-        self.assertEqual(response.status_code,200);self.assertEqual(AuthSession.objects.count(),0)
+        self.assertEqual(response.status_code,200);self.assertEqual(Session.objects.count(),0)
         response=browser.post('/manage/login/',{'username':'nesadmin','password':PASSWORD,'role':'owner'},content_type='application/x-www-form-urlencoded')
-        self.assertEqual(response.status_code,200);self.assertEqual(AuthSession.objects.count(),0)
+        self.assertEqual(response.status_code,200);self.assertEqual(Session.objects.count(),0)
 
     def test_failed_login_audit_is_bounded_and_has_aggregate_counts(self):
         browser=client()
@@ -260,7 +325,6 @@ class AccountTests(TestCase):
     def test_legacy_session_capacity_setting_is_not_a_runtime_dependency(self):
         first=self.signed(owner=True)
         second=client();self.assertEqual(login(second).status_code,303)
-        self.assertEqual(AuthSession.objects.count(),0)
         self.assertEqual(Session.objects.count(),2)
         self.assertEqual(first.get('/manage/').status_code,200)
         self.assertEqual(second.get('/manage/').status_code,200)
@@ -283,7 +347,6 @@ class AccountTests(TestCase):
             response=login(browser)
         self.assertEqual(response.status_code,200)
         self.assertNotContains(response,'SYNTHETIC-PRIVATE-DB')
-        self.assertEqual(AuthSession.objects.count(),0)
         self.assertEqual(Session.objects.count(),0)
         self.assertEqual(browser.get('/manage/').status_code,401)
 
@@ -331,7 +394,7 @@ class AccountTests(TestCase):
         a,b=self.signed(owner=True),self.signed()
         services.invalidate_all_sessions()
         self.assertEqual(a.get('/manage/').status_code,401);self.assertEqual(b.get('/manage/').status_code,401)
-        self.assertEqual(AuthSession.objects.count(),0)
+        self.assertEqual(Session.objects.count(),0)
 
     def test_audit_occurrence_counter_is_strict_typed_and_database_bounded(self):
         values=dict(category=Category.ACCESS,event_code='AUTH_TEST',level=Level.INFO,source=Source.APPLICATION,result=Result.DENIED)
@@ -386,7 +449,6 @@ class AccountConcurrencyTests(TransactionTestCase):
         self.assertEqual(
             parse_datetime(data[services.SESSION_LAST_SEEN]),
             initial+timedelta(seconds=1))
-        self.assertEqual(AuthSession.objects.count(),0)
 
     def test_parallel_failures_do_not_lose_the_fifth_attempt(self):
         owner=services.bootstrap_owner(PASSWORD)

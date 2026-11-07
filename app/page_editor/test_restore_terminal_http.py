@@ -162,11 +162,15 @@ class RestoreTerminalHttpTests(TransactionTestCase):
         before_pins=list(VersionBasePin.objects.filter(holder_id=stage.pk).order_by('id').values())
         before_basis=(stage.source_revision_id,stage.base_revision_id)
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=False)
+        self.employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
+        item['client']=self.employee_client
         self.selected_denied(item,value,save_status=403,save_code='EDITOR_FIELDS_FORBIDDEN')
         stage.refresh_from_db();self.assertEqual(stage.status,'held')
         self.assertEqual(list(VersionBasePin.objects.filter(holder_id=stage.pk).order_by('id').values()),before_pins)
-        self.stage_replay(item,'stale')
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=True)
+        self.employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
+        item['client']=self.employee_client
+        self.stage_replay(item,'stale')
         before=self.domain()
         restored=self.employee_client.get(self.path('state',self.selector(stage=stage)))
         self.assertEqual(restored.status_code,200)

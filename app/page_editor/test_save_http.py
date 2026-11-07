@@ -182,7 +182,9 @@ class EditorSaveHttpTests(TransactionTestCase):
         self.assertEqual(self.save(value, self.employee_client).status_code, 200)
         set_grant(actor=self.owner, employee=self.employee, page=self.page, revoke=True)
         before = self.state()
-        self.assert_error(self.save(value, self.employee_client), 403, "EDITOR_FIELDS_FORBIDDEN")
+        response = self.save(value, self.employee_client)
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("no-store", response["Cache-Control"])
         self.assertEqual(self.state(), before)
 
     def test_early_visitor_foreign_csrf_no_body_or_engine(self):

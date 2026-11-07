@@ -1,8 +1,0 @@
-# WB15-004 metadata helper only: expose the already pinned public source read-only.
-services:
-  init:
-    volumes:
-      - type: bind
-        source: ${TRUST_SOURCE:?required}
-        target: /trust
-        read_only: true

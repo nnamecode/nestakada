@@ -7,10 +7,13 @@ from uuid import uuid4
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.contrib.sessions.backends.db import SessionStore
+from django.contrib.sessions.models import Session
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import close_old_connections
 from django.test import TransactionTestCase, override_settings
 
+from accounts import services as auth_services
 from accounts.services import bootstrap_owner, create_employee, set_grant
 from accounts.models import UserProfile
 from accounts.test_support import editor_session
@@ -88,6 +91,25 @@ class SimplePageCommitTests(TransactionTestCase):
         self.assertEqual(OperationReceipt.objects.count(), before_receipts)
         self.assertEqual(AuditEvent.objects.filter(
             code='VERSION_COMMIT_EMPLOYEE').count(), 1)
+
+    def test_malformed_editor_session_is_rejected_before_commit(self):
+        key=str(self.session(self.employee))
+        data=Session.objects.get(pk=key).get_decoded()
+        data[auth_services.SESSION_ISSUED_AT]=1
+        Session.objects.filter(pk=key).update(
+            session_data=SessionStore().encode(data))
+        before=(self.current(),PageRevision.objects.count(),AuditEvent.objects.count())
+        with self.assertRaisesMessage(ValidationError,'EDITOR_SESSION_ENDED'):
+            C.commit_employee(
+                actor=self.employee,page_id=self.page.pk,
+                base_revision=self.current(),
+                patch=S.TextPricePatch(main_text='<p>must not commit</p>'),
+                expected_generation=1,operation_id=uuid4(),
+                editor_request_fingerprint='f' * 64,
+                editor_session_key=key)
+        self.assertEqual(
+            (self.current(),PageRevision.objects.count(),AuditEvent.objects.count()),
+            before)
 
     def test_owner_commit_keeps_draft_pin_stable_and_limit_ten(self):
         base = self.current()

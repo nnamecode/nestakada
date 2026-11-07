@@ -281,10 +281,12 @@ class VersionHttpTests(TransactionTestCase):
                              if row['code']=='SEC_PERMISSION_DENIED'),before_denials)
 
         set_grant(actor=self.owner,employee=self.employee,page=self.page,main_text=True)
+        self.employee.security_profile.refresh_from_db()
+        fresh_generation=self.employee.security_profile.generation
         fresh_client=self.login(self.employee.username,EMPLOYEE_PASSWORD)
-        session_prepared=self.post(fresh_client,self.url('restore_prepare',source),{'generation':1})
+        session_prepared=self.post(fresh_client,self.url('restore_prepare',source),{'generation':fresh_generation})
         self.assertEqual(session_prepared.status_code,200)
         Session.objects.filter(pk=fresh_client.session.session_key).delete()
         before=self.domain()
-        session_response=self.post(fresh_client,self.url('restore_apply',source),{'generation':1,'operation_id':uuid4(),'preparation':session_prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
+        session_response=self.post(fresh_client,self.url('restore_apply',source),{'generation':fresh_generation,'operation_id':uuid4(),'preparation':session_prepared.context['prepared']['preparation'],'confirm_input_replacement':'yes'})
         self.assertEqual(session_response.status_code,401);self.assertEqual(self.domain(),before)

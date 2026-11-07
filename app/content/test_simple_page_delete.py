@@ -278,8 +278,9 @@ class SimplePageDeleteTests(TransactionTestCase):
 
         with patch('content.simple_page_delete._password',
                    side_effect=change_hash_after_external_check):
-            with self.assertRaises(PermissionDenied):
+            with self.assertRaises(TreeFault) as ended:
                 self.apply(prepared)
+        self.assertEqual(ended.exception.code, 'TREE_SESSION_ENDED')
         self.assertEqual(self.target_state(), before)
         self.assertEqual(AuditEvent.objects.count(), audits)
         self.assertEqual(OperationReceipt.objects.count(), receipts)

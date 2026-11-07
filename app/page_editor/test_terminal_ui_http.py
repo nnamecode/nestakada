@@ -84,19 +84,21 @@ class TerminalUiHttpTests(TransactionTestCase):
         item['stage'].refresh_from_db();self.assertEqual(item['stage'].status,'invalidated')
         self.terminal(item,'invalidated')
 
-    def test_rui004_held_grant_stale_read_keeps_pins_and_exact_restore_still_works(self):
+    def test_rui004_grant_generation_change_keeps_pins_but_stage_stays_stale(self):
         item=self.make_stage();stage=item['stage']
         pins=list(VersionBasePin.objects.filter(holder_id=stage.pk).order_by('id').values())
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=False)
+        self.employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
+        item['client']=self.employee_client
         self.terminal(item,'invalidated')  # Message only: status remains held.
         stage.refresh_from_db();self.assertEqual(stage.status,'held')
         self.assertEqual(list(VersionBasePin.objects.filter(holder_id=stage.pk).order_by('id').values()),pins)
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=True)
-        before=self.domain();restored=self.employee_client.get(self.stage_path(stage.pk))
-        self.assertEqual(restored.status_code,200)
-        self.assertContains(restored,self.canary)
-        self.assertContains(restored,'data-restore-editor')
-        self.assertEqual(self.domain(),before)
+        self.employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
+        item['client']=self.employee_client
+        self.terminal(item,'invalidated')
+        stage.refresh_from_db();self.assertEqual(stage.status,'held')
+        self.assertEqual(list(VersionBasePin.objects.filter(holder_id=stage.pk).order_by('id').values()),pins)
 
     def test_rui005_same_page_foreign_missing_rights_and_session_do_not_reveal_status(self):
         set_grant(actor=self.owner,employee=self.other,page=self.page,intro_text=True,main_text=True)
@@ -116,10 +118,11 @@ class TerminalUiHttpTests(TransactionTestCase):
         self.assertEqual(self.domain(),before)
         set_grant(actor=self.owner,employee=self.employee,page=self.page,revoke=True)
         before=self.domain();denied=self.employee_client.get(self.stage_path(item['stage'].pk))
-        self.assertEqual(denied.status_code,403);self.no_candidate(denied)
+        self.assertEqual(denied.status_code,401);self.no_candidate(denied)
         for message in MESSAGES.values():self.assertNotIn(message.encode(),denied.content)
         self.assertEqual(self.domain(),before)
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=True)
+        self.employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
         Session.objects.filter(
             pk=self.employee_client.session.session_key).delete()
         before=self.domain();ended=self.employee_client.get(self.stage_path(item['stage'].pk))
