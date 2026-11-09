@@ -1,9 +1,0 @@
-{% extends 'accounts/base.html' %}{% block content %}
-<section data-cleanup-status data-job-id="{{ state.operationId }}"><h1>Очистка версии</h1>
-<p>Операция {{ state.operationId }}</p>
-{% if state.complete %}<p>Версия удалена из истории. Операция завершена.</p>{% if not state.fileDeleted %}<p>HTML-файл сохранён: его использует другое содержимое.</p>{% endif %}
-{% elif state.historyDeleted %}<p>Версия удалена из истории. Очистка файла не завершена.</p>
-{% else %}<p>Задание сохранено. Версия ещё не удалена. Изменение её зависимостей может потребовать технической проверки; другие сохранения пока закрыты.</p>{% endif %}
-{% if preview %}{% if preview.canConfirm %}{% include 'shared_content/cleanup_form.html' %}{% else %}<p>Продолжение запрещено:</p><ul>{% for reason in preview.reasons %}<li>{% if reason == 'CURRENT' %}Это текущая версия.{% elif reason == 'DRAFT_BASE' %}На этой версии основан черновик.{% elif reason == 'RESTORE_STAGE' %}Версия связана с существующим восстановлением.{% elif reason == 'PINNED' %}Версия удерживается другой операцией.{% elif reason == 'LEGACY_INLINE' %}Старый формат хранения пока не поддерживает очистку.{% elif reason == 'UNSUPPORTED_SCHEMA' %}Формат этой версии не поддерживает очистку.{% elif reason == 'UNKNOWN_PROVENANCE' %}Не удалось подтвердить происхождение версии. Нужна техническая проверка.{% elif reason == 'UNKNOWN_PROTECTION' %}Не удалось проверить все зависимости версии. Нужна техническая проверка.{% else %}Очистка недоступна. Нужна техническая проверка.{% endif %}</li>{% endfor %}</ul>{% endif %}{% endif %}
-<a href="{% url 'shared_content:cleanup_status' kind state.operationId %}">Проверить состояние и продолжить</a>
-</section><a href="{% url 'shared_content:history' kind %}">История</a>{% endblock %}

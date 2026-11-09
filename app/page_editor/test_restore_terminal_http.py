@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.test import TransactionTestCase, override_settings
+from accounts.models import UserProfile
 from accounts.services import set_grant
 from audit.models import AuditEvent
 from page_versions import services as V, schema as S
@@ -170,15 +171,34 @@ class RestoreTerminalHttpTests(TransactionTestCase):
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=True)
         self.employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
         item['client']=self.employee_client
-        self.stage_replay(item,'stale')
-        before=self.domain()
-        restored=self.employee_client.get(self.path('state',self.selector(stage=stage)))
-        self.assertEqual(restored.status_code,200)
+        before_replay=self.domain()
+        replay_body={**item['body'],
+            'csrfmiddlewaretoken':item['client'].cookies[settings.CSRF_COOKIE_NAME].value}
+        replay=self.form_post(item['client'],item['path'],replay_body)
+        self.assertEqual(replay.status_code,403)
+        self.assertContains(replay,'Действие недоступно. Проверьте актуальную сессию и права.',status_code=403)
+        self.assertNotContains(replay,self.canary,status_code=403)
+        self.assertEqual(self.domain(),before_replay)
+        stale=self.employee_client.get(self.path('state',self.selector(stage=stage)))
+        self.assertEqual(stale.status_code,409)
+        self.assertNotIn(self.canary.encode(),stale.content)
+        self.assertEqual(self.domain(),before_replay)
         stage.refresh_from_db();self.assertEqual((stage.source_revision_id,stage.base_revision_id),before_basis)
-        self.assertEqual(stage.status,'held');self.assertEqual(self.domain(),before)
+        self.assertEqual(stage.status,'held')
+        generation=UserProfile.objects.get(user=self.employee).generation
+        prepared=V.prepare_restore(actor=self.employee,page_id=self.page.pk,
+            version_id=item['source'],expected_generation=generation)
+        result=V.stage_restore(actor=self.employee,page_id=self.page.pk,
+            preparation=prepared['preparation'],confirm_input_replacement=True,
+            expected_generation=generation,operation_id=uuid4())
+        fresh=RestoreStage.objects.get(pk=result['result_id'])
+        restored=self.employee_client.get(self.path('state',self.selector(stage=fresh)))
+        self.assertEqual(restored.status_code,200)
+        self.assertEqual((fresh.source_revision_id,fresh.base_revision_id),before_basis)
         self.commit('RST-AFTER-GRANT-RESTORE-CURRENT')
-        stage.refresh_from_db();self.assertEqual(stage.status,'invalidated')
-        self.assertFalse(VersionBasePin.objects.filter(holder_id=stage.pk).exists())
+        stage.refresh_from_db();fresh.refresh_from_db()
+        self.assertEqual(stage.status,'invalidated');self.assertEqual(fresh.status,'invalidated')
+        self.assertFalse(VersionBasePin.objects.filter(holder_id__in=[stage.pk,fresh.pk]).exists())
 
     def test_rst006_same_page_same_grants_and_owner_cannot_read_apply_cancel_foreign_stage(self):
         set_grant(actor=self.owner,employee=self.other,page=self.page,intro_text=True,main_text=True)

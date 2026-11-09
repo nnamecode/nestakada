@@ -1,5 +1,97 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-713 (2026-11-09): DEV-08G приостановлен на одном выборе DEV-08G-Q001.** MIME/race/UUID/N+1 замечания code review исправлены; partial сохранён. Нужно выбрать safety ceiling изображений на страницу: рекомендовано64 slots/64 files, альтернативы32/32 или128/128.
+
+> **Текущая точка D-712 (2026-11-09): DEV-08G partial сохранён; два разных harness/oracle замечания исправлены без ослабления продукта.** Context и corruption tests уже PASS; POST остаётся закрыт CSRF403 до файлового чтения. Следом fresh focused repeat.
+
+> **Текущая точка D-711 (2026-11-09): DEV-08G repeat plan review `APPROVED`, реализация начата.** Узкий scope: standalone layout.image через exact page+slot и существующий проверяемый public-media path; main/preview/protected не смешиваются с ним.
+
+> **Текущая точка D-710 (2026-11-09): DEV-08G plan remediation записана, код не начат; repeat review ожидается.** Первый review остановил неоднозначный FileUUID-only доступ и неутверждённое место main image. Scope сужен до standalone image с exact page+slot и проверкой capture→file→recapture без нового media слоя.
+
+> **Текущая точка D-709 (2026-11-09): DEV-08G начат, PIMG-001–009 записаны до кода; plan review ожидается.** Подключаются только главное и самостоятельные изображения опубликованной страницы через существующие READY-файлы и public-media endpoint. Protected carrier/ref пока остаются503; новый media слой не создаётся.
+
+> **Текущая точка D-708 (2026-11-09): DEV-08F завершён, independent review `APPROVED`, findings0.** Публичный шаблон выводит text/price по сохранённому layout, безопасно экранирует цены и закрывает неподдержанные media/protected без частичного ответа. Focused15/15 и guard258/258 PASS; новых моделей и слоёв нет. Следующий DEV-08 срез ещё не начат.
+
+> **Текущая точка D-707 (2026-11-09): DEV-08F начат, LAY-001–008 записаны до кода.** Только pure projection существующих text/price layout blocks; media/protected закрываются503 до отдельного среза. Новых моделей и слоёв нет.
+
+> **Текущая точка D-706 (2026-11-09): DEV-08E visibility remediation завершён, review `APPROVED`, findings0.** Hidden exact Page теперь даёт blank200, published child скрытого родителя доступен и promoted в menu; unknown/deleted404 и corrupt503 сохранены. VIS24/24 и guard252/252 PASS; новых слоёв нет. Foundation stopped.
+
+> **Текущая точка D-705 (2026-11-09): DEV-08E visibility remediation начат, VIS-001–008 записаны до кода.** Исправляется расхождение D-700/D-702 с действующими D-052/D-239/D-240: hidden exact URL должен быть blank200, published child скрытого родителя остаётся доступен и поднимается в navigation. Без новых слоёв.
+
+> **Текущая точка D-704 (2026-11-09): DEV-08D завершён, independent review `APPROVED`, findings0.** Existing safe Header/Footer renderer подключён через coherent Page/navigation adapter; exact media/static routes, CSP и `aria-current` приняты. PSH3/3, HTTP8/8, NAV5/5, shared-public10/10, guard250/250 PASS; schema/cache/background layer не добавлены. Foundation stopped. Следующий этап определяется по pipeline.
+
+> **Текущая точка D-703 (2026-11-09): DEV-08D начат, PSH-001–008 записаны до кода.** Переиспользуются готовые safe shared renderer и media/static responses; добавляются только typed Page/navigation host-adapter, template composition и точные resource routes. Второй storage/lifecycle/cache слой не создаётся.
+
+> **Текущая точка D-702 (2026-11-09): DEV-08C завершён, independent review `APPROVED`, P1/P2/P3 нет.** Navigation5/5 и guard247/247 PASS; bounded Page+PRIMARY pre-order, hidden subtree closure, exact links/current marker приняты. Foundation stopped. Следующий отдельный этап — DEV-08D подключение уже существующих безопасных Header/Footer; не начат.
+
+> **Текущая точка D-701 (2026-11-09): DEV-08C implementation/checks PASS, independent review запущен.** NAV5/5 PASS0.383с; guard247/247 PASS202.867с; Django/migrations/diff clean. Separate bounded navigation excludes hidden subtree and uses exact PRIMARY; no schema/dependency/cache/background layer. До `APPROVED` этап не завершён.
+
+> **Текущая точка D-700 (2026-11-09): DEV-08C начат, NAV-001–008 записаны до кода.** Existing `public_tree` не переиспользуется из-за несовместимого promotion через hidden ancestor. Новый scope: один read-only Page+PRIMARY pre-order DTO и простые ссылки в текущем template; без shared/header/footer/media/SEO/cache/forms/fallback.
+
+> **Текущая точка D-699 (2026-11-09): DEV-08B завершён, repeat independent review `APPROVED`, findings0.** P1 session-DB dependency закрыт: public page/CSS не загружают session даже с cookie; resolver DB failure даёт503. Remediation focused8/8 и guard242/242 PASS, Django/migrations/diff clean, foundation stopped. Следующий отдельный этап — DEV-08C read-only публичная навигация; не начат.
+
+> **Текущая точка D-698 (2026-11-09): DEV-08B review приостановлен владельцу на `DEV-08B-Q002`; implementation/checks сохранены.** Reviewer дважды запросил несуществующий путь (`content/assets/public.css`, затем `estakada/settings.py`) и остановился по loop-stop. Просмотренный код явных P1/P2 не показал, но `APPROVED` нет. Возобновление: точный `app/estakada/settings/base.py`, завершить только middleware/routing review.
+
+> **Текущая точка D-697 (2026-11-09): DEV-08B implementation/checks PASS, independent review запущен.** Public HTTP8/8 PASS0.260с; content/security242/242 PASS199.192с; Django check/migrations/diff clean. Catch-all исключает `/manage`, rich HTML fail closed, no schema/dependency/background layers. До `APPROVED` этап не завершён.
+
+> **Текущая точка D-696 (2026-11-09): DEV-08B-Q001 возобновлён, HTTP-001–008 записаны до кода.** Граница: последний public catch-all, одна GET/HEAD view, один server template/CSS и read-time fail-closed rich-HTML check. Header/Footer/navigation/media/price/SEO/ETag/forms/fallback/production исключены как отдельные этапы.
+
+> **Текущая точка D-695 (2026-11-09): DEV-08B приостановлен владельцу на `DEV-08B-Q001`, код не начат.** Два read-only inventory-вызова повторили один несуществующий путь `app/content/urls.py`; это не ошибка приложения, но третья эквивалентная попытка запрещена. Фактическая корневая маршрутизация подтверждена в `app/estakada/urls.py`. Возобновление: искать только по существующим точным файлам, записать HTTP-001–008 до кода, затем minimal public HTTP/HTML patch.
+
+> **Текущая точка D-694 (2026-11-09): DEV-08A завершён, repeat independent review `APPROVED`.** Read-time проверка PRIMARY закрыла будущий open redirect; focused 9/9 и content/security 234/234 PASS, Django check/migrations/diff clean, стенд остановлен. Новых schema/package/background layers нет. Следующий этап — отдельный DEV-08B: минимальный публичный HTTP/HTML поверх готового read-only DTO; он ещё не начат.
+
+> **Текущая точка D-693 (2026-11-09): DEV-08A код и проверки PASS, independent review запущен.** Новый exact Route → published Page/current resolver: 6/6 focused и 231/231 content/security regression PASS за176.012с; без schema/package/background process. До review `APPROVED` инкремент не завершён.
+
+> **Текущая точка D-692 (2026-11-09): устаревший UX-07 закрыт по уже принятому D-235; начат код DEV-08A.** Публичный дизайн 4б не переобсуждается. Первый узкий patch — параметризованное read-only разрешение точного Route в опубликованную current revision; шаблоны/медиа/формы не смешиваются с ним.
+
+> **Текущая точка D-691 (2026-11-09): REF-07E read-only profitability check завершён; дальнейшее углубление REF-7 остановлено как нерентабельное.** Shared identities нужны текущему provenance/collision FK, а удаление неактивного file fallback требует schema/backup cleanup без пользы для запуска. Код не усложняем. Следующий реальный блокер — завершить UX-07, затем начать DEV-08 публичные шаблоны и навигацию.
+
+> **Текущая точка D-690 (2026-11-09): REF-07D завершён, repeat independent review `APPROVED`.** Legacy shared cleanup/diagnostics/result/prepare/cancel HTTP/UI surface удалена; direct restore/public/simple editor и security controls сохранены. Focused/full/dedicated/browser/final checks PASS, findings нет, foundation stopped. Следующий возможный шаг — отдельная read-only инвентаризация identities/file fallback; она ещё не начата и требует новой границы.
+
+> **Текущая точка D-689 (2026-11-09): REF-07D bounded CF07-002 PASS, repeat review запущен.** Exact retained cohort admission PASS; Header/Footer A→B→direct restore A PASS, provenance/hash/no-cancel/other-domain сохранены. Django check/migrations/syntax/diff PASS, cleanup false, OOM0; foundation stopped, volumes/private evidence retained. До repeat `APPROVED` этап не завершён.
+
+> **Текущая точка D-688 (2026-11-09): владелец ответом «Продолжай» разрешил `REF-07D-Q004`.** Реализуется bounded `continue-shared`: exact retained CF07 cohort валидируется до браузера, выполняется только CF07-002 direct shared restore, без reset/reseed/cleanup. Затем final checks, stop и repeat independent review.
+
+> **Текущая точка D-687 (2026-11-09): repeat review remediation была приостановлена владельцу на `REF-07D-Q004`.** Reviewer подтвердил прежние fixes, но нашёл active final browser CF07-002 со stage/cancel. Probe переписан на direct version restore; static clean. Два запуска coordinator остановились до browser groups с `SCOPED_DOCKER_COMMAND_FAILED`: первый из-за одного неверно переписанного SHA (исправлен), второй — fixture требует пустой DB, тогда как main намеренно хранит retained CF07 cohort. Counts unchanged, partial seed0, foundation stopped. Рекомендуется bounded `continue-shared` mode на существующем exact cohort без reset/reseed.
+
+> **Текущая точка D-686 (2026-11-09): REF-07D remediation checks PASS, repeat review запущен.** Dedicated calibration1/1, storage24/24 и full shared86/86 PASS (1 calibration штатно skipped в full, отдельно PASS). Django/migrations/static/syntax/diff и неизменные counts PASS; foundation stopped, volumes/backup retained. До repeat `APPROVED` этап не завершён.
+
+> **Текущая точка D-685 (2026-11-09): владелец разрешил `REF-07D-Q003`.** Удаляются ровно два obsolete reservation/file-writer calibration tests и их private helpers; exact1MiB/32draft calibration, quota arithmetic, storage security и active simple/public regressions сохраняются. Затем dedicated/full checks и repeat independent review.
+
+> **Текущая точка D-684 (2026-11-09): REF-07D remediation приостановлена владельцу на `REF-07D-Q003`.** Review harness P1/P2 исправлены; storage security24/24 PASS. Dedicated calibration теперь запускается, но первый тест доказан obsolete: он требует удалённый 75%-warning и далее старый reservation/file-writer admission. Второй count-тест также требует `book_durable`/receipts/10001 denial, противоречащие simple-inline контракту. Рекомендуется удалить ровно эти два legacy calibration-теста и их private helpers, сохранив 1MiB/32-draft calibration. Foundation stopped, volumes retained.
+
+> **Текущая точка D-683 (2026-11-09): independent review REF-07D — `CHANGES_REQUIRED`.** Product removal признан безопасным, но исправляются P1/P2 в test/QA harness: убрать сломанные cleanup/cancel suite labels, вернуть три `unlink_verified` TOCTOU/security regression в storage tests и удалить оставшиеся cleanup browser-QA refs. Затем targeted/dedicated checks и повторное review.
+
+> **Текущая точка D-682 (2026-11-09): REF-07D implementation и проверки PASS, independent review ожидается.** Fresh shared-reads4/4, reservation1/1, ref7d8/8 и full shared85/85 PASS (3 dedicated calibration штатно skipped). Django check/migrations/static/syntax/diff и неизменные DB/storage counts подтверждены; foundation stopped, volumes/backup retained. До review `APPROVED` этап не завершён.
+
+> **Текущая точка D-681 (2026-11-09): владелец возобновил D-680.** Разрешена только проверочная последовательность со свежим source snapshot: Start → один shared-reads → при PASS один full shared → final checks и independent review. Patch UI expectation и все изменения REF-07D сохранены; scope безопасности/schema/data не расширяется.
+
+> **Текущая точка D-680 (2026-11-09): REF-07D снова приостановлен владельцу по правилу двух одинаковых ошибок; исправление сохранено.** Reservation1/1 и ref7d8/8 PASS. Full shared прошёл 65 тестов и на 66-м обнаружил stale ожидание недоступности сохранения в пустом редакторе; ожидание исправлено на действующие simple-inline кнопки. Targeted повтор ошибочно выполнен без перезапуска snapshot-стенда и увидел тот же старый файл/тот же failure; третьего запуска нет. Foundation stopped, volumes retained. Возобновление: новый Start со свежим source snapshot → один shared-reads → один full shared → final checks/review.
+
+> **Текущая точка D-679 (2026-11-09): владелец разрешил рекомендуемый `REF-07D-Q002`.** Удаляются ровно 11 obsolete-тестов снятого file/journal HTTP writer; `SharedReservationArithmeticTests`, `ReservationFixture`, active simple/public/direct-restore/security проверки, внутренние legacy-модули, schema/data/blobs/storage сохраняются. Затем обязательны focused/full regression и independent review.
+
+> **Текущая точка D-678 (2026-11-09): REF-07D приостановлен владельцу на `REF-07D-Q002`; изменения сохранены.** Legacy shared restore/cancel/result/cleanup/diagnostics HTTP/UI surface удалена, focused проверки доходят до PASS, но полный shared regression остановлен на 11 тестах старого file/journal HTTP writer. Попытка отключить весь класс отклонена и не применена. Нужен отдельный ответ владельца: удалить только эти 11 obsolete-тестов, сохранив arithmetic/fixtures и все действующие security/public/simple проверки, либо сохранять тяжёлую внутреннюю архитектуру ради прямого тестирования старых модулей. Foundation stopped, volumes/backup сохранены. [План и точный статус](docs/ref7d-shared-http-retirement-plan.md).
+
+> **Текущая точка D-677 (2026-11-09): владелец разрешил REF-07D, приёмка записана до кода.** Удаляется только legacy shared cleanup/diagnostics/result/restore HTTP/UI surface. Schema/data/blobs/storage и security controls не меняются. [План](docs/ref7d-shared-http-retirement-plan.md).
+
+> **Текущая точка D-676 (2026-11-09): read-only REF-07C завершён.** Page receipts/identities/stages/pin пока runtime-active и не удаляются. В shared normal workflow уже простой/inline, но identities и file fallback ещё связаны с legacy-кодом. Следующий отдельный кандидат REF-07D — убрать только старые cleanup/diagnostics/result/legacy-restore HTTP routes и UI links без удаления schema/data/blobs/storage; требуется отдельное разрешение владельца. [Результат](docs/ref7-runtime-legacy-inventory-results.md).
+
+> **Текущая точка D-675 (2026-11-09): после REF-07B начат только read-only REF-07C inventory.** Механическое удаление R7-I003 запрещено: receipts/identities/stages/pins/shared lifecycle ещё имеют runtime refs. Проверяются точные чтения/записи и aggregate counts без содержимого; `AuthResourceState` сохраняется ради throttle, отдельное удаление устаревшей строки `sessions` признано нерентабельным. [План](docs/ref7-runtime-legacy-inventory-plan.md).
+
+> **Текущая точка D-674 (2026-11-09): REF-07B завершён, повторное independent review — `APPROVED`, P1/P2/P3 нет.** Legacy `AuthSession` model/table и три historical rows удалены после проверенного backup; active fixtures/scanners используют только Django Session. RST005 доказывает application-level old-generation denial после fresh CSRF без мутации. Fixture load16/16, RST6/6, editor242/242, final checks и 13 manifests/41 SHA PASS. Foundation stopped, volumes/backup retained. [Результат](docs/ref7-authsession-removal-results.md).
+
+> **Текущая точка D-673 (2026-11-09): владелец возобновил D-672; 13 local browser freeze manifests обновлены отдельными точными патчами.** Все объявленные пары file/SHA во всех manifests сверены — PASS, MJS syntax и diff PASS. Основные доказательства D-672 сохраняются: fixture load16/16, RST6/6, editor242/242, system/migration/count/static PASS. Запущено повторное independent review; до `APPROVED` REF-07B не завершён.
+
+> **Текущая точка D-672 (2026-11-09): REF-07B remediation приостановлена владельцу только на локальных browser freeze manifests.** Оба P1 исправлены в tracked-коде; 16 fixtures load PASS, RST 6/6 и full editor 242/242 PASS, system/migration/count/static/syntax checks PASS. Две массовые `apply_patch` попытки обновить ignored `work/**/http-freeze.json` атомарно отклонены из-за разных JSON comma positions; третьей нет. Стенд останавливается, все изменения сохранены. Возобновление: отдельные точные patches по каждому manifest, затем соответствующие QA preflight и повторное independent review.
+
+> **Текущая точка D-670 (2026-11-09): independent review REF-07B — `CHANGES_REQUIRED`, исправление двух P1 начато.** В активных `tools/*_fixture.py` и scanner ещё оставались импорты удалённой `AuthSession`; RST005 получал `403` с прежним CSRF-токеном и не доказывал application-level generation denial. Исправление ограничено переходом fixtures на единственную Django Session и повтором replay со свежим CSRF при сохранённых old generation/operation/preparation. Затем exact static/syntax/targeted/full checks и повторное независимое review.
+
+> **Текущая точка D-669 (2026-11-09): REF-07B реализован и проверен, independent review ожидается.** Legacy `AuthSession` table0; Django sessions3 и контрольные counts неизменны. Targeted restore6/6, table5/5 и итоговый editor242/242 PASS; system/migration/static/backup checks PASS; foundation stopped. [Результат](docs/ref7-authsession-removal-results.md).
+
+> **Текущая точка D-668 (2026-11-09): D-667 уточнён по фактической generation binding.** Старый held stage поколения1 после revoke/restore остаётся недоступным (`409`) и неизменным; old replay остаётся `403`. Рабочий путь — новая stage-операция из того же source/current под generation3, без ослабления безопасности. Targeted проверка ожидается.
+
+> **Текущая точка D-667 (2026-11-09): владелец возобновил REF-07B по безопасному контракту D-666.** Replay операции старого поколения после revoke/restore прав обязан завершаться `403` без мутации stage/pins/basis; generation binding не ослабляется. После возврата прав проверяются свежая сессия и доступ к сохранённому held stage. Далее: точный patch RST005, targeted restore-terminal, один full editor, final migration/count/static checks и independent review.
+
 > **Текущая точка D-666 (2026-11-06): REF-07B снова приостановлен владельцу; изменения не отброшены.** `price-gui` исправлен и прошёл 4/4. Полный editor прошёл 117 тестов и выявил stale `RST005`; после двух целевых попыток один и тот же exact stage replay стабильно получает безопасный `403` вместо старого ожидания `200`. Причина локализована: исходная операция содержит generation1, после двух grant changes профиль generation3. Третьей попытки нет. Рекомендуется утвердить новый контракт: старый replay после generation revoke запрещён, stage/pins/basis остаются неизменны, после возврата прав разрешены чтение и новая операция, но не replay старого generation.
 
 > **Текущая точка D-665 (2026-11-06): REF-07B приостановлен владельцу по правилу повторов; работа сохранена.** Fresh pre-migration backup+restore PASS, `AuthSession` 3→table removed, Django sessions3 и остальные counts сохранены, migration reverse→forward/full302 PASS. Combined fixture закрыт3/3; price fixture требует re-login после generation revoke. Два wildcard search дали одинаковый Windows error123, третьей попытки нет. Стенд остановлен. Для продолжения: exact path без wildcard, targeted price, full editor, review.

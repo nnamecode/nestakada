@@ -212,7 +212,7 @@ class SharedHttpTests(TransactionTestCase):
                     self.assert_private(response)
                 def forbidden_read(*args, **kwargs):
                     raise AssertionError('UNAUTHORIZED_SHARED_BODY_READ')
-                for action in ('check', 'draft', 'apply', 'restore/prepare'):
+                for action in ('check', 'draft', 'apply'):
                     response = self.post_shared(kind, action, self.payload(kind),
                                                 client=client, read=forbidden_read)
                     self.assertIn(response.status_code, (401, 403))
@@ -388,7 +388,7 @@ class SharedHttpTests(TransactionTestCase):
             'audit': AuditEvent.objects.count(),
         }, before)
 
-    def test_simple_current_supports_simple_draft_and_disables_new_legacy_stages(self):
+    def test_simple_current_supports_simple_draft_without_legacy_stage_route(self):
         from shared_content import profiles
         from shared_content.models import SharedDraft, SharedReceipt
 
@@ -431,9 +431,7 @@ class SharedHttpTests(TransactionTestCase):
 
             prepared = self.post_shared(
                 'header', 'restore/prepare', {}, read=forbidden_read)
-            self.assertEqual(prepared.status_code, 410)
-            self.assertEqual(prepared.json()['code'], 'SHARED_LEGACY_RESTORE_DISABLED')
-            self.assertTrue(prepared.json()['operationNotStarted'])
+            self.assertEqual(prepared.status_code, 404)
             self.assertEqual(self.state(), before)
 
     def test_unknown_kind_not_a_third_shared_block(self):
@@ -442,18 +440,40 @@ class SharedHttpTests(TransactionTestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(self.state(), before)
 
-    def test_legacy_restore_prepare_is_disabled_before_body_read_or_write(self):
+    def test_legacy_http_surface_is_unrouted_for_every_role_without_mutation(self):
         before = self.state()
-
-        def forbidden_read(*args, **kwargs):
-            raise AssertionError('LEGACY_RESTORE_BODY_READ')
-
-        response = self.post_shared(
-            'header', 'restore/prepare', {}, read=forbidden_read)
-        self.assertEqual(response.status_code, 410)
-        self.assertEqual(response.json()['code'], 'SHARED_LEGACY_RESTORE_DISABLED')
-        self.assertTrue(response.json()['operationNotStarted'])
+        identity = uuid4()
+        paths = [
+            '/manage/shared/header/restore/prepare/',
+            f'/manage/shared/header/stages/{identity}/cancel/',
+            f'/manage/shared/header/result/{identity}/',
+            f'/manage/shared/header/cleanup/{identity}/',
+            f'/manage/shared/header/cleanup/jobs/{identity}/',
+            f'/manage/shared/header/cleanup/jobs/{identity}/resume/',
+            f'/manage/shared/header/diagnostics/{identity}/',
+            f'/manage/shared/header/diagnostics/{identity}/reconcile/',
+        ]
+        for client, expected in ((self.owner_client, 404),
+                                 (self.employee_client, 404),
+                                 (self.client, 401)):
+            for path in paths:
+                self.assertEqual(client.get(path).status_code, expected, path)
+                self.assertEqual(client.post(path, data=b'{}',
+                    content_type='application/json').status_code, expected, path)
         self.assertEqual(self.state(), before)
+
+    def test_history_and_editor_assets_have_no_legacy_lifecycle_controls(self):
+        history = self.owner_client.get('/manage/shared/header/history/')
+        self.assertEqual(history.status_code, 200)
+        self.assertNotContains(history, '/cleanup/')
+        self.assertNotContains(history, 'data-cleanup-job')
+        editor = self.owner_client.get('/manage/shared/header/edit/')
+        self.assertEqual(editor.status_code, 200)
+        self.assertNotContains(editor, 'cancel-stage')
+        script = self.owner_client.get('/manage/shared/assets/editor.js')
+        self.assertEqual(script.status_code, 200)
+        self.assertNotContains(script, '/stages/')
+        self.assertNotContains(script, 'cancel-stage')
 
     def seed_revision(self, kind, *, sequence=1, identity=None):
         from shared_content.models import SharedBlock, SharedRevision

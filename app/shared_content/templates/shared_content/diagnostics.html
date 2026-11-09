@@ -1,9 +1,0 @@
-{% extends 'accounts/base.html' %}{% block content %}
-<section data-shared-diagnostics><h1>Диагностика сохранения</h1><p>Операция {{ diagnostic.operationId }}</p>
-<p>Журнал: {{ diagnostic.bookState }}</p>
-{% if diagnostic.receipt %}<p>Известный результат: {{ diagnostic.receipt.resultCode }}. Результат удалён: {{ diagnostic.receipt.gone }}</p>{% else %}<p>Квитанция не найдена. Это не доказывает отмену. Неизвестная бронь сохраняется.</p>{% endif %}
-{% if diagnostic.quotaKnown %}<p>Учтено {{ diagnostic.quota.usedBytes }} байт; удержано {{ diagnostic.quota.heldBytes|default_if_none:'неизвестно' }}; долг {{ diagnostic.quota.retainedDebtBytes }}.</p>{% else %}<p>Размер неизвестен. Требуется техническая проверка.</p>{% endif %}
-{% if diagnostic.reconcileAvailable %}<form method="post" action="{% url 'shared_content:diagnostic_reconcile' kind diagnostic.operationId %}">{% csrf_token %}
-<label>Пароль владельца <input type="password" name="password" maxlength="4096" autocomplete="current-password" required></label>
-<label><input type="checkbox" name="confirmed" value="yes" required>Проверить подтверждённый результат и бронь</label><button>Проверить известный результат</button></form>{% else %}<p>Принудительная отмена, сброс долга и снятие блокировки недоступны.</p>{% endif %}
-</section>{% endblock %}

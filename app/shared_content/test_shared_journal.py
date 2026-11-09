@@ -467,14 +467,13 @@ class SharedJournalRollbackTests(TransactionTestCase):
         self.assertTrue(fresh['durable'])
         self.assertFalse(fresh['heldAuthority'])
 
-    def test_sjr005_valid_book_keeps_real_product_mutations_closed_and_files_unchanged(self):
+    def test_sjr005_legacy_book_does_not_block_simple_inline_writes_or_change_files(self):
         from .journal import SharedJournal
-        from .models import SharedBlock
+        from .models import SharedBlock, SharedDraft, SharedRevision
         from .storage import SharedStorage
         book = book_fixture(actorId=self.owner.pk, blockId=str(SharedBlock.objects.get(kind='header').pk))
         SharedJournal().create_or_replay(book)
         store = SharedStorage()
-        source = self.seed_revision('header')
         for kind in ('header', 'footer'):
             payload = {'protocol': 'shared-editor-v1', 'generation': 1, 'baseRevisionId': None,
                 'sourceMode': 'current', 'draftBasis': None, 'stageId': None, 'html': self.fixture(kind)}
@@ -483,18 +482,11 @@ class SharedJournalRollbackTests(TransactionTestCase):
                 self.assertEqual(checked.status_code, 200)
                 payload['html'] = checked.json()['normalisedHtml']
             payload.update(operationId=str(uuid4()), checkReceipt=checked.json()['checkReceipt'])
-            before_db, before_fs = self.state(), store.inventory()
             for action in ('draft', 'apply'):
-                refused = self.post_shared(kind, action, payload)
-                self.assertEqual(refused.status_code, 503)
-                self.assertEqual(refused.json()['code'], 'SHARED_BUDGET_PROFILE_UNAVAILABLE')
-                self.assertEqual(self.state(), before_db)
+                payload['operationId'] = str(uuid4())
+                before_fs = store.inventory()
+                accepted = self.post_shared(kind, action, payload)
+                self.assertEqual(accepted.status_code, 200)
+                row_model = SharedDraft if action == 'draft' else SharedRevision
+                self.assertEqual(row_model.objects.get(pk=accepted.json()['resultId']).storage_kind, 'inline')
                 self.assertEqual(store.inventory(), before_fs)
-        before_db, before_fs = self.state(), store.inventory()
-        refused = self.post_shared('header', 'restore/prepare', {'protocol': 'shared-editor-v1',
-            'generation': 1, 'baseRevisionId': None, 'sourceRevisionId': str(source.pk),
-            'operationId': str(uuid4()), 'confirmReplace': True})
-        self.assertEqual(refused.status_code, 503)
-        self.assertEqual(refused.json()['code'], 'SHARED_BUDGET_PROFILE_UNAVAILABLE')
-        self.assertEqual(self.state(), before_db)
-        self.assertEqual(store.inventory(), before_fs)

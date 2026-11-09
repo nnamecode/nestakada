@@ -20,7 +20,7 @@ def execute(request):
     from django.contrib.sessions.models import Session
     from django.core.files.uploadedfile import SimpleUploadedFile
     from django.db import connection, models, transaction
-    from accounts.models import AuthSession, UserProfile, PageGrant
+    from accounts.models import UserProfile, PageGrant
     from accounts.services import bootstrap_owner, lock_auth
     from content.models import Page, Route, lock_content
     from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder, PageMediaHome
@@ -136,7 +136,7 @@ def execute(request):
                 'sha256': hashlib.sha256(content_html(row).encode()).hexdigest() if row else None}
         actual_nav = list(Page.objects.filter(pk__in=state['navPageIds']).order_by('position', 'id').values('id', 'name', 'is_published'))
         return {'blocks': blocks, 'nav': actual_nav, 'sessionCount': Session.objects.count(),
-            'authSessionCount': AuthSession.objects.count(), 'receiptCount': SharedReceipt.objects.filter(actor_id=owner.pk).count(),
+            'authSessionCount': Session.objects.count(), 'receiptCount': SharedReceipt.objects.filter(actor_id=owner.pk).count(),
             'jobCount': SharedCleanupJob.objects.count(), 'pinCount': SharedBasePin.objects.count(),
             'assetManifests': {str(file.pk): MediaStorage().manifest(file.key) for file in asset_files(state)},
             'inventoryStamp': SharedStorage().inventory()['inventoryStamp']}
@@ -168,9 +168,9 @@ def execute(request):
             lock_content('default'); lock_auth(); validate(state)
             raw(PageMediaHome).filter(page_id=state['pageId'], folder_id=state['folderId']).delete()
             raw(MediaFolder).filter(pk=state['folderId']).delete()
-            keys = list(AuthSession.objects.filter(user_id=owner.pk).values_list('pk', flat=True))
+            keys = [session.session_key for session in Session.objects.all()
+                if str(session.get_decoded().get('_auth_user_id')) == str(owner.pk)]
             Session.objects.filter(session_key__in=keys).delete()
-            AuthSession.objects.filter(user_id=owner.pk, session_key__in=keys).delete()
             PageGrant.objects.filter(user_id=owner.pk, page_id__in=state['pageIds']).delete()
             raw(Route).filter(page_id__in=state['navPageIds'], target__in=state['navTargets']).delete()
             raw(Page).filter(pk__in=state['pageIds']).delete()

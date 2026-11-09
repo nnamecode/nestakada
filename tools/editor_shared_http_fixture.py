@@ -19,7 +19,7 @@ def execute(request):
     from django.contrib.sessions.models import Session
     from django.core.files.uploadedfile import SimpleUploadedFile
     from django.db import connection, models, transaction
-    from accounts.models import AuthSession, UserProfile, PageGrant
+    from accounts.models import UserProfile, PageGrant
     from accounts.services import bootstrap_owner, recover_owner, lock_auth
     from content.models import Page, Route, lock_content
     from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder, PageMediaHome
@@ -161,9 +161,9 @@ def execute(request):
             lock_content('default'); lock_auth(); validate(state)
             raw(PageMediaHome).filter(page_id=state['pageId'], folder_id=state['folderId']).delete()
             raw(MediaFolder).filter(pk=state['folderId']).delete()
-            own_session_keys = list(AuthSession.objects.filter(user_id=owner.pk).values_list('pk', flat=True))
+            own_session_keys = [session.session_key for session in Session.objects.all()
+                if str(session.get_decoded().get('_auth_user_id')) == str(owner.pk)]
             Session.objects.filter(session_key__in=own_session_keys).delete()
-            AuthSession.objects.filter(user_id=owner.pk, session_key__in=own_session_keys).delete()
             PageGrant.objects.filter(user_id=owner.pk, page_id=state['pageId']).delete()
             raw(Page).filter(pk=state['pageId']).delete()
             UserProfile.objects.filter(user_id=owner.pk).delete(); User.objects.filter(pk=owner.pk).delete()

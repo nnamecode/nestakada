@@ -17,7 +17,7 @@ def execute(request):
     from django.contrib.auth import get_user_model
     from django.contrib.sessions.models import Session
     from django.db import models, transaction
-    from accounts.models import AuthSession, UserProfile, PageGrant
+    from accounts.models import UserProfile, PageGrant
     from content.models import Page, Route, lock_content
     from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder, PageMediaHome
     from media_library.storage import MediaStorage, MediaParentUnavailable
@@ -175,7 +175,10 @@ def execute(request):
             'usageCount':asset.usages.count()} for asset in Asset.objects.order_by('id')]
         receipts = list(OperationReceipt.objects.filter(page_id__in=owned_pages).order_by('id').values('id','action','actor_id','actor_generation','page_id','result_id','result_code'))
         events = list(AuditEvent.objects.filter(actor_id__in=owned_users,code__startswith='VERSION_').values('event_id','code','actor_id','object_ref','occurred_at'))
-        forbidden = [user.password for user in User.objects.all()] + list(AuthSession.objects.filter(user_id__in=owned_users).values_list('pk',flat=True))
+        owned_user_ids = {str(value) for value in owned_users}
+        forbidden = [user.password for user in User.objects.all()] + [session.session_key
+            for session in Session.objects.all()
+            if str(session.get_decoded().get('_auth_user_id')) in owned_user_ids]
         raw_receipts = json.dumps(list(OperationReceipt.objects.filter(page_id__in=owned_pages).values()),default=str)
         raw_events = json.dumps(events,default=str)
         if any(value and value in raw_receipts+raw_events for value in forbidden):
@@ -209,8 +212,9 @@ def execute(request):
                 raise ValueError('Physical fixture cleanup incomplete')
         with transaction.atomic():
             lock_content('default')
-            sessions = list(AuthSession.objects.filter(user_id__in=owned_users).values_list('pk',flat=True))
-            AuthSession.objects.filter(pk__in=sessions).delete()
+            owned_user_ids = {str(value) for value in owned_users}
+            sessions = [session.session_key for session in Session.objects.all()
+                if str(session.get_decoded().get('_auth_user_id')) in owned_user_ids]
             Session.objects.filter(pk__in=sessions).delete()
             PageGrant.objects.filter(user_id__in=owned_users).delete()
             raw(PageMediaHome).filter(page_id__in=owned_pages).delete()

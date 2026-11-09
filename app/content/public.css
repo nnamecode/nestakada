@@ -1,0 +1,21 @@
+:root{color-scheme:light;--ink:#282725;--muted:#6f6b65;--paper:#fff;--soft:#f4f1eb;--accent:#f3a52a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+.public-shell{width:min(920px,calc(100% - 32px));margin:0 auto;padding:48px 0 72px}
+.public-name{margin:0 0 28px;color:var(--muted);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+h1{max-width:780px;margin:0 0 28px;font-size:clamp(2rem,6vw,4.5rem);line-height:1.03;letter-spacing:-.04em}
+.public-intro{margin:0 0 32px;padding:20px 24px;border-left:5px solid var(--accent);background:var(--soft);font-size:1.08rem}
+.public-content{overflow-wrap:anywhere}
+.public-content :is(h2,h3){line-height:1.15;margin-top:1.8em}
+.public-content a{color:#835200;text-underline-offset:.18em}
+.public-content table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
+.public-content :is(th,td){padding:8px 10px;border:1px solid #d9d4cb;text-align:left}
+.public-price{margin-top:32px;max-width:100%;overflow-x:auto}
+.public-price table{width:100%;border-collapse:collapse}
+.public-price :is(th,td){padding:10px;border:1px solid #d9d4cb;text-align:left;vertical-align:top}
+.public-price thead th{background:var(--soft)}
+.public-price-text{white-space:pre-line}
+.public-price-amount{white-space:nowrap;font-variant-numeric:tabular-nums}
+.public-image{margin:24px 0}.public-image img{display:block;max-width:100%;height:auto}
+.public-image-left img{margin-right:auto}.public-image-center img{margin-inline:auto}.public-image-right img{margin-left:auto}
+@media(max-width:560px){.public-shell{padding-top:28px}.public-intro{padding:16px 18px}}

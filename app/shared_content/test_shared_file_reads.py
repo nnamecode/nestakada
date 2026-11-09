@@ -175,9 +175,9 @@ class SharedFileReadTests(TransactionTestCase):
             with self.assertRaises(SharedFault):
                 content_html({**descriptor, **altered})
 
-    def test_unknown_profile_still_creates_no_incoming_blob_or_journal(self):
+    def test_simple_inline_writes_need_no_profile_and_create_no_blob_or_journal(self):
         from shared_content.storage import SharedStorage
-        from shared_content.models import SharedBlock
+        from shared_content.models import SharedBlock, SharedDraft, SharedRevision
         store = SharedStorage()
         store.write_new('EXISTING-ORPHAN')
         for kind in ('header', 'footer'):
@@ -192,16 +192,18 @@ class SharedFileReadTests(TransactionTestCase):
             response = self.post_shared(kind, 'check', payload)
             self.assertEqual(response.status_code, 200)
             result = response.json()
-            payload.update(operationId=str(uuid4()), checkReceipt=result['checkReceipt'])
-            before_db, before_fs = self.state(), store.inventory()
+            payload.update(checkReceipt=result['checkReceipt'])
             for action in ('draft', 'apply'):
+                payload['operationId'] = str(uuid4())
+                before_fs = store.inventory()
                 response = self.post_shared(kind, action, payload)
-                self.assertEqual(response.status_code, 503)
-                self.assertEqual(response.json()['code'], 'SHARED_BUDGET_PROFILE_UNAVAILABLE')
-                self.assertEqual(self.state(), before_db)
+                self.assertEqual(response.status_code, 200)
+                result_id = response.json()['resultId']
+                row = (SharedDraft if action == 'draft' else SharedRevision).objects.get(pk=result_id)
+                self.assertEqual(row.storage_kind, 'inline')
                 self.assertEqual(store.inventory(), before_fs, 'UNKNOWN_PROFILE_STAGED_FILE_OR_JOURNAL')
 
-    def test_real_check_current_file_and_restore_target_read_outside_sql_transactions(self):
+    def test_real_check_current_file_and_direct_restore_read_outside_sql_transactions(self):
         from django.core import signing
         from shared_content.models import SharedRevision
         from shared_content.policy import normalize_html
@@ -242,17 +244,18 @@ class SharedFileReadTests(TransactionTestCase):
                              (self.owner.pk, 'header', str(current.block_id)))
             self.assertEqual(proof['htmlHash'], current_descriptor['file_sha256'])
             self.semantic_slot('header', value['normalisedHtml'], 'FILE-CANARY-header')
-            prepared = self.post_shared('header', 'restore/prepare', {
-                'protocol': 'shared-editor-v1', 'generation': 1, 'baseRevisionId': str(current.pk),
-                'sourceRevisionId': str(old.pk), 'operationId': str(uuid4()), 'confirmReplace': True})
-            self.assertEqual(prepared.status_code, 503)
-            self.assertEqual(prepared.json()['code'], 'SHARED_BUDGET_PROFILE_UNAVAILABLE')
+            token = self.owner_client.cookies[settings.CSRF_COOKIE_NAME].value
+            restored = self.owner_client.post(
+                f'/manage/shared/header/versions/{old.pk}/restore/',
+                data={'expectedCurrentId': str(current.pk), 'confirmed': 'yes'},
+                HTTP_X_CSRFTOKEN=token)
+            self.assertEqual(restored.status_code, 409)
+            self.assertEqual(restored.json()['code'], 'SHARED_MEDIA_UNAVAILABLE')
         self.assertIn((current_descriptor['file_key'], current_descriptor['file_sha256']), reads)
         self.assertIn((old_descriptor['file_key'], old_descriptor['file_sha256']), reads)
-        self.assertEqual(self.state(), before_db, 'FILE_CHECK_OR_PREPARE_MUTATED_METADATA')
-        self.assertEqual(store.inventory(), before_fs, 'FILE_CHECK_OR_PREPARE_STAGED_BLOB')
-        # Actual current and compatible target-source only. No held-stage,
-        # successful restore/Apply, public render or native RAM claim.
+        self.assertEqual(self.state(), before_db, 'FILE_CHECK_OR_RESTORE_MUTATED_METADATA')
+        self.assertEqual(store.inventory(), before_fs, 'FILE_CHECK_OR_RESTORE_STAGED_BLOB')
+        # Actual current and compatible target-source only. No held-stage or native RAM claim.
 
 
 class SharedAdditiveMigrationTests(TransactionTestCase):

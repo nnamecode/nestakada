@@ -55,7 +55,7 @@ def execute(request):
     from django.core.files.uploadedfile import SimpleUploadedFile
     from django.db import connection, transaction
     from django.core import signing
-    from accounts.models import UserProfile, PageGrant, AuthSession
+    from accounts.models import UserProfile, PageGrant
     from accounts.services import bootstrap_owner, create_employee, lock_auth
     from content.models import Page, Route, lock_content
     from page_versions import services as V, schema as S
@@ -132,7 +132,7 @@ def execute(request):
                 raise ValueError('CF_RESUME_ROUTES')
             routes = {key: Route.objects.get(page=page, kind='primary', target='/cf07/' + run + '/' + key.lower() + '/', is_legacy=False)
                       for key, page in pages.items()}
-            if (any(model.objects.exists() for model in (OwnerDraft, RestoreStage, VersionBasePin, AuthSession, SharedRevision, SharedDraft, SharedRestoreStage, SharedBasePin))
+            if (any(model.objects.exists() for model in (OwnerDraft, RestoreStage, VersionBasePin, SharedRevision, SharedDraft, SharedRestoreStage, SharedBasePin))
                     or SharedReceipt.objects.count() != 24
                     or apps.get_model('shared_content', 'SharedIdentityReservation').objects.count() != 66
                     or SharedStorage().inventory()['journalCount']):
@@ -246,18 +246,20 @@ def execute(request):
                 if (len(system) != 1 or {key: val for key, val in system[0].items() if key != 'id'} !=
                         {'kind': 'system', 'target': '/manage/', 'page_id': None, 'is_legacy': False}):
                     raise ValueError('CF_SYSTEM_ROUTE')
-                if any(model.objects.exists() for model in (User, Page, PageRevision, PageContentState, OwnerDraft, RestoreStage, VersionBasePin, Asset, AssetFile, AssetUsage, AuthSession)):
+                if any(model.objects.exists() for model in (User, Page, PageRevision, PageContentState, OwnerDraft, RestoreStage, VersionBasePin, Asset, AssetFile, AssetUsage)):
                     raise ValueError('CF_NONEMPTY_PRESERVED_NO_RESEED')
                 blocks = list(SharedBlock.objects.order_by('kind'))
-                if ([block.kind for block in blocks] != ['footer', 'header'] or any(block.current_revision_id is not None for block in blocks)):
-                    raise ValueError('CF_SHARED_NULL_BASELINE_REQUIRED')
+                if [block.kind for block in blocks] != ['footer', 'header']:
+                    raise ValueError('CF_SHARED_BASELINE_REQUIRED')
                 if SharedStorage().inventory()['journalCount'] or SharedBudget.objects.get(singleton=True).accounting_version == 'faulted':
                     raise ValueError('CF_UNKNOWN_OR_FAULT_BASELINE_PRESERVED')
                 from shared_content.lifecycle import require_no_pending
                 require_no_pending()
                 quota.admit_locked(snapshot_increment=6, new_refs=4)
                 baseline = baseline_catalogue()
-                initial_shared = {block.kind: {'id': str(block.pk), 'currentId': None, 'generation': block.generation} for block in blocks}
+                initial_shared = {block.kind: {'id': str(block.pk),
+                    'currentId': str(block.current_revision_id) if block.current_revision_id else None,
+                    'generation': block.generation} for block in blocks}
                 owner = bootstrap_owner(passwords['owner'])
                 employee = create_employee(actor=owner, username='cf-text-' + run[:8], password=passwords['employee'])
                 price_user = create_employee(actor=owner, username='cf-price-' + run[:8], password=passwords['priceOnly'])
@@ -360,8 +362,8 @@ def execute(request):
             shared[kind] = {'blockId': str(block.pk), 'oldRevisionId': None,
                 'oldMarkup': old_markup['html'], 'newMarkup': new_markup['html']}
         # Both A and B are published later through actual browser Check/Apply.
-        if baseline_catalogue() != baseline or SharedBlock.objects.exclude(current_revision__isnull=True).exists():
-            raise ValueError('CF_SHARED_SEED_MUST_NOT_PUBLISH')
+        if baseline_catalogue() != baseline:
+            raise ValueError('CF_SHARED_SEED_CHANGED_BASELINE')
         max_facts = {label: stock(rich(label)) for label in 'STCD'}
         ownership = {'userIds': [str(user.pk) for user in users.values()], 'pageIds': {key: str(page.pk) for key, page in pages.items()},
             'assetIds': {key: item['id'] for key, item in assets.items()}, 'routeIds': [str(route.pk) for route in routes.values()],

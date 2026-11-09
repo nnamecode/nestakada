@@ -62,7 +62,8 @@ def execute(request):
     from django.contrib.auth import get_user_model
     from django.contrib.sessions.models import Session
     from django.db import connection, transaction
-    from accounts.models import AuthSession, UserProfile, PageGrant
+    from accounts.models import UserProfile, PageGrant
+    from accounts.services import SESSION_GENERATION
     from content.models import Page, Route
     from page_versions.models import OperationReceipt, PageRevision
     if settings.DATABASES['default']['NAME'] != 'estakada_foundation':
@@ -72,24 +73,32 @@ def execute(request):
             with connection.cursor() as cursor:
                 cursor.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
             users = {}
+            decoded_sessions = [(session, session.get_decoded()) for session in Session.objects.all()]
             for identifier, username, role in ((owner_id, 'nesadmin', 'owner'), (employee_id, 'editor-assigned', 'employee')):
                 user = get_user_model().objects.filter(pk=identifier, first_name=run, username=username).values('id', 'is_active').first()
                 profile = UserProfile.objects.filter(user_id=identifier, role=role).values('generation').first()
                 if user is None or profile is None:
                     raise Boundary()
-                sessions = AuthSession.objects.filter(user_id=identifier)
+                sessions = [(session, data) for session, data in decoded_sessions
+                    if str(data.get('_auth_user_id')) == str(identifier)]
+                current_sessions = [(session, data) for session, data in sessions
+                    if data.get(SESSION_GENERATION) == profile['generation']]
                 users[role] = {'id': identifier, 'generation': number(profile['generation'], True),
-                    'active': user['is_active'], 'authSessionCount': number(sessions.count()),
-                    'linkedNativeSessionCount': number(Session.objects.filter(session_key__in=sessions.values('session_key')).count())}
+                    'active': user['is_active'], 'authSessionCount': number(len(current_sessions)),
+                    'linkedNativeSessionCount': number(len(current_sessions))}
             if not Page.objects.filter(pk=page_id, kind='article', name='EDITOR TEST ' + run + ' A').exists():
                 raise Boundary()
             routes = list(Route.objects.filter(page_id=page_id, kind='primary').values_list('target', flat=True))
             if routes != ['/editor-fixture/' + run + '/a/']:
                 raise Boundary()
             grant = PageGrant.objects.filter(user_id=employee_id, page_id=page_id).values('intro_text', 'main_text', 'price').first()
+            employee_sessions = [(session, data) for session, data in decoded_sessions
+                if str(data.get('_auth_user_id')) == str(employee_id)]
             users['employee'].update({'hasGrant': grant is not None,
                 'allowedFields': sorted(key for key in ('intro_text', 'main_text', 'price') if grant is not None and grant[key] and users['employee']['active']),
-                'currentGenerationSessionCount': number(AuthSession.objects.filter(user_id=employee_id, generation=users['employee']['generation']).count())})
+                'currentGenerationSessionCount': number(sum(
+                    data.get(SESSION_GENERATION) == users['employee']['generation']
+                    for _, data in employee_sessions))})
             receipts = []
             for operation in operations:
                 row = OperationReceipt.objects.filter(pk=operation).values('action', 'actor_id', 'page_id', 'actor_generation',

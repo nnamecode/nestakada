@@ -35,7 +35,7 @@ function docker(args,input,timeout=60000){
 const fixtureSource=fs.readFileSync(regular(fixtureFile),'utf8');
 const fixtureHash=sha(fixtureSource),probeHash=sha(fs.readFileSync(regular(probeFile)));
 if(probeHash!=='cc5eb9d764329d39f5d2baef954d9d6b5990664e1c7ebd33c3a7c96ef53e2705')fail('QA_PROBE_FREEZE_MISMATCH');
-if(fixtureHash!=='772b02f4721a8fe65e08ac6e17fecf03e7b98e6b5492ce97b58462675c32abb5')fail('QA_FIXTURE_FREEZE_MISMATCH');
+if(fixtureHash!=='27969a7c7d9d13781102c7ff588b8862d2a311019218842257f26c5d7aa59faf')fail('QA_FIXTURE_FREEZE_MISMATCH');
 const inputManifest=path.join(inputsDir,'inputs.json');
 const inputs=JSON.parse(fs.readFileSync(regular(inputManifest),'utf8'));
 if(Object.keys(inputs).length!==9)fail('CLOSED_SYNTHETIC_CORPUS_REQUIRED');
@@ -53,7 +53,7 @@ const networkPins={
   'probe-nginx.conf':'a5a6f737363da62e70566aff38fccc638cb731e5b7f411cf93c94ff5a8c82cf0'};
 const networkFiles=Object.entries(networkPins).map(([name,digest])=>{const file=regular(path.join(networkRoot,name));if(sha(fs.readFileSync(file))!==digest)fail('NETWORK_CONFIG_FREEZE_MISMATCH');return file;});
 const lateSource=fs.readFileSync(regular(lateFile),'utf8'),lateHash=sha(lateSource);
-if(lateHash!=='ca12fca51b6f99bdc8b4061cc19bcd833baa7bb7fdf1945ea0135c9fe84e1f4b')fail('LATE_ADAPTER_FREEZE_MISMATCH');
+if(lateHash!=='89d805c99dd41af0662540ea3d61ff9233303d55f8896db0f5d31419f7fb17d0')fail('LATE_ADAPTER_FREEZE_MISMATCH');
 const qaFiles=[fixtureFile,probeFile,selfFile,witnessFile,lateFile,...networkFiles,
   path.join(repo,'work/dev07-f-20261031/probe-config/probe_settings.py'),
   path.join(repo,'work/dev07-f-20261031/probe-config/probe_urls.py'),inputManifest,...inputFiles];

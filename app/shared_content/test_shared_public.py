@@ -16,7 +16,7 @@ from content.models import Page, Route, lock_content
 from media_library.models import Asset, AssetFile, AssetUsage
 from media_library.storage import MediaStorage
 from . import test_shared_reservation as R
-from .models import SharedBlock, SharedRevision, SharedDraft, SharedRestoreStage, SharedBasePin, SharedReceipt, SharedCleanupJob
+from .models import SharedBlock, SharedRevision, SharedDraft, SharedBasePin
 from .storage import SharedStorage
 
 
@@ -98,11 +98,6 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
                 self.assertEqual(self.send('header', 'check', value).status_code, 400)
             self.assertEqual(self.read_state(), rejected_state)
             self.applied('header', 'draft', self.intent('header', self.fixture('header', 'DRAFT-NEVER-PUBLIC')))
-            current = self.context('header')
-            stage = self.send('header', 'restore/prepare', {'protocol': 'shared-editor-v1', 'generation': 1,
-                'baseRevisionId': current['baseRevisionId'], 'sourceRevisionId': header['resultId'],
-                'operationId': str(uuid4()), 'confirmReplace': True}, context=current)
-            self.assertEqual(stage.status_code, 200)
             before = self.read_state()
             unchanged = self.anonymous.get(self.host_url)
             self.assertEqual(self.body_bytes(unchanged), source.encode())
@@ -195,14 +190,15 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
                              [long_url])
             self.assertGreater(len(expanded.header_html.encode()), len(rendered.header_html.encode()))
 
-    def test_pub009_corrupt_current_blob_old_etag_cannot_hide_failure_or_blind_retry(self):
+    def test_pub009_corrupt_current_inline_payload_old_etag_cannot_hide_failure_or_blind_retry(self):
         from . import public
         with self.candidate():
             self.seed_public()
             first = self.anonymous.get(self.host_url)
             row = SharedRevision.objects.get(pk=SharedBlock.objects.get(kind='footer').current_revision_id)
-            path = SharedStorage().root / row.file_key
-            path.write_bytes(b'PUB-PRIVATE-CORRUPTION-CANARY')
+            self.assertEqual(row.storage_kind, 'inline')
+            models.QuerySet(model=SharedRevision).filter(pk=row.pk).update(
+                html='PUB-PRIVATE-CORRUPTION-CANARY')
             hits = []
             with patch.object(public, '_read_boundary', side_effect=hits.append):
                 failed = self.anonymous.get(self.host_url, HTTP_IF_NONE_MATCH=first['ETag'])
@@ -211,7 +207,6 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
             self.assertEqual(hits.count('captured'), 1)
             self.assertEqual(hits.count('before_recheck'), 1)
             body = self.body_bytes(failed)
-            self.assertNotIn(row.file_key.encode(), body)
             self.assertNotIn(b'PUB-PRIVATE-CORRUPTION-CANARY', body)
 
     def commit_nav_on_other_connection(self, name):
@@ -261,24 +256,16 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
             self.assertEqual(hits.count('captured'), 2)
             self.assertEqual(unstable['Cache-Control'], 'no-store')
 
-    def test_pub004_old_current_deleted_between_capture_and_read_retries_new_confirmed_snapshot(self):
-        from . import public, lifecycle
+    def test_pub004_current_advanced_between_capture_and_read_retries_new_confirmed_snapshot(self):
+        from . import public
         with self.candidate():
-            header, _ = self.seed_public()
-            old = SharedRevision.objects.get(pk=header['resultId'])
+            self.seed_public()
             first = self.anonymous.get(self.host_url)
             hits = []
             def advance(phase):
                 hits.append(phase)
                 if phase == 'captured' and hits.count(phase) == 1:
                     self.apply_text('header', 'AFTER-CAPTURE-CURRENT-B')
-                    args = {'actor': self.owner, 'kind': 'header', 'generation': 1,
-                            'session_key': self.owner_client.session.session_key}
-                    preview = lifecycle.preview(**args, target_id=old.pk)
-                    result = lifecycle.confirm(**args, target_id=old.pk, operation_id=uuid4(),
-                        confirmation_token=preview['confirmationToken'], password=R.H.OWNER_PASSWORD)
-                    self.assertTrue(result['complete'])
-                    self.assertFalse((SharedStorage().root / old.file_key).exists())
             pins = SharedBasePin.objects.count()
             with patch.object(public, '_read_boundary', side_effect=advance):
                 response = self.anonymous.get(self.host_url, HTTP_IF_NONE_MATCH=first['ETag'])
@@ -287,7 +274,6 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
             self.assertNotEqual(response['ETag'], first['ETag'])
             self.assertEqual(hits.count('captured'), 2)
             self.assertEqual(SharedBasePin.objects.count(), pins)
-            self.assertEqual(SharedCleanupJob.objects.count(), 1)
 
     def test_pub005_media_current_ready_only_revocation_conditional_and_verified_fd(self):
         from . import public
@@ -317,11 +303,6 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
             result = self.applied('header', 'apply', self.intent('header', second_html))
             self.apply_text('header', 'CURRENT-FIRST-ASSET')
             self.applied('header', 'draft', self.intent('header', second_html))
-            current = self.context('header')
-            stage = self.send('header', 'restore/prepare', {'protocol': 'shared-editor-v1', 'generation': 1,
-                'baseRevisionId': current['baseRevisionId'], 'sourceRevisionId': result['resultId'],
-                'operationId': str(uuid4()), 'confirmReplace': True}, context=current)
-            self.assertEqual(stage.status_code, 200)
             self.assertEqual(self.anonymous.get(self.media_url(other_main), HTTP_IF_NONE_MATCH='*').status_code, 404)
             # Explicit isolated metadata fixture: READY must be checked again.
             models.QuerySet(model=Asset).filter(pk=self.asset.pk).update(status=Asset.Status.STAGED)
@@ -411,14 +392,12 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
             new = self.anonymous.get(self.host_url)
             self.assertIn(b'tel:+70000000002', self.body_bytes(new))
             context = self.context('header')
-            prepared = self.send('header', 'restore/prepare', {'protocol': 'shared-editor-v1', 'generation': 1,
-                'baseRevisionId': context['baseRevisionId'], 'sourceRevisionId': str(old.pk),
-                'operationId': str(uuid4()), 'confirmReplace': True}, context=context)
-            self.assertEqual(prepared.status_code, 200)
-            stage = SharedRestoreStage.objects.get(pk=prepared.json()['resultId'])
-            context = {'baseRevisionId': context['baseRevisionId'], 'sourceMode': 'restore-stage',
-                       'draftBasis': None, 'stageId': str(stage.pk)}
-            self.applied('header', 'apply', self.intent('header', self.body(old), context=context))
+            token = self.owner_client.cookies[settings.CSRF_COOKIE_NAME].value
+            restored_form = self.owner_client.post(
+                f'/manage/shared/header/versions/{old.pk}/restore/',
+                data={'expectedCurrentId': context['baseRevisionId'], 'confirmed': 'yes'},
+                HTTP_X_CSRFTOKEN=token)
+            self.assertEqual(restored_form.status_code, 302)
             restored = self.anonymous.get(self.host_url, HTTP_IF_NONE_MATCH=new['ETag'])
             self.assertEqual(restored.status_code, 200)
             body = self.body_bytes(restored)

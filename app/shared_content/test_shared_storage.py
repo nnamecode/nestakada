@@ -33,6 +33,88 @@ class SharedStorageTests(SimpleTestCase):
         self.assertTrue(path.is_relative_to(root))
         return path
 
+    def refuse_unlink(self, descriptor):
+        with self.assertRaises(SharedFault) as failure:
+            self.store.unlink_verified(descriptor)
+        self.assertEqual((failure.exception.code, failure.exception.status),
+                         ('SHARED_CLEANUP_FILE_UNAVAILABLE', 503))
+
+    def test_unlink_wrong_sha_symlink_and_hardlink_preserve_every_named_victim(self):
+        other = self.store.write_new('LC-UNRELATED-VICTIM')
+        other_path = self.store.root / other['file_key']
+        for vector in ('wrong-sha', 'symlink', 'hardlink'):
+            with self.subTest(vector=vector):
+                descriptor = self.store.write_new('LC-SELECTED-VICTIM-' + vector)
+                path = self.store.root / descriptor['file_key']
+                before = path.read_bytes()
+                if vector == 'wrong-sha':
+                    descriptor = dict(descriptor, file_sha256='0' * 64)
+                else:
+                    path.unlink()
+                    if vector == 'symlink':
+                        path.symlink_to(other_path)
+                    else:
+                        os.link(other_path, path)
+                with patch('shared_content.storage.os.unlink', wraps=os.unlink) as unlink:
+                    self.refuse_unlink(descriptor)
+                self.assertEqual(unlink.call_count, 0)
+                self.assertTrue(path.is_symlink() if vector == 'symlink' else path.is_file())
+                expected = before if vector == 'wrong-sha' else b'LC-UNRELATED-VICTIM'
+                self.assertEqual(path.read_bytes(), expected)
+                self.assertEqual(other_path.read_bytes(), b'LC-UNRELATED-VICTIM')
+
+    def test_unlink_inode_replacement_after_hash_read_preserves_both_files(self):
+        descriptor = self.store.write_new('LC-HELD-ORIGINAL')
+        path = self.store.root / descriptor['file_key']
+        retained = path.with_name('own-retained-original')
+        identity = path.stat()
+        original, hits = os.read, []
+
+        def replace_after_eof(fd, size):
+            value = original(fd, size)
+            info = os.fstat(fd)
+            if not value and not hits and (info.st_dev, info.st_ino) == (identity.st_dev, identity.st_ino):
+                hits.append('target-eof')
+                path.rename(retained)
+                path.write_bytes(b'LC-NEW-NAMED-VICTIM')
+                path.chmod(0o600)
+            return value
+
+        with patch('shared_content.storage.os.read', side_effect=replace_after_eof), \
+             patch('shared_content.storage.os.unlink', wraps=os.unlink) as unlink:
+            self.refuse_unlink(descriptor)
+        self.assertEqual(hits, ['target-eof'])
+        self.assertEqual(unlink.call_count, 0)
+        self.assertEqual(retained.read_bytes(), b'LC-HELD-ORIGINAL')
+        self.assertEqual(path.read_bytes(), b'LC-NEW-NAMED-VICTIM')
+
+    def test_unlink_parent_rename_after_hash_read_preserves_both_trees(self):
+        descriptor = self.store.write_new('LC-HELD-PARENT-VICTIM')
+        path = self.store.root / descriptor['file_key']
+        parent = path.parent
+        retained = parent.with_name(parent.name + '-own-retained')
+        identity = path.stat()
+        original, hits = os.read, []
+
+        def rename_after_eof(fd, size):
+            value = original(fd, size)
+            info = os.fstat(fd)
+            if not value and not hits and (info.st_dev, info.st_ino) == (identity.st_dev, identity.st_ino):
+                hits.append('target-eof')
+                parent.rename(retained)
+                parent.mkdir(mode=0o700)
+                path.write_bytes(b'LC-NEW-PARENT-VICTIM')
+                path.chmod(0o600)
+            return value
+
+        with patch('shared_content.storage.os.read', side_effect=rename_after_eof), \
+             patch('shared_content.storage.os.unlink', wraps=os.unlink) as unlink:
+            self.refuse_unlink(descriptor)
+        self.assertEqual(hits, ['target-eof'])
+        self.assertEqual(unlink.call_count, 0)
+        self.assertEqual((retained / path.name).read_bytes(), b'LC-HELD-PARENT-VICTIM')
+        self.assertEqual(path.read_bytes(), b'LC-NEW-PARENT-VICTIM')
+
     def actual(self):
         """Independent finite walk: lstat only, never follow test links."""
         allocated, logical, files, directories = 0, 0, 0, 0

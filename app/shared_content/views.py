@@ -7,14 +7,14 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, Validat
 from django.http import JsonResponse, FileResponse, Http404
 from django.db import DatabaseError
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.views.decorators.http import require_GET, require_POST
 from accounts.views import gate
 from accounts.services import require_session
-from editor_runtime.guards import EditorFault, EditorSlot, InputProfile, input_profile, read_json_bytes
+from editor_runtime.guards import EditorFault, EditorSlot, input_profile, read_json_bytes
 from editor_runtime.processing import normalize_input, strict_json, ProcessingRejected
 from . import services as S, commands as C
 from .faults import SharedFault
-from .models import SharedRevision, SharedReceipt
+from .models import SharedRevision
 from .policy import PROTOCOL, canonical_uuid
 from .content import content_html, descriptor_for
 
@@ -104,48 +104,6 @@ def write_content(request, kind, selected, raw, value):
     media_stamp = S.asset_evidence(result['bindings'])
     late_context(request, kind, before, media_stamp, result)
     return before, result, media_stamp
-
-
-@before_book
-def restore_input(request, kind):
-    generation = request.auth_generation
-    S.inspect_admission(actor=request.user, kind=kind, generation=generation)
-    if request.GET:
-        raise ValueError()
-    raw = read_json_bytes(request, input_profile(owner=True, shared=True))
-    value = strict_json(raw.decode())
-    if (type(value) is not dict or set(value) != {'protocol', 'generation', 'baseRevisionId',
-            'sourceRevisionId', 'operationId', 'confirmReplace'} or value['protocol'] != PROTOCOL
-            or type(value['generation']) is not int or value['generation'] != generation):
-        raise ValueError()
-    canonical_uuid(value['sourceRevisionId']); canonical_uuid(value['operationId'])
-    if value['baseRevisionId'] is not None:
-        canonical_uuid(value['baseRevisionId'])
-    if value['confirmReplace'] is not True:
-        raise SharedFault('SHARED_REPLACE_CONFIRMATION_REQUIRED')
-    replay = C.lookup_replay(actor=request.user, kind=kind, generation=generation, action='restore_prepare',
-        operation_id=UUID(value['operationId']), session_key=request.session.session_key,
-        fingerprint=S.digest({'source': value['sourceRevisionId'], 'base': value['baseRevisionId'], 'confirmed': True}))
-    return generation, value, replay
-
-
-@before_book
-def restore_content(request, kind, value):
-    before = inspect(request, kind)
-    if value['baseRevisionId'] != before.current_id:
-        raise SharedFault('SHARED_CONTEXT_CONFLICT')
-    source = SharedRevision.objects.get(pk=UUID(value['sourceRevisionId']), block_id=before.block_id)
-    if source.schema_version != kind + '-v1':
-        raise SharedFault('SHARED_VERSION_INCOMPATIBLE')
-    import json
-    candidate = {'protocol': PROTOCOL, 'generation': before.generation,
-        'baseRevisionId': before.current_id, 'sourceMode': 'current', 'draftBasis': None,
-        'stageId': None, 'html': content_html(source)}
-    wire = json.dumps(candidate, ensure_ascii=False).encode()
-    result = S.validate_result(normalize_input(wire, before.child), wire)
-    media_stamp = S.asset_evidence(result['bindings'])
-    late_context(request, kind, before, media_stamp, result)
-    return before
 
 
 def validated_restore_source(request, kind, source_id, expected_current_id):
@@ -348,33 +306,6 @@ def apply(request, kind):
     return write(request, kind, 'apply') if legacy_selected(request) else simple_write(request, kind, 'apply')
 
 
-@require_POST
-@guarded
-def restore_cancel(request, kind, stage_id):
-    with EditorSlot():
-        value = cancel_input(request, kind)
-        return operation_response(C.cancel_restore_stage(actor=request.user, kind=kind,
-            generation=request.auth_generation, stage_id=stage_id, operation_id=value['operationId'],
-            confirmed=value['confirmCancel'], session_key=request.session.session_key))
-
-
-@before_book
-def cancel_input(request, kind):
-    if request.META.get('QUERY_STRING'):
-        raise SharedFault('SHARED_INPUT_REJECTED', 400)
-    S.inspect_admission(actor=request.user, kind=kind, generation=request.auth_generation)
-    raw = read_json_bytes(request, InputProfile(16384))
-    return C.parse_cancel_request(raw, generation=request.auth_generation)
-
-
-@require_POST
-@guarded
-def restore_prepare(request, kind):
-    # New restores use restore_version().  Keep the URL closed so no new
-    # legacy stages/files can appear while existing terminal history remains.
-    raise SharedFault('SHARED_LEGACY_RESTORE_DISABLED', 410, operation_not_started=True)
-
-
 @require_GET
 @guarded
 def editor(request, kind):
@@ -391,9 +322,6 @@ def history(request, kind):
     data = S.history(actor=request.user, kind=kind, generation=request.auth_generation,
                      page=int(request.GET.get('page', '1')))
     data['owner'] = True
-    from .models import SharedCleanupJob
-    data['cleanup_jobs'] = list(SharedCleanupJob.objects.filter(block_id=data['context'].block_id)
-        .order_by('-created_at', '-id').values('id', 'sequence', 'phase')[:20])
     return render(request, 'shared_content/history.html', data)
 
 
@@ -440,89 +368,6 @@ def compare(request, kind):
     row = SharedRevision.objects.get(block_id=context.block_id, pk=UUID(canonical_uuid(request.GET['versionId'])))
     return render(request, 'shared_content/compare.html', {'owner': True, 'context': context,
         'row': row, 'saved_html': content_html(row)})
-
-
-@require_GET
-@guarded
-def result(request, kind, operation_id):
-    if request.GET:
-        raise ValueError()
-    return operation_response(C.lookup_result(actor=request.user, kind=kind, generation=request.auth_generation,
-        operation_id=operation_id, session_key=request.session.session_key))
-
-
-def _cleanup_args(request, kind):
-    if request.GET:
-        raise ValueError()
-    return {'actor': request.user, 'kind': kind, 'generation': request.auth_generation,
-            'session_key': request.session.session_key}
-
-
-def _cleanup_post(request):
-    if (set(request.POST) != {'csrfmiddlewaretoken', 'confirmation', 'operationId', 'password', 'confirmed'}
-            or any(len(request.POST.getlist(key)) != 1 for key in request.POST)
-            or request.POST['confirmed'] != 'yes'):
-        raise SharedFault('SHARED_CONFIRMATION_REQUIRED', 400)
-    canonical_uuid(request.POST['operationId'])
-    return {'operation_id': UUID(request.POST['operationId']),
-            'confirmation_token': request.POST['confirmation'], 'password': request.POST['password']}
-
-
-@require_http_methods(['GET', 'POST'])
-@guarded
-def cleanup_preview(request, kind, version_id):
-    from . import lifecycle as L
-    from uuid import uuid4
-    args = _cleanup_args(request, kind)
-    if request.method == 'POST':
-        value = L.confirm(**args, target_id=version_id, **_cleanup_post(request))
-        return render(request, 'shared_content/cleanup_status.html', {'owner': True, 'kind': kind, 'state': value})
-    value = L.preview(**args, target_id=version_id)
-    return render(request, 'shared_content/cleanup.html', {'owner': True, 'preview': value,
-        'operation_id': str(uuid4()), 'resume': False})
-
-
-@require_GET
-@guarded
-def cleanup_status(request, kind, operation_id):
-    from . import lifecycle as L
-    args = _cleanup_args(request, kind)
-    state = L.status(**args, job_id=operation_id)
-    preview = L.preview(**args, job_id=operation_id) if not state['complete'] else None
-    return render(request, 'shared_content/cleanup_status.html', {'owner': True, 'kind': kind,
-        'state': state, 'preview': preview, 'operation_id': str(operation_id), 'resume': True})
-
-
-@require_POST
-@guarded
-def cleanup_resume(request, kind, operation_id):
-    from . import lifecycle as L
-    args = _cleanup_args(request, kind)
-    supplied = _cleanup_post(request)
-    if supplied.pop('operation_id') != operation_id:
-        raise SharedFault('SHARED_OPERATION_COLLISION')
-    state = L.resume(**args, job_id=operation_id, **supplied)
-    return render(request, 'shared_content/cleanup_status.html', {'owner': True, 'kind': kind, 'state': state})
-
-
-@require_GET
-@guarded
-def diagnostics(request, kind, operation_id):
-    from . import lifecycle as L
-    value = L.diagnostics(**_cleanup_args(request, kind), operation_id=operation_id)
-    return render(request, 'shared_content/diagnostics.html', {'owner': True, 'kind': kind, 'diagnostic': value})
-
-
-@require_POST
-@guarded
-def diagnostic_reconcile(request, kind, operation_id):
-    from . import lifecycle as L
-    if (set(request.POST) != {'csrfmiddlewaretoken', 'password', 'confirmed'}
-            or any(len(request.POST.getlist(key)) != 1 for key in request.POST)
-            or request.POST['confirmed'] != 'yes'):
-        raise SharedFault('SHARED_CONFIRMATION_REQUIRED', 400)
-    value = L.reconcile_known(**_cleanup_args(request, kind), operation_id=operation_id, password=request.POST['password'])
-    return render(request, 'shared_content/diagnostics.html', {'owner': True, 'kind': kind, 'diagnostic': value})
 
 
 @require_GET

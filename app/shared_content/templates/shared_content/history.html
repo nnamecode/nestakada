@@ -1,7 +1,4 @@
 {% extends 'accounts/base.html' %}{% block content %}<h1>История {{ context.kind }}</h1>
 <a href="{% url 'shared_content:editor' context.kind %}">Вернуться в редактор</a>
-{% if cleanup_jobs %}<section data-cleanup-jobs><h2>Последние операции очистки</h2>
-{% for job in cleanup_jobs %}<p><a href="{% url 'shared_content:cleanup_status' context.kind job.id %}" data-cleanup-job="{{ job.id }}">Версия {{ job.sequence }} · {{ job.phase }} · {{ job.id }}</a></p>{% endfor %}
-</section>{% endif %}
 {% for row in rows %}<article data-shared-version="{{ row.id }}"><h2>Версия {{ row.sequence }}</h2><p>{{ row.created_at }} · Автор {{ row.author_id }} · Схема {{ row.schema_version }}</p>
-<a href="{% url 'shared_content:version' context.kind row.id %}">Сохранённые данные</a> <a href="{% url 'shared_content:compare' context.kind %}?versionId={{ row.id }}">Сравнить с текущей</a> <a href="{% url 'shared_content:cleanup_preview' context.kind row.id %}">Проверить удаление этой версии</a></article>{% empty %}<p>История пуста.</p>{% endfor %}<p>Страница {{ page }}. <a href="?page={{ page|add:1 }}">Далее</a></p>{% endblock %}
+<a href="{% url 'shared_content:version' context.kind row.id %}">Сохранённые данные</a> <a href="{% url 'shared_content:compare' context.kind %}?versionId={{ row.id }}">Сравнить с текущей</a></article>{% empty %}<p>История пуста.</p>{% endfor %}<p>Страница {{ page }}. <a href="?page={{ page|add:1 }}">Далее</a></p>{% endblock %}

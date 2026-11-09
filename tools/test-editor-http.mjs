@@ -27,7 +27,7 @@ function docker(args,input,timeout=60000){
 }
 const fixtureSource=fs.readFileSync(regular(fixtureFile),'utf8');
 const fixtureHash=sha(fixtureSource),probeHash=sha(fs.readFileSync(regular(probeFile)));
-if(fixtureHash!=='7e9dcaf8e19f12a64d479cfbd873f47f5ef61ee86acb0c8d6a4618bdd72f4ff3'
+if(fixtureHash!=='5fe8087f9e51fbc08bffe64570cae683380c1fd8261d40895591c7ec2a565e0d'
   ||probeHash!=='e32a7fd6973c79956e3288d82f69121c0507a6a6632e096d86ef3bd5f39551ad')fail('QA_FREEZE_MISMATCH');
 const manifest=JSON.parse(fs.readFileSync(path.join(repo,'work/foundation/test/manifest.json'),'utf8'));
 if(!manifest.active||manifest.environment!=='test'||manifest.composeProject!=='nestakada-foundation-test')fail('ACTIVE_LOCAL_TEST_REQUIRED');

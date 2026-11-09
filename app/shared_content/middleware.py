@@ -6,16 +6,14 @@ from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 from accounts.services import require_session, is_owner, note_denial
 from accounts.views import private
-from editor_runtime.guards import EditorFault, BodyTooLarge, BodyMalformed, LengthRequired
+from editor_runtime.guards import EditorFault
 
-PATH = re.compile(r'^/manage/shared/(header|footer)/(check|draft|apply|restore/prepare)/$')
-CANCEL_PATH = re.compile(r'^/manage/shared/(header|footer)/stages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/cancel/$')
+PATH = re.compile(r'^/manage/shared/(header|footer)/(check|draft|apply)/$')
 
 
 class SharedAdmissionMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
-        cancel = CANCEL_PATH.fullmatch(request.path_info)
-        if request.method == 'POST' and (PATH.fullmatch(request.path_info) or cancel):
+        if request.method == 'POST' and PATH.fullmatch(request.path_info):
             try:
                 actor = require_session(request, touch=False)
                 if not is_owner(actor):
@@ -23,22 +21,6 @@ class SharedAdmissionMiddleware(MiddlewareMixin):
                     return private(JsonResponse({'ok': False, 'code': 'SHARED_OWNER_REQUIRED', 'operationNotStarted': True}, status=403))
                 if request.content_type != 'application/json':
                     return private(JsonResponse({'ok': False, 'code': 'EDITOR_JSON_REQUIRED', 'operationNotStarted': True}, status=415))
-                if cancel:
-                    if request.META.get('QUERY_STRING'):
-                        return private(JsonResponse({'ok': False, 'code': 'SHARED_INPUT_REJECTED', 'operationNotStarted': True}, status=400))
-                    if request.META.get('HTTP_TRANSFER_ENCODING'):
-                        raise BodyMalformed()
-                    length = request.META.get('CONTENT_LENGTH', '')
-                    if not length:
-                        raise LengthRequired()
-                    if not length.isascii() or not length.isdecimal():
-                        raise BodyMalformed()
-                    try:
-                        size = int(length)
-                    except ValueError:
-                        raise BodyMalformed() from None
-                    if size > 16384:
-                        raise BodyTooLarge()
             except PermissionDenied:
                 return private(JsonResponse({'ok': False, 'code': 'SHARED_SESSION_ENDED', 'operationNotStarted': True}, status=401))
             except DatabaseError:

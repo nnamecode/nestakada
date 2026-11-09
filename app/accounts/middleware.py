@@ -9,6 +9,8 @@ class SessionPayloadMiddleware:
     """Reject malformed signed session containers before Django auth reads them."""
     def __init__(self,get_response): self.get_response=get_response
     def __call__(self,request):
+        if request.path != '/manage' and not request.path.startswith('/manage/'):
+            return self.get_response(request)
         try:
             data=request.session.load()
         except (AttributeError,TypeError,ValueError):

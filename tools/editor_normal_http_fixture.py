@@ -21,7 +21,7 @@ def execute(request):
     from django.db import connection, models, transaction
     from django.apps import apps
     from django.core.files.uploadedfile import SimpleUploadedFile
-    from accounts.models import AuthSession, UserProfile, PageGrant
+    from accounts.models import UserProfile, PageGrant
     from content.models import Page, Route, lock_content
     from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder, PageMediaHome
     from media_library.storage import MediaStorage
@@ -76,7 +76,7 @@ def execute(request):
             if Route.objects.exclude(pk__in=system_ids).exists():
                 raise ValueError('Foreign route at seed; preserved')
             if any(model.objects.exists() for model in [User, Page, PageRevision,
-                    PageContentState, AuthSession, Session, OwnerDraft, RestoreStage, VersionBasePin,
+                    PageContentState, Session, OwnerDraft, RestoreStage, VersionBasePin,
                     Asset, AssetFile, AssetUsage, MediaFolder, PageMediaHome] + forbidden):
                 raise ValueError('Nonempty exclusive fixture; preserved')
             shared_baseline = shared_hash()
@@ -213,7 +213,8 @@ def execute(request):
             raise ValueError('Foreign revision/state; preserved')
         if (PageGrant.objects.exclude(user_id__in=users).exists() or
                 PageGrant.objects.exclude(page_id__in=pages).exists() or
-                AuthSession.objects.exclude(user_id__in=users).exists()):
+                any(str(session.get_decoded().get('_auth_user_id')) not in {str(user) for user in users}
+                    for session in Session.objects.all())):
             raise ValueError('Foreign grant/session; preserved')
         if OperationReceipt.objects.filter(page_id__in=pages).exclude(actor_id__in=users).exists():
             raise ValueError('Foreign operation actor; preserved')
@@ -349,7 +350,6 @@ def execute(request):
         raw(PageMediaHome).filter(page_id=pages[0], folder_id=folder_id).delete()
         raw(MediaFolder).filter(pk=folder_id).delete()
         session_keys = list(Session.objects.values_list('pk', flat=True))
-        AuthSession.objects.filter(user_id__in=users).delete()
         Session.objects.filter(pk__in=session_keys).delete()
         PageGrant.objects.filter(user_id__in=users, page_id__in=pages).delete()
         raw(Route).filter(pk__in=routes).delete()

@@ -17,7 +17,7 @@ def execute(request):
     from django.contrib.sessions.models import Session
     from django.db import transaction
     from accounts.clock import now
-    from accounts.models import AuthSession, LoginThrottle, UserProfile, PageGrant
+    from accounts.models import LoginThrottle, UserProfile, PageGrant
     if settings.DATABASES['default']['NAME'] != 'estakada_foundation':
         raise ValueError('Wrong fixture database')
     User = get_user_model()
@@ -31,8 +31,9 @@ def execute(request):
         if any(user.username not in ['nesadmin','auth-employee'] or user.first_name not in
                ['AUTH-OWNER-PRIVATE-CANARY','AUTH-EMPLOYEE-PRIVATE-CANARY'] for user in current):
             raise ValueError('Registered fixture user identity changed')
-        keys = list(AuthSession.objects.filter(user_id__in=previous).values_list('session_key', flat=True))
-        AuthSession.objects.filter(user_id__in=previous).delete()
+        previous_ids = {str(value) for value in previous}
+        keys = [session.session_key for session in Session.objects.all()
+            if str(session.get_decoded().get('_auth_user_id')) in previous_ids]
         Session.objects.filter(session_key__in=keys).delete()
         PageGrant.objects.filter(user_id__in=previous).delete()
         UserProfile.objects.filter(user_id__in=previous).delete()

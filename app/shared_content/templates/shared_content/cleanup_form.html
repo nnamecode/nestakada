@@ -1,7 +1,0 @@
-<form method="post" data-cleanup-form {% if resume %}action="{% url 'shared_content:cleanup_resume' preview.kind operation_id %}"{% endif %}>
-{% csrf_token %}<input type="hidden" name="confirmation" value="{{ preview.confirmationToken }}">
-<input type="hidden" name="operationId" value="{{ operation_id }}">
-<label>Действующий пароль владельца <input type="password" name="password" autocomplete="current-password" maxlength="4096" required></label>
-<label><input type="checkbox" name="confirmed" value="yes" required>Подтверждаю удаление только версии {{ preview.sequence }} ({{ preview.targetId }})</label>
-<button type="submit">{% if resume %}Продолжить эту операцию{% else %}Удалить выбранную версию{% endif %}</button>
-</form>

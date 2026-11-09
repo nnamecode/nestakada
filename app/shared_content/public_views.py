@@ -99,11 +99,35 @@ def media_response(request, file_id):
     stream = None
     try:
         file_id = UUID(str(file_id))
+        page_id = slot = None
+        if request.META.get('QUERY_STRING', ''):
+            if (len(request.META['QUERY_STRING'].encode('utf-8')) > 4096
+                    or set(request.GET) != {'page', 'slot'}
+                    or any(len(request.GET.getlist(key)) != 1 for key in ('page', 'slot'))):
+                return _closed(404)
+            page_text = request.GET['page']
+            slot_text = request.GET['slot']
+            try:
+                page_id = UUID(page_text)
+            except (ValueError, TypeError, AttributeError):
+                return _closed(404)
+            if str(page_id) != page_text or not slot_text.startswith('embedded:'):
+                return _closed(404)
+            image_text = slot_text[len('embedded:'):]
+            try:
+                image_id = UUID(image_text)
+            except (ValueError, TypeError, AttributeError):
+                return _closed(404)
+            if str(image_id) != image_text:
+                return _closed(404)
+            slot = slot_text
+        observed = False
         for attempt in range(2):
             with transaction.atomic():
-                snapshot = P._capture_media(file_id)
+                snapshot = P._capture_media(file_id, page_id, slot)
             if snapshot is None:
-                return _closed(404)
+                return unavailable_response() if observed else _closed(404)
+            observed = True
             stamp = P.digest(snapshot)
             P._read_boundary('media_captured')
             error = None
@@ -116,10 +140,12 @@ def media_response(request, file_id):
                 error = exc
             P._read_boundary('media_before_recheck')
             with transaction.atomic():
-                current = P._capture_media(file_id)
+                current = P._capture_media(file_id, page_id, slot)
             if current is None:
                 if stream is not None: stream.close(); stream = None
-                return _closed(404)
+                if attempt == 0:
+                    continue
+                return unavailable_response()
             if P.digest(current) != stamp:
                 if stream is not None: stream.close(); stream = None
                 if attempt == 0:

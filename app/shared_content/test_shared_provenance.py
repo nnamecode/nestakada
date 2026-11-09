@@ -1,21 +1,17 @@
 """Real PG provenance/replay tests. Fixture writes are not product Apply."""
 import hashlib
 import importlib
-import json
 import os
 from pathlib import Path
-from unittest.mock import patch
 from uuid import uuid4
 
 from django.apps import apps
-from django.conf import settings
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connection, IntegrityError, models, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.loader import MigrationLoader
 from django.test import TransactionTestCase, override_settings
 
-from . import commands as C, services as S
+from . import commands as C
 from . import test_shared_http as Q
 from .faults import SharedFault
 from .models import (SharedBlock, SharedRevision, SharedReceipt, SharedIdentityReservation,
@@ -46,94 +42,6 @@ class SharedProvenanceTests(TransactionTestCase):
             from content.models import lock_content
             lock_content('default')
             models.QuerySet(model=type(row)).filter(pk=row.pk).delete()
-
-    def operation_fixture(self, source_mode='current'):
-        source = self.revision(sequence=1)
-        result = self.revision(sequence=2, source=source)
-        value = {'protocol': 'shared-editor-v1', 'generation': 1, 'baseRevisionId': str(source.pk),
-            'sourceMode': source_mode, 'draftBasis': None, 'stageId': None,
-            'html': result.html, 'operationId': str(uuid4()), 'checkReceipt': 'historical-opaque-proof'}
-        query = ''
-        if source_mode == 'owner-draft':
-            draft = SharedDraft.objects.create(block=source.block, base_revision=source,
-                html=source.html, payload_hash=source.payload_hash, author_id=self.owner.pk)
-            value['draftBasis'] = {'id': str(draft.pk), 'revision': 1}
-            query = '?source=owner-draft&draftId=' + str(draft.pk) + '&draftRevision=1'
-            self.remove(draft)  # A consumed draft is gone before replay.
-        receipt = SharedReceipt.objects.create(id=value['operationId'], action='apply', actor_id=self.owner.pk,
-            actor_generation=1, block=source.block, source_revision_id=source.pk, base_revision_id=source.pk,
-            fingerprint=S.digest(value), result_code='applied', result_id=result.pk)
-        return source, result, value, receipt, query
-
-    def replay(self, value, query='', client=None, raw=None):
-        client = client or self.owner_client
-        csrf = client.cookies[settings.CSRF_COOKIE_NAME].value if settings.CSRF_COOKIE_NAME in client.cookies else ''
-        with patch('shared_content.views.read_json_bytes', side_effect=lambda request, profile: request.body):
-            return client.post(self.path('header', 'apply') + query,
-                data=self.raw(value) if raw is None else raw, content_type='application/json', HTTP_X_CSRFTOKEN=csrf)
-
-    def no_payload_dependencies(self):
-        from contextlib import ExitStack
-        stack = ExitStack()
-        for target in ('shared_content.views.normalize_input', 'shared_content.views.inspect',
-                       'shared_content.storage.SharedStorage.read', 'shared_content.quota.reserve_locked'):
-            stack.enter_context(patch(target, side_effect=AssertionError('REPLAY_TOUCHED_PAYLOAD_OR_RESERVATION')))
-        return stack
-
-    def test_old_source_body_deleted_receipt_and_new_provenance_survive(self):
-        source, result, value, receipt, query = self.operation_fixture()
-        self.remove(source)
-        self.assertFalse(SharedRevision.objects.filter(pk=source.pk).exists())
-        self.assertEqual(SharedRevision.objects.get(pk=result.pk).source_revision_id, source.pk)
-        self.assertTrue(SharedIdentityReservation.objects.filter(pk=source.pk, block=source.block, kind='sharedrevision').exists())
-        before = self.state()
-        with self.no_payload_dependencies():
-            response = self.replay(value)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['resultId'], str(result.pk))
-        self.assertTrue(response.json()['replay'])
-        self.assertFalse(response.json()['gone'])
-        self.assertEqual(self.state(), before)
-
-    def test_gone_result_and_consumed_source_replay_without_resurrection(self):
-        source, result, value, receipt, query = self.operation_fixture('owner-draft')
-        self.remove(result); self.remove(source)
-        before = self.state()
-        with self.no_payload_dependencies():
-            response = self.replay(value, query)
-            get_response = self.owner_client.get(self.path('header', 'result') + str(receipt.pk) + '/')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(get_response.status_code, 200)
-        for body in (response.json(), get_response.json()):
-            self.assertTrue(body['gone'])
-            self.assertTrue(body['replay'])
-            self.assertEqual(body['resultId'], str(result.pk))
-            self.assertEqual(body['resultCode'], 'applied')
-        self.assertEqual(self.state(), before)
-
-    def test_closed_selector_fingerprint_and_semantic_json_replay(self):
-        source, result, value, receipt, query = self.operation_fixture()
-        before = self.state()
-        # Canonical semantic fingerprint intentionally accepts JSON whitespace/key order.
-        wire = json.dumps(dict(reversed(list(value.items()))), ensure_ascii=False, indent=2).encode()
-        with self.no_payload_dependencies():
-            self.assertEqual(self.replay(value, raw=wire).status_code, 200)
-            self.assertEqual(self.replay({**value, 'html': value['html'] + 'CHANGED'}).status_code, 409)
-            self.assertEqual(self.replay({**value, 'unknown': True}).status_code, 400)
-            duplicate = self.raw(value)[:-1] + b',"protocol":"shared-editor-v1"}'
-            self.assertEqual(self.replay(value, raw=duplicate).status_code, 400)
-            self.assertEqual(self.replay(value, '?source=restore-stage&stageId=' + str(uuid4())).status_code, 400)
-        self.assertEqual(self.state(), before)
-
-    def test_fresh_authentication_remains_required_for_replay(self):
-        source, result, value, receipt, query = self.operation_fixture()
-        with self.no_payload_dependencies():
-            self.assertEqual(self.replay(value, client=self.employee_client).status_code, 403)
-            from django.test import Client
-            self.assertEqual(self.replay(value, client=Client(enforce_csrf_checks=True)).status_code, 401)
-            from accounts.models import UserProfile
-            UserProfile.objects.filter(user=self.owner).update(generation=2)
-            self.assertEqual(self.replay(value).status_code, 401)
 
     def test_typed_source_base_result_constraints_and_null_kind(self):
         source = self.revision(); foreign = self.revision('footer')
@@ -213,7 +121,7 @@ class SharedProvenanceMigrationTests(TransactionTestCase):
             self.assertEqual(cursor.fetchone(), ('estakada_foundation_unit', 'app_migrator'))
         loader = MigrationLoader(connection)
         self.latest = loader.graph.leaf_nodes('shared_content')
-        self.assertEqual(self.latest, [('shared_content', '0005_cleanup_jobs')])
+        self.assertEqual(self.latest, [('shared_content', '0006_simple_revision_source')])
         for model in (SharedRevision, SharedDraft, SharedRestoreStage, SharedReceipt, SharedBasePin, SharedCleanupJob):
             self.assertEqual(model.objects.count(), 0, 'PROVENANCE_MIGRATION_REQUIRES_EMPTY_UNIT_HISTORY')
         self.assertFalse(SharedBlock.objects.filter(current_revision__isnull=False).exists())
@@ -318,6 +226,9 @@ class SharedProvenanceMigrationTests(TransactionTestCase):
             html=html, payload_hash=hashlib.sha256(html.encode()).hexdigest(), author_id=1)
         result = SharedRevision.objects.create(block=block, sequence=2, schema_version='header-v1',
             html=html, payload_hash=source.payload_hash, author_id=1, source_revision_id=source.pk)
+        # Reverse the newer same-block FK first.  Under 0005 the historical
+        # permanent-identity FK deliberately permits this gone-revision fixture.
+        MigrationExecutor(connection).migrate([('shared_content', '0005_cleanup_jobs')])
         models.QuerySet(model=SharedRevision).filter(pk=source.pk).delete()
         try:
             # Reverse 0005/0004 separately. Only 0003's own preflight/schema
@@ -350,6 +261,13 @@ class SharedProvenanceMigrationTests(TransactionTestCase):
             self.assertEqual(Revision.objects.get(pk=result.pk).source_revision_id, source.pk)
             self.assertEqual(list(Identity.objects.order_by('id').values('id', 'kind', 'block_id')), identities)
         finally:
+            if not SharedRevision.objects.filter(pk=source.pk).exists():
+                models.QuerySet(model=SharedRevision).bulk_create([SharedRevision(
+                    id=source.pk, block_id=source.block_id, sequence=source.sequence,
+                    schema_version=source.schema_version, html=source.html,
+                    storage_kind=source.storage_kind, file_key=source.file_key,
+                    byte_size=source.byte_size, file_sha256=source.file_sha256,
+                    payload_hash=source.payload_hash, author_id=source.author_id)])
             self.restore_latest()
         self.assertIn(self.latest[0], MigrationLoader(connection).applied_migrations)
         self.assertEqual(SharedRevision.objects.get(pk=result.pk).source_revision_id, source.pk)

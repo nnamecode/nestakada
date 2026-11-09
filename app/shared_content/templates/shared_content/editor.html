@@ -6,7 +6,6 @@
 <p>Меню строится по текущей структуре сайта. Контакты сохраняются буквально в версии блока.</p>
 <form data-editor-form>{% csrf_token %}<label for="shared-html">HTML общего блока</label><textarea id="shared-html" rows="22" spellcheck="false">{{ context.source_html }}</textarea>
 <p><button type="button" data-action="check">Проверить</button> <button type="button" data-action="draft">Сохранить черновик</button> <button type="button" data-action="apply">Применить к сайту</button></p>
-{% if context.child.sourceMode == 'restore-stage' %}<p><button type="button" data-action="cancel-stage">Отменить эту подготовку восстановления</button></p>{% endif %}
 <p><a href="{% url 'shared_content:editor' context.kind %}" target="_blank" rel="noopener noreferrer" data-current-source hidden>Открыть актуальный источник отдельно</a></p>
 <p><button type="button" data-retry-intent hidden>Повторить проверку результата прежней отправки</button></p>
 <p role="status" aria-live="polite" data-editor-status></p></form>

@@ -90,7 +90,8 @@ def navigation_html(navigation):
                 or any(ord(c) < 32 or ord(c) == 127 for c in item.label)):
             raise ValueError('SHARED_PUBLIC_NAV_INVALID')
         safe_url(item.url, ('http', 'https'))
-        node = '<a href="' + escape(item.url, quote=True) + '">' + escape(item.label) + '</a>'
+        current = ' aria-current="page"' if item.current else ''
+        node = '<a href="' + escape(item.url, quote=True) + '"' + current + '>' + escape(item.label) + '</a>'
         size += len(node.encode('utf-8'))
         if size > MAX_HTML:
             raise ValueError('SHARED_PUBLIC_NAV_LIMIT')
@@ -122,7 +123,10 @@ def hydrate(source, kind, navigation, media_urls):
         nav_node = root[2]
         nav_node.text = None
         for item in navigation:
-            child = ET.SubElement(nav_node, 'a', {'href': item.url})
+            attributes = {'href': item.url}
+            if item.current:
+                attributes['aria-current'] = 'page'
+            child = ET.SubElement(nav_node, 'a', attributes)
             child.text = item.label
     rendered = serialize_tree(root)
     # Each source keeps its own full legal budget; hydration has an explicitly

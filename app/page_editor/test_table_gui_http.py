@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.test import TransactionTestCase, override_settings
+from accounts.models import UserProfile
 from accounts.services import set_grant
 from page_versions import services as V, schema as S
 from page_versions.models import PageRevision, PageContentState, OwnerDraft, RestoreStage
@@ -95,6 +96,11 @@ class TableGuiHttpTests(TransactionTestCase):
         set_grant(actor=self.owner,employee=self.employee,page=self.page,intro_text=True,main_text=False)
         before=self.state()
         denied=self.post(self.employee_client,self.payload({'main_text':simple()},baseRevisionId=str(self.current().pk)))
+        self.assertEqual(denied.status_code,401);self.assertEqual(self.state(),before)
+        employee_client=self.login(self.employee.username,H.EMPLOYEE_PASSWORD)
+        generation=UserProfile.objects.get(user=self.employee).generation
+        denied=self.post(employee_client,self.payload({'main_text':simple()},
+            baseRevisionId=str(self.current().pk),generation=generation))
         self.assertEqual(denied.status_code,403);self.assertEqual(self.state(),before)
 
     def test_tp2_002_invalid_padding_refuses_whole_input_without_revision_or_receipt(self):

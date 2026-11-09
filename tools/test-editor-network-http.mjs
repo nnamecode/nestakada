@@ -31,7 +31,7 @@ function docker(args,input,timeout=60000){
 const fixtureSource=fs.readFileSync(regular(fixtureFile),'utf8');
 const fixtureHash=sha(fixtureSource),probeHash=sha(fs.readFileSync(regular(probeFile)));
 if(probeHash!=='79777019e2087322817e529fe1041127b96ced53df90a5eccc3d66a34607a193')fail('QA_PROBE_FREEZE_MISMATCH');
-if(fixtureHash!=='772b02f4721a8fe65e08ac6e17fecf03e7b98e6b5492ce97b58462675c32abb5')fail('QA_FIXTURE_FREEZE_MISMATCH');
+if(fixtureHash!=='27969a7c7d9d13781102c7ff588b8862d2a311019218842257f26c5d7aa59faf')fail('QA_FIXTURE_FREEZE_MISMATCH');
 const inputManifest=path.join(inputsDir,'inputs.json');
 const inputs=JSON.parse(fs.readFileSync(regular(inputManifest),'utf8'));
 if(Object.keys(inputs).length!==9)fail('CLOSED_SYNTHETIC_CORPUS_REQUIRED');

@@ -4,10 +4,13 @@ import hashlib
 from pathlib import Path
 import re
 from uuid import UUID
+from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 from content.models import lock_content
 from media_library.models import Asset, AssetFile, AssetUsage
 from media_library.storage import MediaStorage
+from page_versions import schema as page_schema
+from page_versions.models import PageContentState
 from .models import SharedBlock, SharedRevision
 from .content import descriptor_for, content_html
 from .services import digest
@@ -19,16 +22,35 @@ STATIC_TYPES = {'public-shared.css': 'text/css; charset=utf-8',
                 'public-shared.js': 'text/javascript; charset=utf-8'}
 
 
+def _canonical_uuid(value):
+    try:
+        return type(value) is str and str(UUID(value)) == value
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
 @dataclass(frozen=True)
 class NavItem:
     label: str
     url: str
+    current: bool = False
+
+
+@dataclass(frozen=True)
+class HostMediaFile:
+    id: str
+    asset_id: str
+    kind: str
+    key: str
+    sha256: str
+    byte_size: int
 
 
 @dataclass(frozen=True)
 class HostContext:
     stamp: str
     navigation: tuple[NavItem, ...]
+    media: tuple[HostMediaFile, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -91,13 +113,27 @@ def _capture(capture_host):
     if (type(host) is not HostContext or type(host.stamp) is not str
             or re.fullmatch('[0-9a-f]{64}', host.stamp) is None or type(host.navigation) is not tuple
             or any(type(item) is not NavItem or type(item.label) is not str or type(item.url) is not str
-                   for item in host.navigation)):
+                   or type(item.current) is not bool
+                   for item in host.navigation)
+            or type(host.media) is not tuple
+            or any(type(item) is not HostMediaFile
+                   or not _canonical_uuid(item.id)
+                   or not _canonical_uuid(item.asset_id)
+                   or item.kind not in (AssetFile.Kind.MAIN, AssetFile.Kind.LEGACY_PUBLIC)
+                   or type(item.key) is not str
+                   or re.fullmatch('[0-9a-f]{64}', item.sha256) is None
+                   or type(item.byte_size) is not int or item.byte_size < 0
+                   for item in host.media)
+            or len({item.id for item in host.media}) != len(host.media)):
         raise unavailable()
     blocks = list(SharedBlock.objects.select_related('current_revision').order_by('kind'))
     if [block.kind for block in blocks] != ['footer', 'header']:
         raise unavailable()
     pair = [_component(block.current_revision, block) for block in blocks]
-    projection = {'host': {'stamp': host.stamp, 'navigation': [[item.label, item.url] for item in host.navigation]},
+    projection = {'host': {'stamp': host.stamp,
+                  'navigation': [[item.label, item.url, item.current] for item in host.navigation],
+                  'media': [[item.id, item.asset_id, item.kind, item.key,
+                             item.sha256, item.byte_size] for item in host.media]},
                   'pair': pair}
     return projection, host, digest(projection)
 
@@ -108,9 +144,15 @@ def _open_media(file):
     source = MediaStorage().open_verified(file['key'], {'sha256': file['sha256'], 'byte_size': file['byte_size']})
     try:
         prefix = source.read(12); source.seek(0)
-        mime = 'image/webp' if prefix[:4] == b'RIFF' and prefix[8:12] == b'WEBP' else None
-        if file['kind'] == AssetFile.Kind.LEGACY_PUBLIC:
-            mime = 'image/jpeg' if prefix.startswith(b'\xff\xd8\xff') else 'image/png' if prefix.startswith(b'\x89PNG\r\n\x1a\n') else mime
+        if file['kind'] == AssetFile.Kind.MAIN:
+            mime = ('image/webp' if prefix[:4] == b'RIFF'
+                    and prefix[8:12] == b'WEBP' else None)
+        elif file['kind'] == AssetFile.Kind.LEGACY_PUBLIC:
+            mime = ('image/jpeg' if prefix.startswith(b'\xff\xd8\xff')
+                    else 'image/png' if prefix.startswith(b'\x89PNG\r\n\x1a\n')
+                    else None)
+        else:
+            mime = None
         if mime is None:
             raise unavailable()
         return source, mime
@@ -136,6 +178,12 @@ def render_shared(*, capture_host, media_url, static_url):
             error, output, urls = None, {}, {}
             try:
                 navigation_html(host.navigation)
+                for item in host.media:
+                    stream, _ = _open_media({
+                        'id': item.id, 'assetId': item.asset_id,
+                        'kind': item.kind, 'key': item.key,
+                        'sha256': item.sha256, 'byte_size': item.byte_size})
+                    stream.close()
                 for component in snapshot['pair']:
                     source = content_html(component['descriptor'])
                     _, checked = parse_component(source, component['kind'])
@@ -178,7 +226,37 @@ def render_shared(*, capture_host, media_url, static_url):
     raise unavailable()
 
 
-def _capture_media(file_id):
+def _page_media_consumer(file, page_id, slot):
+    state = (PageContentState.objects.select_related('page', 'current_revision')
+             .filter(page_id=page_id, page__is_published=True).first())
+    if (state is None or state.current_revision.page_id != state.page_id
+            or not slot.startswith('embedded:')):
+        return None
+    revision = state.current_revision
+    try:
+        payload = page_schema.validate(revision.payload, state.page.kind)
+    except (ValidationError, TypeError, ValueError, AttributeError):
+        return None
+    if (revision.schema_version != page_schema.SCHEMA
+            or page_schema.digest(payload) != revision.payload_hash):
+        return None
+    image_id = slot[len('embedded:'):]
+    images = [item for item in payload['embedded_images'] if item['id'] == image_id]
+    if len(images) != 1 or images[0]['asset_id'] != str(file.asset_id):
+        return None
+    if not any(node['kind'] == 'image' and node['image_id'] == image_id
+               for node in payload['layout']):
+        return None
+    if not AssetUsage.objects.filter(
+            kind=AssetUsage.Kind.CURRENT_PAGE, consumer_id=state.page_id,
+            slot=slot, asset_id=file.asset_id).exists():
+        return None
+    return {'pageId': str(state.page_id), 'revisionId': str(revision.pk),
+            'payloadHash': revision.payload_hash, 'slot': slot,
+            'assetId': str(file.asset_id)}
+
+
+def _capture_media(file_id, page_id=None, slot=None):
     if not connection.in_atomic_block:
         raise unavailable()
     lock_content('default')
@@ -190,6 +268,14 @@ def _capture_media(file_id):
         kind__in=[AssetFile.Kind.MAIN, AssetFile.Kind.LEGACY_PUBLIC]).values_list('id', flat=True)[:2])
     if variants != [file.pk]:
         return None
+    if ((file.asset.is_legacy and file.kind != AssetFile.Kind.LEGACY_PUBLIC)
+            or (not file.asset.is_legacy and file.kind != AssetFile.Kind.MAIN)):
+        return None
+    if (page_id is None) != (slot is None):
+        return None
+    if page_id is not None:
+        consumer = _page_media_consumer(file, page_id, slot)
+        return None if consumer is None else {'file': _file(file), 'page': consumer}
     consumers = []
     for block in SharedBlock.objects.select_related('current_revision').order_by('kind'):
         row = block.current_revision
@@ -206,6 +292,8 @@ def _capture_media(file_id):
 
 
 def _verify_media_consumers(snapshot):
+    if 'page' in snapshot:
+        return True
     asset_id = snapshot['file']['assetId']
     for consumer in snapshot['consumers']:
         source = content_html(consumer['descriptor'])

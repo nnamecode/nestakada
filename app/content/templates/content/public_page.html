@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.payload.title|default:page.name }}</title>
+  <link rel="stylesheet" href="/static/public.css">
+  <link rel="stylesheet" href="{{ shared_stylesheet }}">
+  <script defer src="{{ shared_script }}"></script>
+</head>
+<body>
+  {{ header_html }}
+  <main class="public-shell">
+    <p class="public-name">{{ page.name }}</p>
+    <h1>{{ page.payload.h1|default:page.name }}</h1>
+    {% for block in body_blocks %}
+      {% if block.kind == 'text' %}
+        <section class="public-content public-text-{{ block.field }}">{{ block.html }}</section>
+      {% elif block.kind == 'price' %}
+        <section class="public-price" aria-label="Цены">
+          <table>
+            <thead><tr><th scope="col">Услуга</th>{% for column in block.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr></thead>
+            <tbody>{% for row in block.rows %}<tr><th scope="row">{{ row.label }}</th>{% for cell in row.cells %}<td class="public-price-{{ cell.kind }}">{{ cell.text }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+          </table>
+        </section>
+      {% elif block.kind == 'image' %}
+        <figure class="public-image public-image-{{ block.alignment }}">
+          <img src="{{ block.src }}" alt="{{ block.alt }}"{% if block.width_px is not None %} width="{{ block.width_px }}"{% endif %}{% if block.height_px is not None %} height="{{ block.height_px }}"{% endif %} loading="lazy" decoding="async">
+        </figure>
+      {% endif %}
+    {% endfor %}
+  </main>
+  {{ footer_html }}
+</body>
+</html>

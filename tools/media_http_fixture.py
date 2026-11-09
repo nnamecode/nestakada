@@ -15,7 +15,7 @@ def execute(request):
     from django.contrib.auth import get_user_model
     from django.contrib.sessions.models import Session
     from django.db import models, transaction
-    from accounts.models import AuthSession, UserProfile, PageGrant
+    from accounts.models import UserProfile, PageGrant
     from content.models import Page, lock_content
     from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder, PageMediaHome
     from media_library.storage import MediaStorage
@@ -100,8 +100,10 @@ def execute(request):
                 raise ValueError('Fixture physical cleanup incomplete')
         with transaction.atomic():
             lock_content('default')
-            keys=list(AuthSession.objects.filter(user_id__in=owned_users).values_list('pk',flat=True))
-            AuthSession.objects.filter(pk__in=keys).delete();Session.objects.filter(pk__in=keys).delete()
+            owned_user_ids={str(value) for value in owned_users}
+            keys=[session.session_key for session in Session.objects.all()
+                if str(session.get_decoded().get('_auth_user_id')) in owned_user_ids]
+            Session.objects.filter(pk__in=keys).delete()
             PageGrant.objects.filter(user_id__in=owned_users).delete()
             models.QuerySet(model=PageMediaHome).filter(page_id__in=owned_pages).delete()
             models.QuerySet(model=MediaFolder).filter(pk__in=folders).delete()
