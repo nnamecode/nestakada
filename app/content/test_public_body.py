@@ -1,19 +1,21 @@
 from types import MappingProxyType
+from uuid import uuid4
 from django.test import SimpleTestCase
 
-from .public_body import (PublicImageBlock, PublicPriceBlock, PublicTextBlock,
-                          project_body)
-from .public_read import PublicPage
+from .public_body import (PublicHeroBlock, PublicImageBlock, PublicPriceBlock,
+                          PublicTextBlock, project_body)
+from .public_read import PublicPage, PublicUnavailable
 
 
 class PublicBodyTests(SimpleTestCase):
     def page(self, *, layout, price=None, intro='<p>INTRO</p>', main='<p>MAIN</p>',
-             embedded_images=None):
+             embedded_images=None, main_image=None, page_kind='article'):
         payload = MappingProxyType({
             'layout': layout, 'price': price,
             'intro_text': intro, 'main_text': main,
-            'embedded_images': embedded_images or []})
-        return PublicPage('r', 'p', 'v', '/p/', 'primary', 'article',
+            'embedded_images': embedded_images or [],
+            'main_image': main_image})
+        return PublicPage('r', 'p', 'v', '/p/', 'primary', page_kind,
                           'Page', '0' * 64, payload)
 
     def test_text_blocks_follow_layout_order(self):
@@ -92,3 +94,47 @@ class PublicBodyTests(SimpleTestCase):
         self.assertEqual(blocks[1], PublicImageBlock(
             'image', '/public-media/' + file_id + '/?page=p&slot=embedded%3A' + image_id,
             '<Диагностика>', 'right', 640, None))
+
+    def test_service_main_image_replaces_exact_intro_in_saved_order(self):
+        image = {
+            'asset_id': '71de8370-3105-5209-a189-82bb243b0041',
+            'alt': '<Кузовной ремонт>', 'alignment': 'left',
+            'width_px': 1200, 'height_px': 700}
+        blocks = project_body(self.page(
+            page_kind='service_detail', main_image=image,
+            layout=[
+                {'kind': 'text', 'field': 'main_text',
+                 'protected_nodes': []},
+                {'kind': 'text', 'field': 'intro_text',
+                 'protected_nodes': []}]),
+            {'main_image': '71de8370-3105-5209-a189-82bb243b0042'})
+        self.assertIsInstance(blocks[0], PublicTextBlock)
+        self.assertEqual(blocks[1], PublicHeroBlock(
+            'hero',
+            '/public-media/71de8370-3105-5209-a189-82bb243b0042/?page=p&slot=main_image',
+            '<Кузовной ремонт>', 'left', 1200, 700, '<p>INTRO</p>'))
+
+    def test_main_image_policy_and_ambiguous_intro_fail_closed(self):
+        image = {
+            'asset_id': '71de8370-3105-5209-a189-82bb243b0043',
+            'alt': 'Image', 'alignment': 'center',
+            'width_px': None, 'height_px': None}
+        ordinary = project_body(self.page(
+            page_kind='article', main_image=image,
+            layout=[{'kind': 'text', 'field': 'intro_text',
+                     'protected_nodes': []}]))
+        self.assertEqual(ordinary, (
+            PublicTextBlock('text', 'intro_text', '<p>INTRO</p>'),))
+
+        for layout in (
+                [],
+                [{'kind': 'text', 'field': 'intro_text',
+                  'protected_nodes': []},
+                 {'kind': 'text', 'field': 'intro_text',
+                  'protected_nodes': []}],
+                [{'kind': 'text', 'field': 'intro_text',
+                  'protected_nodes': [{'id': 'protected'}]}]):
+            with self.subTest(layout=layout), self.assertRaises(PublicUnavailable):
+                project_body(self.page(
+                    page_kind='service_section_overview', main_image=image,
+                    layout=layout), {'main_image': str(uuid4())})

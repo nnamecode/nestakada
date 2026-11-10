@@ -9,7 +9,9 @@ from page_versions import schema
 from page_versions.models import PageContentState, PageRevision
 
 from .models import Page, Route
-from .public_read import PublicUnavailable, public_navigation
+from .public_read import (PublicNavigationItem, PublicUnavailable,
+                          public_navigation)
+from .public_shared import project_breadcrumbs
 from .test_public_http import fake_shared
 
 
@@ -96,7 +98,11 @@ class PublicNavigationTests(TestCase):
                 public_navigation()
 
     def test_alias_page_is_current_and_names_urls_are_escaped(self):
-        page, _route = self.page('Name <unsafe>', '/exact/?a=1&b=2')
+        root, _root_route = self.page('Root <safe>', '/')
+        hidden, _hidden_route = self.page(
+            'Hidden', '/hidden/', parent=root, published=False)
+        page, _route = self.page(
+            'Name <unsafe>', '/exact/?a=1&b=2', parent=hidden)
         Route.objects.create(
             page=page, kind=Route.Kind.ALIAS, target='/alias-current/')
         with patch('content.public_views.render_shared', side_effect=fake_shared):
@@ -105,6 +111,32 @@ class PublicNavigationTests(TestCase):
         self.assertContains(response, 'Name &lt;unsafe&gt;', html=False)
         self.assertContains(response, 'href="/exact/?a=1&amp;b=2" aria-current="page"')
         self.assertNotContains(response, 'href="/alias-current/"')
+        self.assertContains(response, 'aria-label="Хлебные крошки"')
+        self.assertContains(response, '<a href="/">Root &lt;safe&gt;</a>', html=True)
+        self.assertContains(
+            response, '<span aria-current="page">Name &lt;unsafe&gt;</span>',
+            html=True)
+        self.assertNotContains(response, '>Hidden<')
+        self.assertNotContains(response, 'class="public-name"')
+
+    def test_root_breadcrumb_and_malformed_chains_fail_closed(self):
+        self.page('Root', '/')
+        with patch('content.public_views.render_shared', side_effect=fake_shared):
+            response = self.client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response, '<span aria-current="page">Root</span>', html=True)
+
+        current = SimpleNamespace(page_id='current')
+        valid = PublicNavigationItem('current', None, 'Current', '/current/')
+        for navigation in (
+                (),
+                (valid, valid),
+                (PublicNavigationItem('current', 'missing', 'Current', '/current/'),),
+                (PublicNavigationItem('current', 'parent', 'Current', '/current/'),
+                 PublicNavigationItem('parent', 'current', 'Parent', '/parent/'))):
+            with self.assertRaises(PublicUnavailable):
+                project_breadcrumbs(current, navigation)
 
     def test_unknown_skips_navigation_and_navigation_failure_is_closed_503(self):
         with patch('content.public_shared.public_navigation') as navigation:

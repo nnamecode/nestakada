@@ -1,15 +1,54 @@
 """Typed bridge from the public Page reader to the shared renderer."""
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from media_library.models import Asset, AssetFile, AssetUsage
 from shared_content.public import HostContext, HostMediaFile, NavItem
 from shared_content.services import digest
 
-from .public_read import (PublicPage, PublicUnavailable, public_navigation,
-                          resolve_target)
+from .public_read import (PUBLIC_HERO_PAGE_KINDS, PublicPage,
+                          PublicUnavailable, public_navigation, resolve_target)
 
 
 HOST_POLICY = 'public-page-host-v1'
+MAX_STANDALONE_IMAGE_SLOTS = 64
+MAX_STANDALONE_MEDIA_FILES = 64
+
+
+@dataclass(frozen=True)
+class PublicBreadcrumbItem:
+    name: str
+    target: str | None
+    current: bool
+
+
+def project_breadcrumbs(page, navigation):
+    """Project one validated visible ancestry chain without another read."""
+    by_id = {}
+    for item in navigation:
+        if item.page_id in by_id:
+            raise PublicUnavailable()
+        by_id[item.page_id] = item
+    item = by_id.get(page.page_id)
+    if item is None:
+        raise PublicUnavailable()
+    reverse_chain, seen = [], set()
+    while item is not None:
+        if item.page_id in seen:
+            raise PublicUnavailable()
+        seen.add(item.page_id)
+        reverse_chain.append(item)
+        if item.parent_id is None:
+            break
+        item = by_id.get(item.parent_id)
+        if item is None:
+            raise PublicUnavailable()
+    chain = tuple(reversed(reverse_chain))
+    return tuple(PublicBreadcrumbItem(
+        name=crumb.name,
+        target=None if crumb.page_id == page.page_id else crumb.target,
+        current=crumb.page_id == page.page_id,
+    ) for crumb in chain)
 
 
 class PublicSharedHost:
@@ -19,12 +58,23 @@ class PublicSharedHost:
         self.target = target
         self.page = None
         self.navigation = ()
+        self.breadcrumbs = ()
         self.media = MappingProxyType({})
 
     @staticmethod
     def _standalone_media(page):
         embedded = {item['id']: item for item in page.payload['embedded_images']}
         slots = {}
+        main_image = page.payload['main_image']
+        if (main_image is not None
+                and page.page_kind in PUBLIC_HERO_PAGE_KINDS):
+            intro_nodes = [
+                node for node in page.payload['layout']
+                if node['kind'] == 'text' and node['field'] == 'intro_text']
+            if (len(intro_nodes) != 1
+                    or intro_nodes[0]['protected_nodes']):
+                raise PublicUnavailable()
+            slots['main_image'] = main_image['asset_id']
         for node in page.payload['layout']:
             if node['kind'] != 'image':
                 continue
@@ -32,6 +82,8 @@ class PublicSharedHost:
             if image is None:
                 raise PublicUnavailable()
             slots['embedded:' + image['id']] = image['asset_id']
+        if len(slots) > MAX_STANDALONE_IMAGE_SLOTS:
+            raise PublicUnavailable()
         if not slots:
             return MappingProxyType({}), ()
         usage_rows = list(AssetUsage.objects.select_related('asset').filter(
@@ -44,7 +96,7 @@ class PublicSharedHost:
         file_rows = list(AssetFile.objects.filter(
             asset_id__in=asset_ids,
             kind__in=[AssetFile.Kind.MAIN, AssetFile.Kind.LEGACY_PUBLIC]
-        ).order_by('asset_id', 'id'))
+        ).order_by('asset_id', 'id')[:len(asset_ids) + 1])
         variants = {}
         for file in file_rows:
             variants.setdefault(file.asset_id, []).append(file)
@@ -67,6 +119,8 @@ class PublicSharedHost:
             files[str(file.pk)] = HostMediaFile(
                 id=str(file.pk), asset_id=str(file.asset_id), kind=file.kind,
                 key=file.key, sha256=file.sha256, byte_size=file.byte_size)
+        if len(files) > MAX_STANDALONE_MEDIA_FILES:
+            raise PublicUnavailable()
         return MappingProxyType(mapping), tuple(files[key] for key in sorted(files))
 
     def capture(self):
@@ -74,6 +128,7 @@ class PublicSharedHost:
         if not isinstance(page, PublicPage):
             raise PublicUnavailable()
         navigation = public_navigation()
+        breadcrumbs = project_breadcrumbs(page, navigation)
         media, media_files = self._standalone_media(page)
         projection = {
             'policy': HOST_POLICY,
@@ -94,6 +149,7 @@ class PublicSharedHost:
         }
         self.page = page
         self.navigation = navigation
+        self.breadcrumbs = breadcrumbs
         self.media = media
         shared_navigation = tuple(NavItem(
             item.name, item.target, item.page_id == page.page_id)
@@ -103,4 +159,4 @@ class PublicSharedHost:
     def body(self):
         if not isinstance(self.page, PublicPage):
             raise PublicUnavailable()
-        return self.page, self.navigation, self.media
+        return self.page, self.navigation, self.breadcrumbs, self.media

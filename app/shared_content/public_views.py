@@ -111,14 +111,19 @@ def media_response(request, file_id):
                 page_id = UUID(page_text)
             except (ValueError, TypeError, AttributeError):
                 return _closed(404)
-            if str(page_id) != page_text or not slot_text.startswith('embedded:'):
+            if str(page_id) != page_text:
                 return _closed(404)
-            image_text = slot_text[len('embedded:'):]
-            try:
-                image_id = UUID(image_text)
-            except (ValueError, TypeError, AttributeError):
-                return _closed(404)
-            if str(image_id) != image_text:
+            if slot_text == 'main_image':
+                pass
+            elif slot_text.startswith('embedded:'):
+                image_text = slot_text[len('embedded:'):]
+                try:
+                    image_id = UUID(image_text)
+                except (ValueError, TypeError, AttributeError):
+                    return _closed(404)
+                if str(image_id) != image_text:
+                    return _closed(404)
+            else:
                 return _closed(404)
             slot = slot_text
         observed = False
@@ -126,7 +131,8 @@ def media_response(request, file_id):
             with transaction.atomic():
                 snapshot = P._capture_media(file_id, page_id, slot)
             if snapshot is None:
-                return unavailable_response() if observed else _closed(404)
+                return (unavailable_response()
+                        if observed and page_id is not None else _closed(404))
             observed = True
             stamp = P.digest(snapshot)
             P._read_boundary('media_captured')
@@ -143,6 +149,8 @@ def media_response(request, file_id):
                 current = P._capture_media(file_id, page_id, slot)
             if current is None:
                 if stream is not None: stream.close(); stream = None
+                if page_id is None:
+                    return _closed(404)
                 if attempt == 0:
                     continue
                 return unavailable_response()

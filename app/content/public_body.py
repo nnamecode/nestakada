@@ -2,7 +2,8 @@
 from dataclasses import dataclass
 from urllib.parse import urlencode
 
-from .public_read import PublicPage, PublicUnavailable
+from .public_read import (PUBLIC_HERO_PAGE_KINDS, PublicPage,
+                          PublicUnavailable)
 
 
 @dataclass(frozen=True)
@@ -41,6 +42,17 @@ class PublicImageBlock:
     height_px: int | None
 
 
+@dataclass(frozen=True)
+class PublicHeroBlock:
+    kind: str
+    src: str
+    alt: str
+    alignment: str
+    width_px: int | None
+    height_px: int | None
+    html: str
+
+
 def _amount(value, is_from):
     whole, separator, fraction = value.partition('.')
     groups = []
@@ -61,13 +73,36 @@ def project_body(page, media=None):
         payload = page.payload
         media = {} if media is None else media
         embedded = {item['id']: item for item in payload['embedded_images']}
+        main_image = (payload['main_image']
+                      if page.page_kind in PUBLIC_HERO_PAGE_KINDS else None)
+        if main_image is not None:
+            intro_nodes = [
+                node for node in payload['layout']
+                if node['kind'] == 'text' and node['field'] == 'intro_text']
+            if (len(intro_nodes) != 1
+                    or intro_nodes[0]['protected_nodes']):
+                raise PublicUnavailable()
         result = []
         for node in payload['layout']:
             if node['kind'] == 'text':
                 if node['protected_nodes']:
                     raise PublicUnavailable()
-                result.append(PublicTextBlock(
-                    kind='text', field=node['field'], html=payload[node['field']]))
+                if main_image is not None and node['field'] == 'intro_text':
+                    file_id = media['main_image']
+                    query = urlencode((('page', page.page_id),
+                                       ('slot', 'main_image')))
+                    result.append(PublicHeroBlock(
+                        kind='hero',
+                        src='/public-media/' + file_id + '/?' + query,
+                        alt=main_image['alt'],
+                        alignment=main_image['alignment'],
+                        width_px=main_image['width_px'],
+                        height_px=main_image['height_px'],
+                        html=payload['intro_text']))
+                else:
+                    result.append(PublicTextBlock(
+                        kind='text', field=node['field'],
+                        html=payload[node['field']]))
             elif node['kind'] == 'price':
                 price = payload['price']
                 if price is None:

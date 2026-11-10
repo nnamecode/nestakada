@@ -1,0 +1,270 @@
+{
+  "schema": "dev09-services-catalog-v1",
+  "policy": "validated_package_not_import_authority",
+  "inputs": {
+    "map_sha256": "c1d542d0761ffbdb9fc58c9227fc94144515ab18c3155952a93dc6fb4d1bbad8",
+    "evidence_sha256": "c3a8a395fb4ed55fef6027a58014ce5decaadda7c559870bf06247c2fbeb79bc",
+    "source_sha256": "e61fbaffbfea280abf1c9d3c1017174b8c22323bcc149c88e8bb013cbf9e1da7"
+  },
+  "page": {
+    "page_id": "f39af842-05a7-4101-af9a-2fc320d457d0",
+    "map_id": "MAP-002",
+    "url": "/services/",
+    "kind": "services_master_catalog",
+    "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+    "position": 1,
+    "name": "Услуги и цены",
+    "h1": "Услуги и цены автосервиса \"Эстакада\"",
+    "title": "Услуги | Автосервис «Эстакада»",
+    "description": "",
+    "is_published": false,
+    "source": {
+      "relative_path": "work/site-audit/crawl/0184ec81ddcc19cff2bd.html",
+      "sha256": "e61fbaffbfea280abf1c9d3c1017174b8c22323bcc149c88e8bb013cbf9e1da7"
+    },
+    "groups": [
+      {
+        "name": "Кузовной ремонт",
+        "href": "/services/kuzovnoj-remont/",
+        "items": [
+          {
+            "name": "Ремонт кузова",
+            "href": "/services/kuzovnoj-remont/remont-kuzova"
+          },
+          {
+            "name": "Покраска автомобиля",
+            "href": "/services/kuzovnoj-remont/pokraska-avtomobilya"
+          },
+          {
+            "name": "Восстановление геометрии кузова",
+            "href": "/services/kuzovnoj-remont/vosstanovlenie-geometrii-kuzova"
+          },
+          {
+            "name": "Ремонт кузовных деталей автомобиля",
+            "href": "/services/kuzovnoj-remont/remont-kuzovnyix-detalej-avtomobilya"
+          },
+          {
+            "name": "Замена деталей кузова",
+            "href": "/services/kuzovnoj-remont/zamena-detalej-kuzova"
+          },
+          {
+            "name": "Ремонт после лобового удара",
+            "href": "/services/kuzovnoj-remont/remont-posle-lobovogo-udara"
+          },
+          {
+            "name": "Стекла и фары",
+            "href": "/services/kuzovnoj-remont/stekla-i-faryi"
+          },
+          {
+            "name": "Полировка кузова",
+            "href": "/services/kuzovnoj-remont/polirovka-kuzova"
+          },
+          {
+            "name": "Замена лобового стекла",
+            "href": "/services/kuzovnoj-remont/zamena-lobovogo-stekla"
+          },
+          {
+            "name": "Устранение царапин",
+            "href": "/services/kuzovnoj-remont/ustranenie-czarapin"
+          },
+          {
+            "name": "Ремонт бамперов",
+            "href": "/services/kuzovnoj-remont/remont-bamperov"
+          }
+        ]
+      },
+      {
+        "name": "Плановое ТО",
+        "href": "/services/planovoe-to/",
+        "items": [
+          {
+            "name": "Техническое Обслуживание (ТО)",
+            "href": "/services/planovoe-to/texnicheskoe-obsluzhivanie-to"
+          },
+          {
+            "name": "Замена масла в двигателе",
+            "href": "/services/planovoe-to/zamena-masla-v-dvigatele"
+          },
+          {
+            "name": "Замена фильтров",
+            "href": "/services/planovoe-to/zamena-filtrov"
+          },
+          {
+            "name": "Замена салонного фильтра",
+            "href": "/services/planovoe-to/zamena-salonnogo-filtra"
+          },
+          {
+            "name": "Замена тормозных колодок",
+            "href": "/services/planovoe-to/zamena-tormoznyix-kolodok"
+          },
+          {
+            "name": "Замена тормозных дисков",
+            "href": "/services/planovoe-to/zamena-tormoznyix-diskov"
+          },
+          {
+            "name": "Замена техниченских жидкостей",
+            "href": "/services/planovoe-to/zamena-texnichenskix-zhidkostej"
+          },
+          {
+            "name": "Замена свечей зажигания",
+            "href": "/services/planovoe-to/zamena-svechej-zazhiganiya"
+          },
+          {
+            "name": "Замена щёток стеклоочистетелей",
+            "href": "/services/planovoe-to/zamena-shhyotok-stekloochistetelej"
+          }
+        ]
+      },
+      {
+        "name": "Ремонт",
+        "href": "/services/remont/",
+        "items": [
+          {
+            "name": "Ремонт тормозной системы",
+            "href": "/services/remont/remont-tormoznoj-sistemyi"
+          },
+          {
+            "name": "Ремонт подвески",
+            "href": "/services/remont/remont-podveski"
+          },
+          {
+            "name": "Ремонт ходовой части",
+            "href": "/services/remont/remont-xodovoj-chasti"
+          },
+          {
+            "name": "Ремонт рулевого управления",
+            "href": "/services/remont/remont-rulevogo-upravleniya"
+          },
+          {
+            "name": "Ремонт электрооборудования",
+            "href": "/services/remont/remont-elektrooborudovaniya"
+          },
+          {
+            "name": "Замена ремня ГРМ",
+            "href": "/services/remont/zamena-remnya-grm"
+          },
+          {
+            "name": "Ремонт Кондиционера | Климат-контроля | Печки",
+            "href": "/services/remont/kondiczionera-klimatkontrolya-pechki"
+          },
+          {
+            "name": "Сход-развал",
+            "href": "/services/remont/sxod-razval"
+          },
+          {
+            "name": "Ремонт системы охлаждения",
+            "href": "/services/remont/remont-sistemyi-oxlazhdeniya"
+          },
+          {
+            "name": "Капитальный ремонт АКПП/МКПП/РКПП/Вариатора",
+            "href": "/services/remont/remont-akppmkpprkppvariatora"
+          },
+          {
+            "name": "Ремонт трансмиссии",
+            "href": "/services/remont/remont-transmissii"
+          },
+          {
+            "name": "Ремонт двигателя",
+            "href": "/services/remont/remont-dvigatelya"
+          },
+          {
+            "name": "Ремонт генератора",
+            "href": "/services/remont/remont-generatora"
+          },
+          {
+            "name": "Ремонт стартера",
+            "href": "/services/remont/remont-startera"
+          },
+          {
+            "name": "Ремонт выхлопной системы",
+            "href": "/services/remont/remont-vyixlopnoj-sistemyi"
+          },
+          {
+            "name": "Ремонт системы зажигания",
+            "href": "/services/remont/remont-sistemyi-zazhiganiya"
+          },
+          {
+            "name": "Ремонт негабаритного транспорта",
+            "href": "/services/remont/remont-kommercheskogo-negabaritnogo"
+          }
+        ]
+      },
+      {
+        "name": "Диагностика",
+        "href": "/services/diagnostika/",
+        "items": [
+          {
+            "name": "Диагностирование авто перед приобретением",
+            "href": "/services/diagnostika/diagnostirovanie-avto-pered-priobreteniem"
+          },
+          {
+            "name": "Диагностика тормозной системы",
+            "href": "/services/diagnostika/diagnostika-tormoznoj-sistemyi"
+          },
+          {
+            "name": "Диагностика подвески",
+            "href": "/services/diagnostika/diagnostika-podveski"
+          },
+          {
+            "name": "Диагностика ходовой части",
+            "href": "/services/diagnostika/diagnostika-xodovoj-chasti"
+          },
+          {
+            "name": "Диагностика электрооборудования",
+            "href": "/services/diagnostika/diagnostika-elektrooborudovaniya"
+          },
+          {
+            "name": "Диагностика кондиционера|Печки",
+            "href": "/services/diagnostika/diagnostika-kondiczionerapechki"
+          },
+          {
+            "name": "Диагностика системы охлаждения",
+            "href": "/services/diagnostika/diagnostika-sistemyi-oxlazhdeniya"
+          },
+          {
+            "name": "Диагностика АКПП/МКПП/РКПП/Вариатора",
+            "href": "/services/diagnostika/diagnostika-akppmkpprkppvariatora"
+          },
+          {
+            "name": "Диагностика трансмиссии",
+            "href": "/services/diagnostika/diagnostika-transmissii"
+          },
+          {
+            "name": "Диагностика двигателя",
+            "href": "/services/diagnostika/diagnostika-dvigatelya"
+          }
+        ]
+      },
+      {
+        "name": "Другие Услуги",
+        "href": "/services/drugie-uslugi/",
+        "items": [
+          {
+            "name": "Заправка и ремонт кондиционера",
+            "href": "/services/drugie-uslugi/zapravka-i-remont-kondiczionera/"
+          },
+          {
+            "name": "Полировка авто",
+            "href": "/services/drugie-uslugi/polirovka-avto/"
+          },
+          {
+            "name": "Эвакуация автомобиля",
+            "href": "/services/drugie-uslugi/evakuacziya-avtomobilya"
+          },
+          {
+            "name": "Обработка порогов",
+            "href": "/services/drugie-uslugi/obrabotka-porogov"
+          },
+          {
+            "name": "Регулировка фар",
+            "href": "/services/drugie-uslugi/regulirovka-far"
+          },
+          {
+            "name": "Автомойка",
+            "href": "/services/drugie-uslugi/avtomojka"
+          }
+        ]
+      }
+    ]
+  }
+}

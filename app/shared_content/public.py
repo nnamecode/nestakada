@@ -7,6 +7,7 @@ from uuid import UUID
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 from content.models import lock_content
+from content.public_read import PUBLIC_HERO_PAGE_KINDS
 from media_library.models import Asset, AssetFile, AssetUsage
 from media_library.storage import MediaStorage
 from page_versions import schema as page_schema
@@ -229,8 +230,7 @@ def render_shared(*, capture_host, media_url, static_url):
 def _page_media_consumer(file, page_id, slot):
     state = (PageContentState.objects.select_related('page', 'current_revision')
              .filter(page_id=page_id, page__is_published=True).first())
-    if (state is None or state.current_revision.page_id != state.page_id
-            or not slot.startswith('embedded:')):
+    if (state is None or state.current_revision.page_id != state.page_id):
         return None
     revision = state.current_revision
     try:
@@ -240,12 +240,28 @@ def _page_media_consumer(file, page_id, slot):
     if (revision.schema_version != page_schema.SCHEMA
             or page_schema.digest(payload) != revision.payload_hash):
         return None
-    image_id = slot[len('embedded:'):]
-    images = [item for item in payload['embedded_images'] if item['id'] == image_id]
-    if len(images) != 1 or images[0]['asset_id'] != str(file.asset_id):
-        return None
-    if not any(node['kind'] == 'image' and node['image_id'] == image_id
-               for node in payload['layout']):
+    if slot == 'main_image':
+        image = payload['main_image']
+        intro_nodes = [
+            node for node in payload['layout']
+            if node['kind'] == 'text' and node['field'] == 'intro_text']
+        if (state.page.kind not in PUBLIC_HERO_PAGE_KINDS
+                or image is None
+                or image['asset_id'] != str(file.asset_id)
+                or len(intro_nodes) != 1
+                or intro_nodes[0]['protected_nodes']):
+            return None
+    elif type(slot) is str and slot.startswith('embedded:'):
+        image_id = slot[len('embedded:'):]
+        images = [
+            item for item in payload['embedded_images']
+            if item['id'] == image_id]
+        if len(images) != 1 or images[0]['asset_id'] != str(file.asset_id):
+            return None
+        if not any(node['kind'] == 'image' and node['image_id'] == image_id
+                   for node in payload['layout']):
+            return None
+    else:
         return None
     if not AssetUsage.objects.filter(
             kind=AssetUsage.Kind.CURRENT_PAGE, consumer_id=state.page_id,

@@ -20,6 +20,7 @@
 - `PIMG-007`: существующий двухпопыточный composition расширяется typed host-media tuple: внутри короткой DB transaction capture полного Page/payload/standalone slot/current_page usage/public file descriptor; затем вне transaction `open_verified` + MIME каждого page FD; затем новая короткая DB recapture и сравнение полного host stamp. Drift revision/publication/usage/slot/file descriptor вызывает один повтор, затем503. Только совпавший финальный capture оставляет frozen slot→FileUUID mapping для body и composite ETag; FS I/O под content lock запрещён. Missing/corrupt physical image закрывает весь page503 до template/response, без canary/UUID/частичного HTML.
 - `PIMG-008`: protected text, `protected_ref` и неизвестный kind сохраняют прежний whole-page503 без canary/UUID; DEV-08G не ослабляет rich-HTML equality guard и не доверяет raw `src`/client URL.
 - `PIMG-009`: ALIAS, hidden blank200, redirects/unknown, Header/Footer media, ETag/304/HEAD, sessionless/no-write и существующие text/price сценарии не регрессируют.
+- `PIMG-010`: одна current published Page допускает не более 64 достижимых standalone image slots и 64 уникальных физических READY MAIN/LEGACY_PUBLIC files. Реальный HTTP render с 64 slots/64 отдельными проверяемыми файлами даёт200 и 64 contextual URL. 65 slots/65 files закрывает весь page ответом503/no-store до `_open_media`, без canary, FileUUID и частичного HTML. Batch file query ограничен максимумом `unique assets + 1`, достаточным для fail-closed обнаружения duplicate/missing variants без неограниченной материализации строк.
 
 ## Рентабельная реализация
 
@@ -33,8 +34,24 @@
 
 Repeat independent plan review: `APPROVED`, P1/P2/P3 нет. D-711 допускает реализацию только `PIMG-001–009` в указанной границе.
 
-## Статус D-713 / DEV-08G-Q001
+## Статус D-714 / DEV-08G-Q001
 
 Code review вернул CHANGES_REQUIRED. Уже внесены однозначные исправления: exact MAIN→WebP и LEGACY_PUBLIC→JPEG/PNG с binding к `Asset.is_legacy`; media recapture disappearance теперь retry→503, initial invalid остаётся404; malformed contextual UUID даёт404 без маскировки DB failure; N+1 заменён двумя пакетными запросами.
 
-Остаётся согласовать safety ceiling публичного renderer: одновременно ограничить число standalone layout image slots и unique физических файлов на одной Page. Без ceiling анонимный GET может вызвать неограниченное число SHA/open. Рекомендация `64/64`: достаточно обычным внутренним страницам и пагинируемым альбомам, но ограничивает худший запрос; превышение закрывается503 до файлового чтения. Альтернативы: строгие `32/32` либо более тяжёлые `128/128`. До ответа product code и новые tests сохранены, повторные запуски не выполнять.
+Владелец 2026-11-09 утвердил `DEV-08G-Q001`: максимум `64 standalone slots / 64 unique physical files` на одну Page. Это предел одного анонимного render, а не upload/storage quota. Превышение закрывает всю страницу ответом503 до файлового чтения. DEV-08G возобновлён; добавить PIMG-010, завершить тесты замечаний code review и повторное независимое ревью.
+
+## Статус D-715
+
+Повторное независимое code review вернуло два P2 без P1/P3. Batch AssetFile query должен иметь SQL slice `unique assets + 1`, чтобы corrupt duplicate variants не материализовались без предела. Mock-only PIMG-010 недостаточен: добавить реальный HTTP/PG/FS oracle 64→200 и 65→503/no-store до `_open_media`. Отдельный shared-public regression выявил, что contextual Page retry→503 не должен менять прежний queryless shared-media revoke→404; ветви развести локально без нового endpoint/state machine. До повторного review DEV-08G не завершать.
+
+## Статус D-716
+
+DEV-08G приостановлен владельцу по правилу цикла. Эквивалентная ошибка test-method boundary повторилась второй раз: после первого переноса хвоста unit PIMG-010 из race test новый HTTP test снова был вставлен до этого хвоста, поэтому строки `usage_query.assert_not_called()` и unique-file defense оказались внутри следующего метода. Третью попытку патча без явного resume не делать. Product partial уже содержит bounded AssetFile query `[:len(asset_ids)+1]` и локальное сохранение queryless shared revoke→404 при contextual Page retry→503, но после этих изменений tests/review не выполнялись.
+
+## Решение D-717
+
+Владелец командой «сделай как надо» явно возобновил D-716 и потребовал не пропускать остановленную работу. Принят рекомендованный вариант: не переносить отдельные строки в третий раз, а одним exact patch целиком заменить оба PIMG-010 test methods между подтверждёнными соседними методами. После этого обязательны fresh public-image, shared-public и повторное независимое code review обоих P2 и queryless regression.
+
+## Итог D-718
+
+DEV-08G завершён. Repeat independent code review `APPROVED`, новых P1/P2/P3 нет. Batched usage+asset и AssetFile queries ограничены; file query материализует максимум `unique assets + 1` и fail-closed доказывает exact-one. Реальный HTTP/PG/FS PIMG-010 подтверждает 64 distinct READY files→200/64 contextual URLs и65→503/no-store до `_open_media`, без canary/FileUUID/частичного HTML. Contextual Page disappearance/drift даёт bounded retry→503, initial invalid404; прежний queryless shared revoke остаётся404. Exact is_legacy/kind и MAIN-WebP/LEGACY-JPEG|PNG сохранены. Public-image17/17 PASS108.995с, shared-public10/10 PASS95.655с, public-layout16/16 PASS0.472с, guard268/268 PASS298.100с; Django check PASS, migrations no changes, diff-check clean. Новых model/schema/cache/worker/dependency/state-machine слоёв нет. Production/VPS/старый сайт не затронуты.

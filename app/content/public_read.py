@@ -16,6 +16,12 @@ from .models import Page, Route
 from .validators import exact_target
 
 
+PUBLIC_HERO_PAGE_KINDS = frozenset((
+    Page.Kind.SERVICE,
+    Page.Kind.SERVICE_SECTION,
+))
+
+
 class PublicNotFound(Exception):
     pass
 

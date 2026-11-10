@@ -304,7 +304,19 @@ $source = Join-Path $repo 'app'
 Reject-Link $source
 $items = @(Get-ChildItem -LiteralPath $source -Recurse -Force)
 foreach ($item in $items) { Reject-Link $item.FullName }
-$files = @($items | Where-Object { !$_.PSIsContainer -and $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') } | Sort-Object FullName)
+$migrationPackages = @(
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09b_articles_slice.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09e_services_catalog.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09g_service_roots.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09h_service_details.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09i_planned_maintenance.json'))
+)
+$migrationPackageNames = @($migrationPackages | ForEach-Object { Split-Path -Leaf $_ })
+if ($migrationPackageNames.Count -ne 5 -or
+    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json').Where({ $_ -notin $migrationPackageNames }).Count -ne 0) {
+    throw 'Migration package snapshot allowlist must contain exactly the five reviewed package names.'
+}
+$files = @($items | Where-Object { !$_.PSIsContainer -and ($_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages) } | Sort-Object FullName)
 if (!(Test-Path -LiteralPath (Join-Path $source 'manage.py'))) { throw 'Application source is incomplete.' }
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 Reject-Link $work
@@ -319,7 +331,19 @@ if ($Environment -eq 'test') {
     }
     $source = $snapshot
 }
-$sourceFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') } | Sort-Object FullName | ForEach-Object {
+$migrationPackages = @(
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09b_articles_slice.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09e_services_catalog.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09g_service_roots.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09h_service_details.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09i_planned_maintenance.json'))
+)
+$manifestPackageNames = @($migrationPackages | ForEach-Object { Split-Path -Leaf $_ })
+if ($manifestPackageNames.Count -ne 5 -or
+    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json').Where({ $_ -notin $manifestPackageNames }).Count -ne 0) {
+    throw 'Migration package manifest allowlist must contain exactly the five reviewed package names.'
+}
+$sourceFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages } | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($source.Length+1).Replace('\','/'); sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 $sourceManifest = Join-Path $work "source-$runId.json"

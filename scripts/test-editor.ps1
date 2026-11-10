@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
+param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=Join-Path $repo 'work/foundation/test'
@@ -82,6 +82,8 @@ elseif($Suite -eq 'shared-journal'){$dockerArgs+=@('shared_content.test_shared_j
 elseif($Suite -eq 'shared-reservation'){$dockerArgs+=@('shared_content.test_shared_reservation','--failfast')}
 elseif($Suite -eq 'final-media'){$dockerArgs+=@('page_editor.test_final_media_http','--failfast')}
 elseif($Suite -eq 'guard'){$dockerArgs+=@('request_guard.tests','audit','content','accounts','foundation_tests','--failfast')}
+elseif($Suite -eq 'dev09'){$dockerArgs+=@('content.test_dev09_migration_apply','--failfast')}
+elseif($Suite -eq 'dev09-services'){$dockerArgs+=@('content.test_dev09e_services_catalog','--failfast')}
 elseif($Suite -eq 'public-read'){$dockerArgs+=@('content.test_public_read','--failfast')}
 elseif($Suite -eq 'public-http'){$dockerArgs+=@('content.test_public_http','--failfast')}
 elseif($Suite -eq 'public-nav'){$dockerArgs+=@('content.test_public_navigation','--failfast')}

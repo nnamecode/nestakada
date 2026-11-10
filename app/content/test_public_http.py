@@ -42,9 +42,10 @@ class PublicHttpTests(TestCase):
 
     def page(self, name, target, *, published=True, route_kind=Route.Kind.PRIMARY,
              intro='<p>Intro</p>', main='<p>Main <strong>text</strong></p>',
-             layout=None, price=None, embedded_images=None, position=0):
+             layout=None, price=None, embedded_images=None, position=0,
+             kind=Page.Kind.ARTICLE):
         page = Page.objects.create(
-            name=name, kind=Page.Kind.ARTICLE, position=position,
+            name=name, kind=kind, position=position,
             is_published=published)
         route = Route.objects.create(
             page=page, kind=route_kind, target=target,
@@ -187,9 +188,221 @@ class PublicHttpTests(TestCase):
         self.assertEqual(response['Content-Type'], 'text/css; charset=utf-8')
         self.assertEqual(response['X-Content-Type-Options'], 'nosniff')
         self.assertFalse(response.cookies)
+        css = response.content.decode()
+        hero = css.split('.public-hero{', 1)[1].split('}', 1)[0]
+        hero_copy = css.split('.public-hero-copy{', 1)[1].split('}', 1)[0]
+        self.assertIn('display:flex', hero)
+        self.assertIn('align-items:flex-end', hero)
+        self.assertIn('padding-top:', hero)
+        self.assertIn('position:relative', hero_copy)
+        self.assertNotIn('position:absolute', hero_copy)
+        self.assertIn('.public-hero-copy table{display:block;max-width:100%;overflow-x:auto', css)
+        self.assertIn('.public-breadcrumbs ol{display:flex;flex-wrap:wrap', css)
+        self.assertIn('.public-breadcrumbs a:focus-visible{outline:3px solid var(--accent)', css)
+        self.assertIn('.public-services-catalog', css)
+        self.assertIn('grid-template-columns:repeat(4,minmax(0,1fr))', css)
+        self.assertIn('grid-template-columns:repeat(3,minmax(0,1fr))', css)
+        self.assertIn('grid-template-columns:1fr', css)
+        self.assertNotIn('text-overflow:ellipsis', css)
+        catalog_css = css.split('.public-services-catalog{', 1)[1].split(
+            '.public-price{', 1)[0]
+        self.assertIn(
+            '.public-services-catalog a:focus-visible{outline:3px solid var(--accent)',
+            css)
+        self.assertNotIn('height:', catalog_css.replace('line-height:', ''))
+        self.assertIn('.public-service-root-catalog', css)
+        self.assertIn(
+            '.public-service-root-catalog a:focus-visible{outline:3px solid var(--accent)',
+            css)
+        root_css = css.split('.public-service-root-catalog ul{', 1)[1].split(
+            '.public-price{', 1)[0]
+        self.assertIn('grid-template-columns:repeat(4,minmax(0,1fr))', root_css)
+        self.assertIn(
+            '.public-service-root-catalog ul{grid-template-columns:repeat(3,minmax(0,1fr))}',
+            css)
+        self.assertIn('.public-service-root-catalog ul{grid-template-columns:1fr}', css)
+        self.assertNotIn('height:', root_css.replace('line-height:', ''))
         session_load.assert_not_called()
         self.assertEqual(self.client.head('/static/public.css').content, b'')
         self.assertEqual(self.client.post('/static/public.css').status_code, 405)
+
+    def test_services_catalog_http_has_exact_semantic_safe_links_and_scoped_class(self):
+        from . import dev09_migration_apply as migration
+
+        package = migration._read_services_package()
+        payload = migration._services_payload(package['page'])
+        _page, route, revision = self.page(
+            'Услуги и цены', '/services/', intro='',
+            main=payload['main_text'], kind=Page.Kind.SERVICES)
+        response = self.client.get(route.target)
+        source = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(source.count('class="public-services-catalog"'), 1)
+        block = source.split('class="public-services-catalog"', 1)[1].split(
+            '</section>', 1)[0]
+        expected = []
+        for group in package['page']['groups']:
+            expected.append((group['href'], group['name']))
+            expected.extend((item['href'], item['name']) for item in group['items'])
+        actual = []
+        for fragment in block.split('<a href="')[1:]:
+            href, rest = fragment.split('"', 1)
+            body = rest.split('</a>', 1)[0]
+            self.assertTrue(body.startswith('><strong>'))
+            self.assertTrue(body.endswith('</strong>'))
+            text = body[len('><strong>'):-len('</strong>')]
+            actual.append((href, text))
+        self.assertEqual(actual, expected)
+        self.assertEqual(block.count('<h2>'), 5)
+        self.assertEqual(block.count('<li>'), 53)
+        self.assertNotIn('<script', block.lower())
+        self.assertNotIn('javascript:', block.lower())
+        damaged = dict(revision.payload)
+        damaged['main_text'] = payload['main_text'] + '<script>partial-canary</script>'
+        raw(PageRevision).filter(pk=revision.pk).update(
+            payload=damaged, payload_hash=schema.digest(damaged))
+        closed = self.client.get(route.target)
+        self.assertEqual(closed.status_code, 503)
+        self.assertEqual(closed['Cache-Control'], 'no-store')
+        self.assertNotIn(expected[0][1].encode(), closed.content)
+        self.assertNotIn(expected[-1][1].encode(), closed.content)
+        _other, other_route, _other_revision = self.page(
+            'Article', '/not-catalog/', position=1)
+        other = self.client.get(other_route.target).content.decode()
+        self.assertNotIn('class="public-services-catalog"', other)
+
+    def test_service_root_catalogs_have_exact_safe_tiles_and_scoped_class(self):
+        from . import dev09_migration_apply as migration
+
+        package = migration._read_service_roots_package()
+        last = None
+        for position, page_data in enumerate(package['pages']):
+            with self.subTest(map_id=page_data['map_id']):
+                payload = migration._service_root_payload(page_data)
+                _page, route, revision = self.page(
+                    page_data['name'], page_data['url'], intro='',
+                    main=payload['main_text'], kind=Page.Kind.SERVICE_CATALOG,
+                    position=position)
+                response = self.client.get(route.target)
+                self.assertEqual(response.status_code, 200)
+                source = response.content.decode()
+                self.assertEqual(source.count('class="public-service-root-catalog"'), 1)
+                block = source.split('class="public-service-root-catalog"', 1)[1].split(
+                    '</section>', 1)[0]
+                actual = []
+                for fragment in block.split('<a href="')[1:]:
+                    href, rest = fragment.split('"', 1)
+                    name = rest.split('<strong>', 1)[1].split('</strong>', 1)[0]
+                    actual.append((href, name))
+                self.assertEqual(
+                    actual,
+                    [(tile['href'], tile['name']) for tile in page_data['tiles']])
+                self.assertNotIn('<script', block.lower())
+                self.assertNotIn('javascript:', block.lower())
+                last = (page_data, route, revision)
+
+        page_data, route, revision = last
+        damaged = dict(revision.payload)
+        damaged['main_text'] += '<script>root-partial-canary</script>'
+        raw(PageRevision).filter(pk=revision.pk).update(
+            payload=damaged, payload_hash=schema.digest(damaged))
+        closed = self.client.get(route.target)
+        self.assertEqual(closed.status_code, 503)
+        self.assertEqual(closed['Cache-Control'], 'no-store')
+        self.assertNotIn(page_data['tiles'][0]['name'].encode(), closed.content)
+        self.assertNotIn(page_data['tiles'][-1]['name'].encode(), closed.content)
+
+        _other, other_route, _revision = self.page(
+            'Article', '/root-catalog-other/', position=10)
+        other = self.client.get(other_route.target).content.decode()
+        self.assertNotIn('class="public-service-root-catalog"', other)
+
+    def test_service_details_render_all_exact_safe_payloads_and_fail_closed(self):
+        from . import dev09_migration_apply as migration
+
+        package = migration._read_service_details_package()
+        last = None
+        for position, page_data in enumerate(package['pages']):
+            with self.subTest(map_id=page_data['map_id']):
+                payload = migration._service_detail_payload(page_data)
+                _page, route, revision = self.page(
+                    page_data['name'], page_data['url'],
+                    intro=payload['intro_text'], main=payload['main_text'],
+                    kind=Page.Kind.SERVICE, position=position)
+                response = self.client.get(route.target)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(payload['intro_text'].encode(), response.content)
+                self.assertIn(payload['main_text'].encode(), response.content)
+                self.assertNotIn(b'<script>alert', response.content.lower())
+                self.assertNotIn(b'javascript:', response.content.lower())
+                self.assertIsNone(payload['price'])
+                self.assertIsNone(payload['main_image'])
+                self.assertIsNone(payload['preview_image'])
+                self.assertEqual(payload['embedded_images'], [])
+                self.assertNotIn(b'public-price', response.content)
+                self.assertNotIn(b'public-main-image', response.content)
+                self.assertNotIn(b'public-works', response.content)
+                last = (page_data, route, revision, payload)
+
+        page_data, route, revision, payload = last
+        for field in ('intro_text', 'main_text'):
+            with self.subTest(unsafe_field=field):
+                damaged = dict(revision.payload)
+                damaged[field] += '<script>detail-partial-canary</script>'
+                raw(PageRevision).filter(pk=revision.pk).update(
+                    payload=damaged, payload_hash=schema.digest(damaged))
+                closed = self.client.get(route.target)
+                self.assertEqual(closed.status_code, 503)
+                self.assertEqual(closed['Cache-Control'], 'no-store')
+                self.assertNotIn(payload['intro_text'].encode(), closed.content)
+                self.assertNotIn(payload['main_text'].encode(), closed.content)
+                self.assertNotIn(page_data['name'].encode(), closed.content)
+                raw(PageRevision).filter(pk=revision.pk).update(
+                    payload=payload, payload_hash=schema.digest(payload))
+
+    def test_planned_maintenance_renders_exact9_and_fails_closed(self):
+        from . import dev09_migration_apply as migration
+
+        package = migration._read_planned_maintenance_package()
+        last = None
+        for position, page_data in enumerate(package['pages']):
+            with self.subTest(map_id=page_data['map_id']):
+                payload = migration._service_detail_payload(page_data)
+                kind = (Page.Kind.SERVICE_SECTION if position == 0
+                        else Page.Kind.SERVICE)
+                _page, route, revision = self.page(
+                    page_data['name'], page_data['url'],
+                    intro=payload['intro_text'], main=payload['main_text'],
+                    kind=kind, position=position + 20)
+                response = self.client.get(route.target)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(payload['intro_text'].encode(), response.content)
+                self.assertIn(payload['main_text'].encode(), response.content)
+                self.assertNotIn(b'<script>alert', response.content.lower())
+                self.assertNotIn(b'javascript:', response.content.lower())
+                self.assertIsNone(payload['price'])
+                self.assertIsNone(payload['main_image'])
+                self.assertEqual(payload['embedded_images'], [])
+                self.assertNotIn(b'public-price', response.content)
+                self.assertNotIn(b'public-main-image', response.content)
+                self.assertNotIn(b'public-works', response.content)
+                last = (page_data, route, revision, payload)
+
+        page_data, route, revision, payload = last
+        for field in ('intro_text', 'main_text'):
+            with self.subTest(unsafe_field=field):
+                damaged = dict(revision.payload)
+                damaged[field] += '<script>maintenance-partial-canary</script>'
+                raw(PageRevision).filter(pk=revision.pk).update(
+                    payload=damaged, payload_hash=schema.digest(damaged))
+                closed = self.client.get(route.target)
+                self.assertEqual(closed.status_code, 503)
+                self.assertEqual(closed['Cache-Control'], 'no-store')
+                self.assertNotIn(payload['intro_text'].encode(), closed.content)
+                self.assertNotIn(payload['main_text'].encode(), closed.content)
+                self.assertNotIn(page_data['name'].encode(), closed.content)
+                raw(PageRevision).filter(pk=revision.pk).update(
+                    payload=payload, payload_hash=schema.digest(payload))
 
     def test_manage_routes_keep_priority_over_public_catch_all(self):
         response = self.client.get('/manage/login/')

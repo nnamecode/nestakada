@@ -11,11 +11,22 @@
 <body>
   {{ header_html }}
   <main class="public-shell">
-    <p class="public-name">{{ page.name }}</p>
+    <nav class="public-breadcrumbs" aria-label="Хлебные крошки">
+      <ol>
+        {% for crumb in breadcrumbs %}
+          <li>{% if not forloop.first %}<span class="public-breadcrumb-separator" aria-hidden="true">/</span>{% endif %}{% if crumb.current %}<span aria-current="page">{{ crumb.name }}</span>{% else %}<a href="{{ crumb.target }}">{{ crumb.name }}</a>{% endif %}</li>
+        {% endfor %}
+      </ol>
+    </nav>
     <h1>{{ page.payload.h1|default:page.name }}</h1>
     {% for block in body_blocks %}
       {% if block.kind == 'text' %}
-        <section class="public-content public-text-{{ block.field }}">{{ block.html }}</section>
+        <section class="{% if page.page_kind == 'services_master_catalog' and block.field == 'main_text' %}public-services-catalog{% elif page.page_kind == 'service_catalog' and block.field == 'main_text' %}public-service-root-catalog{% else %}public-content public-text-{{ block.field }}{% endif %}">{{ block.html }}</section>
+      {% elif block.kind == 'hero' %}
+        <section class="public-hero public-hero-{{ block.alignment }}">
+          <img src="{{ block.src }}" alt="{{ block.alt }}"{% if block.width_px is not None %} width="{{ block.width_px }}"{% endif %}{% if block.height_px is not None %} height="{{ block.height_px }}"{% endif %} decoding="async">
+          <div class="public-hero-copy">{{ block.html }}</div>
+        </section>
       {% elif block.kind == 'price' %}
         <section class="public-price" aria-label="Цены">
           <table>

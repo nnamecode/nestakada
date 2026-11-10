@@ -13,7 +13,7 @@ from shared_content.public_views import html_response
 
 from .public_read import (PublicBlank, PublicNotFound, PublicPage, PublicRedirect,
                           PublicUnavailable, resolve_target)
-from .public_body import PublicTextBlock, project_body
+from .public_body import PublicHeroBlock, PublicTextBlock, project_body
 from .public_shared import PublicSharedHost
 
 
@@ -88,13 +88,14 @@ def page(request):
                 capture_host=host.capture,
                 media_url=_media_url,
                 static_url=selected_static)
-            current, _navigation, media = host.body()
+            current, _navigation, breadcrumbs, media = host.body()
             body_blocks = tuple(
                 replace(block, html=mark_safe(block.html))
-                if isinstance(block, PublicTextBlock) else block
+                if isinstance(block, (PublicTextBlock, PublicHeroBlock)) else block
                 for block in project_body(current, media))
             body = render_to_string('content/public_page.html', {
                 'page': current,
+                'breadcrumbs': breadcrumbs,
                 'body_blocks': body_blocks,
                 'header_html': mark_safe(rendered.header_html),
                 'footer_html': mark_safe(rendered.footer_html),

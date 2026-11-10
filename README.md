@@ -1,6 +1,84 @@
 # Новый сайт автосервиса «Эстакада»
 
-> **Текущая точка D-713 (2026-11-09): DEV-08G приостановлен на одном выборе DEV-08G-Q001.** MIME/race/UUID/N+1 замечания code review исправлены; partial сохранён. Нужно выбрать safety ceiling изображений на страницу: рекомендовано64 slots/64 files, альтернативы32/32 или128/128.
+> **Текущая точка D-782 (2026-11-10): DEV-09J read-only profitability selection завершён; product code не начат.** Рекомендован exact5 под existing MAP-012: five single leading two-column price tables,46 approved rows, existing price schema/layout/public renderer and closed text grammar. Multi-table/interleaved/missing-authority/blocked-parent pages excluded. Требуется owner approval `DEV09J-Q001`.
+
+> **Текущая точка D-781 (2026-11-10): DEV-09I завершён; final independent code review `APPROVED`, P1/P2/P3=0.** Exact9 hidden «Плановое ТО» package/writer, host authority, parent-first atomic create/replay, security/public/foundation boundaries приняты без новой архитектуры. Focused23/23, public15/15, guard316/316 и final checks PASS; foundation stopped. Production/live/persistent apply и publication не выполнялись.
+
+> **Текущая точка D-780 (2026-11-10): DEV-09I implementation/checks PASS; independent code review ожидается.** Canonical exact9 package43,706 bytes, reused host validator/text renderer, exact MAP-002 proof и atomic parent+8 writer готовы. Focused23/23, public15/15, guard316/316, Django/no-migrations, exact-five manifest и diff-check PASS; foundation stopped. Persistent/production apply и publication не выполнялись.
+
+> **Текущая точка D-779 (2026-11-10): DEV-09I repeat plan review `APPROVED`, P1/P2/P3=0; product code не начат.** Exact input hashes/maxima, per-MAP structure/class/wrapper oracle и MAP-041 unknown404 boundary независимо подтверждены. Требуется отдельное owner approval начала реализации `MIGI-001–012`.
+
+> **Текущая точка D-778 (2026-11-10): DEV-09I D-777 возобновлён; no-backtick validation PASS, product code не начат.** Diff-check clean, exact input rows9, structure rows9, MIGI IDs12, unknown404 present и stale blank claim absent. Repeat independent plan review запущен.
+
+> **Текущая точка D-777 (2026-11-10): DEV-09I plan remediation приостановлена владельцу по anti-loop; изменения сохранены, product code не начат.** Две эквивалентные validation-команды не дошли до shell: JS wrapper ошибочно завершал строку на Markdown-backtick (`Unexpected identifier MIGI/work`). Третьей нет. Exact inputs/signatures/unknown404 remediation записана; возобновление — одна проверка без backtick patterns, затем repeat independent plan review.
+
+> **Текущая точка D-776 (2026-11-10): DEV-09I plan review вернул P1=0/P2=2/P3=1; remediation записана, product code не начат.** Exact9 source/artifact path+bytes+SHA и per-MAP block/class/wrapper oracle добавлены; MAP-041 absent route исправлен на unknown404 и publication остаётся future launch gate. Требуется repeat independent plan review.
+
+> **Текущая точка D-775 (2026-11-10): владелец утвердил DEV-09I exact9; minimal implementation plan и `MIGI-001–012` записаны, product code не начат.** Existing host validator и safe text renderer переиспользуются; one64KiB package, exact DEV-09E authority, MAP-002 proof и atomic parent+8 children. MAP-041/prices/media/publication/new layers excluded. Требуется independent plan review.
+
+> **Текущая точка D-774 (2026-11-10): DEV-09I read-only selection завершён; product code не начат.** Рекомендован exact9: hidden MAP-011 «Плановое ТО» и8 простых детей с existing DEV-09E catalog authority и прежней closed text grammar. MAP-041 исключён из-за вложенного `ol/li/h3/p`, prices/tables/media/publication/new layers не входят. Требуется явное owner approval `DEV09I-Q001` до implementation plan.
+
+> **Текущая точка D-773 (2026-11-10): DEV-09H завершён; final independent code review `APPROVED`, P1/P2/P3=0.** Реализованы exact10 hidden service-detail страниц существующим UNIT-only atomic writer: closed package/renderer, exact parent tiles, create/replay/rollback/concurrency и расширенные fail-closed oracles. Host checks и guard309/309 PASS; Django/no-migrations/exact-four manifest/diff PASS; foundation stopped. Production/live/persistent apply не выполнялись. Следующее — read-only выбор следующего небольшого DEV-09 cohort.
+
+> **Текущая точка D-771 (2026-11-10): DEV-09H приостановлен владельцу после двух ошибок surrogate negative test; изменения сохранены.** Independent review P1=0/P2=3 привёл к усилению extractor/selfcheck/mixed+collision+unsafe HTTP tests. Изменённый второй guard выявил необработанный `UnicodeEncodeError` из `nh3` при unpaired surrogate; третьей попытки нет. Foundation stopped. Возобновление: закрыть Unicode до sanitizer constant `MIGRATION_PACKAGE_INVALID`, fresh snapshot, один guard и repeat review. Старый/живой сайт и production не затронуты.
+
+> **Текущая точка D-770 (2026-11-10): DEV-09H minimal implementation plan `APPROVED`, P1/P2/P3=0; product code не начат.** Exact10 child/tile authority, fixed caps, zero-entity closed package, two-parent atomic writer и generic public regression приняты без новых слоёв. Требуется отдельное owner approval начала MIGH-001–012.
+
+> **Текущая точка D-769 (2026-11-10): DEV-09H plan review P1=0/P2=2; remediation записана, код не начат.** Existing DEV-09G package теперь pinned authority exact child parent/position/name/URL; caps численные, imported regions доказанно zero-entity и reject any `&` без decoder. Требуется repeat independent plan review.
+
+> **Текущая точка D-768 (2026-11-10): владелец утвердил DEV-09H exact10; minimal implementation plan и MIGH-001–012 записаны, код не начат.** One closed96KiB package, approved intro/body, exact two-parent proof и atomic10-page UNIT writer; media/prices/publication/new layers excluded. Требуется independent plan review.
+
+> **Текущая точка D-767 (2026-11-10): DEV-09H read-only profitability selection завершён; код не начат.** Рекомендован один homogeneous cohort из10 hidden no-price `service_detail` под уже созданными MAP-012/MAP-014: closed `h2/p/ul/ol/li/strong`, approved intro+body, media deferred. MAP-032 и table/blocked branches исключены. Требуется явное owner approval exact10 до implementation plan.
+
+> **Текущая точка D-766 (2026-11-10): DEV-09G завершён; final independent code review `APPROVED`, P1/P2/P3=0.** Две hidden root-catalog страницы exact17/5 реализованы существующим UNIT-only atomic writer и закрытым renderer без новых слоёв. Focused2/2, final guard303/303, host/Django/migrations/diff PASS; production/live site не затронуты. Следующий bounded DEV-09 candidate ещё не выбран.
+
+> **Текущая точка D-764 (2026-11-10): DEV-09G minimal implementation plan `APPROVED`, P1/P2/P3=0; product code не начат.** Source-authoritative titles, artifact-authoritative17/5 tiles, exact three-package manifest, direct MAP-002 proof and atomic hidden two-page boundary приняты. Требуется явное owner approval начала реализации MIGF-001–012.
+
+> **Текущая точка D-763 (2026-11-10): DEV-09G plan review P1=0/P2=2; оба P2 исправлены, product code не начат.** Titles теперь строго извлекаются из pinned source по D-023, artifacts authoritative только для tiles; foundation snapshot/manifest требует три exact JSON path без wildcard. Требуется repeat independent plan review.
+
+> **Текущая точка D-762 (2026-11-10): владелец утвердил MAP-012+MAP-014; DEV-09G implementation plan/MIGF-001–012 готов, product code не начат.** Two hidden service catalogs, closed16KiB package, approved17/5 tiles, existing UNIT writer and scoped safe renderer; no children/media/publication/new layers. Требуется independent plan review.
+
+> **Текущая точка D-761 (2026-11-10): DEV-09F read-only selection завершён; product code не начат.** Рекомендован один bounded slice MAP-012 `/services/remont/` + MAP-014 `/services/drugie-uslugi/`: два approved no-hero/no-price-table root catalogs,22 exact approved tiles, hidden only, no media/publication/new layers. D-171 сохраняет две owner-approved подписи, D-200 исключает «Автомойку». Требуется явное owner approval выбора до implementation plan.
+
+> **Текущая точка D-760 (2026-11-10): DEV-09F read-only profitability selection приостановлен владельцу по anti-loop; product code не начат.** Две PowerShell inventory-команды повторили `ParserError: empty pipe element` из-за pipe после `foreach`; третьей попытки нет. До остановки подтверждено:61 remaining ready,57 service с media bindings; минимальные кандидаты MAP-012 `/services/remont/` и MAP-014 `/services/drugie-uslugi/` без hero/price tables. Возобновление — только явно, с отдельным `$files=@(...)` без `foreach | ...`.
+
+> **Текущая точка D-759 (2026-11-10): DEV-09E завершён; repeat independent code review `APPROVED`, P1/P2/P3=0.** Одна hidden MAP-002 `/services/`, closed package exact5/58, existing UNIT-only atomic writer и scoped semantic catalog готовы без новых model/migration/runtime layers. Focused20/20, guard298/298, host/Django/migrations/diff PASS; production/live site не затронуты. Следующий bounded DEV-09 candidate ещё не выбран.
+
+> **Текущая точка D-758 (2026-11-09): DEV-09E minimal implementation plan `APPROVED`, P1/P2/P3=0; product code не начат.** Exact one hidden page/small package/existing writer/closed renderer/scoped CSS boundaries приняты. Требуется явное owner approval начала реализации.
+
+> **Текущая точка D-757 (2026-11-09): repeat plan review P1/P2=0, одна P3 исправлена; final confirmation ожидается.** Stale instruction to extend shared HTML policy заменена на writer+closed renderer+catalog-scoped CSS с policy unchanged. Product code не начат.
+
+> **Текущая точка D-756 (2026-11-09): DEV-09E plan review P1=0/P2=4; план исправлен, product code не начат.** Shared `aria-hidden` expansion удалён; decoration CSS-only. MAP-001 descriptor standalone, helpers receive validated payload, host file boundary and Django HTTP oracle added. Требуется repeat independent plan review.
+
+> **Текущая точка D-755 (2026-11-09): владелец утвердил DEV-09E макет; minimal implementation plan готов, product code не начат.** Одна hidden MAP-002 page, small closed package, existing UNIT-only writer, semantic safe catalog HTML и kind-specific CSS; no models/migrations/children/media/publication. `MIGE-001–012`; требуется independent plan review.
+
+> **Текущая точка D-754 (2026-11-09): DEV-09E independent design review `APPROVED`; product code не начат.** Exact58 decoded names/paths/order и5 groups подтверждены. P2 закрыты: child/root numbers скрыты от accessibility tree, mobile `.nav.open` доступен и привязан к positioned header. Новых P1/P2/P3 нет; browser QA не выполнялся по решению владельца. Требуется явное owner approval макета.
+
+> **Текущая точка D-753 (2026-11-09): независимое ревью DEV-09E приостановлено по loop-stop; product code не начат.** Рецензент подтвердил H1/5 groups/no extra main content/accessibility/responsive4/3/1/design-only, но две shell-команды exact58 comparison не дали доказательства names/paths/order. Нужна явная команда владельца на возобновление короткими PowerShell-проверками без inline Node и без Playwright.
+
+> **Текущая точка D-752 (2026-11-09): DEV-09E MAP-002 full mockup подготовлен без Playwright; product code не начат.** `work/services.html` переиспользует accepted tiles, exact5 groups/58 source links, no hero/images/text. Structural QA mismatch0 и responsive4/3/1 PASS; записаны `SVCAT-001–009`. Independent review и owner approval ожидаются.
+
+> **Текущая точка D-751 (2026-11-09): DEV-09E profitability inventory завершён; код не начат.** Из61 remaining ready routes 57 service pages блокирует один неутверждённый предок MAP-002 `/services/`; direct actions/reviews/contacts/gallery требуют media/embed/form/DEV-10. Рекомендуется сначала full mockup UI-S052 на existing tiles. Browser QA приостановлен: Playwright prerequisite `npx` отсутствует, ничего не установлено.
+
+> **Текущая точка D-750 (2026-11-09): DEV-09D завершён; repeat independent code review `APPROVED`, P1/P2/P3 нет.** Exact full article branch:20 hidden pages/18 articles, closed v2 package and UNIT-only atomic writer. Host/focused17/17/guard289/289/Django/migrations/diff PASS; foundation stopped. Следующий bounded DEV-09 candidate выбирается по remaining ready branch, без persistent apply/publication.
+
+> **Текущая точка D-749 (2026-11-09): последний DEV-09D oracle P2 исправлен; repeat code review ожидается.** Host selfcheck теперь явно покрывает missing/extra/reordered paragraph/list blocks и package blocks, сохраняя labelled failures. Syntax/selfcheck/actual20 PASS, diff clean; runtime и Python tests после D-748 не менялись.
+
+> **Текущая точка D-748 (2026-11-09): DEV-09D review remediation PASS, repeat code review ожидается.** Full rollback state equality и labelled full-entity/facts/reorder selfcheck закрыли оба P2. Host syntax/selfcheck/actual PASS; fresh focused17/17 PASS18.561с; Django/migrations/diff clean. Product writer/package после guard289/289 не менялись; foundation stopped.
+
+> **Текущая точка D-747 (2026-11-09): DEV-09D review remediation приостановлена владельцу; product checks D-746 сохранены.** Code review P1=0, два P2 только в oracle. Full rollback equality добавлена; entity/facts/reorder selfcheck усилен, но два запуска подряд дали `SELFCHECK_MISSED`: сначала stale mdash needle (исправлен), затем статически найден stale guillemet missing-item needle. Третьего запуска нет. Возобновление: encoded needle + labelled selfcheck, один host run, focused и repeat review.
+
+> **Текущая точка D-746 (2026-11-09): DEV-09D implementation/checks PASS, independent code review ожидается.** Canonical v2 package:20 hidden pages/18 articles, 60,804 bytes. Host validator PASS; focused17/17 и guard289/289 PASS; Django/migrations/diff clean. Closed p/br/ul/li renderer требует sanitizer equality; persistent apply/publication и новые runtime слои отсутствуют.
+
+> **Текущая точка D-745 (2026-11-09): DEV-09D second remediation записана, код не начат; repeat plan review ожидается.** Review добавил MAP-103 с тремя `<br />` и concurrency oracle. Closed schema v2 теперь хранит paragraph segments/list items; writer один строит p/br/ul/li, re-escapes text и требует sanitizer equality. MAP-108 NBSP paragraph сохраняется exact.
+
+> **Текущая точка D-744 (2026-11-09): DEV-09D plan remediation записана, код не начат; repeat review ожидается.** Full source check: 15 paragraph-only и 3 exact paragraph+single-list articles; five exact entities. Package schema v2 вводит только closed paragraph/unordered-list data, writer сам безопасно экранирует HTML; universal parser/ETL/persistent apply по-прежнему отсутствуют.
+
+> **Текущая точка D-743 (2026-11-09): DEV-09D plan review приостановлен владельцу, код не начат.** Reviewer дважды получил одинаковый PowerShell ParserError и остановился по anti-loop. До остановки найден реальный P1: MAP-065/MAP-071/MAP-093 содержат `<ul>/<li>`, а источники используют дополнительные entities, поэтому full-18 plain-paragraph plan потеряет данные или fail-closed. Рекомендуется один исправленный read-only review и узкая remediation с закрытым list block/entity allowlist.
+
+> **Текущая точка D-742 (2026-11-09): DEV-09D спланирован, код не начат; independent plan review ожидается.** Все 18 ready-статей доказанно имеют одну plain-paragraph grammar. План расширяет существующий package/writer до 20 hidden pages без нового parser/format/ETL и без persistent apply/publication; `MIGD-001–012` записаны до кода.
+
+> **Текущая точка D-741 (2026-11-09): DEV-09C завершён, repeat code review `APPROVED`, P1/P2/P3 нет.** UNIT-only atomic hidden create/exact replay: focused17/17, guard289/289, Django/migrations/diff PASS. Следующий bounded candidate DEV-09D — оставшиеся ready-статьи каталога тем же contract; persistent apply/publication пока отсутствуют.
 
 > **Текущая точка D-712 (2026-11-09): DEV-08G partial сохранён; два разных harness/oracle замечания исправлены без ослабления продукта.** Context и corruption tests уже PASS; POST остаётся закрыт CSRF403 до файлового чтения. Следом fresh focused repeat.
 

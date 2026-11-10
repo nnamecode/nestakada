@@ -1,0 +1,144 @@
+{
+  "schema": "dev09-service-roots-v1",
+  "policy": "validated_approved_artifact_not_import_authority",
+  "inputs": {
+    "map_sha256": "c1d542d0761ffbdb9fc58c9227fc94144515ab18c3155952a93dc6fb4d1bbad8",
+    "evidence_sha256": "c3a8a395fb4ed55fef6027a58014ce5decaadda7c559870bf06247c2fbeb79bc"
+  },
+  "pages": [
+    {
+      "page_id": "729b10a3-709e-41c0-a71f-0d376a2b8586",
+      "map_id": "MAP-012",
+      "url": "/services/remont/",
+      "kind": "service_catalog",
+      "parent_id": "f39af842-05a7-4101-af9a-2fc320d457d0",
+      "position": 2,
+      "name": "Ремонт",
+      "h1": "Ремонт",
+      "title": "Ремонт | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/ca4ab73dc69f37051a6f.html",
+        "sha256": "249c910d6e6340f652587f14c3cdea20c5c7befe21adf9f42719f16e7bd289a5"
+      },
+      "artifact": {
+        "relative_path": "work/remont.html",
+        "sha256": "cf7352e8dd14cae5059b3bf583586f32266882b47a44eff3d5119269dd4564c3"
+      },
+      "tiles": [
+        {
+          "name": "Ремонт тормозной системы",
+          "href": "/services/remont/remont-tormoznoj-sistemyi"
+        },
+        {
+          "name": "Ремонт подвески",
+          "href": "/services/remont/remont-podveski"
+        },
+        {
+          "name": "Ремонт ходовой части",
+          "href": "/services/remont/remont-xodovoj-chasti"
+        },
+        {
+          "name": "Ремонт рулевого управления",
+          "href": "/services/remont/remont-rulevogo-upravleniya"
+        },
+        {
+          "name": "Ремонт электрооборудования",
+          "href": "/services/remont/remont-elektrooborudovaniya"
+        },
+        {
+          "name": "Замена ремня ГРМ",
+          "href": "/services/remont/zamena-remnya-grm"
+        },
+        {
+          "name": "Климат-контроль, Печка",
+          "href": "/services/remont/kondiczionera-klimatkontrolya-pechki"
+        },
+        {
+          "name": "Сход-развал",
+          "href": "/services/remont/sxod-razval"
+        },
+        {
+          "name": "Ремонт системы охлаждения",
+          "href": "/services/remont/remont-sistemyi-oxlazhdeniya"
+        },
+        {
+          "name": "АКПП/МКПП/РКПП/Вариатора",
+          "href": "/services/remont/remont-akppmkpprkppvariatora"
+        },
+        {
+          "name": "Ремонт трансмиссии",
+          "href": "/services/remont/remont-transmissii"
+        },
+        {
+          "name": "Ремонт двигателя",
+          "href": "/services/remont/remont-dvigatelya"
+        },
+        {
+          "name": "Ремонт генератора",
+          "href": "/services/remont/remont-generatora"
+        },
+        {
+          "name": "Ремонт стартера",
+          "href": "/services/remont/remont-startera"
+        },
+        {
+          "name": "Ремонт выхлопной системы",
+          "href": "/services/remont/remont-vyixlopnoj-sistemyi"
+        },
+        {
+          "name": "Ремонт системы зажигания",
+          "href": "/services/remont/remont-sistemyi-zazhiganiya"
+        },
+        {
+          "name": "Ремонт негабаритного транспорта",
+          "href": "/services/remont/remont-kommercheskogo-negabaritnogo"
+        }
+      ]
+    },
+    {
+      "page_id": "ec990108-25c4-4ae9-961f-13487e63e938",
+      "map_id": "MAP-014",
+      "url": "/services/drugie-uslugi/",
+      "kind": "service_catalog",
+      "parent_id": "f39af842-05a7-4101-af9a-2fc320d457d0",
+      "position": 4,
+      "name": "Другие Услуги",
+      "h1": "Другие Услуги",
+      "title": "Другие Услуги | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/32ee0e4b4942a75ffa9e.html",
+        "sha256": "25a3204a9ddb323e93b37b60887d78c6680d3978d8026cb7c8818b1ad4eeb78d"
+      },
+      "artifact": {
+        "relative_path": "work/drugie-uslugi.html",
+        "sha256": "50c2c6c412d9ff93c7581816d7323eb541dc00c0b0878cca50ccadbc7446af1d"
+      },
+      "tiles": [
+        {
+          "name": "Заправка и ремонт кондиционера",
+          "href": "/services/drugie-uslugi/zapravka-i-remont-kondiczionera/"
+        },
+        {
+          "name": "Полировка авто",
+          "href": "/services/drugie-uslugi/polirovka-avto/"
+        },
+        {
+          "name": "Эвакуация автомобиля",
+          "href": "/services/drugie-uslugi/evakuacziya-avtomobilya"
+        },
+        {
+          "name": "Обработка порогов",
+          "href": "/services/drugie-uslugi/obrabotka-porogov"
+        },
+        {
+          "name": "Регулировка фар",
+          "href": "/services/drugie-uslugi/regulirovka-far"
+        }
+      ]
+    }
+  ]
+}
