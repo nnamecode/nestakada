@@ -111,6 +111,12 @@ def _normalize_value(value, context, raw, POLICY_VERSION):
     for field in ('main_image', 'preview_image'):
         if field in changes:
             normalized[field] = image_reference(changes[field])
+    if 'home_profile' in changes:
+        if not context['owner'] or 'embedded_source' not in context:
+            raise ValueError('EDITOR_INPUT_INVALID')
+        from page_versions.home_profile import validate as validate_home_profile
+        normalized['home_profile'] = validate_home_profile(
+            changes['home_profile'], context['embedded_source']['embedded_images'])
     if normalized != comparison:
         for field in normalized:
             item = {'field': field, 'code': 'NORMALIZATION_REVIEW_REQUIRED'}

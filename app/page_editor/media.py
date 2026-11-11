@@ -66,7 +66,23 @@ def prepare(context, changes, *, derived=None):
         return None
     try:
         evidence = E.preflight(payload)
-        for asset_id in sorted(evidence):
+        # MAIN/PREVIEW are an editor-preview contract, not a requirement for
+        # every immutable image already embedded in a page.  In particular,
+        # migrated gallery photographs legitimately have one LEGACY_PUBLIC
+        # file.  The version engine still verifies every referenced file
+        # above; require preview derivatives only for external slots and for
+        # embedded references that this edit actually introduces/replaces.
+        derivative_assets = {
+            payload[field]['asset_id'] for field in FIELDS
+            if payload[field] is not None
+        }
+        if derived is not None:
+            original = {row['id']: row['asset_id']
+                        for row in context.payload['embedded_images']}
+            derivative_assets.update(
+                row['asset_id'] for row in payload['embedded_images']
+                if original.get(row['id']) != row['asset_id'])
+        for asset_id in sorted(derivative_assets):
             for file in derivatives(asset_id).values():
                 with open_derivative(file):
                     pass

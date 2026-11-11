@@ -1,0 +1,945 @@
+{
+  "schema": "dev12-home-package-v1",
+  "policy": "approved_v4_core_owner_versioned_profile",
+  "inputs": {
+    "approved_sha256": "815f8918963a64ec653827a530288f69fafd332a9eb05e0d5e320a5476b77ad7",
+    "gallery_sha256": "9db5b026d6affa4668e2ca19268d8663355c1e22504f6aba6aa1676ed3d41b3b",
+    "b_sha256": "2936561288256d42968363afe90147678aa6fc88bbdff9faf21fde1c2d986639",
+    "e_sha256": "beffdfdbacc6a24a71c68ee692f03be262f67745b8425e1ce9b204b8d15ca9e9",
+    "g_sha256": "956c35fb5697acb23b039a980d1915228bd1100f1884ebece3fcd909ace365db",
+    "h_sha256": "439dea21aa4257e934e0781faec982bb05157d5a734171ced58086df4e8bd52a",
+    "i_sha256": "fa0e85ba9640ffa45916e810bece20e949698b3dbe82f9ead99750210b98a5cf",
+    "j_sha256": "e091047ae5272fa9834d828d5ed73e1fbc914a41faa07e4367b9787ad0a8934d",
+    "k_sha256": "9980c60a1a2ee354ef156c7f9695cfc76ec051f798dfe3610a95f3e29c473e67"
+  },
+  "home": {
+    "page_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+    "url": "/",
+    "kind": "home",
+    "h1": "АВТОТЕХЦЕНТР ЭСТАКАДА",
+    "title": "Главная | Автосервис «Эстакада»",
+    "description": "",
+    "indexing_allowed": true
+  },
+  "profile": {
+    "schema": "home-profile-v1",
+    "hero": {
+      "lead": "Широкий спектр услуг по ремонту автомобилей — от диагностики и планового обслуживания до сложного кузовного ремонта.",
+      "alt": "Мастера работают с автомобилями в ремонтной зоне автотехцентра Эстакада",
+      "image_id": "908cfffc-ccd9-5ff5-ac34-2ebf2dcbd9c4"
+    },
+    "advantages": [
+      "Все работы проводятся по заказ-наряду",
+      "Опытные сотрудники",
+      "Гибкая система скидок",
+      "Обслуживание коммерческого транспорта",
+      "Полный спектр услуг по ремонту автомобиля",
+      "Производим работы любой сложности",
+      "Работаем с НДС и без НДС",
+      "Собственный склад запчастей"
+    ],
+    "comparisons": [
+      {
+        "heading": "КАК РАБОТАЮТ\nОФИЦИАЛЬНЫЕ ДИЛЕРЫ",
+        "bullets": [
+          "Высокая стоимость работ и запчастей",
+          "Долгое ожидание записи и согласований",
+          "Часто предлагают замену узла в сборе вместо локального ремонта",
+          "Решение выбирается по регламенту, а не по вашему бюджету"
+        ],
+        "result_mark": "₽",
+        "result_text": "Риск переплаты за крупную замену там, где возможен ремонт"
+      },
+      {
+        "heading": "КАК РАБОТАЮТ НЕБОЛЬШИЕ\nАВТОСЕРВИСЫ И ЧАСТНЫЕ МАСТЕРА",
+        "bullets": [
+          "Диагностика часто ограничена общими ошибками",
+          "Детали могут менять по очереди в поисках причины",
+          "Качество зависит от конкретного мастера",
+          "Не всегда есть документы, контроль и гарантия"
+        ],
+        "result_mark": "?",
+        "result_text": "Риск лишних работ, непредсказуемых расходов и последствий ремонта"
+      },
+      {
+        "heading": "КАК РАБОТАЕТ\nАВТОТЕХЦЕНТР «ЭСТАКАДА»",
+        "bullets": [
+          "Проводим подробную диагностику до ремонта",
+          "Находим причину, а не меняем всё подряд",
+          "Согласовываем план, сроки и бюджет",
+          "Оформляем заказ-наряд и даём гарантию",
+          "Объясняем результат и дальнейшие рекомендации"
+        ],
+        "result_mark": "☆",
+        "result_text": "Обоснованный ремонт, адекватная стоимость, гарантия на наши работы"
+      }
+    ],
+    "steps": [
+      {
+        "alt": "Заказчик звонит в автосервис из дома",
+        "heading": "Связываетесь с нами",
+        "text": "Звонок, сообщение в Telegram/MAX, форма заявки на сайте.",
+        "image_id": "3cc301e4-3ca2-5747-bbb2-66af06d36124"
+      },
+      {
+        "alt": "Менеджер за стойкой уточняет задачу и записывает заявку",
+        "heading": "Уточняем задачу",
+        "text": "Обсуждаем неисправность и согласовываем время вашего визита.",
+        "image_id": "c372d6ed-b152-525e-9da6-d315c3f068de"
+      },
+      {
+        "alt": "Мастер диагностирует автомобиль с планшетом",
+        "heading": "Диагностика",
+        "text": "Проверяем автомобиль, делаем подробную диагностику и составляем план работ.",
+        "image_id": "2b4bec32-7c70-5ec1-a231-1bbd95d3e902"
+      },
+      {
+        "alt": "Мастер ремонтирует автомобиль",
+        "heading": "Выполняем работы",
+        "text": "Согласно утверждённого плана и бюджета",
+        "image_id": "4f7540b4-d859-5d87-acae-8d9eada62027"
+      },
+      {
+        "alt": "Мастер передаёт ключ владельцу автомобиля",
+        "heading": "Передаём автомобиль",
+        "text": "С гарантией на выполненные работы.",
+        "image_id": "153bc808-7e91-5f3f-9990-dccfff814645"
+      }
+    ],
+    "services": [
+      {
+        "id": "7795eae6-fea9-52ae-b5eb-46f2bfacb200",
+        "label": "Кузовной ремонт",
+        "caption": "11 услуг",
+        "url": "/services/kuzovnoj-remont/",
+        "alt": "Концептуальная иллюстрация кузовного ремонта",
+        "fallback_visible": true,
+        "source_page_id": null,
+        "image_id": "c85fa929-bf43-506f-9e12-89e76afb99b7"
+      },
+      {
+        "id": "89706ff2-fd8f-5192-bd3a-6a8b298909fe",
+        "label": "Плановое ТО",
+        "caption": "9 услуг",
+        "url": "/services/planovoe-to/",
+        "alt": "Концептуальная иллюстрация планового технического обслуживания",
+        "fallback_visible": true,
+        "source_page_id": "4359fedb-0703-41a0-b76c-faaa165073ca",
+        "image_id": "b563633c-6dce-5ee8-9daa-b4f655e02caf"
+      },
+      {
+        "id": "4af0f7b9-8218-53d0-a448-fb0179e34398",
+        "label": "Ремонт",
+        "caption": "17 услуг",
+        "url": "/services/remont/",
+        "alt": "Концептуальная иллюстрация ремонта автомобиля",
+        "fallback_visible": true,
+        "source_page_id": "729b10a3-709e-41c0-a71f-0d376a2b8586",
+        "image_id": "4f82889a-5097-5c50-b622-a5e289931fd3"
+      },
+      {
+        "id": "aa8894a0-17ee-565e-8d5d-d9e0c46780bc",
+        "label": "Диагностика",
+        "caption": "10 услуг",
+        "url": "/services/diagnostika/",
+        "alt": "Концептуальная иллюстрация диагностики автомобиля",
+        "fallback_visible": true,
+        "source_page_id": "2171f684-ccda-4402-b2be-f498b665f5b5",
+        "image_id": "df6a1ec3-42fd-5de5-a970-a9c0624831f2"
+      },
+      {
+        "id": "90e49e58-4dea-544f-baf6-3a63a3faba4a",
+        "label": "Шиномонтаж",
+        "caption": "Сезонные работы",
+        "url": "/services/drugie-uslugi/shinomontazh/",
+        "alt": "Концептуальная иллюстрация шиномонтажа",
+        "fallback_visible": true,
+        "source_page_id": null,
+        "image_id": "38e87931-0542-5e81-a2c3-3b057241a809"
+      },
+      {
+        "id": "7a555385-55fa-55ac-a7d7-8ca9cd7751ee",
+        "label": "Сход-развал",
+        "caption": "Проверка геометрии",
+        "url": "/services/drugie-uslugi/sxod-razval",
+        "alt": "Концептуальная иллюстрация сход-развала",
+        "fallback_visible": true,
+        "source_page_id": null,
+        "image_id": "aaa0bb6b-8d65-5eae-a05f-c3fc4348c2c3"
+      },
+      {
+        "id": "e9c340ba-46a3-55ef-8ea8-d863de60b439",
+        "label": "Автомойка",
+        "caption": "Мойка автомобиля",
+        "url": "/services/avtomojka",
+        "alt": "Концептуальная фотография автомойки",
+        "fallback_visible": true,
+        "source_page_id": null,
+        "image_id": "d6127110-3f95-5821-baf4-746f58a7cc50"
+      },
+      {
+        "id": "6f1368d3-b13e-5785-a76b-5461ef319ebf",
+        "label": "Другие услуги",
+        "caption": "8 услуг",
+        "url": "/services/drugie-uslugi/",
+        "alt": "Концептуальная иллюстрация дополнительных услуг автосервиса",
+        "fallback_visible": true,
+        "source_page_id": "ec990108-25c4-4ae9-961f-13487e63e938",
+        "image_id": "d25f3d0b-8e1b-5cf3-a266-449c8b860492"
+      }
+    ],
+    "prices": [
+      {
+        "id": "c8347462-722d-5e75-867d-d41e541dcb0a",
+        "key": "body",
+        "url": "/services/kuzovnoj-remont/",
+        "label": "Кузовной ремонт",
+        "rows": [
+          {
+            "id": "b93c44c1-aaa9-5e95-ab76-85d0819252b0",
+            "url": "/services/kuzovnoj-remont/remont-kuzova",
+            "label": "Ремонт кузова",
+            "price_text": "после осмотра",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "eb926dfe-04b8-5947-8de6-5c01f41fc147",
+            "url": "/services/kuzovnoj-remont/pokraska-avtomobilya",
+            "label": "Покраска автомобиля",
+            "price_text": "от 10 000 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "bfa11603-cd04-5a3e-ab2c-611e40ac1ecc",
+            "url": "/services/kuzovnoj-remont/vosstanovlenie-geometrii-kuzova",
+            "label": "Восстановление геометрии кузова",
+            "price_text": "от 3 375 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "201968b0-9130-5681-8786-520a7f9f19c7",
+            "url": "/services/kuzovnoj-remont/remont-kuzovnyix-detalej-avtomobilya",
+            "label": "Ремонт кузовных деталей",
+            "price_text": "от 1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "c9e5ab18-59b1-5171-a5a0-6c2a8e141e0d",
+            "url": "/services/kuzovnoj-remont/zamena-detalej-kuzova",
+            "label": "Замена деталей кузова",
+            "price_text": "после осмотра",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "624569d0-2adb-5f27-9906-782ebd42319b",
+            "url": "/services/kuzovnoj-remont/remont-posle-lobovogo-udara",
+            "label": "Ремонт после лобового удара",
+            "price_text": "от 10 000 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "3a948e62-c8ef-5d3a-894d-12295616db41",
+            "url": "/services/kuzovnoj-remont/stekla-i-faryi",
+            "label": "Стёкла и фары",
+            "price_text": "от 2 000 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "cba2ef45-37d9-5c0d-a3b5-dfc0308231aa",
+            "url": "/services/kuzovnoj-remont/polirovka-kuzova",
+            "label": "Полировка кузова",
+            "price_text": "от 2 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          }
+        ],
+        "source_page_id": null
+      },
+      {
+        "id": "d90339a3-9bf4-57a0-b77a-f707d18e6fd6",
+        "key": "repair",
+        "url": "/services/remont/",
+        "label": "Ремонт",
+        "rows": [
+          {
+            "id": "062fce61-a53b-5998-adf7-cbe373ae9b31",
+            "url": "/services/remont/remont-tormoznoj-sistemyi",
+            "label": "Ремонт тормозной системы",
+            "price_text": "от 1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": "c176ea0e-e37c-4f7b-9e7c-3f4ca73608cb",
+            "source_row_id": "003b4437-bd9d-5611-b0b4-d535633f85a3"
+          },
+          {
+            "id": "55178980-9002-56b2-b60d-6d8d4796e5ee",
+            "url": "/services/remont/remont-podveski",
+            "label": "Ремонт подвески",
+            "price_text": "от 1 600 ₽",
+            "fallback_visible": true,
+            "source_page_id": "38a4be87-aae5-4776-a32d-10407f70eac9",
+            "source_row_id": "85cacc09-8067-5103-bf09-622f72df8776"
+          },
+          {
+            "id": "4c22b4af-ac80-5443-8c84-8b0dcd350d09",
+            "url": "/services/remont/remont-xodovoj-chasti",
+            "label": "Ремонт ходовой части",
+            "price_text": "от 1 800 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "b3b5e491-e33b-52a6-bfb6-d23047e8c1f1",
+            "url": "/services/remont/remont-rulevogo-upravleniya",
+            "label": "Ремонт рулевого управления",
+            "price_text": "от 4 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "b3f9df69-a464-5d85-aeb9-cf296e8fbfb4",
+            "url": "/services/remont/remont-elektrooborudovaniya",
+            "label": "Ремонт электрооборудования",
+            "price_text": "уточняйте",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "fc3d1f2e-54de-597d-a104-6dd431be5be0",
+            "url": "/services/remont/zamena-remnya-grm",
+            "label": "Замена ремня ГРМ",
+            "price_text": "уточняйте",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "5671d532-e4cb-51e9-8259-2e2b251dd3ce",
+            "url": "/services/remont/kondiczionera-klimatkontrolya-pechki",
+            "label": "Климат-контроль, печка",
+            "price_text": "от 1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "f509e207-352a-57fc-9dfd-a69f84a9c0d5",
+            "url": "/services/remont/sxod-razval",
+            "label": "Сход-развал",
+            "price_text": "от 1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          }
+        ],
+        "source_page_id": "729b10a3-709e-41c0-a71f-0d376a2b8586"
+      },
+      {
+        "id": "65bc1c25-2477-5ca7-866b-dfa2e1ea998c",
+        "key": "tires",
+        "url": "/services/drugie-uslugi/shinomontazh/",
+        "label": "Шиномонтаж",
+        "rows": [
+          {
+            "id": "3a539dfd-ba75-508a-bfc3-be8639905f68",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R15, 4 колеса",
+            "price_text": "2 200 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "71f60e0a-4a8d-5080-b086-bedb879140f8",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R16, 4 колеса",
+            "price_text": "2 400 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "86ac027a-55cb-5f4f-b4ee-ccc7ce8f468b",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R17, 4 колеса",
+            "price_text": "2 900 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "9cfd6c4d-be0d-5a04-89b3-34984d614a95",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R18, 4 колеса",
+            "price_text": "3 600 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "622d8f7e-58b5-513f-bc08-524eab5f74e5",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R19, 4 колеса",
+            "price_text": "4 000 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "3501c863-b85d-5d57-a78e-76138b72e9da",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R20, 4 колеса",
+            "price_text": "4 700 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "aa350856-a796-59d9-be45-316e20395405",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R21, 4 колеса",
+            "price_text": "5 600 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "d640c7c4-bf2f-5bb2-9223-c2742294485d",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж R22, 4 колеса",
+            "price_text": "6 600 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          }
+        ],
+        "source_page_id": null
+      },
+      {
+        "id": "fd487ab3-7922-591d-849c-d7155c097de3",
+        "key": "alignment",
+        "url": "/services/drugie-uslugi/sxod-razval",
+        "label": "Сход-развал",
+        "rows": [
+          {
+            "id": "08fd944a-6828-5580-a49a-42dd81962a7e",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Проверка сход-развала",
+            "price_text": "1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "15ea84a3-3e61-56fb-8198-59c2b15a8008",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Легковой автомобиль",
+            "price_text": "2 300 / 3 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "e84ad513-dfec-5276-8e2a-f7a0045e8162",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Кроссовер, внедорожник, минивэн",
+            "price_text": "2 800 / 4 000 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "15908ba9-df3c-5579-a4ad-638df4792998",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Коммерческий транспорт",
+            "price_text": "3 500 / 4 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "3f1779b8-10f3-54ee-bf61-f744b0d4f7f8",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Грузовые машины более 4 тонн",
+            "price_text": "3 500 / 5 000 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "0a969867-de05-513c-85bd-d35c6527f0c9",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Диагностика ходовой",
+            "price_text": "1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "c63fe29b-9a30-5210-8e07-a9e8c4f633af",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Колесо: снятие и установка",
+            "price_text": "350 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "58dea8ed-58a3-5e58-a5fa-d87eebb1ae76",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Авто с пневмоподвеской",
+            "price_text": "+800 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          }
+        ],
+        "source_page_id": null
+      },
+      {
+        "id": "1b224414-b2b6-5a4d-88eb-fd21f677b70e",
+        "key": "carwash",
+        "url": "/services/avtomojka",
+        "label": "Автомойка",
+        "rows": [
+          {
+            "id": "f6a468c0-9b2c-5052-9c4d-b43576ff3b08",
+            "url": "/services/avtomojka",
+            "label": "Техническая мойка",
+            "price_text": "от 300 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "090515f3-1db7-5906-b678-3b7394540a3b",
+            "url": "/services/avtomojka",
+            "label": "Экспресс-мойка",
+            "price_text": "от 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "acb5360f-d80d-5b1b-9a9d-802aea53bcb9",
+            "url": "/services/avtomojka",
+            "label": "Стандартная мойка",
+            "price_text": "от 800 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "a88437a0-54ff-59e5-b6c0-4a7aa4f51be1",
+            "url": "/services/avtomojka",
+            "label": "Комплексная мойка",
+            "price_text": "от 1 700 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "50bb0cce-657f-5385-b7a1-786a05917f5f",
+            "url": "/services/avtomojka",
+            "label": "Двухфазная стандартная мойка",
+            "price_text": "от 1 600 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "4de0672b-622e-580e-b888-75fa87f3013b",
+            "url": "/services/avtomojka",
+            "label": "Двухфазная комплексная мойка",
+            "price_text": "от 2 300 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "cefa9530-3e5a-5962-8af3-18a2aa4866c7",
+            "url": "/services/avtomojka",
+            "label": "Обезжиривание кузова",
+            "price_text": "от 400 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "c0f0703b-0daa-5bbe-af26-bb10558b9774",
+            "url": "/services/avtomojka",
+            "label": "Холодный воск",
+            "price_text": "от 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          }
+        ],
+        "source_page_id": null
+      },
+      {
+        "id": "54ba1d2f-1691-55d1-828a-213461c7e8bc",
+        "key": "other",
+        "url": "/services/drugie-uslugi/",
+        "label": "Другие услуги",
+        "rows": [
+          {
+            "id": "3f1c3513-809d-5841-8534-cd7c209b9d48",
+            "url": "/services/drugie-uslugi/zapravka-i-remont-kondiczionera/",
+            "label": "Заправка и ремонт кондиционера",
+            "price_text": "1 900 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "5ba3aea6-a882-565c-8618-7d5e27d50f54",
+            "url": "/services/drugie-uslugi/polirovka-avto/",
+            "label": "Полировка авто",
+            "price_text": "уточняйте",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "c48aade5-0954-5259-80d1-20d7e7a4c896",
+            "url": "/services/drugie-uslugi/evakuacziya-avtomobilya",
+            "label": "Эвакуация автомобиля",
+            "price_text": "уточняйте",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "4430da6b-4917-522e-b1f9-7b9790540414",
+            "url": "/services/drugie-uslugi/obrabotka-porogov",
+            "label": "Обработка порогов",
+            "price_text": "уточняйте",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "6cae1e5e-ffe4-595d-a44f-9e2fccc7d74b",
+            "url": "/services/drugie-uslugi/regulirovka-far",
+            "label": "Регулировка фар",
+            "price_text": "от 450 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "32eaaf23-1f71-50a5-9da5-570768b166e9",
+            "url": "/services/drugie-uslugi/shinomontazh/",
+            "label": "Шиномонтаж",
+            "price_text": "от 2 200 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          },
+          {
+            "id": "a2918b36-a96c-5bf7-929a-76fb86fd1940",
+            "url": "/services/drugie-uslugi/sxod-razval",
+            "label": "Сход-развал",
+            "price_text": "от 1 500 ₽",
+            "fallback_visible": true,
+            "source_page_id": null,
+            "source_row_id": null
+          }
+        ],
+        "source_page_id": "ec990108-25c4-4ae9-961f-13487e63e938"
+      }
+    ],
+    "photo_strip": {
+      "alt": "Фасад автотехцентра Эстакада с открытыми и освещёнными ремонтными боксами",
+      "image_id": "a8a8e973-ab1d-5efe-8102-f775b6072f2a"
+    },
+    "works": [
+      {
+        "id": "2d05e11b-880f-5537-9a56-d5fd1f0160fd",
+        "source_page_id": "6544b045-761f-5e38-9f37-408427ecfb29",
+        "url": "/gallery-of-works/nissan-murano-kuzovnoj-remont",
+        "label": "Ниссан Мурано\nКузовной ремонт",
+        "photo_count_text": "4 фото",
+        "image_id": "22ac75d6-1333-50ec-8820-2d678dcea67f",
+        "asset_id": "dc36aa92-08a2-51b7-9508-5a5283ccda55",
+        "alt": "Ниссан Мурано — кузовной ремонт",
+        "fallback_visible": true
+      },
+      {
+        "id": "88396a42-f3d7-5fc0-87cb-e0d7f0be36c2",
+        "source_page_id": "1d74fcff-9bf7-5827-8225-ff585b13a301",
+        "url": "/gallery-of-works/volkswagen-passat-kuzovnoj-remont",
+        "label": "Volkswagen Passat\nКузовной ремонт",
+        "photo_count_text": "9 фото",
+        "image_id": "b06e5cde-2916-5eaf-bba1-b4d946759fa0",
+        "asset_id": "60684fc2-7daf-5574-a4bd-fb27af4bb984",
+        "alt": "Volkswagen Passat — кузовной ремонт",
+        "fallback_visible": true
+      },
+      {
+        "id": "9fd1a7ef-5dc3-56f9-a673-0322fafa9394",
+        "source_page_id": "780ff368-beea-5cd3-87ed-eb3c1a7ad440",
+        "url": "/gallery-of-works/volvo-xc60-kuzovnoj-remont",
+        "label": "Volvo XC60\nКузовной ремонт",
+        "photo_count_text": "9 фото",
+        "image_id": "66a4b791-f47b-5349-8f00-8be9566ce34d",
+        "asset_id": "94ccc9d5-8083-571f-bf49-0100e14fe951",
+        "alt": "Volvo XC60 — кузовной ремонт",
+        "fallback_visible": true
+      },
+      {
+        "id": "342355c1-dc0b-58c4-bfca-856076f2a61a",
+        "source_page_id": "48a2cd1d-68ee-546a-bf4c-5516806a2623",
+        "url": "/gallery-of-works/kuzovnoj-remont-hyundai-solaris",
+        "label": "Hyundai Solaris\nКузовной ремонт",
+        "photo_count_text": "13 фото",
+        "image_id": "535c6c34-19fd-5c81-895e-34ba022aef35",
+        "asset_id": "27a6f84f-27fa-59a1-9f41-9cd6d602acc1",
+        "alt": "Hyundai Solaris — кузовной ремонт",
+        "fallback_visible": true
+      },
+      {
+        "id": "a8c94703-15fa-554a-a915-783273cfc122",
+        "source_page_id": "76ac1994-8491-5370-8a5f-844180f0605d",
+        "url": "/gallery-of-works/ssangyong-rexton-kuzovnoj-remont",
+        "label": "SsangYong Rexton\nКузовной ремонт",
+        "photo_count_text": "9 фото",
+        "image_id": "27c6be24-4386-50a4-9b2d-7b450a8ea56e",
+        "asset_id": "97dec332-4e05-5041-ab85-edcb7b60e2e5",
+        "alt": "SsangYong Rexton — кузовной ремонт",
+        "fallback_visible": true
+      },
+      {
+        "id": "ed7c8600-8946-5aa8-99ee-69a5c0cf96d0",
+        "source_page_id": "77ca5a64-bac3-5d33-bd7f-05824ba78b36",
+        "url": "/gallery-of-works/chrysler-kuzovnoj-remont",
+        "label": "Chrysler\nКузовной ремонт",
+        "photo_count_text": "21 фото",
+        "image_id": "f92c6405-83e8-5664-a698-f34c69c7ab39",
+        "asset_id": "aa4b4e6f-5a95-5e5a-a307-ec9761b31fcb",
+        "alt": "Chrysler — кузовной ремонт",
+        "fallback_visible": true
+      }
+    ],
+    "reviews": {
+      "heading": "ОТЗЫВЫ",
+      "url": "/reviews",
+      "label": "ОТКРЫТЬ ВСЕ ВИДЕО-ОТЗЫВЫ"
+    }
+  },
+  "media": [
+    {
+      "role": "hero",
+      "image_id": "908cfffc-ccd9-5ff5-ac34-2ebf2dcbd9c4",
+      "asset_id": "01339f84-84a1-52c7-9de1-9e1952287450",
+      "file_id": "6b1feed1-c3cc-5404-ba49-1932d6f48fba",
+      "local_file": "media/design-concepts/public-light-hero-workshop-v3.webp",
+      "storage_key": "img/01339f84-84a1-52c7-9de1-9e1952287450/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 180260,
+      "sha256": "54b00fe0b81b39b5eee0452b950d72d9de8d7400fe167ade33882e7248572012",
+      "alt": "Мастера работают с автомобилями в ремонтной зоне автотехцентра Эстакада"
+    },
+    {
+      "role": "step-1",
+      "image_id": "3cc301e4-3ca2-5747-bbb2-66af06d36124",
+      "asset_id": "8b6b2e35-150d-5fb8-9b17-66f3ccce19d9",
+      "file_id": "51936fdc-4129-5701-862e-e94506ac5953",
+      "local_file": "media/design-concepts/process-v4/customer-call.webp",
+      "storage_key": "img/8b6b2e35-150d-5fb8-9b17-66f3ccce19d9/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 114108,
+      "sha256": "6e019fc94896a92f11efd0f16bf5e712070f8a0a4f7adc0ec354acb165f8da8b",
+      "alt": "Заказчик звонит в автосервис из дома"
+    },
+    {
+      "role": "step-2",
+      "image_id": "c372d6ed-b152-525e-9da6-d315c3f068de",
+      "asset_id": "ac9d6e75-f5eb-5617-b2bb-34a428e415ae",
+      "file_id": "edee7b49-dae3-50b8-9d29-68b24bd59aa1",
+      "local_file": "media/design-concepts/process-v4/advisor-call.webp",
+      "storage_key": "img/ac9d6e75-f5eb-5617-b2bb-34a428e415ae/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 89494,
+      "sha256": "288b43fdf180ff162424f05f54779720b5e6601022d871c8e8493251667a56f1",
+      "alt": "Менеджер за стойкой уточняет задачу и записывает заявку"
+    },
+    {
+      "role": "step-3",
+      "image_id": "2b4bec32-7c70-5ec1-a231-1bbd95d3e902",
+      "asset_id": "b520ec19-a12e-587d-b1a1-129cd2db2268",
+      "file_id": "636ac7de-cd2a-5b89-bbb8-c17be1f2466f",
+      "local_file": "media/design-concepts/process-v4/diagnostics-tablet.webp",
+      "storage_key": "img/b520ec19-a12e-587d-b1a1-129cd2db2268/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 154774,
+      "sha256": "71808bff48db5149574b5f7741debec517fe0d0c7a44ee4b821306716cc59580",
+      "alt": "Мастер диагностирует автомобиль с планшетом"
+    },
+    {
+      "role": "step-4",
+      "image_id": "4f7540b4-d859-5d87-acae-8d9eada62027",
+      "asset_id": "151fe9fa-d995-5fb3-96e2-4727d53fd837",
+      "file_id": "9ee7b14b-765c-59d7-a9bc-ffe610b9f36d",
+      "local_file": "media/design-concepts/process-v4/repair-work.webp",
+      "storage_key": "img/151fe9fa-d995-5fb3-96e2-4727d53fd837/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 183762,
+      "sha256": "12535012f440a8ad3556a9cf9c7a5dd69efae3d227e3db32510db90608b47d00",
+      "alt": "Мастер ремонтирует автомобиль"
+    },
+    {
+      "role": "step-5",
+      "image_id": "153bc808-7e91-5f3f-9990-dccfff814645",
+      "asset_id": "a0ae7e9e-b701-5e34-bacb-c389bf93738e",
+      "file_id": "4f398a36-d78b-559c-91ce-5b0d0ec6f9f2",
+      "local_file": "media/design-concepts/process-v4/key-handover.webp",
+      "storage_key": "img/a0ae7e9e-b701-5e34-bacb-c389bf93738e/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 137348,
+      "sha256": "6871f77caaa4f44ab3a3a62ce1dfce6c939b8375d3fc5d361260d5db63af352e",
+      "alt": "Мастер передаёт ключ владельцу автомобиля"
+    },
+    {
+      "role": "service-1",
+      "image_id": "c85fa929-bf43-506f-9e12-89e76afb99b7",
+      "asset_id": "4d8d9e5c-3908-56c2-b11f-506d3633772b",
+      "file_id": "26ec05d7-cee1-5cc2-91e7-e690c54ae8ea",
+      "local_file": "media/design-concepts/services-v4/body-repair.webp",
+      "storage_key": "img/4d8d9e5c-3908-56c2-b11f-506d3633772b/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 137872,
+      "sha256": "783e8200f1ffdb3beaa6ff883ecfea682dbe7263baa11d252d436e7198fa933d",
+      "alt": "Концептуальная иллюстрация кузовного ремонта"
+    },
+    {
+      "role": "service-2",
+      "image_id": "b563633c-6dce-5ee8-9daa-b4f655e02caf",
+      "asset_id": "7dcb4d49-40a1-5338-8ca8-c60edb65adcf",
+      "file_id": "00a01da3-3be1-5275-8a7c-ee9faf885d51",
+      "local_file": "media/design-concepts/services-v4/maintenance.webp",
+      "storage_key": "img/7dcb4d49-40a1-5338-8ca8-c60edb65adcf/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 167450,
+      "sha256": "ddaecfe7f2d1ca6de2ed6807fa386a2c2cb9720ed818dee81ce18d8780781e01",
+      "alt": "Концептуальная иллюстрация планового технического обслуживания"
+    },
+    {
+      "role": "service-3",
+      "image_id": "4f82889a-5097-5c50-b622-a5e289931fd3",
+      "asset_id": "0d719728-dd68-58eb-bc3a-c21b828cdc73",
+      "file_id": "0c6caa35-f88a-5904-8437-8d2d55086fcc",
+      "local_file": "media/design-concepts/services-v4/repair.webp",
+      "storage_key": "img/0d719728-dd68-58eb-bc3a-c21b828cdc73/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 205424,
+      "sha256": "d57105e1fb89f77887384c42e9c9f16b436c18ec278a79460399f2e7583915d1",
+      "alt": "Концептуальная иллюстрация ремонта автомобиля"
+    },
+    {
+      "role": "service-4",
+      "image_id": "df6a1ec3-42fd-5de5-a970-a9c0624831f2",
+      "asset_id": "2ea80dca-4ce1-56be-9e23-2d58bcfce1bf",
+      "file_id": "9cff75ad-7962-56d0-a58b-0c0ac8adca31",
+      "local_file": "media/design-concepts/services-v4/diagnostics.webp",
+      "storage_key": "img/2ea80dca-4ce1-56be-9e23-2d58bcfce1bf/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 158832,
+      "sha256": "78053a832a1e9b6a1e74b4a36db1708341d412d101c301bc155a725e857d5091",
+      "alt": "Концептуальная иллюстрация диагностики автомобиля"
+    },
+    {
+      "role": "service-5",
+      "image_id": "38e87931-0542-5e81-a2c3-3b057241a809",
+      "asset_id": "0b5f0882-3974-5a26-b5cb-e4ae922884f9",
+      "file_id": "cfcb3540-f695-506d-b5b6-d8b82b896ca5",
+      "local_file": "media/design-concepts/services-v4/tire-service.webp",
+      "storage_key": "img/0b5f0882-3974-5a26-b5cb-e4ae922884f9/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 174514,
+      "sha256": "1d7f14f5859376dc93942e1ad8c16874294eb3835bddbd132b015d1df90f5184",
+      "alt": "Концептуальная иллюстрация шиномонтажа"
+    },
+    {
+      "role": "service-6",
+      "image_id": "aaa0bb6b-8d65-5eae-a05f-c3fc4348c2c3",
+      "asset_id": "242eaef8-da77-58ea-844b-954ce1f88401",
+      "file_id": "b824cb0f-5a80-5686-b4e4-4c3a2e874953",
+      "local_file": "media/design-concepts/services-v4/wheel-alignment.webp",
+      "storage_key": "img/242eaef8-da77-58ea-844b-954ce1f88401/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 167448,
+      "sha256": "f635072d2e39310fd06d4a348b16c131ae3a7a71ffedb1ee733a464aaa00ead6",
+      "alt": "Концептуальная иллюстрация сход-развала"
+    },
+    {
+      "role": "service-7",
+      "image_id": "d6127110-3f95-5821-baf4-746f58a7cc50",
+      "asset_id": "80ee0b33-cb69-54aa-bfa6-de53e4b0511d",
+      "file_id": "9523eaad-7978-5c0f-81f9-0627c600aacd",
+      "local_file": "media/design-concepts/services-v4/car-wash.webp",
+      "storage_key": "img/80ee0b33-cb69-54aa-bfa6-de53e4b0511d/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 277134,
+      "sha256": "efef7ac707f9fad0c9330814640d47b58cfb8f45ae5dc44e0bccce2af1c307af",
+      "alt": "Концептуальная фотография автомойки"
+    },
+    {
+      "role": "service-8",
+      "image_id": "d25f3d0b-8e1b-5cf3-a266-449c8b860492",
+      "asset_id": "75241fa1-529c-5587-891b-99115877f17a",
+      "file_id": "fcea7a63-659f-5120-a7e3-ef997945c90c",
+      "local_file": "media/design-concepts/services-v4/other-services.webp",
+      "storage_key": "img/75241fa1-529c-5587-891b-99115877f17a/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 195828,
+      "sha256": "d2756f684ec56589f5cea1e0767dffaa40868adfd9cfbca3bc42fff34f76992d",
+      "alt": "Концептуальная иллюстрация дополнительных услуг автосервиса"
+    },
+    {
+      "role": "photo-strip",
+      "image_id": "a8a8e973-ab1d-5efe-8102-f775b6072f2a",
+      "asset_id": "93518ab5-fc53-50ab-a6b3-302b0813a4ac",
+      "file_id": "fc6a50ee-c0f3-525d-8bda-67beee220e20",
+      "local_file": "media/design-concepts/photo-strip-v4/exterior-bays-bright-v1.webp",
+      "storage_key": "img/93518ab5-fc53-50ab-a6b3-302b0813a4ac/main.webp",
+      "kind": "main",
+      "mime": "image/webp",
+      "bytes": 201684,
+      "sha256": "640bc75001fede5e3c29c85ca2629af2263770da5014339edc0e5def9d83d43f",
+      "alt": "Фасад автотехцентра Эстакада с открытыми и освещёнными ремонтными боксами"
+    }
+  ]
+}

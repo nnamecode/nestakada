@@ -1,6 +1,9 @@
 from unittest.mock import patch
 import base64
+import copy
 import hashlib
+import json
+from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import urlencode
 from uuid import uuid4
@@ -178,6 +181,67 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
         self.apply_text('footer', 'PRODUCTION-FOOTER')
         return self.create_public_page()
 
+    def create_home_profile_page(self):
+        package_path = Path(__file__).with_name('dev12_home_profile.json')
+        package = json.loads(package_path.read_text(encoding='utf-8'))
+        profile = copy.deepcopy(package['profile'])
+        embedded = []
+        for item in package['media']:
+            embedded.append({
+                'id': item['image_id'], 'asset_id': str(self.asset.pk),
+                'alt': item['alt'], 'alignment': 'center',
+                'width_px': None, 'height_px': None,
+            })
+        for item in profile['works']:
+            item['asset_id'] = str(self.asset.pk)
+            embedded.append({
+                'id': item['image_id'], 'asset_id': str(self.asset.pk),
+                'alt': item['alt'], 'alignment': 'center',
+                'width_px': None, 'height_px': None,
+            })
+        maximum = Page.objects.filter(parent__isnull=True).aggregate(
+            value=models.Max('position'))['value']
+        page = Page.objects.create(
+            name='HOME-PROFILE', kind=Page.Kind.HOME,
+            position=0 if maximum is None else maximum + 1,
+            is_published=True)
+        route = Route.objects.create(
+            page=page, kind=Route.Kind.PRIMARY, target='/')
+        payload = schema.snapshot_v1(
+            page.kind, h1='HOME-PROFILE', title='HOME-PROFILE',
+            embedded_images=embedded, home_profile=profile).data(page.kind)
+        revision = PageRevision.objects.create(
+            page=page, sequence=1, schema_version=schema.SCHEMA,
+            payload=payload, payload_hash=schema.digest(payload),
+            kind=PageRevision.Kind.INITIAL, author_id=1)
+        PageContentState.objects.create(
+            page=page, current_revision=revision, sequence=1)
+        for slot in schema.asset_slots(payload):
+            media_services.attach(
+                asset_id=self.asset.pk, kind='current_page',
+                consumer_id=page.pk, slot=slot)
+        return page, route, revision
+
+    def test_dev12_home_uses_real_shared_double_capture_and_physical_media(self):
+        with self.candidate():
+            self.apply_text('header', 'PRODUCTION-HEADER')
+            self.apply_text('footer', 'PRODUCTION-FOOTER')
+            _page, route, _revision = self.create_home_profile_page()
+            before = self.read_state()
+            response = self.anonymous.get(route.target)
+            self.assertEqual(response.status_code, 200)
+            source = response.content.decode()
+            self.assertIn('class="public-home"', source)
+            main = source.split('<main', 1)[1].split('</main>', 1)[0]
+            self.assertEqual(main.count('/public-media/'), 21)
+            self.assertIn('PRODUCTION-HEADER', source)
+            self.assertRegex(response['ETag'], r'^"[0-9a-f]{64}"$')
+            unchanged = self.anonymous.get(
+                route.target, HTTP_IF_NONE_MATCH=response['ETag'])
+            self.assertEqual(unchanged.status_code, 304)
+            self.assertEqual(self.anonymous.head(route.target).content, b'')
+            self.assertEqual(self.read_state(), before)
+
     def test_psh001_005_006_current_composition_resources_etag_and_no_writes(self):
         with self.candidate():
             page, route, _revision = self.seed()
@@ -309,6 +373,7 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
             page_id=str(uuid4()),
             payload={
                 'main_image': None,
+                'preview_image': None,
                 'embedded_images': [
                     {'id': image_id, 'asset_id': str(asset_id)}
                     for image_id, asset_id in zip(image_ids, asset_ids)
@@ -334,9 +399,10 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
                 'content.public_shared.AssetFile.objects.filter') as file_query:
             usage_query.return_value.filter.return_value.order_by.return_value = usage_rows
             file_query.return_value.order_by.return_value = file_rows
-            mapping, files = PublicSharedHost._standalone_media(page)
+            mapping, files, seo_media = PublicSharedHost._standalone_media(page)
         self.assertEqual(len(mapping), count)
         self.assertEqual(len(files), count)
+        self.assertIsNone(seo_media)
         self.assertEqual(usage_query.call_count, 1)
         self.assertEqual(file_query.call_count, 1)
 
@@ -404,7 +470,8 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
             self.assertEqual(hero_accepted.status_code, 200)
             self.assertEqual(hero_source.count('class="public-hero '), 1)
             self.assertEqual(hero_source.count('<figure'), 63)
-            self.assertEqual(hero_source.count('?page='), 64)
+            self.assertEqual(hero_source.count('?page='), 65)
+            self.assertEqual(hero_source.count('property="og:image"'), 1)
 
             _hero_over_page, hero_over_route, _revision = self.create_many_image_page(
                 assets[:64], main_asset=assets[64],
@@ -465,10 +532,12 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
                 denied_page_response = self.anonymous.get(denied_route.target)
                 self.assertEqual(denied_page_response.status_code, 200)
                 self.assertNotIn(b'public-hero', denied_page_response.content)
-                self.assertNotIn(str(file.pk).encode(),
-                                 denied_page_response.content)
+                self.assertIn(str(file.pk).encode(),
+                              denied_page_response.content)
+                self.assertIn(b'property="og:image"',
+                              denied_page_response.content)
                 self.assertEqual(
-                    self.anonymous.get(denied_url).status_code, 404)
+                    self.anonymous.get(denied_url).status_code, 200)
 
             for index, mode in enumerate(('duplicate', 'protected'), start=67):
                 bad_page, bad_route, revision = self.create_public_page(
@@ -675,7 +744,7 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
             self.assertEqual(self.anonymous.get(page_url(pages['orphan'][0])).status_code, 404)
             self.assertEqual(self.anonymous.get(page_url(pages['protected'][0])).status_code, 404)
             self.assertEqual(self.anonymous.get(
-                page_url(pages['preview'][0], 'preview_image')).status_code, 404)
+                page_url(pages['preview'][0], 'preview_image')).status_code, 200)
             self.assertEqual(self.anonymous.get(page_url(hidden[0])).status_code, 404)
             self.assertEqual(self.anonymous.get(page_url(wrong[0])).status_code, 404)
             self.assertEqual(self.anonymous.get(page_url(old[0])).status_code, 404)
@@ -684,6 +753,35 @@ class PublicSharedPageTests(reservation.ReservationFixture, TransactionTestCase)
             protected_page = self.anonymous.get(pages['protected'][1].target)
             self.assertEqual(protected_page.status_code, 503)
             self.assertNotIn(str(file.pk).encode(), protected_page.content)
+
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_dev11_preview_image_is_contextual_og_image_and_not_body_content(self):
+        with self.candidate():
+            self.apply_text('header', 'PRODUCTION-HEADER')
+            self.apply_text('footer', 'PRODUCTION-FOOTER')
+            asset = self.clone_public_asset()
+            page, route, _revision = self.create_public_page(
+                name='seo-preview', target='/seo-preview/', position=80,
+                image_asset=asset, image_mode='preview')
+            file = asset.files.get(kind=AssetFile.Kind.MAIN)
+            query = urlencode((('page', str(page.pk)),
+                               ('slot', 'preview_image')))
+            expected = ('http://localhost:8767/public-media/%s/?%s'
+                        % (file.pk, query))
+            response = self.anonymous.get(route.target)
+            self.assertEqual(response.status_code, 200)
+            source = response.content.decode()
+            self.assertIn(
+                '<meta property="og:image" content="%s">' % expected.replace('&', '&amp;'),
+                source)
+            self.assertIn(
+                '<meta property="og:image:alt" content="&lt;PUBLIC-ALT&gt;">',
+                source)
+            self.assertNotIn('<figure', source)
+            self.assertEqual(
+                self.anonymous.get('/public-media/%s/?%s' % (file.pk, query)).status_code,
+                200)
 
     def test_pimg_corrupt_physical_file_closes_page_before_partial_html(self):
         with self.candidate():

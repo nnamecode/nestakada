@@ -3,10 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page.payload.title|default:page.name }}</title>
+  <title>{{ seo.title }}</title>
+  {% if seo.description %}<meta name="description" content="{{ seo.description }}">{% endif %}
+  {% if seo.canonical %}<link rel="canonical" href="{{ seo.canonical }}">{% endif %}
+  <meta property="og:title" content="{{ seo.og_title }}">
+  {% if seo.og_description %}<meta property="og:description" content="{{ seo.og_description }}">{% endif %}
+  {% if seo.og_url %}<meta property="og:url" content="{{ seo.og_url }}">{% endif %}
+  {% if seo.image %}<meta property="og:image" content="{{ seo.image.url }}">
+  <meta property="og:image:alt" content="{{ seo.image.alt }}">{% endif %}
+  {% if auto_repair_json %}<script type="application/ld+json">{{ auto_repair_json }}</script>{% endif %}
   <link rel="stylesheet" href="/static/public.css">
   <link rel="stylesheet" href="{{ shared_stylesheet }}">
   <script defer src="{{ shared_script }}"></script>
+  {% if gallery %}<script defer src="/static/public-gallery.js"></script>{% endif %}
+  {% if home %}<script defer src="/static/public-home.js"></script>{% endif %}
 </head>
 <body>
   {{ header_html }}
@@ -18,7 +28,50 @@
         {% endfor %}
       </ol>
     </nav>
-    <h1>{{ page.payload.h1|default:page.name }}</h1>
+    {% if home %}
+      {% include "content/_public_home.html" %}
+    {% else %}<h1>{{ page.payload.h1|default:page.name }}</h1>
+    {% if gallery %}
+      <section class="public-gallery-catalog" aria-label="Альбомы выполненных работ" data-gallery-catalog>
+        <div class="public-gallery-grid">
+          {% for album in gallery.albums %}
+            <a class="public-gallery-card" href="{{ album.target }}" data-gallery-modal-url="{{ album.modal_target }}" aria-label="Открыть альбом {{ album.name }}, фотографий: {{ album.photos|length }}">
+              <span class="public-gallery-cover"><img src="{{ album.photos.0.src }}" alt="{{ album.photos.0.alt }}" loading="lazy" decoding="async"><span>{{ album.photos|length }} фото</span></span>
+              <span class="public-gallery-meta"><strong>{{ album.name }}</strong><span>Открыть альбом&nbsp; ↗</span></span>
+            </a>
+          {% endfor %}
+        </div>
+        {% if gallery.request.page == 2 %}<p class="public-gallery-all"><a href="/gallery-of-works/">Все выполненные работы</a></p>{% endif %}
+      </section>
+      {% if gallery.selected %}
+        <dialog class="public-gallery-dialog" open aria-labelledby="public-gallery-dialog-title" data-gallery-dialog>
+          <div class="public-gallery-dialog-head">
+            <div><p>Фотогалерея работ</p><h2 id="public-gallery-dialog-title">{{ gallery.selected.name }}</h2></div>
+            <a class="public-gallery-close" href="{{ gallery.request.base_target }}" aria-label="Закрыть галерею">×</a>
+          </div>
+          <div class="public-gallery-selected-copy">{{ gallery_selected_text }}</div>
+          <div class="public-gallery-stage">
+            {% for photo in gallery.selected.photos %}<img src="{{ photo.src }}" alt="{{ photo.alt }}"{% if not forloop.first %} hidden{% endif %} decoding="async" data-gallery-photo>{% endfor %}
+            <button class="public-gallery-arrow public-gallery-prev" type="button" aria-label="Предыдущее фото" data-gallery-prev>←</button>
+            <button class="public-gallery-arrow public-gallery-next" type="button" aria-label="Следующее фото" data-gallery-next>→</button>
+          </div>
+          <div class="public-gallery-dialog-foot">
+            <span class="public-gallery-counter" aria-live="polite"><b>01</b> / {{ gallery.selected.photos|length|stringformat:"02d" }}</span>
+            <div class="public-gallery-thumbs" aria-label="Выбор фотографии">
+              {% for photo in gallery.selected.photos %}<button type="button" aria-label="Показать фото {{ forloop.counter }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}" data-gallery-thumb="{{ forloop.counter0 }}"><img src="{{ photo.src }}" alt="" loading="lazy" decoding="async"></button>{% endfor %}
+            </div>
+          </div>
+        </dialog>
+      {% endif %}
+    {% elif page.page_kind == 'gallery_album' %}
+      <p class="public-gallery-back"><a href="/gallery-of-works/">← Все работы</a></p>
+      <section class="public-gallery-album" aria-label="Фотографии альбома">
+        {% for block in body_blocks %}
+          {% if block.kind == 'text' %}<div class="public-content public-text-{{ block.field }}">{{ block.html }}</div>
+          {% elif block.kind == 'image' %}<figure><img src="{{ block.src }}" alt="{{ block.alt }}" loading="lazy" decoding="async"></figure>{% endif %}
+        {% endfor %}
+      </section>
+    {% else %}
     {% for block in body_blocks %}
       {% if block.kind == 'text' %}
         <section class="{% if page.page_kind == 'services_master_catalog' and block.field == 'main_text' %}public-services-catalog{% elif page.page_kind == 'service_catalog' and block.field == 'main_text' %}public-service-root-catalog{% else %}public-content public-text-{{ block.field }}{% endif %}">{{ block.html }}</section>
@@ -40,6 +93,7 @@
         </figure>
       {% endif %}
     {% endfor %}
+    {% endif %}{% endif %}
   </main>
   {{ footer_html }}
 </body>

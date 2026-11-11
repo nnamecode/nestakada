@@ -4,6 +4,7 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from django.db import DatabaseError
+from django.core.exceptions import ValidationError
 from django.contrib.sessions.models import Session
 from django.test import TransactionTestCase, override_settings
 
@@ -254,4 +255,18 @@ class EditorSaveHttpTests(TransactionTestCase):
         with patch("page_versions.engine.preflight", side_effect=revoke):
             response = self.save(value, self.employee_client)
         self.assert_error(response, 403, "EDITOR_FIELDS_FORBIDDEN")
+        self.assertEqual(self.state(), before)
+
+    def test_final_locked_recapture_rejects_source_digest_drift(self):
+        from django.db import connection
+        value = self.prepare()
+        before = self.state()
+
+        def drift(payload, expected_digest):
+            self.assertTrue(connection.in_atomic_block)
+            raise ValidationError("VERSIONS_HOME_SOURCES_STALE")
+
+        with patch("page_versions.engine.check_home_sources", side_effect=drift):
+            response = self.save(value)
+        self.assert_error(response, 409, "EDITOR_OPERATION_CONFLICT")
         self.assertEqual(self.state(), before)

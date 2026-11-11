@@ -37,7 +37,7 @@ def _locked_assets(ids):
     return assets
 
 
-def write_file(*, asset_id, kind, key, chunks, storage=None):
+def write_file(*, asset_id, kind, key, chunks, storage=None, file_id=None):
     """Only a trusted producer; no input image acceptance/format inference here."""
     storage = storage or MediaStorage()
     with transaction.atomic():
@@ -46,7 +46,11 @@ def write_file(*, asset_id, kind, key, chunks, storage=None):
         if asset.status != Asset.Status.STAGED:
             raise ValidationError('MEDIA_FILES_REQUIRE_STAGED_ASSET')
         # Validate all metadata/path fields before a physical write.
-        record = AssetFile(asset=asset,kind=kind,key=key,sha256='0'*64,byte_size=0)
+        values = {'asset':asset, 'kind':kind, 'key':key,
+                  'sha256':'0'*64, 'byte_size':0}
+        if file_id is not None:
+            values['id'] = UUID(str(file_id))
+        record = AssetFile(**values)
         record.full_clean(validate_unique=True)
         if FileKeyReservation.objects.filter(pk=key).exists():
             raise ValidationError('MEDIA_STORAGE_KEY_ALREADY_RESERVED')

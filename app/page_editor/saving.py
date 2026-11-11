@@ -1,6 +1,6 @@
 """Current-only checked saves; original DEV05 atomic engine and permanent ledger."""
 import re
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.db import transaction
 from page_versions import engine as E, schema as S
 from page_versions.models import OperationReceipt
@@ -64,42 +64,9 @@ def replay_checked(*, actor, page_id, generation, meta, session_key):
         return E.result(row, True)
 
 
-def commit_checked(*, actor, page_id, generation, origin, before, raw, result, session_key):
-    E.outside()
-    meta = save_request(result)
-    replay = replay_checked(actor=actor, page_id=page_id, generation=generation, meta=meta, session_key=session_key)
-    if replay is not None:
-        return replay
-    worker = {key: value for key, value in result.items() if key != 'save_request'}
-    worker = check_worker_result(worker, raw=raw, context=before)
-    if worker['changed']:
-        raise CheckFault('EDITOR_NORMALIZATION_REQUIRED')
-    try:
-        after = inspect_context(actor=actor, page_id=page_id, generation=generation, origin=origin,
-                                selector=meta['source'])
-    except CheckFault:
-        replay = replay_checked(actor=actor, page_id=page_id, generation=generation, meta=meta, session_key=session_key)
-        if replay is not None:
-            return replay
-        raise
-    if before.stamp != after.stamp or meta['baseRevisionId'] != after.child['base_revision_id']:
-        # A concurrent identical commit may have advanced current since replay.
-        replay = replay_checked(actor=actor, page_id=page_id, generation=generation, meta=meta, session_key=session_key)
-        if replay is not None:
-            return replay
-        raise CheckFault('EDITOR_BASE_CONFLICT')
-    derived_payload, map_hash = None, None
-    if 'derived' in worker:
-        derived_payload, map_hash = embedded.validate_derived(after, worker, save=True)
-    # Authentic receipt/context/canonical map authority precedes new FS work.
-    verify_check_receipt(meta['checkReceipt'], context=after, changes=worker['changes'],
-        derived_map_hash=map_hash, _before_fs=True)
-    media_evidence = media.prepare(after, worker['changes'], derived=worker.get('derived'))
-    if media_evidence is not None:
-        after = media.late_context(actor=actor, page_id=page_id, generation=generation,
-            session_key=session_key, origin=origin, before=after, evidence=media_evidence)
-    verify_check_receipt(meta['checkReceipt'], context=after, changes=worker['changes'],
-                         media_evidence=media_evidence.proof if media_evidence else None, derived_map_hash=map_hash)
+def _mutate_checked(*, actor, page_id, generation, after, worker, derived_payload,
+                    meta, session_key, home_source_digest):
+    """Use only inside the retained final content/auth transaction."""
     try:
         source = meta['source']
         if source['rebase'] and meta['action'] != 'draft':
@@ -121,6 +88,7 @@ def commit_checked(*, actor, page_id, generation, origin, before, raw, result, s
                     rebase=source['rebase'], draft_id=source['draftBasis']['id'] if source['draftBasis'] else None,
                     expected_draft_hash=S.digest(after.payload) if source['draftBasis'] else None,
                     expected_draft_base=meta['baseRevisionId'] if source['draftBasis'] else None,
+                    expected_home_source_digest=home_source_digest,
                     editor_request_fingerprint=meta['fingerprint'], editor_session_key=session_key)
             if simple_current(source, meta['action']):
                 from page_versions import simple_commands
@@ -129,6 +97,7 @@ def commit_checked(*, actor, page_id, generation, origin, before, raw, result, s
                     base_revision=meta['baseRevisionId'], snapshot=snapshot,
                     expected_generation=generation,
                     operation_id=meta['operationId'],
+                    expected_home_source_digest=home_source_digest,
                     editor_request_fingerprint=meta['fingerprint'],
                     editor_session_key=session_key)
             if source['editingFrom'] == 'owner-draft':
@@ -141,12 +110,14 @@ def commit_checked(*, actor, page_id, generation, origin, before, raw, result, s
                     draft_id=source['draftBasis']['id'],
                     draft_revision=source['draftBasis']['revision'],
                     expected_draft_hash=S.digest(after.payload),
+                    expected_home_source_digest=home_source_digest,
                     editor_request_fingerprint=meta['fingerprint'],
                     editor_session_key=session_key)
             return E.commit_owner(actor=actor, page_id=page_id, base_revision=meta['baseRevisionId'],
                 snapshot=snapshot, expected_generation=generation, operation_id=meta['operationId'],
                 stage_id=source['stageId'], editor_request_fingerprint=meta['fingerprint'],
-                editor_session_key=session_key)
+                editor_session_key=session_key,
+                expected_home_source_digest=home_source_digest)
         patch = S.TextPricePatch(**worker['changes'])
         if simple_current(source, meta['action']):
             from page_versions import simple_commands
@@ -155,16 +126,83 @@ def commit_checked(*, actor, page_id, generation, origin, before, raw, result, s
                 base_revision=meta['baseRevisionId'], patch=patch,
                 expected_generation=generation,
                 operation_id=meta['operationId'],
+                expected_home_source_digest=home_source_digest,
                 editor_request_fingerprint=meta['fingerprint'],
                 editor_session_key=session_key)
         return E.commit_employee(actor=actor, page_id=page_id, base_revision=meta['baseRevisionId'],
             patch=patch, expected_generation=generation,
             operation_id=meta['operationId'], stage_id=source['stageId'],
-            editor_request_fingerprint=meta['fingerprint'], editor_session_key=session_key)
+            editor_request_fingerprint=meta['fingerprint'], editor_session_key=session_key,
+            expected_home_source_digest=home_source_digest)
     except ValidationError as exc:
         if 'EDITOR_SESSION_ENDED' in str(exc):
             raise CheckFault('EDITOR_SESSION_ENDED') from None
+        replay = replay_checked(actor=actor, page_id=page_id, generation=generation,
+                                meta=meta, session_key=session_key)
+        if replay is not None:
+            return replay
+        raise CheckFault('EDITOR_OPERATION_CONFLICT') from None
+
+
+def commit_checked(*, actor, page_id, generation, origin, before, raw, result, session_key):
+    E.outside()
+    meta = save_request(result)
+    replay = replay_checked(actor=actor, page_id=page_id, generation=generation, meta=meta, session_key=session_key)
+    if replay is not None:
+        return replay
+    worker = {key: value for key, value in result.items() if key != 'save_request'}
+    worker = check_worker_result(worker, raw=raw, context=before)
+    from .checks import canonicalize_home_change
+    worker, home_source_digest = canonicalize_home_change(before, worker)
+    if worker['changed']:
+        raise CheckFault('EDITOR_NORMALIZATION_REQUIRED')
+    try:
+        after = inspect_context(actor=actor, page_id=page_id, generation=generation, origin=origin,
+                                selector=meta['source'])
+    except CheckFault:
         replay = replay_checked(actor=actor, page_id=page_id, generation=generation, meta=meta, session_key=session_key)
         if replay is not None:
             return replay
+        raise
+    if before.stamp != after.stamp or meta['baseRevisionId'] != after.child['base_revision_id']:
+        # A concurrent identical commit may have advanced current since replay.
+        replay = replay_checked(actor=actor, page_id=page_id, generation=generation, meta=meta, session_key=session_key)
+        if replay is not None:
+            return replay
+        raise CheckFault('EDITOR_BASE_CONFLICT')
+    after_worker, after_home_source_digest = canonicalize_home_change(
+        after, worker)
+    if (after_worker['changes'] != worker['changes']
+            or after_home_source_digest != home_source_digest):
+        raise CheckFault('EDITOR_CONTEXT_CHANGED')
+    worker = after_worker
+    derived_payload, map_hash = None, None
+    if 'derived' in worker:
+        derived_payload, map_hash = embedded.validate_derived(after, worker, save=True)
+    # Authentic receipt/context/canonical map authority precedes new FS work.
+    verify_check_receipt(meta['checkReceipt'], context=after, changes=worker['changes'],
+        derived_map_hash=map_hash, _before_fs=True,
+        home_source_digest=after_home_source_digest)
+    media_evidence = media.prepare(after, worker['changes'], derived=worker.get('derived'))
+    if media_evidence is not None:
+        after = media.late_context(actor=actor, page_id=page_id, generation=generation,
+            session_key=session_key, origin=origin, before=after, evidence=media_evidence)
+    verify_check_receipt(meta['checkReceipt'], context=after, changes=worker['changes'],
+                         media_evidence=media_evidence.proof if media_evidence else None,
+                         derived_map_hash=map_hash,
+                         home_source_digest=after_home_source_digest)
+    try:
+        return _mutate_checked(actor=actor, page_id=page_id,
+            generation=generation, after=after, worker=worker,
+            derived_payload=derived_payload, meta=meta, session_key=session_key,
+            home_source_digest=after_home_source_digest)
+    except ValidationError as exc:
+        if 'EDITOR_SESSION_ENDED' in str(exc):
+            raise CheckFault('EDITOR_SESSION_ENDED') from None
+        if media_evidence is not None:
+            raise CheckFault('EDITOR_MEDIA_UNAVAILABLE') from None
+        raise CheckFault('EDITOR_OPERATION_CONFLICT') from None
+    except (ObjectDoesNotExist, OSError):
+        if media_evidence is not None:
+            raise CheckFault('EDITOR_MEDIA_UNAVAILABLE') from None
         raise CheckFault('EDITOR_OPERATION_CONFLICT') from None

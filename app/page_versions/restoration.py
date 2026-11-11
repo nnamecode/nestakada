@@ -10,7 +10,7 @@ def _candidate(page,source,current,fields,owner):
     past=S.validate(source.payload,page.kind);present=S.validate(current.payload,page.kind)
     if source.schema_version!=S.SCHEMA or current.schema_version!=S.SCHEMA:raise ValidationError('VERSIONS_INCOMPATIBLE_SCHEMA')
     if any(node['kind']=='protected_ref' for node in past['layout']):raise ValidationError('VERSIONS_COMPONENT_RESOLVER_UNAVAILABLE')
-    wanted=sorted(S.OWNER_FIELDS if owner else set(fields)&S.EMPLOYEE_FIELDS)
+    wanted=sorted((set(S.OWNER_FIELDS)&set(past)) if owner else set(fields)&S.EMPLOYEE_FIELDS)
     if not wanted:raise PermissionDenied('VERSIONS_NO_RESTORE_FIELDS')
     current_nodes={node['id']:node for node in present['layout']}
     for node in past['layout']:

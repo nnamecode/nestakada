@@ -277,24 +277,38 @@ def check_editor_session(actor,generation,session_key):
         raise ValidationError('EDITOR_SESSION_ENDED')
 
 
-def commit_employee(*,actor,page_id,base_revision,patch,expected_generation,operation_id,stage_id=None,editor_request_fingerprint=None,editor_session_key=None):
+def check_home_sources(payload, expected_digest):
+    """Final selected-source recapture; caller already holds content/auth locks."""
+    if expected_digest is None:
+        return
+    if (type(expected_digest) is not str or re.fullmatch('[a-f0-9]{64}', expected_digest) is None
+            or payload.get('page_kind') != 'home' or 'home_profile' not in payload):
+        raise ValidationError('VERSIONS_HOME_SOURCES_STALE')
+    from page_editor.home_sources import capture
+    _facts, actual = capture(payload['home_profile'])
+    if actual != expected_digest:
+        raise ValidationError('VERSIONS_HOME_SOURCES_STALE')
+
+
+def commit_employee(*,actor,page_id,base_revision,patch,expected_generation,operation_id,stage_id=None,editor_request_fingerprint=None,editor_session_key=None,expected_home_source_digest=None):
     if type(patch) is not S.TextPricePatch:raise ValidationError('VERSIONS_TYPED_PATCH_REQUIRED')
-    return _commit(actor,page_id,base_revision,expected_generation,operation_id,'commit_employee',patch=patch,stage_id=stage_id,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key)
+    return _commit(actor,page_id,base_revision,expected_generation,operation_id,'commit_employee',patch=patch,stage_id=stage_id,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key,expected_home_source_digest=expected_home_source_digest)
 
 
-def commit_owner(*,actor,page_id,base_revision,snapshot,expected_generation,operation_id,stage_id=None,draft_id=None,draft_revision=None,expected_draft_hash=None,editor_request_fingerprint=None,editor_session_key=None):
+def commit_owner(*,actor,page_id,base_revision,snapshot,expected_generation,operation_id,stage_id=None,draft_id=None,draft_revision=None,expected_draft_hash=None,editor_request_fingerprint=None,editor_session_key=None,expected_home_source_digest=None):
     return _commit(actor,page_id,base_revision,expected_generation,operation_id,'commit_owner',snapshot=snapshot,
-        stage_id=stage_id,draft_id=draft_id,draft_revision=draft_revision,expected_draft_hash=expected_draft_hash,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key)
+        stage_id=stage_id,draft_id=draft_id,draft_revision=draft_revision,expected_draft_hash=expected_draft_hash,editor_request_fingerprint=editor_request_fingerprint,editor_session_key=editor_session_key,expected_home_source_digest=expected_home_source_digest)
 
 
-def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=None,snapshot=None,stage_id=None,draft_id=None,draft_revision=None,expected_draft_hash=None,editor_request_fingerprint=None,editor_session_key=None):
+def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=None,snapshot=None,stage_id=None,draft_id=None,draft_revision=None,expected_draft_hash=None,editor_request_fingerprint=None,editor_session_key=None,expected_home_source_digest=None):
     outside();owner_required=action=='commit_owner'
     if editor_request_fingerprint is not None and (type(editor_request_fingerprint) is not str or re.fullmatch('[a-f0-9]{64}',editor_request_fingerprint) is None):
         raise ValidationError('VERSIONS_INVALID_EDITOR_FINGERPRINT')
     changes=patch.changes() if patch is not None else None
     params={'base':str(uid(base_revision)),'changes':S.digest(changes) if changes is not None else None,
         'snapshot':S.digest(snapshot.data()) if type(snapshot) is S.Snapshot else None,'stage':str(uid(stage_id)) if stage_id else None,
-        'draft':str(uid(draft_id)) if draft_id else None,'draft_revision':draft_revision}
+        'draft':str(uid(draft_id)) if draft_id else None,'draft_revision':draft_revision,
+        'home_sources':expected_home_source_digest}
     def candidate(page,profile,fields,state):
         _assert_base(state,base_revision)
         if changes is not None:
@@ -332,6 +346,7 @@ def _commit(actor,page_id,base_revision,generation,operation_id,action,patch=Non
         previous=replay(operation_id,action,actor,page,generation,params,editor_request_fingerprint=editor_request_fingerprint)
         if previous:return previous
         if candidate(page,profile,fields,state)!=payload:raise ValidationError('VERSIONS_CURRENT_CONFLICT')
+        check_home_sources(payload,expected_home_source_digest)
         check_evidence(payload,evidence)
         source_id=RestoreStage.objects.get(pk=stage_id).source_revision_id if stage_id else uid(base_revision)
         row=new_revision(page,state,payload,'automatic',actor,source=source_id)

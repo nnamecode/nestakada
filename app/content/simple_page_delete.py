@@ -23,6 +23,7 @@ from page_versions.models import (IdentityReservation, OperationReceipt,
                                   VersionBasePin)
 
 from .models import Page, Route
+from .home_projection import delete_dependency_guard
 from .simple_tree_commands import _enter, _outside, _page, _uid
 from .tree_commands import TreeFault
 
@@ -46,6 +47,7 @@ def _rv(queryset, table):
 
 
 def _scope(page):
+    dependencies, dependency_digest = delete_dependency_guard(page.pk)
     children = list(_rv(
         Page.objects.select_for_update().filter(parent=page).order_by('id'),
         'content_page'))
@@ -151,12 +153,15 @@ def _scope(page):
             'consumer': str(row.consumer_id),
             'asset': str(row.asset_id), 'slot': row.slot,
         } for row in usages],
+        'home_dependencies': dependencies,
+        'home_dependency_digest': dependency_digest,
     })
     return {
         'primary': primaries[0], 'routes': routes, 'state': state,
         'revisions': revisions, 'metadata': metadata, 'stable': stable,
         'drafts': drafts, 'stages': stages, 'pins': pins,
         'grants': grants, 'homes': homes, 'usages': usages,
+        'home_dependencies': dependencies,
         'stamp': stamp,
     }
 

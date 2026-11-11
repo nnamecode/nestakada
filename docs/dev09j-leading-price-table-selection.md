@@ -1,6 +1,6 @@
 # DEV-09J: выбор первого прайсового cohort
 
-Дата: 2026-11-10. Основание: D-023, D-172–D-174, D-180, D-184, D-208, D-235 и завершённый DEV-09I D-781. Статус: read-only profitability selection завершён; exact5 предложен владельцу, но не утверждён. Product code не начат.
+Дата: 2026-11-10. Основание: D-023, D-172–D-174, D-180, D-184, D-208, D-235 и завершённый DEV-09I D-781. Статус: exact5 утверждён владельцем D-784; minimal implementation plan D-785 подготовлен, product code не начат.
 
 ## Актуальный остаток
 
@@ -68,4 +68,4 @@ Price cell rule is closed and lossless:
 
 ## Gate
 
-`DEV09J-Q001`: утвердить exact5 above as next cohort. Then: minimal implementation plan → independent plan review → separate product-code approval.
+`DEV09J-Q001`: **утверждено владельцем D-784**. Следующий gate: independent review `docs/dev09j-leading-price-table-implementation-plan.md`, затем отдельное owner approval product code.

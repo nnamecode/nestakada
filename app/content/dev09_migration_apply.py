@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 import stat
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -50,6 +50,13 @@ SERVICE_DETAILS_PAGES_SHA256 = '1d22ab1cd4d71116fcf9c3b25d8cdaf05f0f9e1a17612a33
 PLANNED_PACKAGE_NAME = 'dev09i_planned_maintenance.json'
 PLANNED_PACKAGE_SHA256 = 'fa0e85ba9640ffa45916e810bece20e949698b3dbe82f9ead99750210b98a5cf'
 PLANNED_PAGES_SHA256 = '91e02eabc9b19944c002cf85f4e4cd3dcc1a0e395f7bb0988c856cc451c5793c'
+LEADING_PRICE_PACKAGE_NAME = 'dev09j_leading_price_details.json'
+LEADING_PRICE_PACKAGE_SHA256 = 'e091047ae5272fa9834d828d5ed73e1fbc914a41faa07e4367b9787ad0a8934d'
+LEADING_PRICE_PAGES_SHA256 = '5fd96cbbbe6adabd96f4a02ccaab1ed5493e1e25a66dc825dbf5ccfdb77ff4ba'
+LEADING_PRICE_ROW_COUNTS = (11, 8, 21, 5, 1)
+DIAGNOSTICS_PACKAGE_NAME = 'dev09k_diagnostics_branch.json'
+DIAGNOSTICS_PACKAGE_SHA256 = '9980c60a1a2ee354ef156c7f9695cfc76ec051f798dfe3610a95f3e29c473e67'
+DIAGNOSTICS_PAGES_SHA256 = '21e3965116ada52d91054c0621f220d74545a47bf9502ac2d8cb012bd318266a'
 SERVICE_ROOTS_EXPECTED = (
     ('729b10a3-709e-41c0-a71f-0d376a2b8586', 'MAP-012',
      '/services/remont/', 2, 'Ремонт', 'Ремонт',
@@ -321,6 +328,84 @@ def _read_planned_maintenance_package(catalog_package=None):
     return _validate_planned_maintenance_package(value, catalog_package)
 
 
+def _read_leading_price_package(parent_package=None):
+    package = Path(__file__).resolve().with_name(LEADING_PRICE_PACKAGE_NAME)
+    if (package.name != LEADING_PRICE_PACKAGE_NAME
+            or package.parent != Path(__file__).resolve().parent):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    nofollow = getattr(os, 'O_NOFOLLOW', None)
+    if nofollow is None:
+        _fault('MIGRATION_PACKAGE_UNSUPPORTED')
+    descriptor = None
+    try:
+        descriptor = os.open(package, os.O_RDONLY | nofollow)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or not 1 <= info.st_size <= 65536:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        if Path(os.path.realpath(package)) != package:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        with os.fdopen(descriptor, 'rb') as stream:
+            descriptor = None
+            content = stream.read(65537)
+    except ValidationError:
+        raise
+    except (OSError, ValueError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if (len(content) > 65536 or b'\r' in content
+            or hashlib.sha256(content).hexdigest() != LEADING_PRICE_PACKAGE_SHA256):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    try:
+        value = json.loads(content.decode('utf-8', errors='strict'),
+                           object_pairs_hook=_pairs)
+    except (UnicodeError, json.JSONDecodeError, RecursionError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    if parent_package is None:
+        parent_package = _read_service_roots_package()
+    return _validate_leading_price_package(value, parent_package)
+
+
+def _read_diagnostics_package(catalog_package=None):
+    package = Path(__file__).resolve().with_name(DIAGNOSTICS_PACKAGE_NAME)
+    if (package.name != DIAGNOSTICS_PACKAGE_NAME
+            or package.parent != Path(__file__).resolve().parent):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    nofollow = getattr(os, 'O_NOFOLLOW', None)
+    if nofollow is None:
+        _fault('MIGRATION_PACKAGE_UNSUPPORTED')
+    descriptor = None
+    try:
+        descriptor = os.open(package, os.O_RDONLY | nofollow)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or not 1 <= info.st_size <= 98304:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        if Path(os.path.realpath(package)) != package:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        with os.fdopen(descriptor, 'rb') as stream:
+            descriptor = None
+            content = stream.read(98305)
+    except ValidationError:
+        raise
+    except (OSError, ValueError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if (len(content) > 98304 or b'\r' in content
+            or hashlib.sha256(content).hexdigest() != DIAGNOSTICS_PACKAGE_SHA256):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    try:
+        value = json.loads(content.decode('utf-8', errors='strict'),
+                           object_pairs_hook=_pairs)
+    except (UnicodeError, json.JSONDecodeError, RecursionError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    if catalog_package is None:
+        catalog_package = _read_services_package()
+    return _validate_diagnostics_package(value, catalog_package)
+
+
 def _exact_keys(value, expected):
     if type(value) is not dict or set(value) != set(expected):
         _fault('MIGRATION_PACKAGE_INVALID')
@@ -563,6 +648,162 @@ def _validate_service_details_package(value, parent_package):
     return value
 
 
+def _validate_leading_price_package(value, parent_package):
+    _exact_keys(value, {'schema', 'policy', 'inputs', 'pages'})
+    if (value['schema'] != 'dev09-leading-price-details-v1'
+            or value['policy'] != 'validated_approved_price_text_not_import_authority'
+            or value['inputs'] != {
+                'map_sha256': MAP_SHA256, 'evidence_sha256': RTE_SHA256,
+                'parent_package_sha256': SERVICE_ROOTS_PACKAGE_SHA256}
+            or type(value['pages']) is not list or len(value['pages']) != 5):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    parents = [page for page in parent_package['pages']
+               if page['map_id'] == 'MAP-012']
+    if len(parents) != 1:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    parent = parents[0]
+    identities, positions, urls = set(), set(), set()
+    text_cells = {
+        (2, 12): 'от 3500 за 1 шт.',
+        (2, 15): '1500 за 1 шт.',
+    }
+    for page_index, (page, row_count) in enumerate(
+            zip(value['pages'], LEADING_PRICE_ROW_COUNTS, strict=True)):
+        _exact_keys(page, {'page_id', 'map_id', 'url', 'kind', 'parent_id',
+                           'position', 'name', 'h1', 'title', 'description',
+                           'is_published', 'source', 'artifact', 'intro',
+                           'blocks', 'price_rows'})
+        _exact_keys(page['source'], {'relative_path', 'sha256'})
+        _exact_keys(page['artifact'], {'relative_path', 'sha256'})
+        tile = (parent['tiles'][page['position']]
+                if type(page['position']) is int
+                and 0 <= page['position'] < len(parent['tiles']) else None)
+        if (page['kind'] != 'service_detail' or page['parent_id'] != parent['page_id']
+                or page['is_published'] is not False or page['description'] != ''
+                or not _canonical_uuid(page['page_id'])
+                or tile != {'name': page['name'], 'href': page['url']}
+                or type(page['intro']) is not str or not page['intro']
+                or type(page['blocks']) is not list or not page['blocks']
+                or type(page['price_rows']) is not list
+                or len(page['price_rows']) != row_count
+                or type(page['map_id']) is not str or type(page['h1']) is not str
+                or type(page['title']) is not str):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        identity, position = page['page_id'], (page['parent_id'], page['position'])
+        if identity in identities or position in positions or page['url'] in urls:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        identities.add(identity); positions.add(position); urls.add(page['url'])
+        _validate_service_text(page)
+        for row_index, row in enumerate(page['price_rows']):
+            _exact_keys(row, {'label', 'cell'})
+            if type(row['label']) is not str or not row['label']:
+                _fault('MIGRATION_PACKAGE_INVALID')
+            try:
+                schema.text(row['label'], 500, multiline=False)
+            except ValidationError:
+                _fault('MIGRATION_PACKAGE_INVALID')
+            expected_text = text_cells.get((page_index, row_index))
+            cell = row['cell']
+            if expected_text is not None:
+                _exact_keys(cell, {'kind', 'text'})
+                if cell != {'kind': 'text', 'text': expected_text}:
+                    _fault('MIGRATION_PACKAGE_INVALID')
+            else:
+                _exact_keys(cell, {'kind', 'amount', 'from'})
+                if (cell['kind'] != 'amount' or type(cell['amount']) is not str
+                        or re.fullmatch(r'(0|[1-9][0-9]{0,8})(\.[0-9]{1,2})?',
+                                        cell['amount']) is None
+                        or type(cell['from']) is not bool):
+                    _fault('MIGRATION_PACKAGE_INVALID')
+    encoded = json.dumps(value['pages'], ensure_ascii=False,
+                         separators=(',', ':')).encode('utf-8')
+    if hashlib.sha256(encoded).hexdigest() != LEADING_PRICE_PAGES_SHA256:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return value
+
+
+def _validate_diagnostics_package(value, catalog_package):
+    _exact_keys(value, {'schema', 'policy', 'inputs', 'pages'})
+    if (value['schema'] != 'dev09-diagnostics-branch-v1'
+            or value['policy'] != 'validated_approved_diagnostics_text_not_import_authority'
+            or value['inputs'] != {
+                'map_sha256': MAP_SHA256, 'evidence_sha256': RTE_SHA256,
+                'catalog_package_sha256': SERVICES_PACKAGE_SHA256}
+            or type(value['pages']) is not list or len(value['pages']) != 10):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    catalog = catalog_package.get('page') if type(catalog_package) is dict else None
+    groups = catalog.get('groups') if type(catalog) is dict else None
+    group = groups[3] if type(groups) is list and len(groups) == 5 else None
+    if (catalog is None or catalog.get('map_id') != 'MAP-002'
+            or type(group) is not dict or group.get('name') != 'Диагностика'
+            or group.get('href') != '/services/diagnostika/'
+            or type(group.get('items')) is not list or len(group['items']) != 10):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    parent = value['pages'][0]
+    source_table = {
+        'headers': ['Класс авто, наименование работ', 'Цена, руб.'],
+        'rows': [
+            {'kind': 'category', 'label': 'ВАЗ'},
+            {'kind': 'service', 'label': 'Диагностика ЭСУД и удаление ошибок',
+             'price': 'от 1500'},
+            {'kind': 'category', 'label': 'Иномарки среднего класса'},
+            {'kind': 'service', 'label': 'Диагностика ЭСУД и удаление ошибок',
+             'price': 'от 1500'},
+            {'kind': 'category', 'label': 'Внедорожники'},
+            {'kind': 'service', 'label': 'Диагностика ЭСУД и удаление ошибок',
+             'price': 'от 1500'},
+        ],
+    }
+    if (type(parent) is not dict or parent.get('map_id') != 'MAP-013'
+            or parent.get('kind') != 'service_section_overview'
+            or parent.get('parent_id') != catalog['page_id']
+            or parent.get('position') != 3
+            or group.get('name') != parent.get('name')
+            or group.get('href') != parent.get('url')
+            or parent.get('source_table') != source_table):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    identities, positions, urls = set(), set(), set()
+    for index, page in enumerate(value['pages']):
+        keys = {'page_id', 'map_id', 'url', 'kind', 'parent_id', 'position',
+                'name', 'h1', 'title', 'description', 'is_published',
+                'source', 'artifact', 'intro', 'blocks'}
+        if index == 0:
+            keys.add('source_table')
+        _exact_keys(page, keys)
+        _exact_keys(page['source'], {'relative_path', 'sha256'})
+        _exact_keys(page['artifact'], {'relative_path', 'sha256'})
+        if index == 0:
+            expected_parent = catalog['page_id']
+            tile = {'name': group['name'], 'href': group['href']}
+            expected_kind = 'service_section_overview'
+        else:
+            expected_parent = parent['page_id']
+            item = group['items'][page['position']] if (
+                type(page['position']) is int
+                and 0 <= page['position'] < len(group['items'])) else None
+            tile = item
+            expected_kind = 'service_detail'
+        if (page['kind'] != expected_kind or page['parent_id'] != expected_parent
+                or page['is_published'] is not False or page['description'] != ''
+                or not _canonical_uuid(page['page_id'])
+                or tile != {'name': page['name'], 'href': page['url']}
+                or type(page['intro']) is not str or not page['intro']
+                or type(page['blocks']) is not list or not page['blocks']
+                or type(page['map_id']) is not str or type(page['h1']) is not str
+                or type(page['title']) is not str):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        identity, position = page['page_id'], (page['parent_id'], page['position'])
+        if identity in identities or position in positions or page['url'] in urls:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        identities.add(identity); positions.add(position); urls.add(page['url'])
+        _validate_service_text(page)
+    encoded = json.dumps(value['pages'], ensure_ascii=False,
+                         separators=(',', ':')).encode('utf-8')
+    if hashlib.sha256(encoded).hexdigest() != DIAGNOSTICS_PAGES_SHA256:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return value
+
+
 def _validate_planned_maintenance_package(value, catalog_package):
     _exact_keys(value, {'schema', 'policy', 'inputs', 'pages'})
     if (value['schema'] != 'dev09-planned-maintenance-v1'
@@ -744,6 +985,60 @@ def _service_detail_payload(page):
     payload['intro_text'] = intro
     payload['main_text'] = main
     payload['description'] = page['description']
+    return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
+
+
+def _diagnostics_payload(page):
+    payload = _service_detail_payload(page)
+    table = page.get('source_table')
+    if table is None:
+        return payload
+    headers = table['headers']
+    rendered = [
+        '<table><thead><tr><th scope="col">',
+        escape(headers[0], quote=False),
+        '</th><th scope="col">',
+        escape(headers[1], quote=False),
+        '</th></tr></thead><tbody>',
+    ]
+    for row in table['rows']:
+        label = escape(row['label'], quote=False)
+        if row['kind'] == 'category':
+            rendered.extend(('<tr><td colspan="2"><strong>', label,
+                             '</strong></td></tr>'))
+        elif row['kind'] == 'service':
+            rendered.extend(('<tr><td>', label, '</td><td>',
+                             escape(row['price'], quote=False), '</td></tr>'))
+        else:
+            _fault('MIGRATION_PACKAGE_INVALID')
+    rendered.append('</tbody></table>')
+    main_text = ''.join(rendered) + payload['main_text']
+    if restricted_clean(main_text) != main_text:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    payload['main_text'] = main_text
+    return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
+
+
+def _leading_price_payload(page):
+    payload = _service_detail_payload(page)
+    namespace = UUID(page['page_id'])
+    column_id = str(uuid5(namespace, 'price-column:0'))
+    rows = []
+    for index, source in enumerate(page['price_rows']):
+        cell = {'column_id': column_id, **source['cell']}
+        rows.append({
+            'id': str(uuid5(namespace, 'price-row:' + str(index))),
+            'label': source['label'],
+            'cells': [cell],
+        })
+    payload['price'] = {
+        'columns': [{'id': column_id, 'label': 'Цена, руб.'}],
+        'rows': rows,
+    }
+    if [node['kind'] for node in payload['layout']] != ['text', 'text', 'price']:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    payload['layout'] = [payload['layout'][0], payload['layout'][2],
+                         payload['layout'][1]]
     return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
 
 
@@ -998,6 +1293,96 @@ def apply_service_details():
             _create_aggregate(page, actor, payload)
         return {'status': 'pass', 'replayed': False, 'pages': len(pages),
                 'published': 0}
+
+
+def apply_leading_price_details():
+    """Create the five reviewed hidden price-bearing details, or exact-replay all."""
+    _enabled()
+    parent_package = _read_service_roots_package()
+    package = _read_leading_price_package(parent_package)
+    pages = package['pages']
+    payloads = [_leading_price_payload(page) for page in pages]
+    parents = [page for page in parent_package['pages']
+               if page['map_id'] == 'MAP-012']
+    if len(parents) != 1:
+        _fault('MIGRATION_PARENT_REQUIRED')
+    parent = parents[0]
+    with transaction.atomic():
+        _identity()
+        lock_content('default')
+        lock_auth()
+        actor = _owner()
+        list(Page.objects.select_for_update().filter(pk=parent['page_id']))
+        if not _exact_aggregate(parent, actor, _service_root_payload(parent)):
+            _fault('MIGRATION_PARENT_REQUIRED')
+        for page in pages:
+            tile = parent['tiles'][page['position']]
+            if tile != {'name': page['name'], 'href': page['url']}:
+                _fault('MIGRATION_PARENT_REQUIRED')
+        page_ids = [UUID(page['page_id']) for page in pages]
+        existing = list(Page.objects.select_for_update().filter(pk__in=page_ids))
+        if len(existing) == len(pages):
+            if not all(_exact_aggregate(page, actor, payload)
+                       for page, payload in zip(pages, payloads, strict=True)):
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            return {'status': 'pass', 'replayed': True, 'pages': len(pages),
+                    'published': 0, 'price_rows': 46}
+        if existing:
+            _fault('MIGRATION_EXISTING_CONFLICT')
+        _preflight_absent(pages)
+        for page, payload in zip(pages, payloads, strict=True):
+            _create_aggregate(page, actor, payload)
+        return {'status': 'pass', 'replayed': False, 'pages': len(pages),
+                'published': 0, 'price_rows': 46}
+
+
+def apply_diagnostics_branch():
+    """Create the reviewed hidden diagnostics parent and nine children."""
+    _enabled()
+    catalog_package = _read_services_package()
+    package = _read_diagnostics_package(catalog_package)
+    pages = package['pages']
+    payloads = [_diagnostics_payload(page) for page in pages]
+    with transaction.atomic():
+        _identity()
+        lock_content('default')
+        lock_auth()
+        actor = _owner()
+        catalog = catalog_package['page']
+        list(Page.objects.select_for_update().filter(pk=catalog['page_id']))
+        if not _exact_aggregate(catalog, actor, _services_payload(catalog)):
+            _fault('MIGRATION_PARENT_REQUIRED')
+        group = catalog['groups'][3]
+        parent = pages[0]
+        if ({'name': group['name'], 'href': group['href']}
+                != {'name': parent['name'], 'href': parent['url']}):
+            _fault('MIGRATION_PARENT_REQUIRED')
+        for page in pages[1:]:
+            tile = group['items'][page['position']]
+            if tile != {'name': page['name'], 'href': page['url']}:
+                _fault('MIGRATION_PARENT_REQUIRED')
+        page_ids = [UUID(page['page_id']) for page in pages]
+        existing = list(Page.objects.select_for_update().filter(pk__in=page_ids))
+        if len(existing) == len(pages):
+            expected_children = {
+                (UUID(page['page_id']), page['position']) for page in pages[1:]
+            }
+            actual_children = set(Page.objects.select_for_update().filter(
+                parent_id=parent['page_id']).values_list('pk', 'position'))
+            if actual_children != expected_children:
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            if not all(_exact_aggregate(page, actor, payload)
+                       for page, payload in zip(pages, payloads, strict=True)):
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            return {'status': 'pass', 'replayed': True, 'pages': len(pages),
+                    'published': 0, 'table_rows': 6}
+        if existing:
+            _fault('MIGRATION_EXISTING_CONFLICT')
+        _preflight_absent(pages)
+        for page, payload in zip(pages, payloads, strict=True):
+            _create_aggregate(page, actor, payload)
+        return {'status': 'pass', 'replayed': False, 'pages': len(pages),
+                'published': 0, 'table_rows': 6}
 
 
 def apply_planned_maintenance():

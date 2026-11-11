@@ -35,7 +35,7 @@ def _candidate(page, fields, owner, state, *, patch=None, snapshot=None):
 
 def _commit(*, actor, page_id, base_revision, expected_generation, operation_id,
             editor_request_fingerprint, editor_session_key, owner, patch=None,
-            snapshot=None):
+            snapshot=None, expected_home_source_digest=None):
     E.outside()
     operation = E.uid(operation_id)
     _fingerprint(editor_request_fingerprint)
@@ -58,6 +58,7 @@ def _commit(*, actor, page_id, base_revision, expected_generation, operation_id,
         page, state, checked = inspect()
         if checked != payload:
             raise ValidationError('VERSIONS_CURRENT_CONFLICT')
+        E.check_home_sources(payload, expected_home_source_digest)
         E.check_evidence(payload, evidence)
         row = E.new_revision(
             page, state, payload, 'automatic', actor,
@@ -79,7 +80,8 @@ def _commit(*, actor, page_id, base_revision, expected_generation, operation_id,
 
 def commit_owner(*, actor, page_id, base_revision, snapshot,
                  expected_generation, operation_id,
-                 editor_request_fingerprint, editor_session_key):
+                 editor_request_fingerprint, editor_session_key,
+                 expected_home_source_digest=None):
     if type(snapshot) is not S.Snapshot:
         raise ValidationError('VERSIONS_TYPED_PRODUCER_REQUIRED')
     return _commit(
@@ -87,24 +89,26 @@ def commit_owner(*, actor, page_id, base_revision, snapshot,
         expected_generation=expected_generation, operation_id=operation_id,
         editor_request_fingerprint=editor_request_fingerprint,
         editor_session_key=editor_session_key, owner=True,
-        snapshot=snapshot)
+        snapshot=snapshot, expected_home_source_digest=expected_home_source_digest)
 
 
 def commit_employee(*, actor, page_id, base_revision, patch,
                     expected_generation, operation_id,
-                    editor_request_fingerprint, editor_session_key):
+                    editor_request_fingerprint, editor_session_key,
+                    expected_home_source_digest=None):
     return _commit(
         actor=actor, page_id=page_id, base_revision=base_revision,
         expected_generation=expected_generation, operation_id=operation_id,
         editor_request_fingerprint=editor_request_fingerprint,
-        editor_session_key=editor_session_key, owner=False, patch=patch)
+        editor_session_key=editor_session_key, owner=False, patch=patch,
+        expected_home_source_digest=expected_home_source_digest)
 
 
 def save_owner_draft(*, actor, page_id, base_revision, snapshot,
                      expected_generation, operation_id, draft_revision=None,
                      rebase=False, draft_id=None, expected_draft_hash=None,
                      expected_draft_base=None, editor_request_fingerprint,
-                     editor_session_key):
+                     editor_session_key, expected_home_source_digest=None):
     E.outside()
     operation = E.uid(operation_id)
     _fingerprint(editor_request_fingerprint)
@@ -145,6 +149,7 @@ def save_owner_draft(*, actor, page_id, base_revision, snapshot,
         page, base, draft, checked = inspect()
         if checked != payload:
             raise ValidationError('VERSIONS_DRAFT_CONFLICT')
+        E.check_home_sources(payload, expected_home_source_digest)
         E.check_evidence(payload, evidence)
         instant = E.now()
         if draft is None:
@@ -207,7 +212,8 @@ def cancel_owner_draft(*, actor, page_id, draft_id, draft_revision,
 def publish_owner_draft(*, actor, page_id, base_revision, snapshot,
                         expected_generation, operation_id, draft_id,
                         draft_revision, expected_draft_hash,
-                        editor_request_fingerprint, editor_session_key):
+                        editor_request_fingerprint, editor_session_key,
+                        expected_home_source_digest=None):
     """Publish the exact selected draft without the legacy receipt ledger."""
     E.outside()
     operation = E.uid(operation_id)
@@ -238,6 +244,7 @@ def publish_owner_draft(*, actor, page_id, base_revision, snapshot,
         page, state, draft, checked = inspect()
         if checked != payload:
             raise ValidationError('VERSIONS_DRAFT_CONFLICT')
+        E.check_home_sources(payload, expected_home_source_digest)
         E.check_evidence(payload, evidence)
         row = E.new_revision(
             page, state, payload, 'automatic', actor,

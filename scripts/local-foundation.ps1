@@ -44,7 +44,7 @@ function Acquire-FoundationStateLock {
     Reject-Link $backupRoot
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     $directory = [IO.DirectoryInfo]::new($backupRoot)
-    $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+    $acl = [System.IO.FileSystemAclExtensions]::GetAccessControl(
         $directory,[Security.AccessControl.AccessControlSections]::Access)
     $acl.SetAccessRuleProtection($true,$false)
     $rules = $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])
@@ -54,7 +54,7 @@ function Acquire-FoundationStateLock {
             $sid,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
         $acl.AddAccessRule($rule)
     }
-    [IO.FileSystemAclExtensions]::SetAccessControl($directory,$acl)
+    [System.IO.FileSystemAclExtensions]::SetAccessControl($directory,$acl)
     $backupLockPath = Join-Path $backupRoot '.backup.lock'
     if (Test-Path -LiteralPath $backupLockPath) { Reject-Link $backupLockPath }
     try {
@@ -191,7 +191,7 @@ function Protect-Private {
     # Edit only the DACL. A newly constructed owner/security descriptor can ask
     # Set-Acl for SeSecurityPrivilege on an existing directory during restart.
     $directory = [IO.DirectoryInfo]::new($private)
-    $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+    $acl = [System.IO.FileSystemAclExtensions]::GetAccessControl(
         $directory, [Security.AccessControl.AccessControlSections]::Access)
     $acl.SetAccessRuleProtection($true,$false)
     $rules = $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])
@@ -200,7 +200,7 @@ function Protect-Private {
         $rule = New-Object Security.AccessControl.FileSystemAccessRule($sid,'FullControl','ContainerInherit,ObjectInherit','None','Allow')
         $acl.AddAccessRule($rule)
     }
-    [IO.FileSystemAclExtensions]::SetAccessControl($directory, $acl)
+    [System.IO.FileSystemAclExtensions]::SetAccessControl($directory, $acl)
 }
 function Prepare-Secrets([string]$Image) {
     New-Item -ItemType Directory -Force -Path $private | Out-Null
@@ -209,12 +209,12 @@ function Prepare-Secrets([string]$Image) {
     foreach ($file in Get-ChildItem -LiteralPath $private -File -Force) {
         Reject-Link $file.FullName
         $fileInfo = [IO.FileInfo]::new($file.FullName)
-        $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+        $acl = [System.IO.FileSystemAclExtensions]::GetAccessControl(
             $fileInfo, [Security.AccessControl.AccessControlSections]::Access)
         $acl.SetAccessRuleProtection($false,$true)
         $rules = $acl.GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier])
         foreach ($rule in @($rules)) { $acl.RemoveAccessRuleSpecific($rule) }
-        [IO.FileSystemAclExtensions]::SetAccessControl($fileInfo, $acl)
+        [System.IO.FileSystemAclExtensions]::SetAccessControl($fileInfo, $acl)
     }
     foreach ($name in @('bootstrap-password','migrator-password','runtime-password','django-secret','deployment-django-secret')) {
         $path = Join-Path $private $name
@@ -242,12 +242,12 @@ function Prepare-Secrets([string]$Image) {
     # Inherited restrictions also replace any explicit broad ACL on existing files.
     foreach ($file in Get-ChildItem -LiteralPath $private -File -Force) {
         $fileInfo = [IO.FileInfo]::new($file.FullName)
-        $acl = [IO.FileSystemAclExtensions]::GetAccessControl(
+        $acl = [System.IO.FileSystemAclExtensions]::GetAccessControl(
             $fileInfo, [Security.AccessControl.AccessControlSections]::Access)
         $acl.SetAccessRuleProtection($false,$true)
         $rules = $acl.GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier])
         foreach ($rule in @($rules)) { $acl.RemoveAccessRuleSpecific($rule) }
-        [IO.FileSystemAclExtensions]::SetAccessControl($fileInfo, $acl)
+        [System.IO.FileSystemAclExtensions]::SetAccessControl($fileInfo, $acl)
     }
 }
 
@@ -309,12 +309,16 @@ $migrationPackages = @(
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09e_services_catalog.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09g_service_roots.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09h_service_details.json')),
-    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09i_planned_maintenance.json'))
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09i_planned_maintenance.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09j_leading_price_details.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09k_diagnostics_branch.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev10_gallery.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev12_home_profile.json'))
 )
 $migrationPackageNames = @($migrationPackages | ForEach-Object { Split-Path -Leaf $_ })
-if ($migrationPackageNames.Count -ne 5 -or
-    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json').Where({ $_ -notin $migrationPackageNames }).Count -ne 0) {
-    throw 'Migration package snapshot allowlist must contain exactly the five reviewed package names.'
+if ($migrationPackageNames.Count -ne 9 -or
+    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $migrationPackageNames }).Count -ne 0) {
+    throw 'Migration package snapshot allowlist must contain exactly the nine reviewed package names.'
 }
 $files = @($items | Where-Object { !$_.PSIsContainer -and ($_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages) } | Sort-Object FullName)
 if (!(Test-Path -LiteralPath (Join-Path $source 'manage.py'))) { throw 'Application source is incomplete.' }
@@ -336,12 +340,16 @@ $migrationPackages = @(
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09e_services_catalog.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09g_service_roots.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09h_service_details.json')),
-    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09i_planned_maintenance.json'))
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09i_planned_maintenance.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09j_leading_price_details.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09k_diagnostics_branch.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev10_gallery.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev12_home_profile.json'))
 )
 $manifestPackageNames = @($migrationPackages | ForEach-Object { Split-Path -Leaf $_ })
-if ($manifestPackageNames.Count -ne 5 -or
-    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json').Where({ $_ -notin $manifestPackageNames }).Count -ne 0) {
-    throw 'Migration package manifest allowlist must contain exactly the five reviewed package names.'
+if ($manifestPackageNames.Count -ne 9 -or
+    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $manifestPackageNames }).Count -ne 0) {
+    throw 'Migration package manifest allowlist must contain exactly the nine reviewed package names.'
 }
 $sourceFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages } | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($source.Length+1).Replace('\','/'); sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}

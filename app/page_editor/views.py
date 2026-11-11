@@ -6,7 +6,8 @@ from accounts.views import gate
 from accounts.services import require_session, note_denial
 from editor_runtime.guards import EditorFault, EditorSlot, read_json_bytes
 from editor_runtime.processing import normalize_input
-from .checks import inspect_context, check_worker_result, issue_check_receipt, CheckFault
+from .checks import (inspect_context, check_worker_result, issue_check_receipt,
+                     canonicalize_home_change, CheckFault)
 from .saving import commit_checked
 from .source_context import selector_for
 from . import media
@@ -39,6 +40,7 @@ def check(request, page_id):
             before = request_context(request, page_id)
             raw = read_json_bytes(request, before.profile)
             result = check_worker_result(normalize_input(raw, before.child), raw=raw, context=before)
+            result, home_source_digest = canonicalize_home_change(before, result)
             map_hash = None
             if 'derived' in result:
                 _, map_hash = embedded.validate_derived(before, result)
@@ -52,11 +54,19 @@ def check(request, page_id):
             after = request_context(request, page_id)
             if after.stamp != before.stamp:
                 raise CheckFault('EDITOR_CONTEXT_CHANGED')
+            after_result, after_home_source_digest = canonicalize_home_change(
+                after, result)
+            if (after_result['changes'] != result['changes']
+                    or after_home_source_digest != home_source_digest):
+                raise CheckFault('EDITOR_CONTEXT_CHANGED')
+            result = after_result
             if media_evidence is not None:
                 after = media.late_context(actor=current_actor, page_id=page_id, generation=generation,
                     session_key=request.session.session_key, origin=origin, before=before, evidence=media_evidence)
             receipt = issue_check_receipt(context=after, result=result,
-                media_evidence=media_evidence.proof if media_evidence else None, derived_map_hash=map_hash)
+                media_evidence=media_evidence.proof if media_evidence else None,
+                derived_map_hash=map_hash,
+                home_source_digest=after_home_source_digest)
             response = {'protocol': 'page-editor-v1',
                 'inputFingerprint': result['input_fingerprint'], 'normalisedChanges': result['changes'],
                 'normalisationChanged': result['changed'], 'fieldWarnings': result['warnings'],

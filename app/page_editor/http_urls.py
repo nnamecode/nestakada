@@ -6,6 +6,7 @@ from . import embedded_views
 
 app_name = 'page_editor'
 urlpatterns = [path('', editor_page.editor, name='editor'), path('state/', editor_page.state, name='state'),
+               path('sources/', editor_page.source_candidates, name='source_candidates'),
                path('check/', views.check, name='check'), path('save/', views.save, name='save'),
                path('draft/', views.draft, name='draft'), path('draft/cancel/', views.cancel_draft, name='cancel_draft'),
                path('media/', media_views.picker, name='media_picker'),

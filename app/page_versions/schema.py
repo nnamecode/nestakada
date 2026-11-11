@@ -8,11 +8,12 @@ import re
 from uuid import UUID
 from django.core.exceptions import ValidationError
 from content.models import Page
+from . import home_profile
 
 SCHEMA='page-content-v1'
 KEYS={'schema_version','page_kind','intro_text','main_text','price','h1','title','description','indexing_allowed',
       'main_image','preview_image','embedded_images','layout'}
-OWNER_FIELDS=KEYS-{'schema_version','page_kind'}
+OWNER_FIELDS=(KEYS-{'schema_version','page_kind'})|{'home_profile'}
 EMPLOYEE_FIELDS={'intro_text','main_text','price'}
 
 
@@ -96,7 +97,9 @@ def _price(value):
 
 
 def validate(payload,page_kind=None):
-    keys(payload,KEYS)
+    if type(payload) is not dict:invalid()
+    actual=set(payload);expected=KEYS|({'home_profile'} if payload.get('page_kind')==Page.Kind.HOME and 'home_profile' in payload else set())
+    if actual!=expected:invalid()
     if payload['schema_version']!=SCHEMA or payload['page_kind'] not in Page.Kind.values or (page_kind is not None and payload['page_kind']!=page_kind):invalid()
     for field in ['intro_text','main_text']:
         text(payload[field],multiline=True)
@@ -138,6 +141,9 @@ def validate(payload,page_kind=None):
         blocks.add(node['id'])
     for node in payload['layout']:
         if node['kind']=='text' and any(item['reference_id'] not in images|protected_references for item in node['protected_nodes']):invalid()
+    if 'home_profile' in payload:
+        try:home_profile.validate(payload['home_profile'],payload['embedded_images'])
+        except ValueError:invalid()
     return copy.deepcopy(payload)
 
 
@@ -164,10 +170,12 @@ class TextPricePatch:
 
 
 def snapshot_v1(page_kind,*,intro_text='',main_text='',price=None,h1='',title='',description='',indexing_allowed=True,
-                main_image=None,preview_image=None,embedded_images=None,layout=None):
-    return Snapshot.trusted({'schema_version':SCHEMA,'page_kind':page_kind,'intro_text':intro_text,'main_text':main_text,'price':price,
+                main_image=None,preview_image=None,embedded_images=None,layout=None,home_profile=_MISSING):
+    payload={'schema_version':SCHEMA,'page_kind':page_kind,'intro_text':intro_text,'main_text':main_text,'price':price,
         'h1':h1,'title':title,'description':description,'indexing_allowed':indexing_allowed,'main_image':main_image,'preview_image':preview_image,
-        'embedded_images':[] if embedded_images is None else embedded_images,'layout':[] if layout is None else layout},page_kind)
+        'embedded_images':[] if embedded_images is None else embedded_images,'layout':[] if layout is None else layout}
+    if home_profile is not _MISSING:payload['home_profile']=home_profile
+    return Snapshot.trusted(payload,page_kind)
 
 
 def asset_slots(payload):
@@ -176,3 +184,16 @@ def asset_slots(payload):
         if payload[name] is not None:result[name]=payload[name]['asset_id']
     for image in payload['embedded_images']:result['embedded:'+image['id']]=image['asset_id']
     return result
+
+
+def displayed_embedded_image_ids(payload):
+    result = {node['image_id'] for node in payload['layout']
+              if node['kind'] == 'image'}
+    profile = payload.get('home_profile')
+    if profile is not None:
+        result.add(profile['hero']['image_id'])
+        result.add(profile['photo_strip']['image_id'])
+        result.update(item['image_id'] for item in profile['steps'])
+        result.update(item['image_id'] for item in profile['services'])
+        result.update(item['image_id'] for item in profile['works'])
+    return frozenset(result)

@@ -9,7 +9,7 @@ INPUT_KEYS = frozenset({'protocol', 'generation', 'baseRevisionId', 'editingFrom
                        'draftBasis', 'stageId', 'changes'})
 TEXT_FIELDS = frozenset({'intro_text', 'main_text', 'price'})
 OWNER_FIELDS = TEXT_FIELDS | {'h1', 'title', 'description', 'indexing_allowed',
-                             'main_image', 'preview_image'}
+                             'main_image', 'preview_image', 'home_profile'}
 CONTEXT_KEYS = frozenset({'protocol', 'owner', 'fields', 'generation', 'page_id',
                          'base_revision_id', 'page_path', 'origin', 'protected_fields', 'policy_version'})
 

@@ -14,6 +14,7 @@ from . import policy_constants
 
 CHECK_POLICY = 'page-editor-check-v1'
 SALT = 'estakada.page-editor.check.v1'
+_HOME_SOURCE_DEFAULT = object()
 FAILURES = {
     'EDITOR_INPUT_REJECTED': 400,
     'EDITOR_OPERATION_CONFLICT': 409,
@@ -51,6 +52,7 @@ class CheckContext:
     permission_hash: str
     stamp: str
     payload: dict | None = None
+    home_source_digest: str | None = None
 
     @property
     def profile(self):
@@ -61,6 +63,12 @@ def restore_context(context, payload, source_revision_id):
     """Build a closed normalizer context for an already authorised restore candidate."""
     candidate = S.validate(payload, context.payload['page_kind'])
     child = dict(context.child)
+    fields = set(child['fields'])
+    if child['owner'] and candidate['page_kind'] == 'home' and 'home_profile' in candidate:
+        fields.add('home_profile')
+    else:
+        fields.discard('home_profile')
+    child['fields'] = sorted(fields)
     child['embedded_source'] = {
         key: candidate[key]
         for key in ('intro_text', 'main_text', 'layout', 'embedded_images')
@@ -75,7 +83,8 @@ def restore_context(context, payload, source_revision_id):
         'policy': CHECK_POLICY,
     })
     return CheckContext(
-        context.actor_id, child, context.permission_hash, stamp, candidate)
+        context.actor_id, child, context.permission_hash, stamp, candidate,
+        context.home_source_digest)
 
 
 def inspect_admission(*, actor, page_id, generation):
@@ -121,6 +130,13 @@ def _inspect_context_locked(*, actor, page_id, generation, origin, selector=None
                 if not allow_unavailable:
                     raise
                 payload, base, source_facts, readable = None, str(state.current_revision_id), {}, False
+            if not readable or page.kind != 'home' or 'home_profile' not in payload:
+                fields = [field for field in fields if field != 'home_profile']
+            home_source_digest = None
+            if readable and page.kind == 'home' and 'home_profile' in payload:
+                from .home_sources import capture
+                _, home_source_digest = capture(payload['home_profile'])
+                source_facts = {**source_facts, 'homeSourceDigest': home_source_digest}
             layout = payload['layout'] if readable else []
             if type(layout) is not list:
                 raise CheckFault('EDITOR_CAPABILITY_UNAVAILABLE')
@@ -142,10 +158,11 @@ def _inspect_context_locked(*, actor, page_id, generation, origin, selector=None
                      'current_revision_id': str(state.current_revision_id)}
             if readable:
                 child['embedded_source'] = {key: payload[key] for key in ('intro_text', 'main_text', 'layout', 'embedded_images')}
-            permission_hash = E.permission_hash(profile, fields)
+            permission_hash = E.permission_hash(profile, engine_fields)
             stamp = fingerprint({'child': child, 'sourceFacts': source_facts,
                                  'permissions': permission_hash, 'policy': CHECK_POLICY})
-            return CheckContext(actor.pk, child, permission_hash, stamp, payload)
+            return CheckContext(actor.pk, child, permission_hash, stamp, payload,
+                                home_source_digest)
     except ValidationError:
         raise CheckFault('EDITOR_BASE_UNAVAILABLE') from None
 
@@ -178,7 +195,50 @@ def check_worker_result(result, *, raw, context):
     return result
 
 
-def issue_check_receipt(*, context, result, media_evidence=None, derived_map_hash=None):
+def canonicalize_home_change(context, result):
+    """Protect fixed composition and replace bound fallbacks with DB facts."""
+    if 'home_profile' not in result['changes']:
+        return result, context.home_source_digest
+    if (context.payload is None or 'home_profile' not in context.payload
+            or context.payload.get('page_kind') != 'home'):
+        raise CheckFault('EDITOR_INPUT_REJECTED')
+    from content.models import lock_content
+    from page_versions.home_profile import validate_edit
+    from .home_sources import capture, synchronize
+    embedded = context.payload['embedded_images']
+    try:
+        candidate = validate_edit(
+            context.payload['home_profile'], result['changes']['home_profile'],
+            embedded)
+    except (ValueError, TypeError, AttributeError):
+        raise CheckFault('EDITOR_INPUT_REJECTED') from None
+    try:
+        with transaction.atomic():
+            lock_content('default')
+            facts, source_digest = capture(candidate)
+        canonical = synchronize(context.payload['home_profile'], candidate, facts)
+        canonical = validate_edit(context.payload['home_profile'], canonical,
+                                  embedded)
+    except ValidationError:
+        raise CheckFault('EDITOR_CAPABILITY_UNAVAILABLE') from None
+    changed = canonical != result['changes']['home_profile']
+    if not changed:
+        return result, source_digest
+    value = dict(result)
+    value['changes'] = {**result['changes'], 'home_profile': canonical}
+    value['normalized_fingerprint'] = fingerprint(value['changes'])
+    value['changed'] = True
+    warning = {'field': 'home_profile',
+               'code': 'NORMALIZATION_REVIEW_REQUIRED'}
+    value['warnings'] = [*result['warnings']]
+    if warning not in value['warnings']:
+        value['warnings'].append(warning)
+    return value, source_digest
+
+
+def issue_check_receipt(*, context, result, media_evidence=None,
+                        derived_map_hash=None,
+                        home_source_digest=_HOME_SOURCE_DEFAULT):
     if (context.child['policy_version'] != policy_constants.POLICY_VERSION
             or result['policy_version'] != policy_constants.POLICY_VERSION):
         raise CheckFault('EDITOR_CONTEXT_CHANGED')
@@ -194,10 +254,17 @@ def issue_check_receipt(*, context, result, media_evidence=None, derived_map_has
         data['mediaEvidence'] = media_evidence
     if derived_map_hash is not None:
         data['derivedMapHash'] = derived_map_hash
+    home_digest = (context.home_source_digest
+                   if home_source_digest is _HOME_SOURCE_DEFAULT
+                   else home_source_digest)
+    if home_digest is not None:
+        data['homeSourceDigest'] = home_digest
     return signing.dumps(data, salt=SALT, compress=False)
 
 
-def verify_check_receipt(token, *, context, changes, media_evidence=None, derived_map_hash=None, _before_fs=False):
+def verify_check_receipt(token, *, context, changes, media_evidence=None,
+                         derived_map_hash=None, _before_fs=False,
+                         home_source_digest=_HOME_SOURCE_DEFAULT):
     """Proof only; future writes must still reparse and recheck actual context."""
     if type(token) is not str or len(token) > 8192:
         raise CheckFault('EDITOR_CHECK_RECEIPT_INVALID')
@@ -213,6 +280,11 @@ def verify_check_receipt(token, *, context, changes, media_evidence=None, derive
         expected.add('mediaEvidence')
     if derived_map_hash is not None:
         expected.add('derivedMapHash')
+    home_digest = (context.home_source_digest
+                   if home_source_digest is _HOME_SOURCE_DEFAULT
+                   else home_source_digest)
+    if home_digest is not None:
+        expected.add('homeSourceDigest')
     if (type(value) is not dict or set(value) != expected
             or value['protocol'] != CHECK_POLICY or value['actorId'] != context.actor_id
             or value['semanticPolicy'] != policy_constants.POLICY_VERSION
@@ -221,6 +293,7 @@ def verify_check_receipt(token, *, context, changes, media_evidence=None, derive
             or value['pageId'] != context.child['page_id']
             or value['baseRevisionId'] != context.child['base_revision_id']
             or value['contextStamp'] != context.stamp or value['permissionHash'] != context.permission_hash
+            or value.get('homeSourceDigest') != home_digest
             or value['source'] != context.child.get('source')
             or value['editingFrom'] != context.child.get('source', {}).get('editingFrom', 'current')
             or type(value['inputFingerprint']) is not str

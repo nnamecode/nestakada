@@ -12,6 +12,9 @@ CSRF_COOKIE_NAME = f'estakada_{ENVIRONMENT}_csrf'
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
+PUBLIC_ORIGIN = ('http://127.0.0.1:8766'
+                 if ENVIRONMENT == 'dev' else 'http://127.0.0.1:8767')
+SEO_ROBOTS_PROFILE = 'deny-all'
 
 AUTH_TRUSTED_PROXY_HOST = "ingress"
 

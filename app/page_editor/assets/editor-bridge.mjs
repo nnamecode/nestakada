@@ -1,4 +1,5 @@
 import {mountEditorPage} from './editor.bundle.js';
+import {mountHomeProfileEditor} from './home-profile-editor.mjs';
 
 const root=document.querySelector('[data-editor-page]');
 const initial=JSON.parse(document.getElementById('editor-initial-state').textContent);
@@ -122,7 +123,7 @@ if(!link.sheet)await new Promise((resolve,reject)=>{
   link.addEventListener('load',()=>{clearTimeout(timer);resolve();},{once:true});
   link.addEventListener('error',()=>{clearTimeout(timer);reject(fail('EDITOR_UNAVAILABLE'));},{once:true});
 });
-mountEditorPage({root,initialState:initial,styleSheet:link.sheet,check,save:args=>transmit('save',args),
+const mounted=mountEditorPage({root,initialState:initial,styleSheet:link.sheet,check,save:args=>transmit('save',args),
   issueEmbedded:initial.owner?async value=>{
     const context=structuredClone(contextNow());await session();
     const result=await post('embedded/issue',JSON.stringify({generation:context.generation,baseRevisionId:context.baseRevisionId,...value}),selector(context));
@@ -138,3 +139,5 @@ mountEditorPage({root,initialState:initial,styleSheet:link.sheet,check,save:args
   draft:initial.owner&&initial.editingFrom!=='restore-stage'?args=>transmit('draft',args):undefined,
   cancelDraft:initial.owner?cancel:undefined,
   reauth:async()=>{const result=await session({refresh:true});return {...result,sameUser:true};}});
+if(initial.owner&&Object.hasOwn(initial.values,'home_profile'))mountHomeProfileEditor({root,initial,
+  invalidate:mounted.invalidate,searchSources:async q=>{await session();const query=new URLSearchParams({q});const result=await json(prefix+'sources/?'+query.toString());await session();return result;}});

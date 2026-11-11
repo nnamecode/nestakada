@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
+param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','dev11','dev12-candidates','dev12-media','dev12-projector','dev12-public','dev12-remediation','dev12-schema','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=Join-Path $repo 'work/foundation/test'
@@ -84,6 +84,29 @@ elseif($Suite -eq 'final-media'){$dockerArgs+=@('page_editor.test_final_media_ht
 elseif($Suite -eq 'guard'){$dockerArgs+=@('request_guard.tests','audit','content','accounts','foundation_tests','--failfast')}
 elseif($Suite -eq 'dev09'){$dockerArgs+=@('content.test_dev09_migration_apply','--failfast')}
 elseif($Suite -eq 'dev09-services'){$dockerArgs+=@('content.test_dev09e_services_catalog','--failfast')}
+elseif($Suite -eq 'dev11'){$dockerArgs+=@(
+    'content.test_dev11_seo_projection',
+    'content.test_dev11_auto_repair',
+    'content.test_dev11_sitemap',
+    'content.test_dev11_robots',
+    'content.test_public_http',
+    'content.test_dev10_gallery_public',
+    '--failfast')}
+elseif($Suite -eq 'dev12-schema'){$dockerArgs+=@(
+            'page_versions.test_home_profile_schema',
+            'page_editor.test_home_sources',
+    'page_editor.test_home_candidates',
+    'page_editor.test_home_save_http',
+    'page_versions.test_simple_commands',
+    'page_versions.test_http',
+    'page_editor.test_check_http',
+    'page_editor.test_save_http',
+    '--failfast')}
+elseif($Suite -eq 'dev12-candidates'){$dockerArgs+=@('page_editor.test_home_candidates','--failfast')}
+elseif($Suite -eq 'dev12-media'){$dockerArgs+=@('content.test_dev12_home_media_import','content.test_dev12_home_writer','--failfast')}
+elseif($Suite -eq 'dev12-projector'){$dockerArgs+=@('content.test_dev12_home_projection','content.test_dev12_home_delete_guard','content.test_simple_page_delete','--failfast')}
+elseif($Suite -eq 'dev12-public'){$dockerArgs+=@('content.test_dev12_home_public','--failfast')}
+elseif($Suite -eq 'dev12-remediation'){$dockerArgs+=@('page_versions.test_home_profile_schema','page_editor.test_home_sources','page_editor.test_home_save_http','--failfast')}
 elseif($Suite -eq 'public-read'){$dockerArgs+=@('content.test_public_read','--failfast')}
 elseif($Suite -eq 'public-http'){$dockerArgs+=@('content.test_public_http','--failfast')}
 elseif($Suite -eq 'public-nav'){$dockerArgs+=@('content.test_public_navigation','--failfast')}

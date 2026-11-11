@@ -1,5 +1,141 @@
 # Процесс полной разработки
 
+> **Текущая точка D-854 (2026-11-11): DEV-12 завершён локально.** `DEV12-IMP-001–008` PASS, final independent review APPROVED P1/P2/P3=0. Candidate source digest/server-derived fallback/xmin/stable identity, mixed MAIN/LEGACY media, progressive no-JS/ARIA и real shared-host приняты; work unbind/delete dependency закрыты. Fresh targeted106/106, guard401/401, Django/no-migrations/host/JS/PowerShell/diff PASS. Persistent apply/publication/VPS отсутствуют. Следующая работа этапа8 — bounded DEV-13 scope/plan; до LEGAL-01 реальные заявки/PII не собирать.
+
+> **Текущая точка D-853 (2026-11-11): DEV12-IMP-008 remediation приостановлена владельцу по anti-loop.** Forged stable-ID HTTP дважды дал503; второй exact run уточнил `EDITOR_TRANSPORT_UNAVAILABLE`, до server validator. Новые source/profile unit14/14 PASS, partial сохранён. Resume only: targeted child transport diagnostic без третьего HTTP повтора → exact fix → fresh one `dev12-remediation` run → affected final checks/repeat review.
+
+> **Текущая точка D-852 (2026-11-11): DEV12-IMP-008 review CHANGES REQUESTED, P1=0/P2=4/P3=1.** Bounded fixes: candidate binding digest, server-derived fallback, damaged aggregate+xmin ABA, stable identity/order protection; progressive ARIA and real shared-host integration proof. Только existing paths, без новой архитектуры. После targeted/final checks обязателен repeat independent review.
+
+> **Текущая точка D-851 (2026-11-11): DEV12-IMP-007 PASS; начат IMP-008.** Fresh frozen run дал exact DEV-12 116/116, calibrated public/shared14/14 и full guard399/399 PASS; Django check0, no migrations, host/selfcheck/JS/PowerShell/diff PASS. IMP-007 не добавлял функций; live/persistent apply/publication отсутствуют. Далее обязательный independent code review, bounded remediation и repeat review; до APPROVED DEV-12 не завершён.
+
+> **Текущая точка D-850 (2026-11-11): DEV12-IMP-006 PASS; следующий IMP-007.** Fixed server-rendered home, scoped responsive CSS и local price-tabs JS работают через existing coherent public/shared/media/SEO layers. Exact21 local media, legacy generic branch, missing-usage 503/no-store, CSP/no-network/no-storage, keyboard/ARIA/focus/no-JS и отсутствие form/contact/map/external embeds проверены. Focused4/4 и public HTTP regression21/21 PASS, system check0; без models/migrations/dependencies/new service и без live/persistent apply/publication. Далее combined exact regression/full guard/system/migration/diff evidence.
+
+> **Текущая точка D-849 (2026-11-11): DEV12-IMP-005 PASS; следующий IMP-006.** Pure bounded projector меняет только bound amount/from+visibility, missing ID использует versioned fallback без lookup/write; xmin double capture закрывает stale/ABA. Existing page-delete stamp включает locked home dependency guard D-256/D-300. Focused10/10 и combined full delete regression19/19 PASS за23.723с, system check0. Без models/migrations/dependencies/new service и без live/persistent apply/publication. Далее fixed template/CSS/local JS и HTTP/security/accessibility tests.
+
+> **Текущая точка D-848 (2026-11-11): DEV12-IMP-004 PASS; следующий IMP-005.** Exact default-off media import и UNIT home writer закрывают STAGED recovery, READY21 physical/locked recapture, exact pre/post-state, automatic revision/current/draft/pin/usages63, zero-write replay, rollback и concurrency. Writer11/11 и full DEV-12 regression82/82 PASS за170.371с, system check0. Без models/migrations/dependencies/new service и без live/persistent apply/publication. Далее pure bounded source/home projector и bounded delete dependency guard.
+
+> **Текущая точка D-847 (2026-11-11): DEV12-IMP-004 partial; media import PASS, UNIT writer следующий.** Exact default-off STAGED→physical→READY import, deterministic recovery/replay и changed source/physical fail-closed готовы; package/media5/5 PASS за3.538с, system check0, host checks PASS. Новых subsystem/model/migration/dependency нет. Далее exact existing-home pre/post-state writer с READY locked recapture, owner draft/pin/usages/rollback/concurrency tests; live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-846 (2026-11-11): DEV12-IMP-003 PASS; следующий IMP-004.** Existing owner-only editor получил закрытые home fields и bounded explicit candidate search20+1; signed source digest/final locked recapture сохранены. Candidate/UI5/5 и full exact82/82 PASS за170.917с, system check0. Без models/migrations/dependencies/new background/API layer и без live/persistent apply/publication. Далее отдельный exact media lifecycle import, затем default-off READY-only UNIT home writer и READY-media/draft/pin/usage tests.
+
+> **Текущая точка D-845 (2026-11-11): DEV12-IMP-003 partial; source digest/final recapture PASS.** Exact bounded facts cap64, signed receipt и final version-service transaction drift gate готовы; targeted save17/17, full77/77, system check0, foundation stopped. Следующий срез IMP-003: owner-only candidate picker20+1 и closed UI fields; затем READY-media fixtures IMP-004.
+
+> **Текущая точка D-844 (2026-11-11): DEV12-IMP-003 приостановлен владельцу по антициклу.** Две foundation Start попытки остановились до Docker/tests на эквивалентном ACL TypeNotFound в Windows PowerShell 5.1. Bounded home source facts/tests подготовлены, но не проверены. После решения владельца рекомендовано возобновить через `pwsh` 7.6.9, затем exact `dev12-schema`; IMP-003 остаётся текущим.
+
+> **Текущая точка D-843 (2026-11-11): DEV12-IMP-003 partial; owner-only server field/restore exact55/55 PASS.** Employee/legacy/non-home boundaries сохранены, system check0, foundation stopped. IMP-003 ещё не закрыт: далее selected-source digest/final locked recapture, bounded candidate picker и closed owner UI; save fixtures используют READY media вместе с IMP-004.
+
+> **Текущая точка D-842 (2026-11-11): DEV12-IMP-002 PASS; IMP-003 следующий, ещё не начат.** Closed optional home-only profile schema сохраняет legacy/non-home exact compatibility; exact4/4, host selfcheck/check, PowerShell parse и diff PASS. Foundation stopped. Следующий patch — owner-only existing editor field/check/save/version/restore.
+
+> **Текущая точка D-841 (2026-11-11): DEV12-IMP-001 PASS; начат IMP-002.** Canonical package/tool exact8 services/6 groups/47 rows/6 works/15 media;4 service+2 amount bindings; host syntax/selfcheck/check/diff PASS, writes0. Следующий patch — optional home-only schema validator с legacy snapshot compatibility.
+
+> **Текущая точка D-840 (2026-11-11): владелец разрешил DEV12-IMP-001–008; начат IMP-001.** Текущий patch только exact read-only authority inventory, canonical package/host selfchecks и measured caps; runtime/schema/editor/DB/publication не меняются. После PASS — IMP-002 optional home schema/profile validator.
+
+> **Текущая точка D-839 (2026-11-11): DEV-12 minimal implementation plan `APPROVED`, P1/P2/P3=0; product code не начат.** Все source/media/draft/legacy/check boundaries закрыты без новых models/background layers. Обязательный gate: явное owner approval `DEV12-IMP-001–008`; после него начать с exact read-only authority inventory/package/selfchecks IMP-001.
+
+> **Текущая точка D-838 (2026-11-11): пять P2 первого DEV-12 plan review устранены; ожидается repeat review, product code не начат.** Dynamic source ограничен price amount/from; media import отделён от READY-only home writer; mirror draft/pin/usages, safe legacy home и signed selected-source digest/final locked recapture определены. После APPROVED требуется отдельное owner approval кода.
+
+> **Текущая точка D-837 (2026-11-11): DEV-12 scope final `APPROVED`, P1/P2/P3=0; minimal implementation plan подготовлен, product code не начат.** План: optional home-only profile в existing revision, owner-only existing editor/version path, bounded coherent source/media projection, default-off UNIT writer и exact D-835 local composition. Gate: independent plan review → final APPROVED → отдельное owner approval кода.
+
+> **Текущая точка D-836 (2026-11-11): repeat DEV-12 scope review P1=0/P2=0; последнее wording P3 исправлено, ожидается final confirmation.** RSP-AC-10 проверяет только сохраняемые core-секции; отсутствующие form/contact/map и сокращённые local reviews — documented `N/A/deferred` exceptions. Product code не начат. После APPROVED — minimal implementation plan, его independent review и отдельное owner approval кода.
+
+> **Текущая точка D-835 (2026-11-11): findings первого DEV-12 scope review устранены; ожидается repeat review, product code не начат.** Code-owned только bounded schema/limits/order; concrete profile и fallback versioned в existing home `PageRevision` и меняются только explicit owner save. Exact DEV-12 variant: local `ОТЗЫВЫ` + `/reviews`; form/contact/map/external content `N/A/deferred`. После APPROVED — minimal implementation plan, его independent review и отдельное owner approval кода.
+
+> **Текущая точка D-834 (2026-11-11): владелец утвердил `DEV12-Q001`; independent scope review начат, product code не начат.** Scope frozen: existing Page/version/media/public/shared/SEO layers + closed bounded home profile, без universal builder/new model/API/cache/queue/worker. Form/PII, external embeds/analytics и неподтверждённые contacts исключены до своих gates. После review — minimal implementation plan, его independent review и отдельное owner approval кода.
+
+> **Текущая точка D-833 (2026-11-10): DEV-12 bounded scope proposal готов; product code не начат.** Утверждённый дизайн главной не переоткрывается. Предложен existing-layer renderer с closed bounded home profile, без универсального page-builder/model/API/cache/queue/worker. Form/PII, third-party embeds/analytics и неподтверждённые contacts выключены до DEV-13/30/CONTACT-01. Gate: owner `DEV12-Q001` → independent scope review → minimal plan/review → отдельное разрешение кода.
+
+> **Текущая точка D-832 (2026-11-10): DEV-11 завершён локально; IMP-001–007 PASS и repeat review APPROVED.** Final exact DEV11 50/50, calibration-aware public/shared14/14, full guard370/370 до последнего isolated system-check/media-merge patch, system check0, no migrations/diff PASS. Gallery SEO media объединяется с gallery files по exact descriptor под общим cap64; conflict/cap+1 fail closed. Live/persistent apply/publication отсутствуют. Следующая работа этапа 8 — bounded DEV-12 planning с требуемыми согласованиями до кода.
+
+> **Текущая точка D-830 (2026-11-10): DEV11-IMP-003/004 локально завершены; следующий IMP-005.** Sitemap: five bounded cap+1 queries, exact aliases, current payload validation, xmin digest recapture,50k/50MiB refusal. Robots: fixed deny-all/production bytes, confirmed legacy prefixes и exact gallery query allows. Combined34/34 и26/26, pure6/6, no-migrations/diff PASS. Далее conditional safe AutoRepair без реальных данных; live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-828 (2026-11-10): DEV11-IMP-002 локально завершён; следующий IMP-003.** Escaped metadata/canonical/OG/X-Robots integrated в existing coherent public host; preview/main contextual media и WASH peer double-capture не создают нового reader/layer. SEO+HTTP26/26, SEO+gallery17/17, media14/14, Django/no-migrations/diff PASS. Далее только bounded direct sitemap capture/XML; live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-827 (2026-11-10): DEV11-IMP-001 локально завершён; IMP-002 начат.** Immutable SEO DTO, closed trusted-origin/robots settings и pure canonical/X-Robots/Open Graph text matrix подтверждены exact 6/6; gallery 11/11 и public HTTP 17/17 не сломаны. Следующий срез ограничен existing shared public capture/template/header и preview/main media slot; live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-826 (2026-11-10): owner approval `DEV11-IMP-001–007` получен; начат IMP-001.** Scope frozen D-825; сначала tests-first pure settings/origin/canonical/X-Robots projection. Public HTML/media/sitemap/robots/Schema integration не входит в этот срез; live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-825 (2026-11-10): DEV-11 plan `APPROVED`, P1/P2/P3=0; product code не начат.** Reviewer подтвердил actual preview capture, per-table sitemap cap+1, bounded WASH peer double capture, exact ld+json encoder и no-new-layer boundary. Следующий обязательный gate — отдельное owner approval `DEV11-IMP-001–007`.
+
+> **Текущая точка D-824 (2026-11-10): first DEV-11 plan review P1=0/P2=4/P3=0; remediation записана, product code не начат.** Actual `_page_media_usage/_capture_media` preview support, per-table cap+1, bounded peer WASH double capture and exact safe ld+json encoder закрывают findings без нового слоя. Repeat independent plan review обязателен.
+
+> **Текущая точка D-823 (2026-11-10): DEV-11 scope `APPROVED`, minimal plan готов; independent plan review начат, product code не начат.** Seven bounded slices: pure SEO matrix, existing public/template/media integration, coherent xmin sitemap, fixed robots, disabled-by-default AutoRepair, regression, final review. New runtime subsystem absent. После APPROVED требуется отдельное owner approval `DEV11-IMP-001–007`.
+
+> **Текущая точка D-822 (2026-11-10): first DEV-11 scope review P1=0/P2=3/P3=0; remediation записана, product code не начат.** AutoRepair без любого confirmed visible name/address/phone теперь полностью отсутствует; sitemap использует один bounded DB aggregate capture и optimistic digest recapture; CONTENT-WASH mapping/fail-closed incoherent alias-group точны. Scope/architecture unchanged; repeat independent review обязателен.
+
+> **Текущая точка D-821 (2026-11-10): `DEV11-Q001` утверждён; independent scope review начат, product code не начат.** Frozen minimal boundary: existing public/revision/media layers, trusted metadata/canonical/X-Robots/Open Graph, direct sitemap, fixed robots, conditional AutoRepair; no models/migrations/cache/queue/worker/scheduler. Далее review findings → minimal implementation plan → отдельное owner approval кода.
+
+> **Текущая точка D-820 (2026-11-10): DEV-11 bounded scope proposal готов; product code не начат.** Existing page revision/public layer покрывает metadata, indexing, images and routes; новые model/migration/service/cache/queue/scheduler не предлагаются. Sitemap direct, robots fixed, canonical closed; AutoRepair code conditional и остаётся выключенным до подтверждённых DEV-12/CONTACT-01 данных. Gate: owner `DEV11-Q001` → independent scope review → minimal implementation plan → отдельное разрешение кода.
+
+> **Текущая точка D-819 (2026-11-10): DEV-10 завершён локально.** IMP-001–008 PASS; final independent code review `APPROVED`, P1/P2/P3=0. Reviewer подтвердил package/writer/locks, coherent public/media boundaries, viewer/CSP и отсутствие apply/publication path; bounded host checks повторены PASS. Foundation stopped. Текущий основной этап — 8; следующая работа только после bounded DEV-11 scope/acceptance/plan и требуемого согласования.
+
+> **Текущая точка D-818 (2026-11-10): DEV10-IMP-007 завершён локально; IMP-008 начат.** Exact focused42/42 и full calibrated guard351/351 PASS; viewer state8/8, host package checks, Django check, no migrations и diff-check PASS. Gallery optimistic stamp теперь покрывает все rendered album/photo fields; fail-closed и exact HTTP boundaries усилены. Foundation stopped. Далее independent code review, fixes при findings и bounded repeat verification; persistent apply/publication отсутствуют.
+
+> **Текущая точка D-817 (2026-11-10): DEV10-IMP-006 завершён локально; IMP-007 начат.** Fixed local dependency-free viewer, canonical navigation, arrows/thumbs/Escape/backdrop/focus restore, pure state8/8 and gallery+ordinary public27/27 PASS. Foundation stopped. Далее combined security/media/concurrency regression and evidence, then IMP-008 independent review.
+
+> **Текущая точка D-816 (2026-11-10): DEV10-IMP-005 завершён локально; IMP-006 начат.** Root/page2/direct album/modal server templates, no-JS exact hrefs and scoped responsive4/3/2 CSS PASS. Exact gallery9/9 and ordinary public17/17 PASS; foundation stopped. Далее fixed local viewer JS, без dependency/fetch/storage/eval.
+
+> **Текущая точка D-815 (2026-11-10): DEV10-IMP-004 завершён локально; IMP-005 начат.** Exact root/page2/modal parser, published/hidden child boundary, bounded coherent current-revision/usage/file DTO и shared-host recapture stamp готовы. New+HTTP24/24 и proper calibration-aware shared13/13 PASS; foundation stopped. Далее только templates/CSS.
+
+> **Текущая точка D-814 (2026-11-10): DEV10-IMP-003 завершён локально; IMP-004 начат.** Exact physical/descriptor/aggregate boundary реализован на existing Page/version/media lifecycle. Fresh exact DEV10+DEV09-parent regression45/45, host/Django/no-migrations/diff PASS; foundation stopped. Следующий bounded срез — gallery public DTO/query/coherent projection, без нового service/cache/API.
+
+> **Текущая точка D-813 (2026-11-10): DEV10-IMP-002 завершён; IMP-003 начат.** После явного возобновления создан fresh source snapshot: exact loader 5/5, host selfcheck/check, Django check и no-migrations PASS; foundation stopped. Далее только approved physical preflight + locked descriptor recapture + atomic hidden 18-page/642-usage writer; persistent/live apply и публикация отсутствуют.
+
+> **Текущая точка D-812 (2026-11-10): DEV10-IMP-002 приостановлен владельцу; foundation stopped.** Two focused runs used one immutable source snapshot, so run2 repeated old regex after source fix. Resume: fresh Start + one exact no-wildcard loader module run; product fix preserved.
+
+> **Текущая точка D-811 (2026-11-10): DEV10-IMP-001 PASS; IMP-002 начат.** Exact17/214 canonical package/selfcheck/check/diff PASS, writes0. Следующий bounded срез — closed Python loader/default-off UNIT guard; runtime/DB writes отсутствуют.
+
+> **Текущая точка D-810 (2026-11-10): DEV10-IMP-001 приостановлен владельцу по anti-loop; работа сохранена.** Две equivalent PowerShell inspection parser errors до read/write; третьей нет. Resume: confirmed exact JSON paths, array first, separate ConvertTo-Json. Product code/live/DB не затронуты.
+
+> **Текущая точка D-809 (2026-11-10): owner approval `DEV10-IMP-001–008` получен; начат IMP-001.** Scope frozen D-808; сначала host-only gallery authority/package. Live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-808 (2026-11-10): DEV-10 minimal plan `APPROVED`, P1/P2/P3=0; product code не начат.** Existing-layer exact aggregate/blob/public boundaries приняты независимым ревью без новой runtime subsystem. Следующий gate — отдельное owner approval реализации `DEV10-IMP-001–008`.
+
+> **Текущая точка D-807 (2026-11-10): first DEV-10 plan review P1/P2 исправлен; repeat review ожидается, product code не начат.** Exact full aggregate642 usages, physical blob evidence/locked recapture, numeric caps и default-off UNIT boundary добавлены на existing lifecycle. После `APPROVED` всё ещё требуется отдельное owner approval реализации.
+
+> **Текущая точка D-806 (2026-11-10): DEV10-Q001/Q002 утверждены D-805; exact acceptance/minimal DEV-10 plan готов, product code не начат.** `G10-AT-001–015` и `DEV10-IMP-001–008` используют existing architecture без новых model/migration/API/queue/cache/service. Следующий gate — independent plan review; после APPROVED требуется отдельное owner approval реализации.
+
+> **Текущая точка D-804 (2026-11-10): bounded DEV-10 scope/design proposal готов; product code не начат.** Existing Page/version/media/public renderer достаточно; новые model/migration/API/queue/cache/service не нужны. Обязательный gate: `DEV10-Q001` по standalone album/viewer и `DEV10-Q002` по обратимому 302 `?page=1`; затем exact e2e, minimal plan, independent review и отдельное owner approval кода.
+
+> **Текущая точка D-803 (2026-11-10): `DEV09L-Q001` утверждён; bounded DEV-10 planning начат.** DEV-09 micro-packages остановлены, remaining content сохранён для combined pass. До requirements/acceptance/minimal plan/review и отдельного owner approval product code не менять.
+
+> **Текущая точка D-802 (2026-11-10): DEV-09L bounded selection завершён; product code не начат.** Следующий micro-cohort нерентабелен: exact2 потребовал бы две новые grammars и восьмой package. Ожидается `DEV09L-Q001` на переход к bounded DEV-10 planning и поздний combined remaining-content pass.
+
+> **Текущая точка D-801 (2026-11-10): DEV-09K завершён локально; final review `APPROVED`, P1/P2/P3=0.** Exact10/table/atomic boundaries приняты, focused5/full403/final checks PASS, foundation stopped. Следующий DEV-09 cohort — только после отдельного bounded profitability selection; persistent apply/publication отсутствуют.
+
+> **Текущая точка D-800 (2026-11-10): DEV-09K residual P2 исправлен; third bounded independent review запущен.** Case-insensitive source-table count и uppercase negative закрывают последний acceptance-oracle gap; K checks/diff PASS, product/full403 evidence не изменено.
+
+> **Текущая точка D-799 (2026-11-10): DEV-09K code review P1/P2 исправлены; repeat independent review запущен.** Extra child/MAP-073, second source table и extra artifact root markup теперь fail-closed; fresh focused5/full403/final checks PASS. До `APPROVED` этап не завершён.
+
+> **Текущая точка D-798 (2026-11-10): DEV-09K implementation/checks PASS; independent code review запущен.** Exact10 hidden package/closed table renderer/atomic writer/exact-seven foundation реализованы; focused5/regression48/calibration13/full403 и final checks PASS, foundation stopped. До review APPROVED этап не завершён.
+
+> **Текущая точка D-797 (2026-11-10): владелец разрешил реализацию DEV-09K `MIGK-001–013`; product work начат.** Scope frozen D-796; после implementation обязательны focused/full checks и independent code review.
+
+> **Текущая точка D-796 (2026-11-10): DEV-09K repeat plan review `APPROVED`, P1/P2/P3=0; product code не начат.** Следующий обязательный gate — отдельное owner approval реализации `MIGK-001–013`; scope exact10/one safe renderer/UNIT-only atomic writer остаётся frozen.
+
+> **Текущая точка D-795 (2026-11-10): DEV-09K plan findings P1/P2 remediated; repeat independent review запущен.** Catalog/artifact tile authority, exact10 signatures and MAP-013 body/nav boundary теперь frozen; product code не начат. После APPROVED требуется отдельное owner approval `MIGK-001–013`.
+
+> **Текущая точка D-794 (2026-11-10): DEV09K-Q001 утверждён; exact10 implementation plan `MIGK-001–013` подготовлен, product code не начат.** Следующий gate — independent plan review; затем отдельное owner approval реализации. Scope остаётся existing host/writer/safe renderer, hidden atomic all10, no schema/new layer/publication/persistent apply.
+
+> **Текущая точка D-793 (2026-11-10): DEV-09K bounded selection завершён; product code не начат.** Recommended exact10 MAP-013+9 simple children uses existing safe main-text table support to preserve the omitted source price table exactly; MAP-073 excluded. Следующий gate — owner approval `DEV09K-Q001`, затем plan/review и отдельное implementation permission.
+
+> **Текущая точка D-792 (2026-11-10): DEV-09J завершён локально; final independent review `APPROVED`, findings0.** Exact5/46 host/package/hidden atomic writer/public test/exact-six boundaries соответствуют MIGJ-001–012; focused27/27, public16/16, guard321/321/final checks PASS, foundation stopped. Следующий DEV-09 cohort требует отдельного bounded profitability selection; production/live/persistent apply/publication отсутствуют.
+
+> **Текущая точка D-791 (2026-11-10): remaining DEV-09J CODE-003 P2 remediated; third bounded review запущен.** Extra body, missing/reordered cells, signed/overflow numeric negatives добавлены; all host checks/diff PASS. Product code unchanged after fresh D-790 focused/public/guard321; foundation remains stopped.
+
+> **Текущая точка D-790 (2026-11-10): DEV-09J code review P2x3 remediated; repeat review запущен.** Exact price header, published ancestor-chain HTTP oracle и expanded labelled host negatives/parent cap boundary исправлены; fresh focused27/27, public16/16, guard321/321/final checks PASS, foundation stopped. До repeat review `APPROVED` этап не завершён.
+
+> **Текущая точка D-789 (2026-11-10): DEV-09J implementation/checks PASS; independent code review запущен.** Exact5/46 host/package/reader/price snapshot/hidden atomic writer/public test/exact-six boundary реализованы без новых layers. Focused27/27, public16/16, guard321/321 и final checks PASS; foundation stopped. До review `APPROVED` этап не завершён.
+
+> **Текущая точка D-788 (2026-11-10): owner approval реализации DEV-09J получен.** Разрешены `MIGJ-001–012` строго в D-787 APPROVED scope; production/live/persistent apply и publication не разрешены.
+
+> **Текущая точка D-787 (2026-11-10): DEV-09J repeat plan review `APPROVED`, findings0; product code не начат.** `MIGJ-001–012` accepted with existing16KiB parent cap, exact5/46 rows, hidden/test-only public separation and atomic5. Следующий gate — отдельное owner approval implementation.
+
+> **Текущая точка D-786 (2026-11-10): DEV-09J plan review findings P1=0/P2=2/P3=2 исправлены; product code не начат.** Existing16KiB parent cap restored; hidden writer oracle separated from test-only published HTTP projection; authority/gate text corrected. Следующий gate — repeat independent plan review.
+
+> **Текущая точка D-785 (2026-11-10): owner approval DEV-09J exact5 получен D-784; minimal implementation plan готов, product code не начат.** `MIGJ-001–012` reuse existing host validator, UNIT-only writer, price schema/public renderer and exact MAP-012 authority for five hidden leading-table pages/46 rows. Следующий gate — independent plan review, затем отдельное owner approval implementation.
+
+> **Текущая точка D-783 (2026-11-10): проектная сводка обновлена после рефакторинга; product code не менялся.** `docs/currentprocent.html` теперь считает только27 активных основных DEV-областей:12 fully local/replaced (~44% по count, не срок),5 partial,10 pending; DEV-19 deferred и тяжёлая отдельная DEV-21 исключены из MVP denominator. Следующий product gate остаётся `DEV09J-Q001`.
+
 > **Текущая точка D-782 (2026-11-10): DEV-09J read-only selection завершён; product code не начат.** Из40 remaining ready выбран exact5 under existing MAP-012: five leading single2-column price tables/46 rows plus closed text, entirely on existing price schema/layout/public renderer. Multi-table/interleaved/blocked-parent formats excluded. Следующий gate — owner approval `DEV09J-Q001`.
 
 > **Текущая точка D-781 (2026-11-10): DEV-09I implementation завершена; final independent code review `APPROVED`, findings0.** Exact9 host/package/writer/security/public/exact-five boundaries соответствуют MIGI-001–012; no architecture expansion or DEV-09H regression. Focused23/23, public15/15, guard316/316 and final checks PASS; foundation stopped. Следующая DEV-09 работа выбирается отдельным bounded profitability selection.

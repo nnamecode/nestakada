@@ -113,7 +113,7 @@ def media_response(request, file_id):
                 return _closed(404)
             if str(page_id) != page_text:
                 return _closed(404)
-            if slot_text == 'main_image':
+            if slot_text in ('main_image', 'preview_image'):
                 pass
             elif slot_text.startswith('embedded:'):
                 image_text = slot_text[len('embedded:'):]

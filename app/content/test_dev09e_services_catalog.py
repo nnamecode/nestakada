@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from threading import Barrier
 from unittest.mock import patch
-from uuid import UUID
+from uuid import UUID, uuid5
 
 from django.apps import apps
 from django.core.exceptions import ValidationError
@@ -823,6 +823,349 @@ class Dev09ServicesCatalogTests(TransactionTestCase):
             try:
                 barrier.wait(timeout=10)
                 return migration.apply_planned_maintenance()
+            finally:
+                close_old_connections()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _index: run(), range(2)))
+        self.assertEqual(sum(not row['replayed'] for row in results), 1)
+        self.assertEqual(sum(row['replayed'] for row in results), 1)
+
+    def test_migj_package_price_layout_and_mutations_are_exact_closed(self):
+        parents = migration._read_service_roots_package()
+        package = migration._read_leading_price_package(parents)
+        self.assertEqual([len(page['price_rows']) for page in package['pages']],
+                         [11, 8, 21, 5, 1])
+        self.assertEqual(sum(len(page['price_rows']) for page in package['pages']),
+                         46)
+        text_cells = []
+        for page in package['pages']:
+            payload = migration._leading_price_payload(page)
+            self.assertEqual([node['kind'] for node in payload['layout']],
+                             ['text', 'price', 'text'])
+            self.assertEqual(payload['layout'][0]['field'], 'intro_text')
+            self.assertEqual(payload['layout'][2]['field'], 'main_text')
+            column = payload['price']['columns'][0]
+            self.assertEqual(column, {
+                'id': str(uuid5(UUID(page['page_id']), 'price-column:0')),
+                'label': 'Цена, руб.'})
+            self.assertEqual(len(payload['price']['rows']),
+                             len(page['price_rows']))
+            for index, row in enumerate(payload['price']['rows']):
+                self.assertEqual(
+                    row['id'],
+                    str(uuid5(UUID(page['page_id']), 'price-row:' + str(index))))
+                self.assertEqual(row['cells'][0]['column_id'], column['id'])
+                if row['cells'][0]['kind'] == 'text':
+                    text_cells.append((page['map_id'], index,
+                                       row['cells'][0]['text']))
+        self.assertEqual(text_cells, [
+            ('MAP-055', 12, 'от 3500 за 1 шт.'),
+            ('MAP-055', 15, '1500 за 1 шт.'),
+        ])
+        for label, mutate in (
+                ('schema', lambda value: value.update(schema='wrong')),
+                ('extra', lambda value: value['pages'][0].update(extra=True)),
+                ('parent', lambda value: value['pages'][0].update(
+                    parent_id=str(self.parent_id))),
+                ('label', lambda value: value['pages'][0]['price_rows'][0].update(
+                    label='<script>alert(1)</script>')),
+                ('amount', lambda value: value['pages'][0]['price_rows'][0][
+                    'cell'].update(amount='1e3')),
+                ('text', lambda value: value['pages'][2]['price_rows'][12][
+                    'cell'].update(text='changed'))):
+            with self.subTest(mutation=label):
+                changed = deepcopy(package)
+                mutate(changed)
+                self.assert_fault(
+                    'MIGRATION_PACKAGE_INVALID',
+                    lambda changed=changed:
+                    migration._validate_leading_price_package(changed, parents))
+
+    def test_migj_exact_parent_creates_five_hidden_and_zero_write_replay(self):
+        roots = self.create_exact_service_roots()
+        parent = next(page for page in roots if page.name == 'Ремонт')
+        result = migration.apply_leading_price_details()
+        self.assertEqual(result, {
+            'status': 'pass', 'replayed': False, 'pages': 5,
+            'published': 0, 'price_rows': 46})
+        package = migration._read_leading_price_package()
+        pages = list(Page.objects.filter(
+            pk__in=[UUID(page['page_id']) for page in package['pages']]))
+        self.assertEqual(len(pages), 5)
+        self.assertTrue(all(page.parent_id == parent.pk
+                            and page.kind == Page.Kind.SERVICE
+                            and not page.is_published for page in pages))
+        self.assertFalse(PageGrant.objects.filter(page__in=pages).exists())
+        for descriptor in package['pages']:
+            response = self.client.get(descriptor['url'])
+            self.assertEqual((response.status_code, response.content), (200, b''))
+        before = self.state()
+        replay = migration.apply_leading_price_details()
+        self.assertTrue(replay['replayed'])
+        self.assertEqual(self.state(), before)
+
+    def test_migj_missing_changed_parent_mixed_and_collisions_refuse(self):
+        before = self.state()
+        self.assert_fault('MIGRATION_PARENT_REQUIRED',
+                          migration.apply_leading_price_details)
+        self.assertEqual(self.state(), before)
+        roots = self.create_exact_service_roots()
+        parent = next(page for page in roots if page.name == 'Ремонт')
+        raw(Page).filter(pk=parent.pk).update(name='Changed')
+        before = self.state()
+        self.assert_fault('MIGRATION_PARENT_REQUIRED',
+                          migration.apply_leading_price_details)
+        self.assertEqual(self.state(), before)
+        raw(Page).filter(pk=parent.pk).update(name='Ремонт')
+        descriptor = migration._read_leading_price_package()['pages'][0]
+
+        class RollbackPartial(Exception):
+            pass
+
+        try:
+            with transaction.atomic():
+                Page.objects.create(
+                    id=UUID(descriptor['page_id']), name=descriptor['name'],
+                    kind=descriptor['kind'], parent_id=descriptor['parent_id'],
+                    position=descriptor['position'], is_published=False)
+                before = self.state()
+                self.assert_fault('MIGRATION_EXISTING_CONFLICT',
+                                  migration.apply_leading_price_details)
+                self.assertEqual(self.state(), before)
+                raise RollbackPartial
+        except RollbackPartial:
+            pass
+
+        for label, setup in (
+                ('route', lambda: Route.objects.create(
+                    page=Page.objects.create(
+                        name='Unrelated', kind=Page.Kind.ARTICLE,
+                        position=99, is_published=False),
+                    kind=Route.Kind.PRIMARY, target=descriptor['url'])),
+                ('reservation', lambda: IdentityReservation.objects.create(
+                    id=UUID(descriptor['page_id']), kind='synthetic')),
+                ('position', lambda: Page.objects.create(
+                    name='Sibling', kind=Page.Kind.ARTICLE,
+                    parent_id=descriptor['parent_id'],
+                    position=descriptor['position'], is_published=False))):
+            with self.subTest(collision=label):
+                try:
+                    with transaction.atomic():
+                        setup()
+                        before = self.state()
+                        self.assert_fault('MIGRATION_EXISTING_CONFLICT',
+                                          migration.apply_leading_price_details)
+                        self.assertEqual(self.state(), before)
+                        raise RollbackPartial
+                except RollbackPartial:
+                    pass
+
+    def test_migj_disabled_fifth_failure_and_concurrency(self):
+        with override_settings(DEV09_MIGRATION_APPLY_ENABLED=False), patch(
+                'content.dev09_migration_apply._read_service_roots_package') as reader:
+            self.assert_fault('MIGRATION_APPLY_DISABLED',
+                              migration.apply_leading_price_details)
+            reader.assert_not_called()
+        self.create_exact_service_roots()
+        before = self.state()
+        original = migration._create_aggregate
+        calls = 0
+
+        def fail_fifth(*args):
+            nonlocal calls
+            calls += 1
+            if calls == 5:
+                raise RuntimeError('SYNTHETIC_FIFTH_PRICE_DETAIL_FAILURE')
+            return original(*args)
+
+        with patch('content.dev09_migration_apply._create_aggregate',
+                   side_effect=fail_fifth):
+            with self.assertRaisesRegex(
+                    RuntimeError, 'SYNTHETIC_FIFTH_PRICE_DETAIL_FAILURE'):
+                migration.apply_leading_price_details()
+        self.assertEqual(self.state(), before)
+        barrier = Barrier(2)
+
+        def run():
+            close_old_connections()
+            try:
+                barrier.wait(timeout=10)
+                return migration.apply_leading_price_details()
+            finally:
+                close_old_connections()
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _index: run(), range(2)))
+        self.assertEqual(sum(not row['replayed'] for row in results), 1)
+        self.assertEqual(sum(row['replayed'] for row in results), 1)
+
+    def test_migk_package_table_renderer_and_mutations_are_exact_closed(self):
+        catalog = migration._read_services_package()
+        package = migration._read_diagnostics_package(catalog)
+        self.assertEqual(len(package['pages']), 10)
+        self.assertEqual(
+            [page['position'] for page in package['pages'][1:]],
+            [0, 1, 2, 3, 4, 6, 7, 8, 9])
+        parent = package['pages'][0]
+        payload = migration._diagnostics_payload(parent)
+        main = payload['main_text']
+        self.assertTrue(main.startswith(
+            '<table><thead><tr><th scope="col">Класс авто, наименование работ'))
+        self.assertEqual(main.count('<table>'), 1)
+        self.assertEqual(main.count('<td colspan="2"><strong>'), 3)
+        self.assertEqual(main.count('<td>от 1500</td>'), 3)
+        self.assertLess(main.index('</table>'), main.index('<p>'))
+        self.assertEqual(restricted_clean(main), main)
+        for page in package['pages'][1:]:
+            child = migration._diagnostics_payload(page)
+            self.assertNotIn('<table', child['main_text'])
+            self.assertEqual(restricted_clean(child['main_text']),
+                             child['main_text'])
+        for label, mutate in (
+                ('schema', lambda value: value.update(schema='wrong')),
+                ('extra', lambda value: value['pages'][0].update(extra=True)),
+                ('header', lambda value: value['pages'][0]['source_table'][
+                    'headers'].__setitem__(1, 'Цена')),
+                ('row', lambda value: value['pages'][0]['source_table'][
+                    'rows'].__setitem__(0, {'kind': 'category',
+                                            'label': '<script>x</script>'})),
+                ('child_table', lambda value: value['pages'][1].update(
+                    source_table=value['pages'][0]['source_table'])),
+                ('position5', lambda value: value['pages'][5].update(position=5)),
+                ('text', lambda value: value['pages'][1]['blocks'][0].update(
+                    text='changed'))):
+            with self.subTest(mutation=label):
+                changed = deepcopy(package)
+                mutate(changed)
+                self.assert_fault(
+                    'MIGRATION_PACKAGE_INVALID',
+                    lambda changed=changed:
+                    migration._validate_diagnostics_package(changed, catalog))
+
+    def test_migk_exact_catalog_creates_ten_hidden_and_zero_write_replay(self):
+        catalog_page = self.create_exact_services_parent()
+        result = migration.apply_diagnostics_branch()
+        self.assertEqual(result, {
+            'status': 'pass', 'replayed': False, 'pages': 10,
+            'published': 0, 'table_rows': 6})
+        package = migration._read_diagnostics_package()
+        descriptors = package['pages']
+        pages = {str(page.pk): page for page in Page.objects.filter(
+            pk__in=[UUID(row['page_id']) for row in descriptors])}
+        self.assertEqual(len(pages), 10)
+        parent = pages[descriptors[0]['page_id']]
+        self.assertEqual(
+            (parent.parent_id, parent.position, parent.kind, parent.is_published),
+            (catalog_page.pk, 3, Page.Kind.SERVICE_SECTION, False))
+        self.assertTrue(all(
+            pages[row['page_id']].parent_id == parent.pk
+            and pages[row['page_id']].kind == Page.Kind.SERVICE
+            and not pages[row['page_id']].is_published
+            for row in descriptors[1:]))
+        self.assertFalse(PageGrant.objects.filter(
+            page_id__in=[UUID(row['page_id']) for row in descriptors]).exists())
+        for descriptor in descriptors:
+            response = self.client.get(descriptor['url'])
+            self.assertEqual((response.status_code, response.content), (200, b''))
+        before = self.state()
+        replay = migration.apply_diagnostics_branch()
+        self.assertTrue(replay['replayed'])
+        self.assertEqual(self.state(), before)
+        Page.objects.create(
+            name='Unexpected MAP-073', kind=Page.Kind.SERVICE,
+            parent=parent, position=5, is_published=False)
+        before = self.state()
+        self.assert_fault('MIGRATION_EXISTING_CONFLICT',
+                          migration.apply_diagnostics_branch)
+        self.assertEqual(self.state(), before)
+
+    def test_migk_missing_changed_catalog_mixed_and_collisions_refuse(self):
+        before = self.state()
+        self.assert_fault('MIGRATION_PARENT_REQUIRED',
+                          migration.apply_diagnostics_branch)
+        self.assertEqual(self.state(), before)
+        catalog = self.create_exact_services_parent()
+        raw(Page).filter(pk=catalog.pk).update(name='Changed')
+        before = self.state()
+        self.assert_fault('MIGRATION_PARENT_REQUIRED',
+                          migration.apply_diagnostics_branch)
+        self.assertEqual(self.state(), before)
+        raw(Page).filter(pk=catalog.pk).update(name='Услуги и цены')
+        descriptor = migration._read_diagnostics_package()['pages'][0]
+
+        class RollbackPartial(Exception):
+            pass
+
+        try:
+            with transaction.atomic():
+                Page.objects.create(
+                    id=UUID(descriptor['page_id']), name=descriptor['name'],
+                    kind=descriptor['kind'], parent_id=descriptor['parent_id'],
+                    position=descriptor['position'], is_published=False)
+                before = self.state()
+                self.assert_fault('MIGRATION_EXISTING_CONFLICT',
+                                  migration.apply_diagnostics_branch)
+                self.assertEqual(self.state(), before)
+                raise RollbackPartial
+        except RollbackPartial:
+            pass
+
+        for label, setup in (
+                ('route', lambda: Route.objects.create(
+                    page=Page.objects.create(
+                        name='Unrelated', kind=Page.Kind.ARTICLE,
+                        position=99, is_published=False),
+                    kind=Route.Kind.PRIMARY, target=descriptor['url'])),
+                ('reservation', lambda: IdentityReservation.objects.create(
+                    id=UUID(descriptor['page_id']), kind='synthetic')),
+                ('position', lambda: Page.objects.create(
+                    name='Sibling', kind=Page.Kind.ARTICLE,
+                    parent_id=descriptor['parent_id'],
+                    position=descriptor['position'], is_published=False))):
+            with self.subTest(collision=label):
+                try:
+                    with transaction.atomic():
+                        setup()
+                        before = self.state()
+                        self.assert_fault('MIGRATION_EXISTING_CONFLICT',
+                                          migration.apply_diagnostics_branch)
+                        self.assertEqual(self.state(), before)
+                        raise RollbackPartial
+                except RollbackPartial:
+                    pass
+
+    def test_migk_disabled_tenth_failure_and_concurrency(self):
+        with override_settings(DEV09_MIGRATION_APPLY_ENABLED=False), patch(
+                'content.dev09_migration_apply._read_services_package') as reader:
+            self.assert_fault('MIGRATION_APPLY_DISABLED',
+                              migration.apply_diagnostics_branch)
+            reader.assert_not_called()
+        self.create_exact_services_parent()
+        before = self.state()
+        original = migration._create_aggregate
+        calls = 0
+
+        def fail_tenth(*args):
+            nonlocal calls
+            calls += 1
+            if calls == 10:
+                raise RuntimeError('SYNTHETIC_TENTH_DIAGNOSTICS_FAILURE')
+            return original(*args)
+
+        with patch('content.dev09_migration_apply._create_aggregate',
+                   side_effect=fail_tenth):
+            with self.assertRaisesRegex(
+                    RuntimeError, 'SYNTHETIC_TENTH_DIAGNOSTICS_FAILURE'):
+                migration.apply_diagnostics_branch()
+        self.assertEqual(self.state(), before)
+        barrier = Barrier(2)
+
+        def run():
+            close_old_connections()
+            try:
+                barrier.wait(timeout=10)
+                return migration.apply_diagnostics_branch()
             finally:
                 close_old_connections()
 

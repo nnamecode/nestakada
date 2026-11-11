@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 from django.http import JsonResponse, FileResponse, Http404
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist, ValidationError
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 from django.middleware.csrf import get_token
@@ -18,6 +18,7 @@ from .comparison import editor_metadata
 from .views import request_context, source_response
 from .media import initial_media
 from . import embedded
+from . import home_candidates
 
 
 def context_for(request, page_id):
@@ -52,6 +53,27 @@ def state(request, page_id):
             'currentRevisionId': context.child['current_revision_id'],
             'targetCurrentId': context.child['source']['targetCurrentId']}
     return JsonResponse(response)
+
+
+@require_GET
+@gate(owner=True)
+def source_candidates(request, page_id):
+    try:
+        if set(request.GET) != {'q'} or len(request.GET.getlist('q')) != 1:
+            raise ValueError('EDITOR_SOURCE_QUERY_INVALID')
+        result = home_candidates.search(actor=request.user, page_id=page_id,
+            generation=request.auth_generation, query=request.GET['q'])
+        return JsonResponse(result, json_dumps_params={
+            'ensure_ascii': False, 'allow_nan': False, 'separators': (',', ':')})
+    except ValueError:
+        return JsonResponse({'ok': False, 'code': 'EDITOR_SOURCE_QUERY_INVALID'}, status=400)
+    except PermissionDenied:
+        note_denial(request, 'owner')
+        return JsonResponse({'ok': False, 'code': 'EDITOR_FIELDS_FORBIDDEN'}, status=403)
+    except ObjectDoesNotExist:
+        return JsonResponse({'ok': False, 'code': 'EDITOR_PAGE_UNAVAILABLE'}, status=404)
+    except ValidationError:
+        return JsonResponse({'ok': False, 'code': 'EDITOR_SOURCE_UNAVAILABLE'}, status=503)
 
 
 @require_GET
@@ -112,7 +134,8 @@ def editor(request, page_id):
 @gate()
 def asset(request, name):
     known = {'editor.bundle.js': 'text/javascript', 'editor.css': 'text/css',
-             'editor-bridge.mjs': 'text/javascript'}
+             'editor-bridge.mjs': 'text/javascript',
+             'home-profile-editor.mjs': 'text/javascript'}
     if name not in known:
         raise Http404()
     path = Path(__file__).parent / 'assets' / name

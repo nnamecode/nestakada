@@ -245,11 +245,15 @@ def _page_media_consumer(file, page_id, slot):
         intro_nodes = [
             node for node in payload['layout']
             if node['kind'] == 'text' and node['field'] == 'intro_text']
-        if (state.page.kind not in PUBLIC_HERO_PAGE_KINDS
-                or image is None
+        if (image is None
                 or image['asset_id'] != str(file.asset_id)
-                or len(intro_nodes) != 1
-                or intro_nodes[0]['protected_nodes']):
+                or (state.page.kind in PUBLIC_HERO_PAGE_KINDS
+                    and (len(intro_nodes) != 1
+                         or intro_nodes[0]['protected_nodes']))):
+            return None
+    elif slot == 'preview_image':
+        image = payload['preview_image']
+        if image is None or image['asset_id'] != str(file.asset_id):
             return None
     elif type(slot) is str and slot.startswith('embedded:'):
         image_id = slot[len('embedded:'):]
@@ -258,8 +262,7 @@ def _page_media_consumer(file, page_id, slot):
             if item['id'] == image_id]
         if len(images) != 1 or images[0]['asset_id'] != str(file.asset_id):
             return None
-        if not any(node['kind'] == 'image' and node['image_id'] == image_id
-                   for node in payload['layout']):
+        if image_id not in page_schema.displayed_embedded_image_ids(payload):
             return None
     else:
         return None

@@ -4,13 +4,15 @@ from html import escape
 from django.contrib.sessions.models import Session
 from django.conf import settings
 from django.db import DatabaseError, models
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from audit.models import AuditEvent
 from page_versions import schema
 from page_versions.models import PageContentState, PageRevision
 
+from . import dev09_migration_apply as migration
 from .models import Page, Route
+from .public_seo import AutoRepairProfile, VisibleBusinessFacts
 
 
 def fake_shared(*, capture_host, media_url, static_url):
@@ -43,7 +45,8 @@ class PublicHttpTests(TestCase):
     def page(self, name, target, *, published=True, route_kind=Route.Kind.PRIMARY,
              intro='<p>Intro</p>', main='<p>Main <strong>text</strong></p>',
              layout=None, price=None, embedded_images=None, position=0,
-             kind=Page.Kind.ARTICLE):
+             kind=Page.Kind.ARTICLE, title='Title <safe>', description='',
+             indexing_allowed=True):
         page = Page.objects.create(
             name=name, kind=kind, position=position,
             is_published=published)
@@ -51,7 +54,8 @@ class PublicHttpTests(TestCase):
             page=page, kind=route_kind, target=target,
             is_legacy='?' in target)
         payload = schema.snapshot_v1(
-            page.kind, h1='H1 <safe>', title='Title <safe>',
+            page.kind, h1='H1 <safe>', title=title,
+            description=description, indexing_allowed=indexing_allowed,
             intro_text=intro, main_text=main, price=price,
             embedded_images=embedded_images,
             layout=layout if layout is not None else [
@@ -71,10 +75,10 @@ class PublicHttpTests(TestCase):
         return tuple(model.objects.count() for model in (
             Page, Route, PageRevision, PageContentState, AuditEvent, Session))
 
-    def test_primary_exact_query_renders_safe_data_without_template_execution(self):
+    def test_primary_renders_safe_data_without_template_execution(self):
         marker = '<p>{{ 7|add:7 }}</p>'
-        self.page('Name <safe>', '/exact/?q=1', main=marker)
-        response = self.client.get('/exact/?q=1')
+        self.page('Name <safe>', '/exact/', main=marker)
+        response = self.client.get('/exact/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Name &lt;safe&gt;', html=False)
         self.assertContains(response, 'H1 &lt;safe&gt;', html=False)
@@ -84,7 +88,9 @@ class PublicHttpTests(TestCase):
         self.assertEqual(response['Cache-Control'], 'no-cache')
         self.assertFalse(response.cookies)
 
-    def test_alias_renders_current_page_without_changing_url(self):
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_unknown_alias_renders_without_self_authorized_canonical(self):
         page, _primary, revision = self.page('Alias', '/primary/')
         Route.objects.create(
             page=page, kind=Route.Kind.ALIAS, target='/alias/',
@@ -92,7 +98,103 @@ class PublicHttpTests(TestCase):
         response = self.client.get('/alias/')
         self.assertEqual(response.status_code, 200)
         self.assertIn(revision.payload['main_text'].encode(), response.content)
+        self.assertNotIn(b'rel="canonical"', response.content)
+        self.assertNotIn(b'property="og:url"', response.content)
         self.assertNotIn(b'/primary/', response.get('Location', '').encode())
+
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_dev11_metadata_uses_trusted_origin_and_literal_escaped_text(self):
+        _page, route, _revision = self.page(
+            'Fallback <name>', '/seo/', title='SEO <title>',
+            description='Описание <literal> & значение')
+        response = self.client.get(
+            route.target, HTTP_X_FORWARDED_HOST='attacker.example',
+            HTTP_REFERER='https://attacker.example/path')
+        self.assertEqual(response.status_code, 200)
+        source = response.content.decode()
+        self.assertIn('<title>SEO &lt;title&gt;</title>', source)
+        self.assertIn(
+            '<meta name="description" content="Описание &lt;literal&gt; &amp; значение">',
+            source)
+        self.assertIn(
+            '<link rel="canonical" href="http://localhost:8767/seo/">', source)
+        self.assertIn(
+            '<meta property="og:url" content="http://localhost:8767/seo/">', source)
+        self.assertIn('<meta property="og:title" content="SEO &lt;title&gt;">', source)
+        self.assertNotIn('attacker.example', source)
+        self.assertNotIn('X-Robots-Tag', response)
+
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_dev11_noindex_header_omits_canonical_and_empty_description(self):
+        _page, route, _revision = self.page(
+            'No index', '/no-index/', title='', description='',
+            indexing_allowed=False)
+        response = self.client.get(route.target)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['X-Robots-Tag'], 'noindex, follow')
+        source = response.content.decode()
+        self.assertIn('<title>No index</title>', source)
+        self.assertNotIn('name="description"', source)
+        self.assertNotIn('rel="canonical"', source)
+        self.assertNotIn('property="og:url"', source)
+
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_dev11_wash_alias_canonical_requires_coherent_indexable_peer(self):
+        old_page, _old_primary, _old_revision = self.page(
+            'Старая автомойка', '/wash-source/', kind=Page.Kind.WASH)
+        Route.objects.create(
+            page=old_page, kind=Route.Kind.ALIAS,
+            target='/services/drugie-uslugi/avtomojka', is_legacy=True)
+        _peer, _peer_route, peer_revision = self.page(
+            'Автомойка', '/services/avtomojka',
+            kind=Page.Kind.SERVICE_CATALOG, position=1)
+
+        available = self.client.get('/services/drugie-uslugi/avtomojka')
+        self.assertEqual(available.status_code, 200)
+        self.assertIn(
+            '<link rel="canonical" href="http://localhost:8767/services/avtomojka">',
+            available.content.decode())
+
+        payload = dict(peer_revision.payload)
+        payload['indexing_allowed'] = False
+        raw(PageRevision).filter(pk=peer_revision.pk).update(
+            payload=payload, payload_hash=schema.digest(payload))
+        unavailable = self.client.get('/services/drugie-uslugi/avtomojka')
+        self.assertEqual(unavailable.status_code, 200)
+        self.assertNotIn('rel="canonical"', unavailable.content.decode())
+
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_dev11_auto_repair_is_absent_by_default_and_synthetic_profile_is_safe(self):
+        _page, route, _revision = self.page(
+            'Главная', '/', kind=Page.Kind.HOME)
+        default = self.client.get(route.target)
+        self.assertEqual(default.status_code, 200)
+        self.assertNotIn(b'application/ld+json', default.content)
+        hostile = 'Эстакада </script><!-- & \u2028\u2029'
+        profile = AutoRepairProfile(
+            name=hostile, address='Москва, <улица> & 1',
+            telephone='+7 495 000-00-00')
+        facts = VisibleBusinessFacts(
+            name=profile.name, address=profile.address,
+            telephone=profile.telephone)
+        with patch('content.public_views._auto_repair_inputs',
+                   return_value=(profile, facts)):
+            synthetic = self.client.get(route.target)
+        self.assertEqual(synthetic.status_code, 200)
+        source = synthetic.content.decode()
+        self.assertEqual(source.count('type="application/ld+json"'), 1)
+        encoded = source.split(
+            '<script type="application/ld+json">', 1)[1].split('</script>', 1)[0]
+        self.assertNotIn('<', encoded)
+        self.assertNotIn('>', encoded)
+        self.assertNotIn('&', encoded)
+        parsed = __import__('json').loads(encoded)
+        self.assertEqual(parsed['name'], hostile)
+        self.assertEqual(parsed['@id'], 'http://localhost:8767/#auto-repair')
 
     def test_redirect_is_permanent_and_exactly_internal_primary(self):
         page, primary, _revision = self.page('Redirect', '/current/')
@@ -120,6 +222,7 @@ class PublicHttpTests(TestCase):
         self.assertEqual(blank.content, b'')
         self.assertEqual(blank['Cache-Control'], 'no-cache')
         self.assertEqual(blank['Content-Type'], 'text/html; charset=utf-8')
+        self.assertEqual(blank['X-Robots-Tag'], 'noindex, nofollow')
         self.assertIn("default-src 'none'", blank['Content-Security-Policy'])
         renderer.assert_not_called()
 
@@ -496,3 +599,108 @@ class PublicHttpTests(TestCase):
         self.assertIn('&lt;уточняйте&gt;', source)
         self.assertNotIn('<уточняйте>', source)
         self.assertIn('от 1\u202f234\u202f567,01\u00a0₽', source)
+
+    def test_migj_validated_snapshots_render_all_exact_prices_in_http_order(self):
+        catalog = migration._read_services_package()['page']
+        roots = migration._read_service_roots_package()
+        root = next(page for page in roots['pages']
+                    if page['map_id'] == 'MAP-012')
+        package = migration._read_leading_price_package(roots)
+
+        def publish(descriptor, payload, parent=None):
+            page = Page.objects.create(
+                id=descriptor['page_id'], name=descriptor['name'],
+                kind=descriptor['kind'], parent=parent,
+                position=descriptor['position'], is_published=True)
+            Route.objects.create(
+                page=page, kind=Route.Kind.PRIMARY,
+                target=descriptor['url'], is_legacy=True)
+            revision = PageRevision.objects.create(
+                page=page, sequence=1, schema_version=schema.SCHEMA,
+                payload=payload, payload_hash=schema.digest(payload),
+                kind=PageRevision.Kind.INITIAL, author_id=1)
+            PageContentState.objects.create(
+                page=page, current_revision=revision, sequence=1)
+            return page
+
+        catalog_page = publish(catalog, migration._services_payload(catalog))
+        root_page = publish(root, migration._service_root_payload(root),
+                            catalog_page)
+        total_rows = 0
+        compound_http = []
+        for descriptor in package['pages']:
+            payload = migration._leading_price_payload(descriptor)
+            publish(descriptor, payload, root_page)
+            response = self.client.get(descriptor['url'])
+            source = response.content.decode()
+            self.assertEqual(response.status_code, 200)
+            intro_marker = payload['intro_text']
+            price_marker = descriptor['price_rows'][0]['label']
+            main_marker = payload['main_text']
+            self.assertLess(source.index(intro_marker), source.index(price_marker))
+            self.assertLess(source.index(price_marker), source.index(main_marker))
+            self.assertEqual(source.count('<tbody><tr>'), 1)
+            self.assertIn('<th scope="col">Цена, руб.</th>', source)
+            self.assertEqual(source.count('<th scope="row">'),
+                             len(descriptor['price_rows']))
+            total_rows += len(descriptor['price_rows'])
+            if descriptor['map_id'] == 'MAP-042':
+                self.assertIn('от 1\u202f500\u00a0₽', source)
+            if descriptor['map_id'] == 'MAP-055':
+                for text in ('от 3500 за 1 шт.', '1500 за 1 шт.'):
+                    self.assertIn(text, source)
+                    compound_http.append(text)
+        self.assertEqual(total_rows, 46)
+        self.assertEqual(compound_http,
+                         ['от 3500 за 1 шт.', '1500 за 1 шт.'])
+
+    def test_migk_validated_diagnostics_table_and_child_render_safely(self):
+        catalog = migration._read_services_package()['page']
+        package = migration._read_diagnostics_package({'page': catalog})
+
+        def publish(descriptor, payload, parent=None):
+            page = Page.objects.create(
+                id=descriptor['page_id'], name=descriptor['name'],
+                kind=descriptor['kind'], parent=parent,
+                position=descriptor['position'], is_published=True)
+            Route.objects.create(
+                page=page, kind=Route.Kind.PRIMARY,
+                target=descriptor['url'], is_legacy=True)
+            revision = PageRevision.objects.create(
+                page=page, sequence=1, schema_version=schema.SCHEMA,
+                payload=payload, payload_hash=schema.digest(payload),
+                kind=PageRevision.Kind.INITIAL, author_id=1)
+            PageContentState.objects.create(
+                page=page, current_revision=revision, sequence=1)
+            return page
+
+        catalog_page = publish(catalog, migration._services_payload(catalog))
+        parent_descriptor = package['pages'][0]
+        parent_payload = migration._diagnostics_payload(parent_descriptor)
+        parent = publish(parent_descriptor, parent_payload, catalog_page)
+        child_descriptor = package['pages'][1]
+        child_payload = migration._diagnostics_payload(child_descriptor)
+        publish(child_descriptor, child_payload, parent)
+
+        response = self.client.get(parent_descriptor['url'])
+        source = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        intro = parent_descriptor['intro']
+        table = '<table><thead><tr><th scope="col">'
+        body = parent_descriptor['blocks'][0]['segments'][0]['text']
+        self.assertLess(source.index(intro), source.index(table))
+        self.assertLess(source.index(table), source.index(body))
+        self.assertEqual(source.count('<table>'), 1)
+        self.assertEqual(source.count('<td colspan="2"><strong>'), 3)
+        self.assertEqual(source.count('<td>от 1500</td>'), 3)
+        self.assertIn('<th scope="col">Цена, руб.</th>', source)
+        for forbidden in ('style=', 'border=', 'cellspacing=', 'cellpadding=',
+                          'class="table'):
+            self.assertNotIn(forbidden, source)
+
+        response = self.client.get(child_descriptor['url'])
+        source = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(child_descriptor['intro'], source)
+        self.assertIn(child_descriptor['blocks'][0]['text'], source)
+        self.assertNotIn('<table>', source)

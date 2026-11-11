@@ -9,6 +9,8 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 DEBUG = False
 DEV29_LOCAL_CREATE_ENABLED = False
 DEV09_MIGRATION_APPLY_ENABLED = False
+DEV10_GALLERY_APPLY_ENABLED = False
+DEV12_HOME_APPLY_ENABLED = False
 
 def credential(variable, purpose, default):
     """Read only bounded own mounted credentials; never echo contents or paths."""
