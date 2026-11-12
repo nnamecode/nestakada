@@ -10,6 +10,7 @@ from .models import Asset, AssetFile, AssetUsage, FileKeyReservation
 from .storage import MediaStorage
 
 SALT = 'estakada.media.cleanup.v1'
+MAX_RETAINED_HTML_ASSETS = 1024
 
 
 def _raw(model):
@@ -117,6 +118,75 @@ def replace(*, asset_id, kind, consumer_id, slot):
         # The delete rolls back if the new reference is rejected by validation/constraints.
         detach(kind=kind,consumer_id=consumer_id,slot=slot)
         return attach(asset_id=asset.pk,kind=kind,consumer_id=consumer_id,slot=slot)
+
+
+def _generation_id(value):
+    try:
+        parsed = UUID(str(value))
+    except (ValueError, TypeError, AttributeError):
+        raise ValidationError('MEDIA_RETAINED_GENERATION_INVALID') from None
+    if str(parsed) != str(value):
+        raise ValidationError('MEDIA_RETAINED_GENERATION_INVALID')
+    return parsed
+
+
+def _retained_asset_ids(values):
+    try:
+        ids = sorted(str(UUID(str(value))) for value in values)
+    except (ValueError, TypeError, AttributeError):
+        raise ValidationError('MEDIA_RETAINED_ASSET_INVALID') from None
+    if len(ids) > MAX_RETAINED_HTML_ASSETS or len(ids) != len(set(ids)):
+        raise ValidationError('MEDIA_RETAINED_ASSET_SET_INVALID')
+    return ids
+
+
+def set_retained_html(*, generation_id, asset_ids):
+    """Create one exact READY-asset retention set, or accept exact replay."""
+    generation = _generation_id(generation_id)
+    ids = _retained_asset_ids(asset_ids)
+    with transaction.atomic():
+        lock_content('default')
+        existing = list(AssetUsage.objects.select_for_update().filter(
+            kind=AssetUsage.Kind.RETAINED_HTML,
+            consumer_id=generation).order_by('asset_id'))
+        expected = [(asset_id, asset_id) for asset_id in ids]
+        actual = [(str(row.asset_id), row.slot) for row in existing]
+        if existing:
+            if actual != expected:
+                raise ValidationError('MEDIA_RETAINED_GENERATION_CONFLICT')
+            return {'generation_id': str(generation), 'asset_ids': ids,
+                    'created': 0, 'replay': True}
+        assets = _locked_assets(ids) if ids else []
+        if any(asset.status != Asset.Status.READY for asset in assets):
+            raise ValidationError('MEDIA_RETAINED_REQUIRES_READY')
+        for asset in assets:
+            AssetUsage.objects.create(
+                asset=asset, kind=AssetUsage.Kind.RETAINED_HTML,
+                consumer_id=generation, slot=str(asset.pk))
+        return {'generation_id': str(generation), 'asset_ids': ids,
+                'created': len(assets), 'replay': False}
+
+
+def release_retained_html(*, generation_id):
+    generation = _generation_id(generation_id)
+    with transaction.atomic():
+        lock_content('default')
+        return _raw(AssetUsage).filter(
+            kind=AssetUsage.Kind.RETAINED_HTML,
+            consumer_id=generation).delete()[0]
+
+
+def reconcile_retained_html(*, active_generation_ids):
+    generations = sorted(str(_generation_id(value))
+                         for value in active_generation_ids)
+    if len(generations) > 2 or len(generations) != len(set(generations)):
+        raise ValidationError('MEDIA_RETAINED_ACTIVE_SET_INVALID')
+    with transaction.atomic():
+        lock_content('default')
+        rows = AssetUsage.objects.select_for_update().filter(
+            kind=AssetUsage.Kind.RETAINED_HTML)
+        stale = rows.exclude(consumer_id__in=generations)
+        return _raw(AssetUsage).filter(pk__in=list(stale.values_list('pk', flat=True))).delete()[0]
 
 
 def prepare_cleanup(*, actor, asset_ids, expected_generation, storage=None):

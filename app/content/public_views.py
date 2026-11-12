@@ -12,6 +12,7 @@ from django.utils.safestring import mark_safe
 from shared_content.faults import SharedFault
 from shared_content.public import render_shared
 from shared_content.public_views import html_response
+from service_requests.public import disabled_form_for, form_for
 
 from .public_read import (PublicBlank, PublicNotFound, PublicPage, PublicRedirect,
                           PublicUnavailable, resolve_target)
@@ -31,7 +32,8 @@ GALLERY_SCRIPT = Path(__file__).with_name('public-gallery.js').read_bytes()
 HOME_SCRIPT = Path(__file__).with_name('public-home.js').read_bytes()
 PUBLIC_CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; "
               "img-src 'self'; base-uri 'none'; object-src 'none'; "
-              "frame-ancestors 'none'")
+              "frame-ancestors 'none'; form-action 'self'")
+_RESERVE_RENDER = object()
 
 
 def _media_url(file_id):
@@ -164,7 +166,9 @@ def robots(request):
     return response
 
 
-def page(request):
+def _page(request, reserve_context=None):
+    if reserve_context not in (None, _RESERVE_RENDER):
+        return _closed_response(503, 'Страница временно недоступна.')
     if request.method not in ('GET', 'HEAD'):
         response = _closed_response(405, '')
         response['Allow'] = 'GET, HEAD'
@@ -238,6 +242,9 @@ def page(request):
                 seo_configuration)
             auto_repair_json = (None if auto_node is None else mark_safe(
                 serialize_auto_repair(auto_node)))
+            request_form = (disabled_form_for(current.target)
+                            if reserve_context is _RESERVE_RENDER
+                            else form_for(request, current.target))
             body_blocks = tuple(
                 replace(block, html=mark_safe(block.html))
                 if isinstance(block, (PublicTextBlock, PublicHeroBlock)) else block
@@ -254,12 +261,15 @@ def page(request):
                     else None),
                 'seo': seo,
                 'auto_repair_json': auto_repair_json,
+                'service_request_form': request_form,
                 'header_html': mark_safe(rendered.header_html),
                 'footer_html': mark_safe(rendered.footer_html),
                 'shared_stylesheet': emitted_static['public-shared.css'],
                 'shared_script': emitted_static['public-shared.js'],
             }).encode()
-            response = html_response(request, rendered, body)
+            response = html_response(
+                request, rendered, body,
+                private_dynamic=bool(request_form and request_form['enabled']))
             response['Content-Security-Policy'] = PUBLIC_CSP
             if seo.robots is not None:
                 response['X-Robots-Tag'] = seo.robots
@@ -271,3 +281,12 @@ def page(request):
         return _closed_response(503, 'Страница временно недоступна.')
     response['Cache-Control'] = 'no-cache'
     return response
+
+
+def page(request):
+    return _page(request)
+
+
+def render_reserve(request):
+    """Trusted Python-only entry; no URL can select the reserve context."""
+    return _page(request, _RESERVE_RENDER)

@@ -11,6 +11,17 @@ DEV29_LOCAL_CREATE_ENABLED = False
 DEV09_MIGRATION_APPLY_ENABLED = False
 DEV10_GALLERY_APPLY_ENABLED = False
 DEV12_HOME_APPLY_ENABLED = False
+HTML_RESERVE_ROOT = ''
+SERVICE_REQUEST_INTAKE_ENABLED = False
+SERVICE_REQUEST_TRANSPORT_PROFILE = 'disabled'
+SERVICE_REQUEST_LEGAL_PROFILE = ''
+SERVICE_REQUEST_CONSENT_VERSION = ''
+SERVICE_REQUEST_DELETION_LEDGER_ROOT = '/var/lib/estakada/request-deletions'
+SERVICE_REQUEST_SMTP_HOST = os.environ.get('ESTAKADA_SMTP_HOST', '')
+SERVICE_REQUEST_SMTP_PORT = os.environ.get('ESTAKADA_SMTP_PORT', '')
+SERVICE_REQUEST_SMTP_USER = os.environ.get('ESTAKADA_SMTP_USER', '')
+SERVICE_REQUEST_SMTP_SECURITY = os.environ.get('ESTAKADA_SMTP_SECURITY', '')
+SERVICE_REQUEST_TELEGRAM_CHAT_ID = os.environ.get('ESTAKADA_TELEGRAM_CHAT_ID', '')
 
 def credential(variable, purpose, default):
     """Read only bounded own mounted credentials; never echo contents or paths."""
@@ -30,7 +41,7 @@ def credential(variable, purpose, default):
     except (OSError, UnicodeError, ValueError):
         raise ImproperlyConfigured(f'Required isolated credential unavailable ({purpose})') from None
 
-INSTALLED_APPS = ['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','audit.apps.AuditConfig','content.apps.ContentConfig','accounts.apps.AccountsConfig','media_library.apps.MediaLibraryConfig','page_versions.apps.PageVersionsConfig','shared_content.apps.SharedContentConfig','page_editor']
+INSTALLED_APPS = ['django.contrib.auth','django.contrib.contenttypes','django.contrib.sessions','audit.apps.AuditConfig','content.apps.ContentConfig','accounts.apps.AccountsConfig','media_library.apps.MediaLibraryConfig','page_versions.apps.PageVersionsConfig','shared_content.apps.SharedContentConfig','page_editor','service_requests.apps.ServiceRequestsConfig']
 MIDDLEWARE = [
     'request_guard.middleware.ScannerMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -39,6 +50,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'page_editor.middleware.EditorAdmissionMiddleware',
     'shared_content.middleware.SharedAdmissionMiddleware',
+    'service_requests.middleware.RequestBodyLimitMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

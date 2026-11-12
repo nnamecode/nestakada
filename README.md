@@ -1,5 +1,69 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Конец смены D-887 (2026-11-12): локальная работа сохранена для push.** DEV25-IMP-001–005 PASS; последний evidence HTTP6/6, full DEV-25 43/43, affected accounts/audit41/41, check0, no migrations, diff PASS. Следующий срез — DEV25-IMP-006 combined security/content acceptance; затем IMP-007 regression и IMP-008 independent review. Foundation stopped; Nginx activation/live/VPS отсутствуют.
+
+> **Текущая точка D-886 (2026-11-12): `DEV25-IMP-005` завершён; следующий IMP-006.** Owner-only GET/POST, strict existing-root preflight, CSRF/exact fields, neutral status, synchronous button и fixed safe audit готовы. HTTP6/6, full DEV-25 43/43, affected accounts/audit41/41, check0, no migrations, diff PASS. Далее combined security/content acceptance; Nginx отсутствует.
+
+> **Текущая точка D-885 (2026-11-12): `DEV25-IMP-005` prerequisite partial PASS.** Добавлен один synchronous coordinator capture→render/resources→immutable generation→activation и manifest URL→resource mapping; scheduler/worker отсутствуют. Build2/2, storage+activation+build21/21, no migrations, diff PASS. Следующий patch — owner-only HTTP/status/audit.
+
+> **Текущая точка D-884 (2026-11-12): `DEV25-IMP-004` завершён; следующий IMP-005.** RETAINED_HTML, A/B authoritative activation, confirmed/unknown recovery, real PostgreSQL drift и separate-process crashes/lock готовы. Storage11/11, activation8/8, combined35/35, check0, no migrations, diff PASS. Следующий отдельный срез — owner UI/status/audit; Nginx отсутствует.
+
+> **Текущая точка D-883 (2026-11-12): `DEV25-IMP-004` activation partial PASS.** Prebuilt immutable generation активируется после retained commit и A/B stamp под content lock; pre-replace сохраняет old pointer, post-replace reread различает confirmed warning/unknown, cleanup не откатывает activation. Activation6/6, combined DEV-25+retained31/31, no migrations, diff PASS. Следующий patch — separate child-process `os._exit` crash oracles; UI/Nginx отсутствуют.
+
+> **Текущая точка D-882 (2026-11-12): `DEV25-IMP-004` partial, RETAINED_HTML slice PASS.** Existing media ledger получил bounded exact READY-only retention/replay/release/reconcile без моделей и миграций. Focused3/3, affected media+page-delete34/34, check0, no migrations, diff-check PASS. Следующий patch — prebuilt generation activation с A/B source stamp и pointer-replace recovery; UI/Nginx отсутствуют.
+
+> **Текущая точка D-881 (2026-11-12): `DEV25-IMP-003` завершён; следующий IMP-004.** Safe private storage, immutable generation, full reopen byte verification и proven-orphan reconcile готовы. Storage9/9, полный DEV-25 package22/22, Django check0, migrations no changes, diff-check PASS. UI/retained refs/authoritative activation/Nginx ещё отсутствуют.
+
+> **Текущая точка D-880 (2026-11-12): `DEV25-IMP-003` в работе, safe-storage core7/7 PASS.** Private root/modes, nonblocking flock, first bootstrap marker, missing-pointer refusal, canonical pointer temp/replace, exact UUID inventory, staged verified files и atomic generation rename реализованы. Следующий bounded patch — full generation reopen verification и proven-orphan reconcile; UI/retained refs/activation/Nginx отсутствуют.
+
+> **Текущая точка D-879 (2026-11-12): `DEV25-IMP-002` завершён; следующий IMP-003.** Trusted Python-only reserve render, disabled request form, minimal anonymous GET и closed verified resource capture готовы. Focused13/13 и affected70/70 PASS (45 direct + calibrated15+10); Django check0, migrations no changes, diff-check PASS. Filesystem generation/UI/activation/Nginx ещё отсутствуют.
+
+> **Текущая точка D-877 (2026-11-12): `DEV25-IMP-002` приостановлен владельцу по anti-loop.** Internal reserve render/resource capture partial сохранён; focused run12 PASS+1 test-fixture error. PNG fixture дважды неверно приведён к bytes (`MEDIA_BYTES_REQUIRED`, затем `TypeError`); подтверждено, что это base64 string. Третьего запуска нет. Рекомендуемое возобновление: `base64.b64decode(PNG, validate=True)`, один fresh focused run, затем affected regression.
+
+> **Текущая точка D-876 (2026-11-12): `DEV25-IMP-001` завершён; следующий IMP-002.** Pure contracts, exact route/gallery inventory и bounded read-only source stamp готовы. Focused8/8 и affected86/86 PASS через direct+calibration-aware runs; Django check0, no migrations, diff-check PASS. Filesystem/UI/activation/Nginx отсутствуют.
+
+> **Текущая точка D-875 (2026-11-12): владелец разрешил `DEV25-IMP-001–008`; начат IMP-001.** Первый bounded slice — pure manifest/pointer/resource contracts и read-only exact public inventory/source stamp с tests first. Filesystem writes/UI/activation/Nginx/live/persistent apply отсутствуют.
+
+> **Текущая точка D-874 (2026-11-12): DEV-25 implementation plan final `APPROVED`, P1/P2/P3=0; product code не начат.** Eight bounded slices accepted after exact resource/request/header/bootstrap/caps/crash/durability remediation. Обязательный gate — отдельное owner approval `DEV25-IMP-001–008`; live/persistent/Nginx остаются off.
+
+> **Текущая точка D-873 (2026-11-12): DEV-25 repeat plan review P1=0/P2=1/P3=0; final finding исправлен.** Post-replace root-fsync failure теперь даёт validated activated+durability warning либо fail-closed unknown с блокировкой повторного build; rollback/слепой retry запрещены. Ожидается final confirmation, product code не начат.
+
+> **Текущая точка D-872 (2026-11-12): DEV-25 first plan review P1=1/P2=5/P3=0; findings исправлены, repeat review ожидается.** Добавлены bare+contextual media contracts, anonymous internal request, response metadata, empty-pointer bootstrap/temp recovery, exact enumeration caps и real child-process crash/flock tests. Runtime scope unchanged; product code не начат.
+
+> **Текущая точка D-871 (2026-11-12): DEV-25 minimal implementation plan подготовлен; independent plan review начат, product code не начат.** Eight bounded slices, no models/migrations/dependencies/worker/Nginx. Single atomic `active.json` authority, pre-activation retained refs, full source stamp и deterministic fault matrix. После APPROVED требуется отдельное owner approval `DEV25-IMP-001–008`.
+
+> **Текущая точка D-870 (2026-11-12): DEV-25 scope final `APPROVED`, P1/P2/P3=0; implementation plan готовится, product code не начат.** Closed exact routes/gallery, one activation point, full stale digest, internal reserve context и retained-orphan reconciliation приняты без scheduler/worker/new model/TRUST/Nginx. Далее plan/review и отдельное owner approval кода.
+
+> **Текущая точка D-869 (2026-11-12): DEV-25 repeat scope review P1=0/P2=1/P3=0; final finding исправлен.** Несуществующий `?page=1&album=<slug>` удалён из allowlist и закреплён как unknown/404; renderer не меняется. Остальная remediation принята, ожидается final repeat confirmation; product code не начат.
+
+> **Текущая точка D-868 (2026-11-12): DEV-25 first scope review P1=0/P2=5/P3=1; findings исправлены, repeat review ожидается.** Уточнены closed exact route/gallery set, одна authoritative activation point, full dependency stale digest, external navigation vs fetch policy, internal reserve context и bounded orphan reconciliation. Product code не начат; scope не расширен.
+
+> **Текущая точка D-867 (2026-11-12): владелец утвердил `DEV25-Q001`; independent scope review начат, product code не начат.** Frozen boundary: ручной owner-only existing-renderer build, exact targets/query, self-contained current/previous, computed stale и existing retained-html protection; без scheduler/worker/new model/TRUST/Nginx. После review нужны minimal plan/review и отдельное разрешение кода.
+
+> **Текущая точка D-866 (2026-11-12): bounded DEV-25 scope proposal подготовлен; product code не начат.** Ручной owner-only synchronous build переиспользует existing public renderer и media protection: exact request-target manifest, self-contained current/previous и computed stale; без scheduler/worker/new model/TRUST/Nginx. Gate: owner `DEV25-Q001` → independent scope review → minimal plan/review → отдельное разрешение кода.
+
+> **Текущая точка D-865 (2026-11-12): DEV-13/14/16 завершены локально; final repeat review APPROVED, P1/P2/P3=0.** Minimal заявки, независимые email/Telegram boundaries, read-only admin, owner delete и fail-closed privacy ledger готовы; service_requests36/full guard401 PASS. Real PII/network/live/persistent apply off. Следующий bounded кандидат этапа8 — ручной HTML-резерв DEV-25.
+
+> **Текущая точка D-864 (2026-11-12): DEV13-IMP-001–007 PASS; начат IMP-008 independent code review.** Minimal заявки/уведомления/admin/delete/ledger/security реализованы на existing layers; exact27/public25/calibrated25/full guard401 PASS, system/no-migrations/ingress/diff PASS. Real network/PII/live/persistent apply off; до review APPROVED задача не завершена.
+
+> **Текущая точка D-863 (2026-11-12): DEV13-IMP-001/002 PASS; начат IMP-003.** Minimal DB/policy/default-off atomic form ready; focused10, affected25 и calibrated shared15 PASS. Далее synthetic independent notification guards; real network/PII off.
+
+> **Текущая точка D-862 (2026-11-12): реализация `DEV13-IMP-001–008` разрешена; начат IMP-001.** Minimal schema/policy/signed intent tests first; public intake/network/real PII/live/persistent apply отсутствуют.
+
+> **Текущая точка D-861 (2026-11-12): DEV-13 implementation plan `APPROVED`, P1/P2/P3=0; product code не начат.** Eight bounded slices без queue/outbox/worker/API/cache/Playwright/real network/PII. Ожидается отдельное разрешение владельца на `DEV13-IMP-001–008`.
+
+> **Текущая точка D-860 (2026-11-12): DEV-13 first plan review P1=1/P2=3/P3=2; findings исправлены, repeat review ожидается.** Cache/CSRF/notification/ledger/CSP/Telegram boundaries уточнены без тяжёлой архитектуры. Product code не начат.
+
+> **Текущая точка D-859 (2026-11-12): DEV-13 minimal implementation plan готов; independent plan review начат, product code не начат.** Eight bounded slices на existing layers, no Playwright/real network/PII/CRM/outbox/worker/API/cache. После APPROVED потребуется отдельное разрешение кода.
+
+> **Текущая точка D-858 (2026-11-12): DEV-13 repeat scope review `APPROVED`, P1/P2/P3=0; minimal implementation plan готовится.** Объединённый DEV-13/14/16 остаётся bounded, без CRM/outbox/worker/API/cache/реальных ПД. Product code не начат; после plan review потребуется отдельное разрешение.
+
+> **Текущая точка D-857 (2026-11-12): DEV-13 first scope review P1=0/P2=4/P3=1; замечания исправлены, repeat review ожидается.** Уточнения не добавляют subsystem: insert-winner notifications, convergent ledger delete, LEGAL partials, page cap25 и Nginx launch gate. Product code не начат.
+
+> **Текущая точка D-856 (2026-11-12): `DEV13-Q001` утверждён; independent scope review начат, product code не начат.** Объединённый minimal DEV-13/14/16 исключает CRM/outbox/worker/API/cache и сохраняет SQLi/XSS/CSRF/rights/idempotency/privacy/LEGAL gates. Далее minimal plan/review и отдельное разрешение кода.
+
+> **Текущая точка D-855 (2026-11-12): bounded DEV-13 scope proposal подготовлен; product code не начат.** Предложено одним минимальным инкрементом закрыть прежние DEV-13/14/16: PostgreSQL source of truth, immediate independent email+Telegram attempts, employee read-only и delete/settings только `nesadmin`; no CRM/outbox/worker/API. Public intake и реальные ПД/внешние отправки остаются fail-closed до LEGAL-01. Gate: owner `DEV13-Q001` → independent scope review → minimal plan/review → отдельное разрешение кода.
+
 > **Текущая точка D-853 (2026-11-11): `DEV12-IMP-008` remediation приостановлена владельцу по anti-loop.** Forged stable-ID HTTP дважды вернул503; второй узкий run уточнил `EDITOR_TRANSPORT_UNAVAILABLE`, до server validator. Partial remediation сохранён, source/profile unit14/14 PASS; bind/save/public/shared/final ещё не подтверждены. Возобновление — targeted child transport diagnostic без третьего HTTP повтора, exact fix, один fresh remediation run и repeat review. Live/persistent apply/publication отсутствуют.
 
 > **Текущая точка D-852 (2026-11-11): первый `DEV12-IMP-008` code review — `CHANGES REQUESTED`, P1=0/P2=4/P3=1.** Подтверждены bounded fixes candidate digest/fallback/xmin ABA/stable identity-order и progressive ARIA + real shared-host proof. Исправления остаются в existing layers без новой архитектуры; затем targeted/final checks и repeat independent review. Live/persistent apply/publication отсутствуют.

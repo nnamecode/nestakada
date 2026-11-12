@@ -1,0 +1,15 @@
+<section class="public-request" aria-labelledby="public-request-title">
+  <h2 id="public-request-title">Записаться на обслуживание</h2>
+  {% if service_request_form.enabled %}
+  <form method="post" action="/request/submit/">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ service_request_form.csrf_token }}">
+    <input type="hidden" name="intent" value="{{ service_request_form.intent }}">
+    <label>Имя<input name="name" maxlength="100" autocomplete="name" required></label>
+    <label>Телефон<input name="phone" maxlength="32" inputmode="tel" autocomplete="tel" required></label>
+    <label class="public-request-wide">Автомобиль, если хотите<input name="car" maxlength="300"></label>
+    <label class="public-request-wide">Комментарий<textarea name="comment" maxlength="4000"></textarea></label>
+    <label class="public-request-consent"><input type="checkbox" name="consent" value="on" required> <span>Я подтверждаю отдельное согласие на обработку данных для этой заявки.</span></label>
+    <button type="submit">Отправить заявку</button>
+  </form>
+  {% else %}<p>Онлайн-запись пока недоступна. Пожалуйста, воспользуйтесь указанным на сайте телефоном.</p>{% endif %}
+</section>

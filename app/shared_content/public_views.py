@@ -57,7 +57,7 @@ def _headers(response, etag, *, immutable=False):
     return response
 
 
-def html_response(request, rendered, html_bytes):
+def html_response(request, rendered, html_bytes, *, private_dynamic=False):
     """Trusted host owns stamp/body correspondence; no mutable body re-fetch.
 
     Readiness has already been proved by render_shared. No generic Page renderer
@@ -65,12 +65,19 @@ def html_response(request, rendered, html_bytes):
     """
     denied = _method(request)
     if denied is not None: return denied
-    if type(rendered) is not P.RenderedShared or type(html_bytes) is not bytes:
+    if (type(rendered) is not P.RenderedShared or type(html_bytes) is not bytes
+            or type(private_dynamic) is not bool):
         return unavailable_response()
-    if conditional_matches(request.headers.get('If-None-Match'), rendered.etag):
+    if (not private_dynamic
+            and conditional_matches(request.headers.get('If-None-Match'), rendered.etag)):
         return _headers(HttpResponse(status=304), rendered.etag)
     response = HttpResponse(b'' if request.method == 'HEAD' else html_bytes, content_type='text/html; charset=utf-8')
     response['Content-Length'] = str(len(html_bytes))
+    if private_dynamic:
+        response['Cache-Control'] = 'private, no-store'
+        response['Vary'] = 'Cookie'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
     return _headers(response, rendered.etag)
 
 

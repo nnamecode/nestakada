@@ -94,6 +94,7 @@
       {% endif %}
     {% endfor %}
     {% endif %}{% endif %}
+    {% if service_request_form %}{% include "service_requests/public_form.html" %}{% endif %}
   </main>
   {{ footer_html }}
 </body>
