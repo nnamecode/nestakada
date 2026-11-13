@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1010 (2026-11-14): LAUNCH-IN-007 protocol готов, но advertising export не получен.** Local baseline exact114 requested/113 effective/query2/redirect1; future input is URL-only ignored file, no API/secrets/stats. AC-051/AC-MIG-006/full PASS unchanged. Next gate: owner-provided destination list, then read-only compare.
+
 > **Текущая точка D-1009 (2026-11-14): owner launch checklist LAUNCH-IN-001–008 готов; новых функций и approvals нет.** Базовый no-intake профиль не блокируется MAX/Telegram/SMTP/analytics; production release закрыт IN-002/005/006/007/008. Next external gate: advertising URL export/read-only reconciliation; VPS/live не трогать.
 
 > **Текущая точка D-1008 (2026-11-14): launch/external inventory группы2 завершён read-only, статусы92 AC/full PASS0 неизменны.** Local readiness отделён от восьми внешних входов; intake/optional runtime off, DEV-26/27 deferred, deployment не разрешён. Docker running0. Next no-bloat step: owner-facing external-input checklist, не реализация.
