@@ -1,5 +1,11 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-985: DEV-21 exact2 evidence mapping
+
+`AC-042` / `AT-042` и `AC-OPS-006` / `AT-306` имеют только reviewed `acceptance-fallback-contracts.md` assertions для incident lifecycle:1000 repeats одного stable incident без шторма, второй critical другого component/code независимо, restart/read без ложного recovery, один verified recovery, lost ACK/delivery failure bounded and nonrecursive. Реальных incident controller/cycle/delivery bindings и исполнения нет.
+
+Минимальные independent email/Telegram attempts DEV-13 относятся к сохранённой заявке и не являются доказательством этих technical-incident AC. Отказ от отдельной тяжёлой DEV-21 queue не превращает их в PASS: они явно остаются deferred/assertion-only до отдельного operational scope. Первое чтение предположило несуществующий DEV-13 results filename; tracked plan/decisions/tests были найдены по реестру файлов без одинакового повтора. Full PASS0; states/IDs unchanged.
+
 ### D-984: DEV-18 exact2 evidence mapping
 
 `AC-040` / `AT-040` имеет executed local partial evidence D-643/D-645: actual Docker inspect and >35MiB synthetic probe prove `json-file` rotation `10m×3` for four runtime services; strict transactional `AuditEvent occurred_at < now−30days` cleanup preserves boundary/newer and rolls back on DB failure. Это не общий full AC: unified managed1GiB folder including temporary files, noise-first eviction, backup/external exclusion under pressure, daily target scheduler and operational observation отсутствуют.
