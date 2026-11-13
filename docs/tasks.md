@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-984 (2026-11-13): **DEV-18 exact2 TEST-07 mapping complete; AC-040 local partial, AC-OPS-008 assertion-only, full PASS0.** Existing bounded rotation/retention kept; unified quota/fault/scheduler operations remain. No logging-platform expansion.
+
 Текущая работа D-983 (2026-11-13): **DEV-02 exact2 TEST-07 mapping complete; both local partial, full PASS0.** FOUNDATION11/11 and isolation/role/provenance evidence mapped; production profile/release rehearsal/current vendor-risk gates remain. No runtime change.
 
 Текущая работа D-982 (2026-11-13): **LEGAL-01 + MONITOR-01 exact2 TEST-07 mapping complete; full PASS0.** AC-058 is factual-draft/local partial and external/legal blocked; AC-OPS-004 is design-only and provider/real-I/O blocked. No consent manager, monitoring service or automation added.

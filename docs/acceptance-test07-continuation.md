@@ -1,5 +1,11 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-984: DEV-18 exact2 evidence mapping
+
+`AC-040` / `AT-040` имеет executed local partial evidence D-643/D-645: actual Docker inspect and >35MiB synthetic probe prove `json-file` rotation `10m×3` for four runtime services; strict transactional `AuditEvent occurred_at < now−30days` cleanup preserves boundary/newer and rolls back on DB failure. Это не общий full AC: unified managed1GiB folder including temporary files, noise-first eviction, backup/external exclusion under pressure, daily target scheduler and operational observation отсутствуют.
+
+`AC-OPS-008` / `AT-308` имеет reviewed assertion contract only for80/95/75%, rotation peak, concurrent write, no-space and nonrecursive error reporting. Actual OS folder/controller bindings, physical peak measurement and fault execution отсутствуют. Full PASS0; states/IDs unchanged, scheduler/collector/log platform не добавлены.
+
 ### D-983: DEV-02 exact2 evidence mapping
 
 `AC-053` / `AT-053` имеет executed local partial evidence D-316/317: FOUNDATION-001–011=11/11, strict Host/forwarded-header boundary, DEBUG=False/security settings, live Nginx→app fault behavior, CSRF middleware and deployment audit exit0 with only expected local-HTTP HSTS warning. Это не production-profile PASS: настоящий домен/TLS, production cookies/HSTS/proxy, полные role mutation/GET branches и release `check --deploy` остаются.
