@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-992 (2026-11-13): DEV-19 exact4 mapped assertion-only/deferred.** Manual log-category deletion/reconciliation/read-state/incident behavior remains outside MVP; full PASS0. TEST-08/stage9 closed.
+
 > **Текущая точка D-991 (2026-11-13): DEV-17 exact4 mapped under D-925 no-bloat scope.** Safe typed audit/read/time evidence is local partial; badges/read-state/files/export/Telegram remain deferred or unexecuted, full PASS0. TEST-08/stage9 closed.
 
 > **Текущая точка D-990 (2026-11-13): DEV-08 exact4 mapped.** Public composition/cache have local partial evidence; real8×3 browser/device acceptance remains manual TEST-10 blocked, full PASS0. TEST-08/stage9 closed.

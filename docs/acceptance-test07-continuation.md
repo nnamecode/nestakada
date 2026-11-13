@@ -1,5 +1,11 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-992: DEV-19 exact4 evidence mapping
+
+`AC-062` / `AT-062`, `AC-MAN-004` / `AT-704`, `AC-MAN-005` / `AT-705` and `AC-MAN-006` / `AT-706` are all assertion-only/deferred under the approved MVP simplification. They require owner-confirmed category-bound delete, new-event/other-category/protected-audit preservation, DB/file partial-operation reconciliation, physical1GiB behavior, retry identity, read cursor/badge and independent incident recovery.
+
+The minimal owner read-only AuditEvent screen, strict older-than30-day DB cleanup and Docker technical rotation do not implement or substitute manual category deletion. No application bindings or fault execution exist for these four ACs. Full PASS0; states/IDs unchanged and no category-delete/reconciliation/read-state/incident subsystem is added.
+
 ### D-991: DEV-17 exact4 evidence mapping
 
 `AC-038` / `AT-038` has executed local partial evidence: the exact nine approved categories, one-insert stable UUID, typed references, safe formatter rejecting raw/sensitive payloads, append-only model guards and owner-only bounded filtered read are tested. Per-category rotated files, storage-unavailable incomplete-vs-zero indication and full nine-source operational fixture remain.
