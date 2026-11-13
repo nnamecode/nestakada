@@ -1,0 +1,35 @@
+{
+  "schema": "dev09m-infographic-map019-v1",
+  "policy": "owner-approved-after-intro-one-image",
+  "source": {
+    "relative_path": "media/design-concepts/infographics/map-019-body-repair-sample-v1.png",
+    "mime": "image/png",
+    "width": 1448,
+    "height": 1086,
+    "bytes": 2025618,
+    "sha256": "01bfda46e7dba90adb38affd6fe615beba90f9e182a77073a5ec6e27fa5c5678"
+  },
+  "media": {
+    "relative_path": "media/design-concepts/infographics/map-019-body-repair-v1.webp",
+    "mime": "image/webp",
+    "width": 1200,
+    "height": 900,
+    "bytes": 104682,
+    "sha256": "c86b3d2912b72c4169193777a4df62f0b8ab075bddb9551a77da0027dc6417c5",
+    "image_id": "db49b593-85b1-5377-8873-a4013f762d5e",
+    "asset_id": "6fa5cdd8-dabd-52ab-b994-4e10ef2cb2c8",
+    "file_id": "b7cd2e13-9427-57cc-b65e-28fdc5aaff71",
+    "folder_id": "b6fbe54a-6483-5459-a856-0c4d3c6f6afd",
+    "folder_path": "design/services/infographics",
+    "storage_key": "img/6fa5cdd8-dabd-52ab-b994-4e10ef2cb2c8/main.webp",
+    "alt": "Три этапа ремонта кузова: оценка повреждений, восстановление деталей и проверка результата.",
+    "alignment": "center"
+  },
+  "binding": {
+    "map_id": "MAP-019",
+    "page_id": "080d64ee-4ce1-5399-b672-83dc22f9f8bf",
+    "url": "/services/kuzovnoj-remont/remont-kuzova",
+    "position": "after_intro_text",
+    "block_id": "98ad3c39-de8d-5894-9ce4-a073179ff23e"
+  }
+}

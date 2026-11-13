@@ -18,7 +18,9 @@ from accounts.services import lock_auth
 from audit.constants import Category, Level, Result, Source
 from audit.models import AuditEvent
 from audit.services import record_event
-from media_library.models import AssetUsage
+from media_library import services as media_services
+from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder
+from media_library.storage import MediaStorage
 from page_editor.clean import restricted_clean
 from page_versions import engine, schema
 from page_versions.creation import initial_snapshot
@@ -62,6 +64,9 @@ COMBINED_PACKAGE_SHA256 = '3fb682d6a092d78439fa45b541668554d793490b41eb89d311359
 COMBINED_PAGES_SHA256 = '0ee0924d71cea90e81ab2596b7b4df6df282ebb6f81998d8b55ff54eea5d8c82'
 COMBINED_ROUTES_SHA256 = 'cc5d3255f01e40098a90fd3a48ff8efe2d4f117026b3c55cdaef16fbe42b6433'
 COMBINED_MANIFEST_SHA256 = '8e89d9db34b3b3e1e34574c933ce12a3ac37d7ebd8a3b68a1d6c7591233c2cfa'
+COMBINED_INFOGRAPHIC_PACKAGE_NAME = 'dev09m_infographic_map019.json'
+COMBINED_INFOGRAPHIC_PACKAGE_SHA256 = 'fe083d206a72a3850bb30a554e57d375eba3338aacd87842c6c17f99a0f34954'
+COMBINED_INFOGRAPHIC_PROVENANCE = 'DEV09M owner-approved MAP-019 infographic'
 SERVICE_ROOTS_EXPECTED = (
     ('729b10a3-709e-41c0-a71f-0d376a2b8586', 'MAP-012',
      '/services/remont/', 2, 'Ремонт', 'Ремонт',
@@ -448,6 +453,163 @@ def _read_combined_services_package():
     except (UnicodeError, json.JSONDecodeError, RecursionError):
         _fault('MIGRATION_PACKAGE_INVALID')
     return _validate_combined_services_package(value)
+
+
+def _read_combined_infographic_package():
+    path = Path(__file__).resolve().with_name(COMBINED_INFOGRAPHIC_PACKAGE_NAME)
+    if (path.name != COMBINED_INFOGRAPHIC_PACKAGE_NAME
+            or path.parent != Path(__file__).resolve().parent):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    nofollow = getattr(os, 'O_NOFOLLOW', None)
+    if nofollow is None:
+        _fault('MIGRATION_PACKAGE_UNSUPPORTED')
+    descriptor = None
+    try:
+        descriptor = os.open(path, os.O_RDONLY | nofollow)
+        info = os.fstat(descriptor)
+        if info.st_size > 65536:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        if not stat.S_ISREG(info.st_mode) or Path(os.path.realpath(path)) != path:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        with os.fdopen(descriptor, 'rb') as stream:
+            descriptor = None
+            content = stream.read(65537)
+    except ValidationError:
+        raise
+    except (OSError, ValueError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if (len(content) > 65536 or len(content) != info.st_size or b'\r' in content
+            or hashlib.sha256(content).hexdigest()
+            != COMBINED_INFOGRAPHIC_PACKAGE_SHA256):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    try:
+        value = json.loads(content.decode('utf-8', errors='strict'),
+                           object_pairs_hook=_pairs)
+    except (UnicodeError, json.JSONDecodeError, RecursionError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    expected = {
+        'schema': 'dev09m-infographic-map019-v1',
+        'policy': 'owner-approved-after-intro-one-image',
+        'source': {
+            'relative_path': 'media/design-concepts/infographics/map-019-body-repair-sample-v1.png',
+            'mime': 'image/png', 'width': 1448, 'height': 1086,
+            'bytes': 2025618,
+            'sha256': '01bfda46e7dba90adb38affd6fe615beba90f9e182a77073a5ec6e27fa5c5678',
+        },
+        'media': {
+            'relative_path': 'media/design-concepts/infographics/map-019-body-repair-v1.webp',
+            'mime': 'image/webp', 'width': 1200, 'height': 900,
+            'bytes': 104682,
+            'sha256': 'c86b3d2912b72c4169193777a4df62f0b8ab075bddb9551a77da0027dc6417c5',
+            'image_id': 'db49b593-85b1-5377-8873-a4013f762d5e',
+            'asset_id': '6fa5cdd8-dabd-52ab-b994-4e10ef2cb2c8',
+            'file_id': 'b7cd2e13-9427-57cc-b65e-28fdc5aaff71',
+            'folder_id': 'b6fbe54a-6483-5459-a856-0c4d3c6f6afd',
+            'folder_path': 'design/services/infographics',
+            'storage_key': 'img/6fa5cdd8-dabd-52ab-b994-4e10ef2cb2c8/main.webp',
+            'alt': ('Три этапа ремонта кузова: оценка повреждений, '
+                    'восстановление деталей и проверка результата.'),
+            'alignment': 'center',
+        },
+        'binding': {
+            'map_id': 'MAP-019',
+            'page_id': '080d64ee-4ce1-5399-b672-83dc22f9f8bf',
+            'url': '/services/kuzovnoj-remont/remont-kuzova',
+            'position': 'after_intro_text',
+            'block_id': '98ad3c39-de8d-5894-9ce4-a073179ff23e',
+        },
+    }
+    if value != expected:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return value
+
+
+def _combined_infographic_source(package, source_root):
+    try:
+        root = Path(source_root).resolve(strict=True)
+        relative = Path(package['media']['relative_path'])
+        path = root.joinpath(*relative.parts)
+        info = path.lstat()
+        resolved = path.resolve(strict=True)
+        content = path.read_bytes()
+    except OSError:
+        _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+    if (not stat.S_ISREG(info.st_mode) or path.is_symlink()
+            or resolved != path.absolute() or root not in resolved.parents
+            or len(content) != info.st_size
+            or len(content) != package['media']['bytes']
+            or hashlib.sha256(content).hexdigest()
+            != package['media']['sha256']):
+        _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+    return content
+
+
+def _combined_infographic_exact_asset(package, asset, files):
+    row = package['media']
+    return (str(asset.folder_id) == row['folder_id']
+            and asset.status in (Asset.Status.STAGED, Asset.Status.READY)
+            and asset.provenance == COMBINED_INFOGRAPHIC_PROVENANCE
+            and asset.is_legacy is False and asset.source_url == ''
+            and asset.source_sha256 == row['sha256'] and len(files) == 1
+            and str(files[0].pk) == row['file_id']
+            and files[0].kind == AssetFile.Kind.MAIN
+            and files[0].key == row['storage_key']
+            and files[0].sha256 == row['sha256']
+            and files[0].byte_size == row['bytes'])
+
+
+def import_combined_infographic_media(*, source_root, storage=None):
+    """Import the one approved MAP-019 WebP, or verify its exact replay."""
+    _enabled()
+    package = _read_combined_infographic_package()
+    content = _combined_infographic_source(package, source_root)
+    row = package['media']
+    storage = storage or MediaStorage()
+    with transaction.atomic():
+        folder = MediaFolder.objects.select_for_update().filter(
+            pk=row['folder_id']).first()
+        if folder is None:
+            MediaFolder.objects.create(id=UUID(row['folder_id']),
+                                       path=row['folder_path'])
+        elif folder.path != row['folder_path']:
+            _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+    with transaction.atomic():
+        asset = Asset.objects.select_for_update().filter(
+            pk=row['asset_id']).first()
+        if asset is None:
+            asset = Asset.objects.create(
+                id=UUID(row['asset_id']), folder_id=row['folder_id'],
+                provenance=COMBINED_INFOGRAPHIC_PROVENANCE,
+                source_sha256=row['sha256'])
+            status = 'created'
+        else:
+            status = 'replayed' if asset.status == Asset.Status.READY else 'recovered'
+        files = list(AssetFile.objects.select_for_update().filter(
+            asset=asset).order_by('pk'))
+        if asset.status == Asset.Status.READY:
+            if (not _combined_infographic_exact_asset(package, asset, files)
+                    or storage.manifest(row['storage_key']) != {
+                        'sha256': row['sha256'], 'byte_size': row['bytes']}):
+                _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+            return {'status': 'pass', 'asset': row['asset_id'],
+                    'result': status}
+        if asset.status != Asset.Status.STAGED:
+            _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+        if files:
+            if (not _combined_infographic_exact_asset(package, asset, files)
+                    or storage.manifest(row['storage_key']) != {
+                        'sha256': row['sha256'], 'byte_size': row['bytes']}):
+                _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+        else:
+            media_services.write_file(
+                asset_id=asset.pk, file_id=row['file_id'],
+                kind=AssetFile.Kind.MAIN, key=row['storage_key'],
+                chunks=content, storage=storage)
+    media_services.mark_ready(asset_id=row['asset_id'], storage=storage)
+    return {'status': 'pass', 'asset': row['asset_id'], 'result': status}
 
 
 def _exact_keys(value, expected):
@@ -1332,7 +1494,7 @@ def _service_detail_payload(page):
     return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
 
 
-def _combined_payload(page):
+def _combined_payload(page, infographic=None):
     def render_segments(segments):
         return ''.join(
             ('<strong>' + escape(segment['text'], quote=False) + '</strong>')
@@ -1400,6 +1562,20 @@ def _combined_payload(page):
     payload['intro_text'] = intro
     payload['main_text'] = main
     payload['description'] = page['description']
+    if infographic is not None and page['map_id'] == infographic['binding']['map_id']:
+        row = infographic['media']
+        if (page['page_id'] != infographic['binding']['page_id']
+                or page['url'] != infographic['binding']['url']):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        payload['embedded_images'] = [{
+            'id': row['image_id'], 'asset_id': row['asset_id'],
+            'alt': row['alt'], 'alignment': row['alignment'],
+            'width_px': row['width'], 'height_px': row['height'],
+        }]
+        payload['layout'].insert(1, {
+            'id': infographic['binding']['block_id'], 'kind': 'image',
+            'image_id': row['image_id'],
+        })
     return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
 
 
@@ -1507,6 +1683,8 @@ def _create_aggregate(page_data, actor, payload, routes=None):
         created_at=instant, updated_at=instant)
     VersionBasePin.objects.create(
         revision=revision, holder_kind='owner_draft', holder_id=draft.pk)
+    engine.sync_usage(AssetUsage.Kind.CURRENT_PAGE, page.pk, payload)
+    engine.sync_usage(AssetUsage.Kind.DRAFT, draft.pk, payload)
     record_event(
         category=Category.PAGES_LINKS,
         event_code='MIGRATION_PAGE_IMPORTED', level=Level.INFO,
@@ -1569,6 +1747,16 @@ def _exact_aggregate(page_data, actor, payload, routes=None):
     reservations = list(IdentityReservation.objects.filter(
         pk__in=[revision.pk, draft.pk]).order_by('kind', 'id'))
     reservation_values = {(row.pk, row.kind) for row in reservations}
+    usages = {(row.kind, row.consumer_id, row.slot, row.asset_id)
+              for row in AssetUsage.objects.filter(
+                  consumer_id__in=[page_id, revision.pk, draft.pk])}
+    wanted = set()
+    for kind, consumer_id in (
+            (AssetUsage.Kind.CURRENT_PAGE, page_id),
+            (AssetUsage.Kind.ORDINARY_VERSION, revision.pk),
+            (AssetUsage.Kind.DRAFT, draft.pk)):
+        wanted.update((kind, consumer_id, slot, UUID(asset_id))
+                      for slot, asset_id in schema.asset_slots(payload).items())
     if (len(metadata) != 1 or metadata[0].generation != 1
             or metadata[0].name != '' or metadata[0].comment != ''
             or metadata[0].manual_date is not None
@@ -1581,8 +1769,7 @@ def _exact_aggregate(page_data, actor, payload, routes=None):
             or PageGrant.objects.filter(page=page).exists()
             or RestoreStage.objects.filter(page=page).exists()
             or OperationReceipt.objects.filter(page_id=page_id).exists()
-            or AssetUsage.objects.filter(
-                consumer_id__in=[page_id, revision.pk, draft.pk]).exists()
+            or usages != wanted
             or not _exact_event(page_id, actor.pk)):
         return False
     return True
@@ -1903,16 +2090,51 @@ def _combined_expected_link(page, catalog, roots):
     return None
 
 
-def apply_combined_services():
+def _combined_infographic_preflight(package, storage):
+    row = package['media']
+    expected = {'sha256': row['sha256'], 'byte_size': row['bytes']}
+    try:
+        actual = storage.manifest(row['storage_key'])
+    except (OSError, ValidationError):
+        _fault('MIGRATION_MEDIA_UNAVAILABLE')
+    if actual != expected:
+        _fault('MIGRATION_MEDIA_UNAVAILABLE')
+    return schema.digest({'key': row['storage_key'], **actual})
+
+
+def _combined_infographic_recapture(package, storage, evidence):
+    row = package['media']
+    folder = MediaFolder.objects.select_for_update().filter(
+        pk=row['folder_id']).first()
+    asset = Asset.objects.select_for_update().filter(pk=row['asset_id']).first()
+    files = list(AssetFile.objects.select_for_update().filter(
+        asset_id=row['asset_id']).order_by('pk'))
+    if (folder is None or folder.path != row['folder_path'] or asset is None
+            or asset.status != Asset.Status.READY
+            or not _combined_infographic_exact_asset(package, asset, files)):
+        _fault('MIGRATION_MEDIA_UNAVAILABLE')
+    try:
+        actual = storage.manifest(row['storage_key'])
+    except (OSError, ValidationError):
+        _fault('MIGRATION_MEDIA_UNAVAILABLE')
+    if (actual != {'sha256': row['sha256'], 'byte_size': row['bytes']}
+            or schema.digest({'key': row['storage_key'], **actual}) != evidence):
+        _fault('MIGRATION_MEDIA_UNAVAILABLE')
+
+
+def apply_combined_services(*, storage=None):
     """Create the reviewed hidden DEV-09M aggregate, or exact-replay it."""
     _enabled()
     package = _read_combined_services_package()
+    infographic = _read_combined_infographic_package()
+    storage = storage or MediaStorage()
+    media_evidence = _combined_infographic_preflight(infographic, storage)
     catalog, roots, parent_contracts = _combined_parent_context()
     pages = package['pages']
     routes_by_page = {page['page_id']: [] for page in pages}
     for route in package['routes']:
         routes_by_page[route['page_id']].append(route)
-    payloads = [_combined_payload(page) for page in pages]
+    payloads = [_combined_payload(page, infographic) for page in pages]
     rendered_bytes = sum(
         len(payload['intro_text'].encode('utf-8'))
         + len(payload['main_text'].encode('utf-8')) for payload in payloads)
@@ -1934,6 +2156,8 @@ def apply_combined_services():
         lock_content('default')
         lock_auth()
         actor = _owner()
+        _combined_infographic_recapture(
+            infographic, storage, media_evidence)
         parent_ids = [UUID(page_id) for page_id in parent_contracts]
         list(Page.objects.select_for_update().filter(pk__in=parent_ids))
         list(Route.objects.select_for_update().filter(page_id__in=parent_ids))

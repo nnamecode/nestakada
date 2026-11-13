@@ -313,13 +313,14 @@ $migrationPackages = @(
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09j_leading_price_details.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09k_diagnostics_branch.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09m_combined_services.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09m_infographic_map019.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev10_gallery.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev12_home_profile.json'))
 )
 $migrationPackageNames = @($migrationPackages | ForEach-Object { Split-Path -Leaf $_ })
-if ($migrationPackageNames.Count -ne 10 -or
-    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev09m_combined_services.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $migrationPackageNames }).Count -ne 0) {
-    throw 'Migration package snapshot allowlist must contain exactly the ten reviewed package names.'
+if ($migrationPackageNames.Count -ne 11 -or
+    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev09m_combined_services.json','dev09m_infographic_map019.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $migrationPackageNames }).Count -ne 0) {
+    throw 'Migration package snapshot allowlist must contain exactly the eleven reviewed package names.'
 }
 $files = @($items | Where-Object { !$_.PSIsContainer -and ($_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages) } | Sort-Object FullName)
 if (!(Test-Path -LiteralPath (Join-Path $source 'manage.py'))) { throw 'Application source is incomplete.' }
@@ -345,13 +346,14 @@ $migrationPackages = @(
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09j_leading_price_details.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09k_diagnostics_branch.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev09m_combined_services.json')),
+    [IO.Path]::GetFullPath((Join-Path $source 'content/dev09m_infographic_map019.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev10_gallery.json')),
     [IO.Path]::GetFullPath((Join-Path $source 'content/dev12_home_profile.json'))
 )
 $manifestPackageNames = @($migrationPackages | ForEach-Object { Split-Path -Leaf $_ })
-if ($manifestPackageNames.Count -ne 10 -or
-    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev09m_combined_services.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $manifestPackageNames }).Count -ne 0) {
-    throw 'Migration package manifest allowlist must contain exactly the ten reviewed package names.'
+if ($manifestPackageNames.Count -ne 11 -or
+    @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev09m_combined_services.json','dev09m_infographic_map019.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $manifestPackageNames }).Count -ne 0) {
+    throw 'Migration package manifest allowlist must contain exactly the eleven reviewed package names.'
 }
 $sourceFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages } | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($source.Length+1).Replace('\','/'); sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}

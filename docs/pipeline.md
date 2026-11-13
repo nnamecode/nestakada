@@ -1,5 +1,31 @@
 # Процесс полной разработки
 
+> **Текущая точка D-974 (2026-11-13): MAP-019 minimal local integration COMPLETE after final review.** Open P1/P2/P3=0/0/0; O_NOFOLLOW bounded package reader and manifest-race/missing-usage oracles closed. Fresh named47/47+check0+migrations0, prior public9/21/7. Foundation stop/containers0 required; persistent apply/publication/live and remaining23 remain behind separate owner gates.
+
+> **Текущая точка D-973 (2026-11-13): MAP-019 after-intro minimal local integration PASS; final review next.** Exact WebP1200×900/104682B and metadata package integrated through existing embedded image/layout and one-file default-off importer. Wrapper-only evidence45/45+public9/21/7+check0+migrations0. No schema/dependency/runtime bloat; persistent apply/publication/live and remaining23 remain closed.
+
+> **Текущая точка D-972 (2026-11-13): `INFO-Q006=1`, exact MAP-019 converter literal frozen; fresh plan review active.** Canonical source3050B/SHA e4094994…, exact full-digest Docker argv and runtime/evidence equality fixed. No conversion/WebP/package/code/tests yet.
+
+> **Текущая точка D-971 (2026-11-13): MAP-019 integration plan owner-paused by anti-loop.** Two reviews repeated missing pre-run exact converter literal+argv+SHA; all other findings closed. Production WebP/package/code/tests absent. Recommended `INFO-Q006=1` literal-only plan closure then fresh review; conversion remains forbidden meanwhile.
+
+> **Текущая точка D-970 (2026-11-13): `INFO-Q005=1`, MAP-019 after-intro integration plan remediated.** First review P1/P2/P3=0/3/1; full converter digest/program/no-overwrite, two-phase media evidence+locked recapture/race rollback and UUID provenance added. Repeat plan review required before conversion/code. Remaining23/persistent apply/publication/live closed.
+
+> **Текущая точка D-969 (2026-11-13): MAP-019 visual direction owner-approved; placement deferred by owner.** Preview assigned to exact service page in content map. No pointless hidden Asset/usage/version or layout/public change; existing image block will be used after placement choice. INFO-Q002/remaining23/import/live closed.
+
+> **Текущая точка D-968 (2026-11-13): one MAP-019 preview independently APPROVED; preview owner gate open.** PNG1448×1086/2025618 bytes, exact text/three stages/palette accepted. Recommended `INFO-Q004=1` accepts only visual direction and read-only placement/parameter proposal. `INFO-Q002`, conversion, remaining23 and integration/import/live remain closed.
+
+> **Текущая точка D-967 (2026-11-13): INFOGRAPHICS-01 exact24 text map APPROVED; one MAP-019 sample active.** Owner resume closed MAP015/MAP115; fresh review P1/P2/P3=0/0/0. Only one local candidate image may be created; remaining23 and product integration/import/live remain closed until future gates.
+
+> **Текущая точка D-966 (2026-11-13): INFOGRAPHICS-01 text map owner-paused by anti-loop.** `INFO-Q001=1` accepted; exact24 structure PASS, images0. Two reviews repeated source-bound overreach; remaining only MAP015 optional pressure/inflation/valves and MAP115 names-only programs/treatments. No third remediation. Recommended `INFO-Q003=1` literal two-MAP narrowing then fresh review; MAP019 sample forbidden meanwhile.
+
+> **Текущая точка D-965 (2026-11-13): INFOGRAPHICS-01 minimal first-cohort scope independently APPROVED; owner gate open.** Exact24 DEV-09M: text map→technical review→one MAP-019 sample; candidate format only. Remaining23 forbidden until future `INFO-Q002`. No image/code/import/live. Recommended `INFO-Q001=1`.
+
+> **Текущая точка D-964 (2026-11-13): MEDIA-06 gallery pre-import readiness independently APPROVED.** Existing DEV-10 exact17/214/41 176 391 bytes evidence reused; two host checks PASS writes0/published0. No second manifest/importer or persistent apply. Overall MEDIA-06 remains open; next minimal gate is INFOGRAPHICS-01 scope, not implementation.
+
+> **Текущая точка D-963 (2026-11-13): `MEDIA06-Q001=1` accepted; minimal gallery evidence-reuse audit active.** DEV-09M uses23 existing WebP; MAP-115 deferred, no generation/hero expansion. Next verify whether completed DEV-10 exact214 evidence closes the gallery-file part without duplicate importer. Import/DB/publication/live remain closed.
+
+> **Текущая точка D-962 (2026-11-13): stage8 DEV-09M existing-media reuse proposal APPROVED by review, owner gate open.** Exact24 local WebP/4 361 800 bytes verified;23 fit existing hero-capable kinds, MAP-115 deferred without product expansion. No generation/import/DB/publication/live. Recommended `MEDIA06-Q001=1`; `=2` names MAP replacements.
+
 > **Текущая точка D-961 (2026-11-13): stage8 DEV-09M minimal local implementation COMPLETE/APPROVED.** Final IMP-008 P1/P2/P3=0/0/0; named40/40+public9/21/7+check0+migrations0, foundation stopped. Persistent apply/publication/live remain closed behind a separate future owner gate.
 
 > **Текущая точка D-960 (2026-11-13): `DEV09M-Q008=1`, stage8 IMP-008 remediation resumed.** Exact test-only cap-oracle closure authorized; no product/canonical expansion. Next affected named checks then final independent review.

@@ -1,5 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+import hashlib
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from threading import Barrier
 from unittest.mock import patch
 from uuid import UUID
@@ -15,6 +18,8 @@ from accounts.tests import FAST_HASHERS, PASSWORD
 from audit.constants import Category, Level, Result, Source
 from audit.models import AuditEvent
 from audit.services import record_event
+from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder
+from media_library.storage import MediaStorage
 from page_editor.clean import restricted_clean
 from page_versions import engine, schema
 from page_versions.creation import initial_snapshot
@@ -41,6 +46,28 @@ class Dev09CombinedServicesTests(TransactionTestCase):
 
     def setUp(self):
         self.owner = auth.bootstrap_owner(PASSWORD)
+        package = migration._read_combined_infographic_package()
+        row = package['media']
+        raw(MediaFolder).bulk_create([MediaFolder(
+            id=UUID(row['folder_id']), path=row['folder_path'])])
+        raw(Asset).bulk_create([Asset(
+            id=UUID(row['asset_id']), folder_id=row['folder_id'],
+            status=Asset.Status.READY,
+            provenance=migration.COMBINED_INFOGRAPHIC_PROVENANCE,
+            source_sha256=row['sha256'])])
+        raw(AssetFile).bulk_create([AssetFile(
+            id=UUID(row['file_id']), asset_id=row['asset_id'],
+            kind=AssetFile.Kind.MAIN, key=row['storage_key'],
+            sha256=row['sha256'], byte_size=row['bytes'])])
+        expected = {'sha256': row['sha256'], 'byte_size': row['bytes']}
+        self.storage = type('ExactStorage', (), {
+            'manifest': lambda _self, key: expected.copy()
+            if key == row['storage_key'] else (_ for _ in ()).throw(OSError())
+        })()
+        self.media_storage = patch.object(
+            migration, 'MediaStorage', return_value=self.storage)
+        self.media_storage.start()
+        self.addCleanup(self.media_storage.stop)
 
     def assert_fault(self, code, action):
         with self.assertRaises(ValidationError) as caught:
@@ -89,6 +116,7 @@ class Dev09CombinedServicesTests(TransactionTestCase):
 
     def test_migm_001_004_package_renderer_exact_safe_and_closed(self):
         package = migration._read_combined_services_package()
+        infographic = migration._read_combined_infographic_package()
         self.assertEqual((len(package['pages']), len(package['routes'])), (24, 25))
         self.assertEqual(
             migration._combined_digest(package['pages']),
@@ -114,6 +142,17 @@ class Dev09CombinedServicesTests(TransactionTestCase):
         self.assertIn('от 3000', next(payload['main_text'] for page, payload in
                                      zip(package['pages'], payloads, strict=True)
                                      if page['map_id'] == 'MAP-073'))
+        map019 = next(page for page in package['pages']
+                      if page['map_id'] == 'MAP-019')
+        illustrated = migration._combined_payload(map019, infographic)
+        self.assertEqual(
+            [node['kind'] for node in illustrated['layout']],
+            ['text', 'image', 'text', 'price'])
+        self.assertEqual(illustrated['layout'][1], {
+            'id': infographic['binding']['block_id'], 'kind': 'image',
+            'image_id': infographic['media']['image_id']})
+        self.assertEqual(illustrated['embedded_images'][0]['asset_id'],
+                         infographic['media']['asset_id'])
 
     def test_migm_009_010_mutations_and_caps_fail_before_render(self):
         original = migration._read_combined_services_package()
@@ -269,6 +308,17 @@ class Dev09CombinedServicesTests(TransactionTestCase):
         self.assertEqual(Page.objects.filter(pk__in=ids, is_published=True).count(), 0)
         self.assertEqual(Route.objects.filter(page_id__in=ids).count(), 25)
         self.assertFalse(PageGrant.objects.filter(page_id__in=ids).exists())
+        map019_id = UUID(next(page['page_id'] for page in package['pages']
+                              if page['map_id'] == 'MAP-019'))
+        state = PageContentState.objects.get(page_id=map019_id)
+        draft = OwnerDraft.objects.get(page_id=map019_id)
+        self.assertEqual(
+            set(AssetUsage.objects.filter(asset_id=(
+                migration._read_combined_infographic_package()['media']['asset_id']))
+                .values_list('kind', 'consumer_id')),
+            {(AssetUsage.Kind.CURRENT_PAGE, map019_id),
+             (AssetUsage.Kind.ORDINARY_VERSION, state.current_revision_id),
+             (AssetUsage.Kind.DRAFT, draft.pk)})
         self.assertEqual(Page.objects.count(), before_pages + 24)
         wash_id = UUID(next(page['page_id'] for page in package['pages']
                             if page['map_id'] == 'MAP-115'))
@@ -299,6 +349,30 @@ class Dev09CombinedServicesTests(TransactionTestCase):
             b'<link rel="canonical" href="http://localhost:8767/services/avtomojka">',
             alias.content)
 
+    @override_settings(PUBLIC_ORIGIN='http://localhost:8767',
+                       SEO_ROBOTS_PROFILE='deny-all')
+    def test_migm_006_map019_public_image_follows_intro_and_precedes_main(self):
+        self.create_exact_parents()
+        migration.apply_combined_services()
+        combined = migration._read_combined_services_package()
+        infographic = migration._read_combined_infographic_package()
+        descriptor = next(page for page in combined['pages']
+                          if page['map_id'] == 'MAP-019')
+        raw(Page).filter(pk=descriptor['page_id']).update(is_published=True)
+        with patch('content.public_views.render_shared', side_effect=fake_shared):
+            response = self.client.get(descriptor['url'])
+        source = response.content.decode()
+        payload = migration._combined_payload(descriptor, infographic)
+        alt = infographic['media']['alt']
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(source.index(payload['intro_text']),
+                        source.index('alt="' + alt + '"'))
+        self.assertLess(source.index('alt="' + alt + '"'),
+                        source.index(payload['main_text']))
+        self.assertIn('/public-media/' + infographic['media']['file_id'] + '/',
+                      source)
+        self.assertEqual(source.count('alt="' + alt + '"'), 1)
+
     def test_migm_008_missing_changed_and_partial_refuse_without_writes(self):
         before = self.state()
         self.assert_fault('MIGRATION_PARENT_REQUIRED',
@@ -317,6 +391,49 @@ class Dev09CombinedServicesTests(TransactionTestCase):
             id=UUID(page['page_id']), name=page['name'], kind=page['kind'],
             parent_id=page['parent_id'], position=page['position'],
             is_published=False)
+        before = self.state()
+        self.assert_fault('MIGRATION_EXISTING_CONFLICT',
+                          migration.apply_combined_services)
+        self.assertEqual(self.state(), before)
+
+    def test_migm_014_media_mismatch_refuses_before_page_writes(self):
+        self.create_exact_parents()
+        row = migration._read_combined_infographic_package()['media']
+        raw(Asset).filter(pk=row['asset_id']).update(status=Asset.Status.STAGED)
+        before = self.state()
+        self.assert_fault('MIGRATION_MEDIA_UNAVAILABLE',
+                          migration.apply_combined_services)
+        self.assertEqual(self.state(), before)
+
+    def test_migm_014_physical_manifest_race_rolls_back_page_writes(self):
+        self.create_exact_parents()
+        row = migration._read_combined_infographic_package()['media']
+        expected = {'sha256': row['sha256'], 'byte_size': row['bytes']}
+
+        class RaceStorage:
+            calls = 0
+
+            def manifest(self, key):
+                self.calls += 1
+                if key != row['storage_key']:
+                    raise OSError()
+                if self.calls == 1:
+                    return expected.copy()
+                return {'sha256': '0' * 64, 'byte_size': row['bytes']}
+
+        before = self.state()
+        self.assert_fault(
+            'MIGRATION_MEDIA_UNAVAILABLE',
+            lambda: migration.apply_combined_services(storage=RaceStorage()))
+        self.assertEqual(self.state(), before)
+
+    def test_migm_014_missing_usage_refuses_exact_replay_without_writes(self):
+        self.create_exact_parents()
+        migration.apply_combined_services()
+        infographic = migration._read_combined_infographic_package()
+        raw(AssetUsage).filter(
+            asset_id=infographic['media']['asset_id'],
+            kind=AssetUsage.Kind.CURRENT_PAGE).delete()
         before = self.state()
         self.assert_fault('MIGRATION_EXISTING_CONFLICT',
                           migration.apply_combined_services)
@@ -421,3 +538,64 @@ class Dev09CombinedServicesTests(TransactionTestCase):
             self.assert_fault('MIGRATION_APPLY_DISABLED',
                               migration.apply_combined_services)
             reader.assert_not_called()
+
+
+@override_settings(
+    PASSWORD_HASHERS=FAST_HASHERS, ENVIRONMENT='test',
+    DEV09_MIGRATION_APPLY_ENABLED=True,
+)
+class Dev09CombinedInfographicImportTests(TransactionTestCase):
+    reset_sequences = True
+
+    def test_migm_015_exact_media_import_and_zero_write_replay(self):
+        package = deepcopy(migration._read_combined_infographic_package())
+        content = b'bounded-map019-test-webp'
+        row = package['media']
+        row['relative_path'] = 'media/design-concepts/map019-test.webp'
+        row['bytes'] = len(content)
+        row['sha256'] = hashlib.sha256(content).hexdigest()
+        sources = TemporaryDirectory()
+        media = TemporaryDirectory()
+        self.addCleanup(sources.cleanup)
+        self.addCleanup(media.cleanup)
+        source = Path(sources.name, row['relative_path'])
+        source.parent.mkdir(parents=True)
+        source.write_bytes(content)
+        with patch.object(migration, '_read_combined_infographic_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media.name):
+            first = migration.import_combined_infographic_media(
+                source_root=sources.name, storage=MediaStorage())
+            before = {
+                'folders': list(MediaFolder.objects.values()),
+                'assets': list(Asset.objects.values()),
+                'files': list(AssetFile.objects.values()),
+            }
+            second = migration.import_combined_infographic_media(
+                source_root=sources.name, storage=MediaStorage())
+        self.assertEqual(first['result'], 'created')
+        self.assertEqual(second['result'], 'replayed')
+        self.assertEqual({
+            'folders': list(MediaFolder.objects.values()),
+            'assets': list(Asset.objects.values()),
+            'files': list(AssetFile.objects.values()),
+        }, before)
+        self.assertEqual(Asset.objects.get(pk=row['asset_id']).status,
+                         Asset.Status.READY)
+
+    @override_settings(DEV09_MIGRATION_APPLY_ENABLED=False)
+    def test_migm_016_media_import_default_off_before_package_read(self):
+        with patch.object(migration, '_read_combined_infographic_package') as reader:
+            with self.assertRaisesMessage(ValidationError,
+                                          'MIGRATION_APPLY_DISABLED'):
+                migration.import_combined_infographic_media(
+                    source_root='missing')
+        reader.assert_not_called()
+
+    def test_migm_017_media_import_missing_source_fails_closed(self):
+        with self.assertRaisesMessage(ValidationError,
+                                      'MIGRATION_MEDIA_SOURCE_UNAVAILABLE'):
+            migration.import_combined_infographic_media(
+                source_root='definitely-missing-map019-source-root')
+        self.assertFalse(MediaFolder.objects.exists())
+        self.assertFalse(Asset.objects.exists())
