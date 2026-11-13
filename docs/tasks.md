@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1011 (2026-11-14): **LAUNCH-IN-002 existing FirstVDS facts reconciled; current panel facts absent.** No new doc/tool: checklist now distinguishes old screenshot4vCPU/8GiB/80GiB/CentOS7 template from five minimal no-secret current facts. VPS/SSH/config unchanged. Next: owner read-only panel capture when convenient; IN-002 remains open.
+
 Текущая работа D-1010 (2026-11-14): **LAUNCH-IN-007 local baseline и безопасный input contract готовы; внешний экспорт всё ещё отсутствует.** Exact local facts114/114/113, query2, redirect1; future input ignored path + one required URL column, no secrets/stats/API. AC-051/AC-MIG-006/full PASS unchanged. Next: owner places destination list when available; then read-only compare.
 
 Текущая работа D-1009 (2026-11-14): **owner launch checklist `LAUNCH-IN-001–008` готов без новых функций.** Базовый no-intake профиль не ждёт MAX/Telegram/SMTP/analytics; production закрыт IN-002/005/006/007/008. Next: получить внешний advertising URL export или явно отложить его; сервер и live не трогать.

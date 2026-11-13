@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1011 (2026-11-14): LAUNCH-IN-002 old FirstVDS facts reconciled, current no-secret panel facts still absent.** Existing KVM/Москва/preliminary4vCPU/8GiB/80GiB/CentOS7-template snapshot is not production proof. Next gate: owner read-only five-fact panel capture; no SSH/VPS change/reinstall/delete.
+
 > **Текущая точка D-1010 (2026-11-14): LAUNCH-IN-007 protocol готов, но advertising export не получен.** Local baseline exact114 requested/113 effective/query2/redirect1; future input is URL-only ignored file, no API/secrets/stats. AC-051/AC-MIG-006/full PASS unchanged. Next gate: owner-provided destination list, then read-only compare.
 
 > **Текущая точка D-1009 (2026-11-14): owner launch checklist LAUNCH-IN-001–008 готов; новых функций и approvals нет.** Базовый no-intake профиль не блокируется MAX/Telegram/SMTP/analytics; production release закрыт IN-002/005/006/007/008. Next external gate: advertising URL export/read-only reconciliation; VPS/live не трогать.
