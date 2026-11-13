@@ -1,5 +1,11 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-983: DEV-02 exact2 evidence mapping
+
+`AC-053` / `AT-053` имеет executed local partial evidence D-316/317: FOUNDATION-001–011=11/11, strict Host/forwarded-header boundary, DEBUG=False/security settings, live Nginx→app fault behavior, CSRF middleware and deployment audit exit0 with only expected local-HTTP HSTS warning. Это не production-profile PASS: настоящий домен/TLS, production cookies/HSTS/proxy, полные role mutation/GET branches и release `check --deploy` остаются.
+
+`AC-055` / `AT-055` имеет executed local partial evidence: DB без host port, separated bootstrap/migrator/runtime roles, runtime DDL denial, nonroot/readonly/cap-drop isolation, secret mounts/scan, immutable runtime locks/provenance/SBOM and reviewed base-image remediation. Full AC остаётся открыт для production exposure/config/source scan, staging-first release rehearsal and current vulnerability decision; vendor registry intentionally retains154 open+2 undetermined image/advisory matches. Full PASS0; historical states/IDs unchanged.
+
 ### D-982: LEGAL-01 and MONITOR-01 exact2 evidence mapping
 
 `AC-058` / `AT-058` имеет local partial factual evidence: `docs/legal-form-drafts.md` фиксирует реквизиты ООО «Эстакада», состав/цель/сроки данных, выключенный intake и проекты отдельного согласия/политики; COOKIE-Q001 подтверждает первый запуск без Метрики/Яндекс/YouTube и без преждевременного consent manager. Full AC blocked до LEGAL-Q007–010, проверки FirstVDS/RKN/SMTP/external backup, профильного legal review, постоянных URL и фактической launch-конфигурации.

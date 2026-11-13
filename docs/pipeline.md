@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-983 (2026-11-13): DEV-02 exact2 mapped to executed local partial evidence.** FOUNDATION11/11 plus host/role/isolation/provenance checks do not replace production TLS/exposure/release/vendor-risk gates; full PASS0. TEST-08/stage9 remain closed.
+
 > **Текущая точка D-982 (2026-11-13): LEGAL-01 and MONITOR-01 exact2 mapped, full PASS0.** Legal factual drafts/first-launch closed runtime and PR-03 monitoring arithmetic are partial/design evidence only; external facts, provider and real execution remain blocked. TEST-08/stage9 remain closed.
 
 > **Текущая точка D-981 (2026-11-13): DEV-23 exact1 TEST-07 slice mapped local partial.** `AC-044` has executed isolated current/previous restore evidence; production/admin/external recovery and safety/rollback/tombstone/session/compatibility/HTTP gates keep full PASS0. TEST-08/stage9 remain closed.
