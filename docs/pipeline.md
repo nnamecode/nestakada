@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1001 (2026-11-14): DEV-29 exact9 mapped to simple REF-05H–N replacement evidence.** Local tree/publication/direct-URL/delete behavior is partial; migrated production/advertising/emergency/external-prohibition gates keep full PASS0. Heavy TRUST runtime remains stopped; TEST-08/stage9 closed.
+
 > **Текущая точка D-1000 (2026-11-14): DEV-07 exact8 mapped after explicit owner resume.** Exact-path inventory resolved D-999 without wildcard retry; completed local editor/shared/security/quota evidence is partial, while production/import/cache/physical faults/TEST-09/10 keep full PASS0. No product expansion; TEST-08/stage9 closed.
 
 > **Текущая точка D-999 (2026-11-14): DEV-07 exact8 mapping приостановлен владельцу по anti-loop.** Вторая одинаковая PowerShell/rg wildcard path error; не product failure, третьей попытки нет. Exact8 AC/completion audit прочитаны, реестры и продукт не менялись. Возобновление — только по решению владельца с exact-path inventory без wildcard; TEST-08/stage9 closed.

@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1001 (2026-11-14): **DEV-29 exact9 TEST-07 mapping complete; all executed local partial, full PASS0.** Simple REF-05H–N tree/publication/URL/delete replacement mapped; migrated production tree, advertising inventory, emergency/external prohibition/tombstone paths remain. No heavy TRUST restoration.
+
 Текущая работа D-1000 (2026-11-14): **DEV-07 exact8 TEST-07 mapping complete after owner resume; all executed local partial, full PASS0.** Exact-path inventory resolved D-999 without wildcard retry. Editor/shared/security/quota evidence mapped; production/import/cache/physical fault/TEST-09/10 remain. No feature expansion.
 
 Текущая работа D-999 (2026-11-14): **DEV-07 exact8 TEST-07 mapping приостановлен владельцу по anti-loop.** Повтор №2 одной coordinator wildcard/path error (`docs/*.md` → `docs/dev07-*.md`, Windows os error123); product failure отсутствует, третья попытка запрещена. Проверены exact8 AC и completion audit; registry/product/tests unchanged. Resume recommendation: exact `rg --files` inventory, then explicit paths only.

@@ -1,5 +1,23 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1001: DEV-29 exact9 evidence mapping
+
+`AC-002` / `AT-002` has executed local partial public HTTP evidence for unknown, deleted and hidden page states, including fail-closed damaged routes/content and navigation suppression. Production cache/intermediary behavior, conditional-request leakage across every state and the emergency delivery path remain.
+
+`AC-003` / `AT-003` has executed local partial evidence: publishing/hiding changes only the selected flag and audit; a published child below hidden/deep-hidden ancestors keeps its URL, publication and parent, remains readable and is promoted dynamically in navigation. Persistent real-tree apply/publication remains.
+
+`AC-004` / `AT-004` has executed local partial evidence across simple create/reorder/move/rename and public navigation: new hidden aggregate position, explicit sibling order, hidden-ancestor promotion, stable URL and no name-based resort are covered with stale/ABA/concurrency/rollback guards. Full migrated tree and final admin/public visual order remain.
+
+`AC-005` / `AT-005` has executed local partial deletion evidence: an existing or late-created child blocks leaf deletion without subtree mutation; after an exact fresh composition confirmation only the selected leaf is removed. Production data and the complete operator flow remain.
+
+`AC-006` / `AT-006` and `AC-DTL-002` / `AT-102` have executed local partial evidence for deterministic proposed/exact local paths, occupied page/route/system conflicts, hidden atomic creation and rename/move preserving the stored URL. Legacy exact paths are package-tested separately; persistent migration and the full advertising/old-path inventory remain.
+
+`AC-007` / `AT-007` has executed local partial normal-runtime evidence: repeated explicit URL changes update PRIMARY and create direct old-to-current redirects without chains; occupied/legacy targets, stale/ABA, races and rollback fail closed. Emergency HTML behavior, redirect handling during DB failure, protected advertising inventory and revoked-ID/head integration remain outside the completed simple command.
+
+`AC-024` / `AT-024` has executed local partial evidence: owner/session/CSRF/current-password and exact name/PRIMARY/composition confirmation protect deletion; Page/routes/full history including Stable are removed atomically while subtree, assets/files, shared/retained references and append-only ledgers remain. Password-hash race, Page/Route ABA, late child, rollback, concurrency and lost response are covered. Production execution and external deletion/tombstone reconciliation remain.
+
+`AC-PRO-010` / `AT-410` has executed local partial atomicity/result evidence from the simple delete command: audit/DB faults roll back, lost response/retry converges on the actual gone result, late child/stale composition blocks completion and a new Page at the former URL is not captured. No external prohibition/head receipt or delayed worker exists after the approved simplification, so those protocol branches remain unexecuted. Full PASS0; automation states/executable IDs remain unchanged and the stopped heavy TRUST architecture is not restored.
+
 ### D-1000: DEV-07 exact8 evidence mapping
 
 `AC-013` / `AT-013` has broad executed local partial evidence: accepted formatting and complex tables survive Check, Save, history and selected restore; executable templates/scripts are rejected before publication. Header/Footer have independent owner-only current/draft/history/restore/cancel flows and management routes rather than standalone public page identities. Persistent real-content publication, complete public-page composition and TEST-10 remain.
