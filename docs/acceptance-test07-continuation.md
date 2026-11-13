@@ -1,5 +1,23 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1003: DEV-26 exact10 evidence mapping
+
+`AC-HTML-001` / `AT-201` has local supporting partial evidence from DEV-12 stable-ID/frozen-home rules and DEV-25 immutable current/previous sets: deleting a source does not rewrite the prepared home, while its own live route state is independently known. No operational Nginx path serves the frozen home/404/blank200 matrix during an outage, and no DB restore is invoked.
+
+`AC-HTML-002` / `AT-202` has local supporting partial evidence for stable Page identities, URL-reuse protection, exact route/query descriptors and old-validator invalidation. The old reserve allowance is not exercised against a newly created same-URL object through actual fallback delivery.
+
+`AC-HTML-003` / `AT-203` and `AC-HTML-004` / `AT-204` remain deferred/assertion-only for their external prohibition protocol. Simple local delete/URL commands prove atomic stale/race/rollback behavior, and disconnected DEV-26 journal primitives exist, but there is no runtime external revoke/finalize authority, delayed worker or response-admission point to interrupt. The stopped heavy TRUST path is not substituted.
+
+`AC-HTML-007` / `AT-207` has local partial build/projection evidence: DEV-25 creates an exact closed response/resource set without admin/history/private tokens, while DEV-26 IMP-001/002 validate bounded target/status/header projection and immutable copied releases. Actual Nginx GET/HEAD/304/POST/hidden/deleted/new-page behavior is absent; IMP-003 failed and was rolled back.
+
+`AC-HTML-009` / `AT-209` and `AC-PRO-009` / `AT-409` remain deferred/assertion-only: selector/journal copy/reopen primitives are disconnected, but no signed external freshness head, simultaneous HTML/registry/local-DB rollback, restored-DB revoke reconciliation or controller restart exists. Static200 is not claimed as engine recovery.
+
+`AC-HTML-010` / `AT-210` has local partial evidence: D-300 frozen home composition is not automatically hidden by source deletion, DEV-25 has no daytime partial rebuild mechanism, and unsafe editor markup/path input cannot become reserve execution. Actual emergency serving after deletion remains absent.
+
+`AC-HTML-011` / `AT-211` has local supporting partial evidence from direct chain-free REF-5 URL redirects, DEV-25 exact route metadata and DEV-26 closed projection records. The required outage result `/a` current301 plus `/b` no-file503, hide/delete/reuse delivery and immediate redirect updates are not connected to Nginx.
+
+`AC-HTML-012` / `AT-212` remains deferred/assertion-only: the simplified local URL command is atomic and repeat-safe, but no external prohibition/finalization/admission protocol or lagging delivery worker exists to interrupt at the specified boundaries. Full PASS0; automation states/executable IDs remain unchanged. D-923 no-bloat defer is preserved: no helper, njs, controller, TRUST service, state machine or operational Nginx change is restored.
+
 ### D-1002: DEV-11 exact10 evidence mapping
 
 `AC-010` / `AT-010` and `AC-DTL-003` / `AT-103` have executed local partial evidence across typed Page snapshots, simple creation and public metadata: title/H1/description boundaries are closed, empty description omits the meta tag, literal values are escaped, and later name/body changes do not become SEO authority. Full old-value migration inventory, persistent apply and the complete owner accept/reject suggestion flow remain.
