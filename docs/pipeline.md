@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-989 (2026-11-13): DEV-24 exact3 mapped to closed local readiness evidence.** Actual target-DB failure/recovery is partial; external scheduling/streak/auth and advanced fault branches remain, full PASS0. TEST-08/stage9 closed.
+
 > **Текущая точка D-988 (2026-11-13): DEV-16 exact3 mapped with two explicit oracle drifts.** Local deletion/ledger evidence exists; older repeat-password and notes/history expectations conflict with later D-595/minimal-scope decisions and are not silently passed. TEST-08/stage9 closed.
 
 > **Текущая точка D-987 (2026-11-13): DEV-12 exact3 mapped to executed local partial evidence.** Home price/fallback/stable-ID/delete guards are covered locally; persistent publication/full role HTTP/reserve/consumer-delete gates keep full PASS0. TEST-08/stage9 closed.

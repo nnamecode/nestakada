@@ -1,5 +1,13 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-989: DEV-24 exact3 evidence mapping
+
+`AC-045` / `AT-045` has executed local partial evidence: closed readiness performs real app-process+target PostgreSQL `SELECT 1`, actual stopped DB returns bounded nonzero and restart returns success, with no writes or secret/raw-error output. Five-minute external scheduling, independent probe IDs, F/S streak state, two-failure/two-success notifications and static-reserve bypass remain assertion-only/unexecuted.
+
+`AC-OPS-001` / `AT-301` has local negative evidence: readiness is a management command with no URL/Nginx location/port; `/readiness/` returns ordinary404, so an unauthenticated scan cannot invoke its DB SELECT or receive diagnostics. This is not the future authenticated external readiness endpoint; auth/forwarded-IP and daily external probe behavior remain.
+
+`AC-OPS-002` / `AT-302` has executed local partial evidence: target DB stop gives constant failure in3.455s, transaction-local statement timeout2s/connect5s/Docker8s are bounded, recovery succeeds and persistent counts stay unchanged. Wrong-but-successful other DB, forced SQL over-budget and concurrent normal-user timeout isolation remain unexecuted. Full PASS0; states/IDs unchanged, no endpoint/observer/state machine added.
+
 ### D-988: DEV-16 exact3 evidence mapping
 
 `AC-037` / `AT-037` has executed local partial evidence: owner-only POST+CSRF signed confirmation, employee/anonymous/GET refusal, idempotent single delete, bounded no-PII ledger, fault rollback/retry, concurrent convergence and restore reconciliation. Full PASS is additionally blocked by oracle drift: the older AC still requires repeated password, while later owner decision D-595 explicitly replaced it with ordinary signed confirmation without password. The implementation follows D-595; the acceptance oracle must be reconciled before status promotion. Real old-backup restore and LEGAL/live remain.

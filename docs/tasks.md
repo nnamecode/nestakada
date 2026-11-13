@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-989 (2026-11-13): **DEV-24 exact3 TEST-07 mapping complete; all local partial, full PASS0.** Closed readiness and actual DB-down/recovery evidence mapped; external monitor/streak/auth/wrong-DB/timeout-isolation branches remain. No monitoring expansion.
+
 Текущая работа D-988 (2026-11-13): **DEV-16 exact3 TEST-07 mapping complete; local partial, full PASS0.** Deletion/ledger guards are proven locally; repeat-password and note/history acceptance text need explicit reconciliation with later no-bloat decisions, and LEGAL/live restore remains.
 
 Текущая работа D-987 (2026-11-13): **DEV-12 exact3 TEST-07 mapping complete; all local partial, full PASS0.** Home source/price/fallback/delete evidence mapped; persistent publication, full role HTTP, reserve and real consumer deletion remain. No feature expansion.
