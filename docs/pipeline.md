@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-994 (2026-11-13): DEV-03 exact5 mapped to executed local partial evidence.** Auth/session/scoped-right/stale-basis guards are covered locally; production and real-tab unsaved-input/manual conflict gates keep full PASS0. TEST-08/stage9 closed.
+
 > **Текущая точка D-993 (2026-11-13): DEV-20 exact4 mapped to executed local partial evidence.** SQL0 scanner rejection/two-IP/rate/auth/resource checks do not replace full PERF/many-source/jobs/production gates; full PASS0. TEST-08/stage9 closed.
 
 > **Текущая точка D-992 (2026-11-13): DEV-19 exact4 mapped assertion-only/deferred.** Manual log-category deletion/reconciliation/read-state/incident behavior remains outside MVP; full PASS0. TEST-08/stage9 closed.

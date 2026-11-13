@@ -1,5 +1,17 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-994: DEV-03 exact5 evidence mapping
+
+`AC-014` / `AT-014` has executed local partial evidence: owner creates employee and sets/resets password, employee direct self-reset/manage requests are denied, old sessions die after reset/disable, enable does not revive them, password input is hidden and secrets are absent from argv/audit/output. Production HTTPS/cookie profile and complete real-browser owner workflow remain.
+
+`AC-015` / `AT-015` has executed local partial server evidence for idle30m and absolute12h boundaries, passive status not extending idle, malformed/old-generation sessions closing, and revoked rights checked on the next request. Preservation of unsaved editor input solely in an open real browser tab across expiry/different-user login and explicit resave remains manual/editor-browser acceptance.
+
+`AC-016` / `AT-016` has executed local partial evidence: page-scoped grants, default price-off, immediate revoke, denial of home/protected/system types and forged direct fields; later editor suites enforce typed allowed areas/price boundaries. Full assigned text/link/price HTTP flow against persistently applied real pages remains.
+
+`AC-DTL-001` / `AT-101` has local partial evidence across stale owner generation, revoked grants and editor save/base guards: outdated authorization or basis is refused without hidden partial mutation. The full two-open-editor compare/manual-transfer path remains.
+
+`AC-DTL-018` / `AT-118` has local partial server/UI-contract evidence for session/conflict refusal and no server-side privilege carry-over; the exact unsaved-input-in-memory/no-localStorage-or-URL behavior across expiry/conflict/user switch still needs real browser/manual acceptance. First lookup named two nonexistent guessed test files; exact tracked tests were located without identical retry. Full PASS0; states/IDs unchanged.
+
 ### D-993: DEV-20 exact4 evidence mapping
 
 `AC-041` / `AT-041` has executed local partial evidence: known scanner paths are rejected before body/session/auth/SQL with connection attempts0/SQL0, no cookies, bounded ten-key process counters, expected404 log suppression and compatibility with115 MAP/316 MED. Native scan windows prove useful requests still work and unexpected outcomes remain observable. Full TECH-06 peak, global history/Telegram and production WSGI logging remain.
