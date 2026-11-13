@@ -1,5 +1,13 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1006: per-AC reconciliation completion
+
+The bounded TEST-07 evidence-reconciliation pass is complete for the full registry: `implementation-traceability.csv`, `acceptance-cases.csv` and `acceptance-automation-status.csv` each contain140 rows/140 unique AC, with zero missing/extra AC between them and140/140 `remaining` fields now carrying an individual D-977–D-1005 evidence decision. No generic pre-implementation message remains.
+
+This is a documentation/evidence milestone, not acceptance completion. No AC was promoted to full PASS: persistent apply/publication, production/runtime topology, external monitoring/backup/LEGAL/network facts, TEST-09 physical/fault/load work, TEST-10 real-browser/device work and explicit requirements conflicts remain where recorded per row. Historical `automation_state`/`executable_ids` were deliberately preserved at103 `assertions_waiting_driver`,20 `partial_http`,17 `text_only`; changing that model requires a separate approved registry migration rather than silent recoloring.
+
+No product, dependency, schema, container, live site or VPS change was made by D-976–D-1006, and no regression suite was rerun for the reconciliation. Existing named-suite evidence is referenced without being counted again. TEST-08/stage9 remains closed. The next no-bloat step is a bounded read-only gap register grouping the already recorded remaining work into owner decisions/requirements conflicts, launch-external gates, TEST-09 and TEST-10; it must not create new features or convert missing evidence into PASS.
+
 ### D-1005: DEV-13 exact13 evidence mapping
 
 `AC-030` / `AT-030`, `AC-031` / `AT-031` and `AC-DTL-008` / `AT-108` have executed local synthetic partial evidence for the minimal form: exact required/optional fields, separate consent flag, closed unknown/duplicate keys and length/Unicode boundaries; +7/8 Russian-number normalization accepts approved separators and rejects foreign/additional/invalid forms without claiming ownership verification. Real PII, final LEGAL text/version, persistent enablement and production observation remain.

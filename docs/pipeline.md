@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1006 (2026-11-14): TEST-07 per-AC evidence reconciliation complete for exact140 rows.** All rows have individual evidence decisions, but full PASS0 and historical states103/20/17 remain; production/external/LEGAL/TEST-09/10/conflict gates are still open. TEST-08/stage9 closed. Next no-bloat step is read-only grouped gap register, not implementation.
+
 > **Текущая точка D-1005 (2026-11-14): DEV-13 exact13 reconciled to minimal default-off request scope.** Synthetic validation/idempotency/CSRF/cache/cap evidence is partial; old30m/24h receipt oracle conflicts with D-859, while real PII/LEGAL/network/live/TEST-09/10 keep full PASS0. No subsystem expansion; TEST-08/stage9 closed.
 
 > **Текущая точка D-1004 (2026-11-14): DEV-05 exact12 mapped to DEV-05/simple REF-4 evidence.** Version/Stable/manual/restore/delete/media atomicity is local partial; production/public/open-tab/resources/physical faults keep full PASS0. No legacy workflow restoration; TEST-08/stage9 closed.
