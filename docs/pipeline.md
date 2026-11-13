@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1009 (2026-11-14): owner launch checklist LAUNCH-IN-001–008 готов; новых функций и approvals нет.** Базовый no-intake профиль не блокируется MAX/Telegram/SMTP/analytics; production release закрыт IN-002/005/006/007/008. Next external gate: advertising URL export/read-only reconciliation; VPS/live не трогать.
+
 > **Текущая точка D-1008 (2026-11-14): launch/external inventory группы2 завершён read-only, статусы92 AC/full PASS0 неизменны.** Local readiness отделён от восьми внешних входов; intake/optional runtime off, DEV-26/27 deferred, deployment не разрешён. Docker running0. Next no-bloat step: owner-facing external-input checklist, не реализация.
 
 > **Текущая точка D-1007 (2026-11-14): grouped gap register partitions all140 AC as25 owner/requirements,92 launch/external,7 TEST-09 and16 TEST-10.** No status/PASS change; TEST-08/stage9 closed. Next no-bloat step is read-only launch-readiness inventory, not implementation or deployment.
