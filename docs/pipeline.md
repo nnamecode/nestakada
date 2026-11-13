@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1005 (2026-11-14): DEV-13 exact13 reconciled to minimal default-off request scope.** Synthetic validation/idempotency/CSRF/cache/cap evidence is partial; old30m/24h receipt oracle conflicts with D-859, while real PII/LEGAL/network/live/TEST-09/10 keep full PASS0. No subsystem expansion; TEST-08/stage9 closed.
+
 > **Текущая точка D-1004 (2026-11-14): DEV-05 exact12 mapped to DEV-05/simple REF-4 evidence.** Version/Stable/manual/restore/delete/media atomicity is local partial; production/public/open-tab/resources/physical faults keep full PASS0. No legacy workflow restoration; TEST-08/stage9 closed.
 
 > **Текущая точка D-1003 (2026-11-14): DEV-26 exact10 reconciled under owner defer D-923.** Stable/frozen/exact projection preparation is supporting partial evidence only; operational Nginx/controller/external revoke-head/rollback paths are absent, full PASS0. No runtime expansion; TEST-08/stage9 closed.

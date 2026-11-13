@@ -1,5 +1,25 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1005: DEV-13 exact13 evidence mapping
+
+`AC-030` / `AT-030`, `AC-031` / `AT-031` and `AC-DTL-008` / `AT-108` have executed local synthetic partial evidence for the minimal form: exact required/optional fields, separate consent flag, closed unknown/duplicate keys and length/Unicode boundaries; +7/8 Russian-number normalization accepts approved separators and rejects foreign/additional/invalid forms without claiming ownership verification. Real PII, final LEGAL text/version, persistent enablement and production observation remain.
+
+`AC-032` / `AT-032`, `AC-DTL-009` / `AT-109` and `AC-DTL-010` / `AT-110` have executed local partial PostgreSQL evidence: server-issued bounded intent, concurrent insert-winner, exact replay/lost-response convergence, one request+consent result and changed phone/text/consent-version conflicts without overwrite. Notification attempts belong only to the insert winner and fail independently after commit. Real network, Metrika goal behavior and live LEGAL consent remain gated.
+
+`AC-DTL-011` / `AT-111` is deferred with an explicit requirements conflict: the older oracle requires a 30-minute issuance window and24-hour receipt semantics, while approved minimal D-859 deliberately did not restore the old receipt/cache/24-hour form contract. The current bounded signed intent/idempotency path must not be silently described as that legacy lifecycle; a future requirements decision is needed before promotion.
+
+`AC-DTL-012` / `AT-112` has executed local partial negative evidence: public GET creates no request/result row, dynamic form responses are private/no-store and bypass304, exact pre-CSRF body limits and bounded write-cap/rate contracts fail closed without deleting existing requests. Full scanner/overflow execution with production Nginx and live token/CSRF cadence remains.
+
+`AC-OPS-010` / `AT-310` has executed local supporting partial evidence for request write-cap races, ingress limits and bounded deletion-ledger caps/reconciliation; refusal is observable and existing requests are preserved. Physical receipt/throttle/temporary-space exhaustion across the production filesystem and cross-subsystem media/backup preservation remain TEST-09 work.
+
+`AC-PRO-001` / `AT-401` has executed local partial no-JS/server evidence: when the synthetic gate is enabled the form has server-issued intent+CSRF, explicit POST and no GET-created request/receipt row; DEV-25 reserve output has no working form/intent/CSRF. Real enabled LEGAL/live public form remains off.
+
+`AC-PRO-002` / `AT-402` has executed local partial cache-safety evidence: dynamic form GET is always private/no-store with Vary Cookie and bypasses shared ETag/304, so changed cookie/CSRF/consent cannot receive a stale304. The older positive conditional-304 matrix is not implemented for forms; production proxy behavior remains.
+
+`AC-PRO-003` / `AT-403` has executed local partial evidence: a committed request whose response is lost is recognized by the same intent without a second row/notification winner, and changed context conflicts; fields, intent and result IDs are excluded from URL/analytics. Real Metrika/network execution remains.
+
+`AC-PRO-004` / `AT-404` has executed local partial server evidence for genuine CSRF, private/no-store safe errors, exact intent replay and no duplicate after explicit retry. Preservation of the user's permissible input across an actual old-tab CSRF rotation and complete real-browser flow remains TEST-10/manual. Full PASS0; automation states/executable IDs remain unchanged, real intake stays default-off and no legacy receipt/cache/CRM/outbox/worker layer is restored.
+
 ### D-1004: DEV-05 exact12 evidence mapping
 
 `AC-017` / `AT-017` has executed local partial evidence across DEV-07/REF-4: stale current/base and concurrent saves fail atomically, preserve the entered value for comparison, create no revision/audit side effect and require a fresh explicit Save. Complete production browser/session interruption and all migrated page types remain.
