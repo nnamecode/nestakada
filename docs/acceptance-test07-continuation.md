@@ -1,5 +1,9 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-981: DEV-23 single-AC evidence mapping
+
+`AC-044` / `AT-044` сопоставлен с `docs/ref6-local-restore-check-results.md`. REF-06G реально восстановил оба immutable generation `current|previous` в одноразовую network-none DB/media среду:42 tables,30 migrations,15 media files/6240 bytes; SHA/archive/path проверки, transactional `pg_restore`, unchanged main DB/catalog и zero residual containers/networks/volumes подтверждены, independent review APPROVED. Это local partial evidence. Full AC остаётся открыт для owner-confirmed production procedure, admin и external break-glass path, safety/rollback, tombstone/deletion ledger, session/rights reset, code-version compatibility и HTTP/public smoke. Первое чтение ошиблось только именем файла; после поиска фактического tracked path одинаковая ошибка не повторялась.
+
 ### D-980: DEV-22 single-AC evidence mapping
 
 `AC-043` / `AT-043` сопоставлен с `docs/ref6-local-backup-results.md` и существующим BACKUP contract. REF-06F локально подтверждает два immutable current/previous поколения PostgreSQL+media, manifest/SHA, `pg_restore --list`/`tar --list`, atomic last-good retention при сбоях, отсутствие пяти foundation secrets и независимое review без findings. Это local partial evidence. Full AC blocked до семи внешних зашифрованных точек, отдельного ключа, расписания, наблюдаемого внешнего отказа и реального restore; локальный комплект не выдаётся за внешнюю/полную резервную систему.

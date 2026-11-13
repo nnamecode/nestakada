@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-981 (2026-11-13): **DEV-23 exact1 TEST-07 evidence mapping complete; AC-044 local partial, full PASS0.** REF-06G executed isolated current/previous restore checks with zero main/catalog mutation or residue; production/admin/external recovery and destructive-recovery safeguards remain.
+
 Текущая работа D-980 (2026-11-13): **DEV-22 exact1 TEST-07 evidence mapping complete; AC-043 local partial/external blocked, full PASS0.** REF-06F proves two local immutable generations and last-good integrity; external encryption/key/schedule/faults/restore remain. No backup-platform expansion.
 
 Текущая работа D-979 (2026-11-13): **DEV-10 exact1 TEST-07 evidence mapping complete; AC-008 local partial, full PASS0.** Exact17/214, shared aggregate и root/page2/modal/17 album routes связаны с существующими named tests; persistent apply/publication, TEST-10 и manual responsive acceptance остаются. No product/framework/Playwright expansion.

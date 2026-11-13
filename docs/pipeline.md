@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-981 (2026-11-13): DEV-23 exact1 TEST-07 slice mapped local partial.** `AC-044` has executed isolated current/previous restore evidence; production/admin/external recovery and safety/rollback/tombstone/session/compatibility/HTTP gates keep full PASS0. TEST-08/stage9 remain closed.
+
 > **Текущая точка D-980 (2026-11-13): DEV-22 exact1 TEST-07 slice mapped local-partial/external-blocked.** `AC-043` has REF-06F two-generation integrity evidence; seven external encrypted points/key/schedule/fault/restore gates keep full PASS0. TEST-08/stage9 remain closed.
 
 > **Текущая точка D-979 (2026-11-13): smallest DEV-10 exact1 TEST-07 slice mapped as local partial.** `AC-008` has existing exact17/214/shared-aggregate/root/page2/modal/album evidence; full PASS0 pending persistent apply/publication, TEST-10 and manual responsive acceptance. TEST-08/stage9 remain closed.
