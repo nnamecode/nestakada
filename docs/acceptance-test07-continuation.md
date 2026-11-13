@@ -1,5 +1,23 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1000: DEV-07 exact8 evidence mapping
+
+`AC-013` / `AT-013` has broad executed local partial evidence: accepted formatting and complex tables survive Check, Save, history and selected restore; executable templates/scripts are rejected before publication. Header/Footer have independent owner-only current/draft/history/restore/cancel flows and management routes rather than standalone public page identities. Persistent real-content publication, complete public-page composition and TEST-10 remain.
+
+`AC-054` / `AT-054` has executed local partial security evidence across the closed HTML parser/normalizer, active markup/template/style/unsafe-URL rejection, no-network link handling, protected media boundaries, self-CSP and response-header checks. Production `check --deploy`, the final policy after any approved external resources and complete upload/runtime inspection remain.
+
+`AC-DTL-004` / `AT-104` has executed local partial evidence for allowed headings/marks/tables, source-byte/codepoint/node/depth boundaries, visible normalization before Save and two complex table corpora surviving history/restore without structural loss. Full imported-content corpus, production resource profile and real-browser matrix remain.
+
+`AC-DTL-006` / `AT-106` has executed local partial evidence: internal, anchor and http/https links are normalized with safe attributes; javascript/data/file, controls, encoded bypasses, private/outside-root contexts and network fetching are refused. Full applied employee flow across migrated pages and browser/device acceptance remain.
+
+`AC-DTL-015` / `AT-115` has executed local partial evidence: page history/restore does not roll back the independently current Header/Footer; current and historical shared revisions are separate, and restoring a literal old phone changes only the selected Header fragment while Footer stays current. Persistent real-site content and complete operator comparison on launch data remain.
+
+`AC-DTL-016` / `AT-116` has executed local partial evidence for stale-base/concurrent shared conflicts, owner input preservation, draft isolation and public ETag invalidation after Header/Footer/navigation changes; a draft is never public. Production intermediary caching and the full public Page body remain.
+
+`AC-DTL-017` / `AT-117` has executed local partial quota/lifecycle evidence: actual inventory and warnings are measured, current/history/pins/READY media survive refusal and cleanup boundaries, 10000 historical rows are not silently pruned and no unapproved keep10 rule is applied. The exact local256MiB profile is not a production-universal budget; physical production exhaustion, accumulated terminal-job debt and operator recovery remain TEST-09/launch work.
+
+`AC-PRO-005` / `AT-405` has executed local partial evidence: an actual old literal phone is shown/restored as content, Footer and unrelated state remain unchanged, no placeholder registry is introduced, and template/corrupt trusted inputs fail closed rather than partially applying. Full migrated real Header comparison and production execution remain. Full PASS0; automation states/executable IDs remain unchanged. D-999 is resolved by exact-path inventory; no wildcard retry, product change or new feature was used.
+
 ### D-998: DEV-27 exact7 evidence mapping
 
 `AC-046` / `AT-046` remains assertion-only/deferred for DEV-27: DEV-25 provides a valid local reserve set and DEV-26 IMP-001/002 retain disconnected projection/delivery preparation, but no operational Nginx/controller path serves it when Django/DB fails, verifies the switch notification or selects the contact 503 when no set exists. The failed IMP-003 experiment was rolled back and is not product evidence.
