@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-999 (2026-11-14): DEV-07 exact8 mapping приостановлен владельцу по anti-loop.** Вторая одинаковая PowerShell/rg wildcard path error; не product failure, третьей попытки нет. Exact8 AC/completion audit прочитаны, реестры и продукт не менялись. Возобновление — только по решению владельца с exact-path inventory без wildcard; TEST-08/stage9 closed.
+
 > **Текущая точка D-998 (2026-11-14): DEV-27 exact7 mapped deferred under D-923.** No operational controller/streak/notification path exists; AC-049 old two-success return conflicts with later stateless per-request scope. Full PASS0, no runtime expansion; TEST-08/stage9 closed.
 
 > **Текущая точка D-997 (2026-11-14): DEV-25 exact6 mapped to completed local manual-reserve evidence.** Consistent current/previous, retained media, fault recovery and disabled reserve form are partial; schedule/full disk-fill/actual DEV-26-Nginx outage path keep full PASS0. TEST-08/stage9 closed.
