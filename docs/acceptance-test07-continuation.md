@@ -1,5 +1,17 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-998: DEV-27 exact7 evidence mapping
+
+`AC-046` / `AT-046` remains assertion-only/deferred for DEV-27: DEV-25 provides a valid local reserve set and DEV-26 IMP-001/002 retain disconnected projection/delivery preparation, but no operational Nginx/controller path serves it when Django/DB fails, verifies the switch notification or selects the contact 503 when no set exists. The failed IMP-003 experiment was rolled back and is not product evidence.
+
+`AC-049` / `AT-049` is deferred with an explicit requirements conflict. The older oracle requires two application/DB successes before return and one notification; later approved D-896 scope chose per-request non-sticky fallback where the next normal upstream response immediately has priority, specifically without a state machine. D-923 then deferred DEV-26/27. Neither interpretation is silently passed or implemented.
+
+`AC-OPS-003` / `AT-303`, `AC-OPS-005` / `AT-305` and `AC-PRO-006` / `AT-406` remain assertion-only/deferred: closed local readiness proves a single app+DB check, but there is no probe-ID/retry/streak state, isolated local/external stream, independently confirmed switch/return or notification delivery.
+
+`AC-PRO-007` / `AT-407` has design-only arithmetic evidence for the PR-03 total of576 daily readiness HTTP/SELECT operations across two independent five-minute streams. No external service, real I/O cadence or state placement exists, so arithmetic is not execution evidence.
+
+`AC-PRO-008` / `AT-408` remains assertion-only/deferred: there is no running controller to stop, supervise or distinguish from stale heartbeat/static200, and no restart path to inspect for data rollback. Full PASS0; automation states/executable IDs remain unchanged. D-923/no-bloat is preserved: no helper, state machine, scheduler, monitor, Nginx or notification subsystem is added.
+
 ### D-997: DEV-25 exact6 evidence mapping
 
 `AC-047` / `AT-047` has executed local partial evidence: the owner-triggered synchronous build captures only published public dependencies, excludes history/admin/requests, rejects A/B source drift before activation and atomically keeps validated current/previous generations with exact retained media. A night-only schedule, proof that daytime changes never trigger a build, production durability and operational execution remain; DEV-25 intentionally contains no scheduler or worker.
