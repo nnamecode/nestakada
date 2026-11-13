@@ -1,5 +1,13 @@
 # Процесс полной разработки
 
+> **Текущая точка D-978 (2026-11-13): D-977 registry validation complete after owner-authorized correction.** Actual `acceptance-cases.csv` key is `ac_ids`; corrected audit gives rows/unique140 across all three registries and cross-diff0/0, matrix17/20/103 unchanged. TEST-07 continues; TEST-08/stage9 remain closed.
+
+> **Текущая точка D-977 (2026-11-13): DEV-09 exact12 TEST-07 evidence mapping complete, TEST-08/stage9 closed.** Ten local-partial and two external-fact-blocked AC are mapped to exact existing evidence; full PASS0. Registry states17/20/103 remain historical and unchanged; no framework/Playwright/product/live expansion.
+
+> **Текущая точка D-976 (2026-11-13): no-bloat TEST-07 reconciliation active, TEST-08/stage9 still closed.** Exact140 trace/case/status rows match with zero gaps; first exact12 DEV-09 AC split into10 local-partial and2 advertising/unknown-URL blocked. No full AC promoted, no Playwright/framework/product/live change.
+
+> **Текущая точка D-975 (2026-11-13): `NEXT-Q001=1`; additional23 infographics owner-deferred, stage8 remains active.** DEV-09 now complete; exact stage8 count21/27 (~78%),3 partial DEV-18/22/23,3 deferred/pending DEV-26/27/30. TEST-08/stage9 remain dependency-blocked; no automatic product/persistent/live expansion.
+
 > **Текущая точка D-974 (2026-11-13): MAP-019 minimal local integration COMPLETE after final review.** Open P1/P2/P3=0/0/0; O_NOFOLLOW bounded package reader and manifest-race/missing-usage oracles closed. Fresh named47/47+check0+migrations0, prior public9/21/7. Foundation stop/containers0 required; persistent apply/publication/live and remaining23 remain behind separate owner gates.
 
 > **Текущая точка D-973 (2026-11-13): MAP-019 after-intro minimal local integration PASS; final review next.** Exact WebP1200×900/104682B and metadata package integrated through existing embedded image/layout and one-file default-off importer. Wrapper-only evidence45/45+public9/21/7+check0+migrations0. No schema/dependency/runtime bloat; persistent apply/publication/live and remaining23 remain closed.

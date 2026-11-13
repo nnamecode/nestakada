@@ -1,5 +1,28 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+**Текущий D-976 (2026-11-13):** после owner-defer remaining23 INFOGRAPHICS и stage8 reconciliation D-975 выполнен новый read-only аудит TEST-07 без Playwright/широкого запуска. `implementation-traceability.csv`, `acceptance-cases.csv`, `acceptance-automation-status.csv` содержат exact140 rows/140 unique AC/140 unique case IDs; missing/extra между тремя реестрами0. Automation registry остаётся историческим:17 `text_only`,20 `partial_http`,103 `assertions_waiting_driver`; его сообщения «приложение отсутствует» нельзя считать актуальными после локальной реализации, но массово перекрашивать140 строк без per-AC evidence запрещено.
+
+Первый bounded reconciliation slice — exact12 primary delivery `DEV-09`: `AC-001`, `AC-025`, `AC-051`, `AC-MIG-001–009`. Для10 (`AC-001`, `AC-025`, `AC-MIG-001–005`, `AC-MIG-007–009`) существуют локальные частичные доказательства DEV-09/10/MEDIA-06, включая exact URL/content packages, two-URL wash, gallery17/214 SHA evidence, source/media maps и price rows; ни один полный AC не объявлен PASS, потому что persistent apply/publication/READY и часть общесайтовой сверки отсутствуют. `AC-051` и `AC-MIG-006` отдельно blocked на фактической рекламной выгрузке ANA-Q041 и несвязанных URL; публичный crawl не подменяет эти факты. Следующий разрешённый TEST-07 инкремент — только per-AC evidence mapping этих12 строк к уже существующим named Django suites/doc evidence, затем review; новый framework/driver/Playwright/product endpoint не добавлять. TEST-08/этап9 остаются закрыты.
+
+### D-977: DEV-09 exact12 evidence mapping
+
+| AC | Локальное доказательство | Текущий вывод | Остаток до полного AC |
+| --- | --- | --- | --- |
+| AC-001 | DEV-09 package/create/replay; named `public-read`, `public-http`, `public-nav` suites | local partial | all114 exact paths, persistent apply и полное сравнение источника |
+| AC-025 | DEV-10 `test_g10_writer_002_create_exact_aggregate_and_zero_write_replay`, `test_g10_public_002_root_page2_and_modal_are_exact_bounded`, `test_g10_public_008_server_rendered_catalog_page2_modal_and_album`; MEDIA-06 exact17/214 | local partial | persistent import/publication, READY и TEST-10 |
+| AC-051 | локальный crawl/ZIP/packages не содержат рекламную выгрузку и неизвестные несвязанные URL | blocked | ANA-Q041 и внешние факты владельца |
+| AC-MIG-001 | route-map115; DEV-09 packages и named public suites | local partial | all114 applied/published materials и исходные redirect chains |
+| AC-MIG-002 | `test_migm_006_same_wash_page_primary_alias_http_and_canonical` | local partial | решение по рекламе/launch и persistent apply |
+| AC-MIG-003 | DEV-10 `test_g10_writer_002_create_exact_aggregate_and_zero_write_replay`, `test_g10_public_001_closed_query_parser_and_page1_redirect`, `test_g10_public_002_root_page2_and_modal_are_exact_bounded`, `test_g10_public_008_server_rendered_catalog_page2_modal_and_album`; exact214 | local partial | production import/publication и TEST-10 |
+| AC-MIG-004 | route evidence сохраняет cohort legacy10 | not PASS | representations/READY-06 и controlled import |
+| AC-MIG-005 | MEDIA-06 path/bytes/SHA; gallery fail-closed tests; два документированных error URL | local partial | final bindings/application/cleanup READY |
+| AC-MIG-006 | публичный crawl не подменяет рекламную выгрузку и дополнительные несвязанные пути | blocked | ANA-Q041 и внешние факты владельца |
+| AC-MIG-007 | exact closed DEV-09 package/render tests | local partial | full60+legacy10 и READY-06 |
+| AC-MIG-008 | exact DEV-09 price/table package tests | local partial | persistent placement и полное сравнение источника |
+| AC-MIG-009 | MEDIA-06 exact binding/bytes/SHA; DEV-10 exact214 aggregate | local partial | persistent import и whole-site MEDIA-04 |
+
+Значения `automation_state` и `executable_ids` в реестре намеренно оставлены без изменения: D-977 уточняет только поле остатка по уже имеющимся доказательствам и не выдаёт частичное локальное покрытие за полный PASS.
+
 **Текущий D-315:** локальные base-image исправления и независимое ревью завершены; [результаты](base-image-security-remediation.md). Каталог1056/40, приложение/11FOUNDATIONнеисполнены; vendorостатокнеобнулён. Только следующий явный допуск владельца разрешает ограниченную DEV-02/28.
 
 **Обновление D-313:** TEST-Q008 принят; локальный вход через Nginx проверен с компьютера и из Docker, изоляция/ограничения подтверждены независимо. [Итог](local-foundation-proxy-check.md). Базовые образы имеют открытый остаток безопасности; код сайта запрещён. Старые упоминания запрета подготовки/неработающего HTTP относятся к истории до D-312/313.
