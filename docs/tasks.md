@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-986 (2026-11-13): **DEV-30 exact2 TEST-07 mapping complete; AC-057 deferred, AC-OPS-012 local-negative partial, full PASS0.** First launch remains free of optional external runtime; no premature consent manager or analytics code.
+
 Текущая работа D-985 (2026-11-13): **DEV-21 exact2 TEST-07 mapping complete; both assertion-only/deferred, full PASS0.** Technical incident Telegram lifecycle is not replaced by DEV-13 request notifications. No queue/outbox/worker expansion.
 
 Текущая работа D-984 (2026-11-13): **DEV-18 exact2 TEST-07 mapping complete; AC-040 local partial, AC-OPS-008 assertion-only, full PASS0.** Existing bounded rotation/retention kept; unified quota/fault/scheduler operations remain. No logging-platform expansion.

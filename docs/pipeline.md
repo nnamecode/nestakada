@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-986 (2026-11-13): DEV-30 exact2 mapped under first-launch no-external-runtime rule.** Analytics remains deferred; CSP/no-embed/storage and reserve rejection are partial negative evidence only. Full PASS0, TEST-08/stage9 closed.
+
 > **Текущая точка D-985 (2026-11-13): DEV-21 exact2 mapped assertion-only/deferred.** Technical incident dedupe/recovery/Telegram delivery has contracts but no operational execution; DEV-13 request notifications are not substituted. Full PASS0, TEST-08/stage9 closed.
 
 > **Текущая точка D-984 (2026-11-13): DEV-18 exact2 mapped without logging-platform expansion.** Bounded rotation/30-day DB cleanup are local partial evidence; unified quota/threshold/fault/scheduler operations remain absent, full PASS0. TEST-08/stage9 remain closed.

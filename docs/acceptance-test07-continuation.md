@@ -1,5 +1,11 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-986: DEV-30 exact2 evidence mapping
+
+`AC-057` / `AT-057` остаётся deferred/text-only. D-291–293 фиксируют будущие visits/sources/phone-click/accepted-request goals, no PII/ID, Webvisor off and analytics failure nonblocking, но actual counter ownership/config/goals/legal fake sink and execution отсутствуют. COOKIE-Q001 intentionally keeps first launch free of Metrika/Yandex/YouTube; negative absence evidence не является analytics PASS.
+
+`AC-OPS-012` / `AT-312` имеет local partial negative evidence: public/home tests require CSP `script-src 'self'`, no iframe/Yandex/YouTube, no public cookies/storage; HTML reserve rejects external fetch tags and preserves fixed public CSP. Full accepted/rejected consent/network/storage matrix and future optional-widget configuration remain deferred because no optional external runtime is enabled. Consent manager or analytics code is not added preemptively. Full PASS0; states/IDs unchanged.
+
 ### D-985: DEV-21 exact2 evidence mapping
 
 `AC-042` / `AT-042` и `AC-OPS-006` / `AT-306` имеют только reviewed `acceptance-fallback-contracts.md` assertions для incident lifecycle:1000 repeats одного stable incident без шторма, второй critical другого component/code независимо, restart/read без ложного recovery, один verified recovery, lost ACK/delivery failure bounded and nonrecursive. Реальных incident controller/cycle/delivery bindings и исполнения нет.
