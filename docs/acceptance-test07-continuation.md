@@ -1,5 +1,17 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-995: DEV-06 exact5 evidence mapping
+
+`AC-026` / `AT-026` has executed local partial evidence: real JPEG/PNG/WebP and exact1MB uploads, bytes/pixel/format/MIME/active-payload rejection, owner/CSRF/body-cap boundaries, private source, nosniff contextual output and worker codec/resource tests. Network-level worker-down/unknown-receipt, production storage/runtime and current vendor-risk release decision remain.
+
+`AC-027` / `AT-027` has executed local partial evidence: stable PageMediaHome survives Page rename, direct/subfolder search is boundary-safe, prefix neighbor/traversal/symlink/hardlink escapes are rejected, and picker authorization is contextual. Full applied editor/history navigation and production filesystem traversal matrix remain.
+
+`AC-028` / `AT-028` has executed local partial evidence across editor/media/version tests: owner changes one typed slot, previous Stable/draft/other usage retains immutable bytes, employee media keys are denied, cleanup cannot remove referenced assets, and contextual recapture fails closed on drift. Complete two-article+Stable+active HTML-set observation after persistent publication remains.
+
+`AC-029` / `AT-029` has executed local partial evidence: six usage kinds, owner confirmation/generation/signature, late-reference race, physical unlink failure with honest pending+retry, concurrent attach/delete, actual byte counts and HTML-reserve generation retention. Production storage faults, all active generations/backup consumers and final cleanup operations remain.
+
+`AC-DTL-007` / `AT-107` has executed local partial evidence: employee/visitor cannot inject or change media keys/src/alt/alignment; owner typed metadata replacement is allowed while old Stable/other-reference bytes remain. Whole214-original and all published HTML consumer hashes after real apply remain. Full PASS0; states/IDs unchanged and no new media subsystem added.
+
 ### D-994: DEV-03 exact5 evidence mapping
 
 `AC-014` / `AT-014` has executed local partial evidence: owner creates employee and sets/resets password, employee direct self-reset/manage requests are denied, old sessions die after reset/disable, enable does not revive them, password input is hidden and secrets are absent from argv/audit/output. Production HTTPS/cookie profile and complete real-browser owner workflow remain.

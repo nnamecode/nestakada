@@ -1,5 +1,7 @@
 # Принятые решения
 
+Статус D-995 (2026-11-14): DEV-06 exact5 (`AC-026–029`,`AC-DTL-007`) mapped to executed local media/upload/path/replace/cleanup evidence. Real codec/HTTP/FS/PG/editor/version/HTML-reserve guards provide local partial coverage; production storage/worker transport, whole214+all published consumers and release fault/risk gates remain. Full PASS0; no new media subsystem/product/live change, states/IDs unchanged.
+
 Статус D-994 (2026-11-13): DEV-03 exact5 (`AC-014–016`,`AC-DTL-001`,`AC-DTL-018`) mapped to executed local auth/session/grant/editor-boundary evidence. Owner reset/revoke, idle/hard limits, scoped rights/price-off/protected denial and stale-basis refusal are local partial. Production profile, persistent real-page flows and real-tab unsaved-input/manual conflict paths remain; full PASS0. No MFA/email/CAPTCHA/auth expansion, states/IDs unchanged. Two guessed test filenames were absent; exact tracked tests were located without identical retry.
 
 Статус D-993 (2026-11-13): DEV-20 exact4 (`AC-041`,`AC-052`,`AC-060`,`AC-OPS-009`) mapped to executed local scanner/auth/rate/resource evidence. SQL0 pre-session rejection, bounded counters, real two-IP/rate/active tests, auth windows and measured scan/mixed resources are local partial. Full PERF profiles/five-minute peaks/many-source churn/background-job quotas/production proxy+VPS remain; no DDoS guarantee or full PASS. States/IDs/product unchanged.
