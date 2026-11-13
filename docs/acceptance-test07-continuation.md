@@ -1,5 +1,9 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-980: DEV-22 single-AC evidence mapping
+
+`AC-043` / `AT-043` сопоставлен с `docs/ref6-local-backup-results.md` и существующим BACKUP contract. REF-06F локально подтверждает два immutable current/previous поколения PostgreSQL+media, manifest/SHA, `pg_restore --list`/`tar --list`, atomic last-good retention при сбоях, отсутствие пяти foundation secrets и независимое review без findings. Это local partial evidence. Full AC blocked до семи внешних зашифрованных точек, отдельного ключа, расписания, наблюдаемого внешнего отказа и реального restore; локальный комплект не выдаётся за внешнюю/полную резервную систему.
+
 ### D-979: DEV-10 single-AC evidence mapping
 
 `AC-008` / `AT-008` сопоставлен с уже завершённым локальным DEV-10 без нового запуска и без изменения продукта. Exact package summary и MEDIA-06 подтверждают17 альбомов/214 оригиналов и порядок; `test_g10_writer_002_create_exact_aggregate_and_zero_write_replay` подтверждает единый aggregate без копий; `test_g10_public_002_root_page2_and_modal_are_exact_bounded` и `test_g10_public_008_server_rendered_catalog_page2_modal_and_album` подтверждают root, direct `?page=2`, modal и17 самостоятельных album routes. Это local partial evidence, не полный PASS: persistent apply/publication, итоговая TEST-10 и responsive/manual acceptance остаются. Исторические `automation_state=text_only` и пустой `executable_ids` не переписываются без отдельного решения о модели реестра.
