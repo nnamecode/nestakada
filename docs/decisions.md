@@ -1,5 +1,7 @@
 # Принятые решения
 
+Статус D-993 (2026-11-13): DEV-20 exact4 (`AC-041`,`AC-052`,`AC-060`,`AC-OPS-009`) mapped to executed local scanner/auth/rate/resource evidence. SQL0 pre-session rejection, bounded counters, real two-IP/rate/active tests, auth windows and measured scan/mixed resources are local partial. Full PERF profiles/five-minute peaks/many-source churn/background-job quotas/production proxy+VPS remain; no DDoS guarantee or full PASS. States/IDs/product unchanged.
+
 Статус D-992 (2026-11-13): DEV-19 exact4 (`AC-062`,`AC-MAN-004–006`) reconciled as assertion-only/deferred under approved MVP simplification. Existing audit read/age cleanup/technical rotation do not substitute owner category deletion, DB/file partial reconciliation,1GiB physical fault behavior, read-state/badges or incident lifecycle. Full PASS0; no category-delete/reconciliation subsystem added, states/IDs unchanged.
 
 Статус D-991 (2026-11-13): DEV-17 exact4 (`AC-038`,`AC-039`,`AC-059`,`AC-OPS-007`) reconciled against DEV-28/REF-06B and D-925. Nine categories/typed safe events/unique IDs/owner read and UTC→Moscow display are local partial; badges/read-state remain intentionally deferred; per-category files/incomplete signal/export/midnight/Telegram/full code fixtures remain. Full PASS0; no full logging UX/background/service expansion, states/IDs unchanged.

@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-993 (2026-11-13): **DEV-20 exact4 TEST-07 mapping complete; all executed local partial, full PASS0.** Scanner/auth/rate/resource evidence mapped; full PERF/many-source/jobs/production remains. No rate-limit platform expansion.
+
 Текущая работа D-992 (2026-11-13): **DEV-19 exact4 TEST-07 mapping complete; all assertion-only/deferred, full PASS0.** Manual category deletion remains outside MVP; existing retention/rotation is not substituted. No feature expansion.
 
 Текущая работа D-991 (2026-11-13): **DEV-17 exact4 TEST-07 mapping complete; three local partial, AC-039 assertion-only/deferred, full PASS0.** Minimal owner audit remains; no badges/read-state/files/Telegram expansion.

@@ -1,5 +1,15 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-993: DEV-20 exact4 evidence mapping
+
+`AC-041` / `AT-041` has executed local partial evidence: known scanner paths are rejected before body/session/auth/SQL with connection attempts0/SQL0, no cookies, bounded ten-key process counters, expected404 log suppression and compatibility with115 MAP/316 MED. Native scan windows prove useful requests still work and unexpected outcomes remain observable. Full TECH-06 peak, global history/Telegram and production WSGI logging remain.
+
+`AC-052` / `AT-052` has executed local partial resource evidence from separate scan and mixed native runs: actual HTTP statuses, useful editor requests, container CPU/RAM/OOM/max-event observations and retained-domain checks. It is not the complete pre-agreed PERF-NORMAL/SCAN/MIXED/FAILURE profile, five-minute peak or VPS capacity test and gives no DDoS guarantee.
+
+`AC-060` / `AT-060` has executed local partial evidence for5 failures per real IP, second-IP independence, success clearing only its source, rolling10-minute/15-minute limits, forwarded-header trust boundary, bounded key capacity and concurrent failure correctness; Nginx20/50rps and active8 are inspected/exercised. Background-job duplicate limits, all expensive-operation quotas and production proxy/shared-address topology remain.
+
+`AC-OPS-009` / `AT-309` has executed local partial native evidence: N03/N04/N07 scanner/mixed windows, two real source IPs, SQL0, bounded process keys and measured useful-request/resources. Full10/50/100rps×5min, many-source zone churn and production execution remain. Full PASS0; states/IDs unchanged and no extra rate-limit platform is added.
+
 ### D-992: DEV-19 exact4 evidence mapping
 
 `AC-062` / `AT-062`, `AC-MAN-004` / `AT-704`, `AC-MAN-005` / `AT-705` and `AC-MAN-006` / `AT-706` are all assertion-only/deferred under the approved MVP simplification. They require owner-confirmed category-bound delete, new-event/other-category/protected-audit preservation, DB/file partial-operation reconciliation, physical1GiB behavior, retry identity, read cursor/badge and independent incident recovery.
