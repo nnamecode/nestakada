@@ -1,16 +1,15 @@
 # TEST-07 — сгруппированный реестр остатка
 
-Статус D-1007, 2026-11-14. Это первичная маршрутизация уже зафиксированного остатка после D-1006, а не новый набор требований и не статус прохождения. Канонический подробный текст по каждому AC остаётся в `acceptance-automation-status.csv`; этот документ не заменяет его и не повышает ни один AC до PASS.
+Статус D-1007 с обновлением D-1015, 2026-11-14. Это первичная маршрутизация уже зафиксированного остатка после D-1006, а не новый набор требований и не статус прохождения. Канонический подробный текст по каждому AC остаётся в `acceptance-automation-status.csv`; этот документ не заменяет его и не повышает ни один AC до PASS.
 
-Каждый из 140 AC назначен ровно в одну основную следующую группу. У AC могут быть дополнительные ограничения из других групп; основная группа означает только ближайший необходимый gate. Механическая проверка: owner25 + launch/external92 + TEST-09 7 + TEST-10 16 =140, дублей0, неизвестных ID0.
+Каждый из 140 AC назначен ровно в одну основную следующую группу. У AC могут быть дополнительные ограничения из других групп; основная группа означает только ближайший необходимый gate. После принятия `OWNER-CONFLICT-Q001–Q005=1` механическая маршрутизация: owner21 + launch/external94 + TEST-09 7 + TEST-10 18 =140, дублей0, неизвестных ID0.
 
-## 1. Решение владельца или сверка требований — 25
+## 1. Решение владельца или сверка требований — 21
 
 Сначала требуется не код, а явное сохранение defer либо согласование противоречивого oracle. По no-bloat правилу действующие defer D-923/D-925 и минимальные D-595/D-596/D-859 сохраняются, пока владелец отдельно не откроет соответствующий объём.
 
-- Явные requirements conflicts: `AC-033`, `AC-036`, `AC-037`, `AC-049`, `AC-DTL-011`.
 - Удалённый/отложенный CRM, audit UX и manual-log scope: `AC-034`, `AC-035`, `AC-039`, `AC-062`, `AC-DTL-013`, `AC-MAN-004`, `AC-MAN-005`, `AC-MAN-006`.
-- Отложенный DEV-26/27 и внешний revoke/head/controller protocol: `AC-046`, `AC-HTML-003`, `AC-HTML-004`, `AC-HTML-009`, `AC-HTML-012`, `AC-OPS-003`, `AC-OPS-005`, `AC-PRO-006`, `AC-PRO-007`, `AC-PRO-008`, `AC-PRO-009`.
+- Отложенный DEV-26/27 и внешний revoke/head/controller protocol: `AC-046`, `AC-049`, `AC-HTML-003`, `AC-HTML-004`, `AC-HTML-009`, `AC-HTML-012`, `AC-OPS-003`, `AC-OPS-005`, `AC-PRO-006`, `AC-PRO-007`, `AC-PRO-008`, `AC-PRO-009`.
 - Отложенный optional analytics runtime: `AC-057`.
 
 ### Пять явных конфликтов oracle
@@ -22,16 +21,16 @@
 | `OWNER-CONFLICT-Q001` | `AC-033` | Сохранить D-596: любой активный сотрудник видит все заявки read-only; удалить из oracle назначения, «только свои» и чужую карточку как отдельную модель прав | Вернуть assignee-модель и assigned-only доступ |
 | `OWNER-CONFLICT-Q002` | `AC-036` | Отключение сотрудника немедленно закрывает доступ; заявки остаются владельцу без reassignment/status/history, повторное включение возвращает обычный D-596 read-only доступ ко всем | Вернуть назначения, статусы, историю и правила переназначения |
 | `OWNER-CONFLICT-Q003` | `AC-037` | Сохранить D-595: owner-session + CSRF + POST + подтверждение конкретной заявки без повторного пароля; остальные запреты/tombstone сохраняются | Вернуть повторный ввод пароля перед удалением |
-| `OWNER-CONFLICT-Q004` | `AC-049` | Сохранить D-896/D-923: DEV-26/27 отложены; при будущем возобновлении normal upstream сразу приоритетен per request, без two-success state machine и recovery notification | Вернуть двухуспешный stateful recovery-контроллер |
-| `OWNER-CONFLICT-Q005` | `AC-DTL-011` | Сохранить D-859: bounded one-time intent/idempotency без отдельного 30-minute issuance + 24-hour receipt lifecycle | Вернуть долговечный receipt/cache lifecycle 30m/24h |
+| `OWNER-CONFLICT-Q004` | `AC-049` | Сохранить D-896/D-923: DEV-26/27 отложены; при будущем возобновлении normal upstream сразу приоритетен per request, без routing two-success state/notification. Независимый incident lifecycle AC-045 не меняется | Вернуть двухуспешный stateful routing-контроллер |
+| `OWNER-CONFLICT-Q005` | `AC-DTL-011` | Сохранить D-859: signed intent действует 30 минут, replay в срок идемпотентен; отдельного 24-hour receipt/cache lifecycle нет | Вернуть отдельный долговечный receipt/cache lifecycle 30m/24h |
 
-Пакетный ответ `OWNER-CONFLICT-Q001–Q005=1` принимает все пять рекомендуемых минимальных вариантов. До такого ответа старые строки остаются конфликтными, а не автоматически переписанными.
+Пакетный ответ владельца «Продолжай» после прямого gate принят в D-1015 как `OWNER-CONFLICT-Q001–Q005=1`. Пять старых oracle согласованно заменены; это не повышает AC до PASS и не снимает их новые основные gates ниже.
 
-## 2. Launch/external gates — 92
+## 2. Launch/external gates — 94
 
 Это основной выпускной остаток: persistent apply/publication, реальные импортированные данные, LEGAL/RKN/SMTP/contacts/advertising export, production HTTPS/proxy/storage, внешние backup/monitoring/notifications/analytics, фактический Nginx fallback и launch smoke. Он не разрешает deployment или сбор реальных ПД без отдельного gate.
 
-`AC-001`, `AC-002`, `AC-003`, `AC-004`, `AC-005`, `AC-006`, `AC-007`, `AC-009`, `AC-010`, `AC-011`, `AC-012`, `AC-016`, `AC-017`, `AC-018`, `AC-019`, `AC-020`, `AC-024`, `AC-026`, `AC-027`, `AC-028`, `AC-029`, `AC-030`, `AC-031`, `AC-032`, `AC-038`, `AC-040`, `AC-041`, `AC-042`, `AC-043`, `AC-044`, `AC-045`, `AC-047`, `AC-048`, `AC-050`, `AC-051`, `AC-053`, `AC-054`, `AC-055`, `AC-058`, `AC-059`, `AC-060`, `AC-061`, `AC-063`, `AC-DTL-001`, `AC-DTL-002`, `AC-DTL-003`, `AC-DTL-005`, `AC-DTL-007`, `AC-DTL-008`, `AC-DTL-009`, `AC-DTL-010`, `AC-DTL-012`, `AC-DTL-014`, `AC-DTL-015`, `AC-DTL-016`, `AC-DTL-020`, `AC-HTML-001`, `AC-HTML-002`, `AC-HTML-005`, `AC-HTML-007`, `AC-HTML-008`, `AC-HTML-010`, `AC-HTML-011`, `AC-OPS-001`, `AC-OPS-002`, `AC-OPS-004`, `AC-OPS-006`, `AC-OPS-007`, `AC-OPS-012`, `AC-PRO-001`, `AC-PRO-002`, `AC-PRO-003`, `AC-PRO-005`, `AC-PRO-010`, `AC-PRO-011`, `AC-MIG-001`, `AC-MIG-002`, `AC-MIG-004`, `AC-MIG-005`, `AC-MIG-006`, `AC-MIG-007`, `AC-MIG-008`, `AC-MIG-009`, `AC-SEO-001`, `AC-SEO-002`, `AC-SEO-003`, `AC-SEO-004`, `AC-SEO-005`, `AC-SEO-006`, `AC-MAN-001`, `AC-MAN-002`, `AC-MAN-003`.
+`AC-001`, `AC-002`, `AC-003`, `AC-004`, `AC-005`, `AC-006`, `AC-007`, `AC-009`, `AC-010`, `AC-011`, `AC-012`, `AC-016`, `AC-017`, `AC-018`, `AC-019`, `AC-020`, `AC-024`, `AC-026`, `AC-027`, `AC-028`, `AC-029`, `AC-030`, `AC-031`, `AC-032`, `AC-033`, `AC-037`, `AC-038`, `AC-040`, `AC-041`, `AC-042`, `AC-043`, `AC-044`, `AC-045`, `AC-047`, `AC-048`, `AC-050`, `AC-051`, `AC-053`, `AC-054`, `AC-055`, `AC-058`, `AC-059`, `AC-060`, `AC-061`, `AC-063`, `AC-DTL-001`, `AC-DTL-002`, `AC-DTL-003`, `AC-DTL-005`, `AC-DTL-007`, `AC-DTL-008`, `AC-DTL-009`, `AC-DTL-010`, `AC-DTL-012`, `AC-DTL-014`, `AC-DTL-015`, `AC-DTL-016`, `AC-DTL-020`, `AC-HTML-001`, `AC-HTML-002`, `AC-HTML-005`, `AC-HTML-007`, `AC-HTML-008`, `AC-HTML-010`, `AC-HTML-011`, `AC-OPS-001`, `AC-OPS-002`, `AC-OPS-004`, `AC-OPS-006`, `AC-OPS-007`, `AC-OPS-012`, `AC-PRO-001`, `AC-PRO-002`, `AC-PRO-003`, `AC-PRO-005`, `AC-PRO-010`, `AC-PRO-011`, `AC-MIG-001`, `AC-MIG-002`, `AC-MIG-004`, `AC-MIG-005`, `AC-MIG-006`, `AC-MIG-007`, `AC-MIG-008`, `AC-MIG-009`, `AC-SEO-001`, `AC-SEO-002`, `AC-SEO-003`, `AC-SEO-004`, `AC-SEO-005`, `AC-SEO-006`, `AC-MAN-001`, `AC-MAN-002`, `AC-MAN-003`.
 
 ## 3. TEST-09 physical/fault/load — 7
 
@@ -39,11 +38,11 @@
 
 `AC-052`, `AC-DTL-017`, `AC-DTL-019`, `AC-HTML-006`, `AC-OPS-008`, `AC-OPS-009`, `AC-OPS-010`.
 
-## 4. TEST-10 real browser/device/manual — 16
+## 4. TEST-10 real browser/device/manual — 18
 
 Нужны реальные браузеры/устройства и ручные открытые вкладки; Django HTTP и Playwright не заменяют эту группу.
 
-`AC-008`, `AC-013`, `AC-014`, `AC-015`, `AC-021`, `AC-022`, `AC-023`, `AC-025`, `AC-056`, `AC-DTL-004`, `AC-DTL-006`, `AC-DTL-018`, `AC-OPS-011`, `AC-PRO-004`, `AC-PRO-012`, `AC-MIG-003`.
+`AC-008`, `AC-013`, `AC-014`, `AC-015`, `AC-021`, `AC-022`, `AC-023`, `AC-025`, `AC-036`, `AC-056`, `AC-DTL-004`, `AC-DTL-006`, `AC-DTL-011`, `AC-DTL-018`, `AC-OPS-011`, `AC-PRO-004`, `AC-PRO-012`, `AC-MIG-003`.
 
 ## Порядок продолжения
 

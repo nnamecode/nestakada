@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1015 (2026-11-14): **OWNER-CONFLICT-Q001–Q005=1 accepted; five oracles reconciled to minimal D-595/596/859/896/923.** No assignments/history/repeated-password/two-success-state/24h-receipt subsystem. Routing now owner21+launch94+TEST09 7+TEST10 18=140; automation states/full PASS unchanged. Next safe work again depends on external launch inputs or separate TEST-09/10 approval.
+
 Текущая работа D-1014 (2026-11-14): **five explicit oracle conflicts prepared as OWNER-CONFLICT-Q001–Q005; no decision/status change.** Variant1 for all keeps later minimal no-bloat D-595/596/859/896/923; variant2 restores separate heavy subsystems. Next required gate: explicit owner answer, recommended `OWNER-CONFLICT-Q001–Q005=1`.
 
 Текущая работа D-1013 (2026-11-14): **LAUNCH-IN-006 provider-neutral monitoring facts recorded; provider/readiness channel not chosen.** One managed external service recommended, no custom stack/agent/controller. Public GET is insufficient; protected app/DB readiness remains separate future gate. Next external choice: provider matching seven facts; IN-006 remains open.
