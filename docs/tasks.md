@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-996 (2026-11-14): **DEV-14 exact5 TEST-07 mapping complete; one D-596 local partial/oracle drift, four deferred/conflicting, full PASS0.** Minimal read-only requests remain; no CRM/status/assignee/notes/history expansion.
+
 Текущая работа D-995 (2026-11-14): **DEV-06 exact5 TEST-07 mapping complete; all executed local partial, full PASS0.** Upload/path/replace/cleanup/rights evidence mapped; production worker/storage and whole published consumer verification remain. No media-system expansion.
 
 Текущая работа D-994 (2026-11-13): **DEV-03 exact5 TEST-07 mapping complete; all executed local partial, full PASS0.** Auth/session/grant/stale-base evidence mapped; production and real-browser unsaved-input paths remain. No auth expansion.

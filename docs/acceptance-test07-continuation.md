@@ -1,5 +1,15 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-996: DEV-14 exact5 evidence mapping
+
+`AC-033` / `AT-033` has executed local partial evidence for the later approved D-596 model: owner and employee read-only list/detail, anonymous denial before data, escaped private/no-store responses and bounded pagination/query. Its older assigned-only/assignee/foreign-card oracle conflicts with D-596 employee access to all requests and cannot be promoted without requirements reconciliation. Telegram body safety is covered only by synthetic notification boundaries, not live delivery.
+
+`AC-034` / `AT-034` and `AC-DTL-013` / `AT-113` are assertion-only/deferred: statuses, transition history, reopen confirmation, optimistic status conflicts and assignee changes were explicitly removed from the minimal no-CRM scope.
+
+`AC-035` / `AT-035` is assertion-only/deferred: notes/contact corrections/history were explicitly removed; immutable original request and no-PII audit remain local supporting evidence but do not implement notes.
+
+`AC-036` / `AT-036` is assertion-only/requirements-conflict: employee session disable/re-enable behavior is implemented, but reassignment of open requests and historical closed assignee require the removed assignment/status/history model. D-596 all-employee read-only access supersedes assigned-request visibility. Full PASS0; states/IDs unchanged and no CRM/status/assignee/notes/history subsystem is restored.
+
 ### D-995: DEV-06 exact5 evidence mapping
 
 `AC-026` / `AT-026` has executed local partial evidence: real JPEG/PNG/WebP and exact1MB uploads, bytes/pixel/format/MIME/active-payload rejection, owner/CSRF/body-cap boundaries, private source, nosniff contextual output and worker codec/resource tests. Network-level worker-down/unknown-receipt, production storage/runtime and current vendor-risk release decision remain.

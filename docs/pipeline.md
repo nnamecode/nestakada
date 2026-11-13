@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-996 (2026-11-14): DEV-14 exact5 mapped against D-596 no-CRM scope.** Read-only owner/employee evidence is partial; assigned-only/status/assignee/notes/history oracles conflict with later approved simplification and remain unpassed. TEST-08/stage9 closed.
+
 > **Текущая точка D-995 (2026-11-14): DEV-06 exact5 mapped to executed local partial evidence.** Media codec/path/replace/cleanup/rights guards are covered locally; production transport/storage and whole published-consumer gates keep full PASS0. TEST-08/stage9 closed.
 
 > **Текущая точка D-994 (2026-11-13): DEV-03 exact5 mapped to executed local partial evidence.** Auth/session/scoped-right/stale-basis guards are covered locally; production and real-tab unsaved-input/manual conflict gates keep full PASS0. TEST-08/stage9 closed.

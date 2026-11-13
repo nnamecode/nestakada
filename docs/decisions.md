@@ -1,5 +1,7 @@
 # Принятые решения
 
+Статус D-996 (2026-11-14): DEV-14 exact5 (`AC-033–036`,`AC-DTL-013`) reconciled against later D-596/minimal DEV-13 scope. Owner+employee read-only request list/detail is executed local partial, but AC-033 assigned-only oracle conflicts with D-596 all-request employee visibility. Status/assignee/notes/history/reopen AC branches were explicitly removed and remain assertion-only/deferred or requirements-conflict. Full PASS0; acceptance oracles are not silently rewritten and no CRM subsystem is restored.
+
 Статус D-995 (2026-11-14): DEV-06 exact5 (`AC-026–029`,`AC-DTL-007`) mapped to executed local media/upload/path/replace/cleanup evidence. Real codec/HTTP/FS/PG/editor/version/HTML-reserve guards provide local partial coverage; production storage/worker transport, whole214+all published consumers and release fault/risk gates remain. Full PASS0; no new media subsystem/product/live change, states/IDs unchanged.
 
 Статус D-994 (2026-11-13): DEV-03 exact5 (`AC-014–016`,`AC-DTL-001`,`AC-DTL-018`) mapped to executed local auth/session/grant/editor-boundary evidence. Owner reset/revoke, idle/hard limits, scoped rights/price-off/protected denial and stale-basis refusal are local partial. Production profile, persistent real-page flows and real-tab unsaved-input/manual conflict paths remain; full PASS0. No MFA/email/CAPTCHA/auth expansion, states/IDs unchanged. Two guessed test filenames were absent; exact tracked tests were located without identical retry.
