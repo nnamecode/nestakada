@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1004 (2026-11-14): DEV-05 exact12 mapped to DEV-05/simple REF-4 evidence.** Version/Stable/manual/restore/delete/media atomicity is local partial; production/public/open-tab/resources/physical faults keep full PASS0. No legacy workflow restoration; TEST-08/stage9 closed.
+
 > **Текущая точка D-1003 (2026-11-14): DEV-26 exact10 reconciled under owner defer D-923.** Stable/frozen/exact projection preparation is supporting partial evidence only; operational Nginx/controller/external revoke-head/rollback paths are absent, full PASS0. No runtime expansion; TEST-08/stage9 closed.
 
 > **Текущая точка D-1002 (2026-11-14): DEV-11 exact10 mapped to completed local SEO evidence.** Metadata/media/sitemap/robots/gallery and safe optional JSON-LD are partial; production migration/profile/crawl, real company facts and deferred emergency delivery keep full PASS0. No external runtime; TEST-08/stage9 closed.

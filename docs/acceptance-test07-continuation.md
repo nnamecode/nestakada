@@ -1,5 +1,27 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1004: DEV-05 exact12 evidence mapping
+
+`AC-017` / `AT-017` has executed local partial evidence across DEV-07/REF-4: stale current/base and concurrent saves fail atomically, preserve the entered value for comparison, create no revision/audit side effect and require a fresh explicit Save. Complete production browser/session interruption and all migrated page types remain.
+
+`AC-018` / `AT-018` has executed local partial evidence: an employee current-source Save changes only permitted fields, creates one immutable automatic revision, preserves an independent owner draft and protected fields, and rolls back on audit/media faults. Persistent public observation and full real-content role matrix remain.
+
+`AC-019` / `AT-019` has executed local partial evidence for the exact ten ordinary revisions plus every Stable, Stable-aware pruning, manual revisions inside the ordinary limit, protected current/draft/stage/media bases and real concurrency/rollback. Production accumulated-history/resource behavior remains.
+
+`AC-020` / `AT-020` has executed local partial evidence: only the owner may set Stable after an exact viewed stamp; demotion requires current password plus fresh composition and locked password-hash recheck, preserves the original date, does not publish or inherit the label and never removes current. Full production operator/browser flow remains.
+
+`AC-021` / `AT-021` has executed local partial HTTP/UI evidence: an assigned employee can view ordinary/manual/Stable history and labels for the assigned Page, while visitor, foreign employee, draft/private source and guessed preview/media paths are denied with private/no-store responses. TEST-10 and persistent production data remain.
+
+`AC-022` / `AT-022` and `AC-023` / `AT-023` have executed local partial compare/restore evidence: compare/prepare does not change current; direct restore and legacy replay apply only compatible permitted content in one transaction, preserving URL/tree/publication/rights/Stable/shared blocks and refusing missing media, lost rights or incompatible snapshots without partial mutation. Complete production open-tab/manual-copy behavior remains.
+
+`AC-063` / `AT-063` and `AC-MAN-001` / `AT-701` have executed local partial evidence: owner manual snapshot copies the explicitly saved current revision rather than owner draft or unsaved input, records independent metadata/server authorship/time, does not publish, and never inherits Stable. Concurrent double submit converges to one row/audit. Persistent real editor observation remains.
+
+`AC-MAN-002` / `AT-702` has executed local partial evidence: ordinary revision delete protects current, Stable, draft/stage/pin/media bases; Stable-vs-delete races, stale composition and audit rollback are closed, and physical/shared files remain. Whole-page deletion remains the separate DEV-29 command; production accumulated consumers remain.
+
+`AC-MAN-003` / `AT-703` has executed local partial evidence for owner/employee/GET/CSRF boundaries, exact repeat/concurrency behavior, server-time ordering and the eleventh ordinary revision under Stable/current protection. Full production browser and long-running history remain.
+
+`AC-DTL-019` / `AT-119` has executed local partial atomicity evidence across version/media Save, draft publish and direct restore: media preflight is revalidated under locks; audit/usage/revision/current mutations roll back together, and incompatible old snapshots are neither rewritten nor partially applied. Physical production storage failures and the complete TEST-09 matrix remain. Full PASS0; automation states/executable IDs remain unchanged, and the completed simple REF-4 path is used instead of restoring the legacy universal receipt workflow.
+
 ### D-1003: DEV-26 exact10 evidence mapping
 
 `AC-HTML-001` / `AT-201` has local supporting partial evidence from DEV-12 stable-ID/frozen-home rules and DEV-25 immutable current/previous sets: deleting a source does not rewrite the prepared home, while its own live route state is independently known. No operational Nginx path serves the frozen home/404/blank200 matrix during an outage, and no DB restore is invoked.
