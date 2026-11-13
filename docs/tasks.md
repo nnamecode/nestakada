@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-979 (2026-11-13): **DEV-10 exact1 TEST-07 evidence mapping complete; AC-008 local partial, full PASS0.** Exact17/214, shared aggregate и root/page2/modal/17 album routes связаны с существующими named tests; persistent apply/publication, TEST-10 и manual responsive acceptance остаются. No product/framework/Playwright expansion.
+
 Текущая работа D-978 (2026-11-13): **Устранено по явному решению владельца «почини всё что с ошибкой и продолжай».** Причина ложного `case_unique=0` подтверждена по фактическому заголовку: в `acceptance-cases.csv` поле называется `ac_ids`, а не `ac_id`. После возобновления выполнен один исправленный read-only аудит: trace/cases/status rows140/140/140, unique140/140/140, расхождения trace↔case0 и case↔status0; automation matrix17/20/103 неизменна, `git diff --check` без ошибок. Ошибок продукта и данных не обнаружено.
 
 Текущая работа D-977 (2026-11-13): **DEV-09 exact12 TEST-07 evidence mapping complete; full PASS0.** Ten AC have bounded local partial evidence, two remain blocked by ANA-Q041/unknown URLs. Historical states17/20/103 are preserved; only per-row remaining evidence/gaps were reconciled. No product/test-framework/Playwright change.

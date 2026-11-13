@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-979 (2026-11-13): smallest DEV-10 exact1 TEST-07 slice mapped as local partial.** `AC-008` has existing exact17/214/shared-aggregate/root/page2/modal/album evidence; full PASS0 pending persistent apply/publication, TEST-10 and manual responsive acceptance. TEST-08/stage9 remain closed.
+
 > **Текущая точка D-978 (2026-11-13): D-977 registry validation complete after owner-authorized correction.** Actual `acceptance-cases.csv` key is `ac_ids`; corrected audit gives rows/unique140 across all three registries and cross-diff0/0, matrix17/20/103 unchanged. TEST-07 continues; TEST-08/stage9 remain closed.
 
 > **Текущая точка D-977 (2026-11-13): DEV-09 exact12 TEST-07 evidence mapping complete, TEST-08/stage9 closed.** Ten local-partial and two external-fact-blocked AC are mapped to exact existing evidence; full PASS0. Registry states17/20/103 remain historical and unchanged; no framework/Playwright/product/live expansion.
