@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1008 (2026-11-14): launch/external inventory группы2 завершён read-only, статусы92 AC/full PASS0 неизменны.** Local readiness отделён от восьми внешних входов; intake/optional runtime off, DEV-26/27 deferred, deployment не разрешён. Docker running0. Next no-bloat step: owner-facing external-input checklist, не реализация.
+
 > **Текущая точка D-1007 (2026-11-14): grouped gap register partitions all140 AC as25 owner/requirements,92 launch/external,7 TEST-09 and16 TEST-10.** No status/PASS change; TEST-08/stage9 closed. Next no-bloat step is read-only launch-readiness inventory, not implementation or deployment.
 
 > **Текущая точка D-1006 (2026-11-14): TEST-07 per-AC evidence reconciliation complete for exact140 rows.** All rows have individual evidence decisions, but full PASS0 and historical states103/20/17 remain; production/external/LEGAL/TEST-09/10/conflict gates are still open. TEST-08/stage9 closed. Next no-bloat step is read-only grouped gap register, not implementation.

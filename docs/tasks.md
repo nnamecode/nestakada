@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1008 (2026-11-14): **read-only launch-readiness inventory группы2 завершён; статусы92 AC и full PASS0 не изменены.** Known/local/external/deferred границы сведены без product code, tests, deployment или подключения сервисов. Docker running0; исторические Exited/Created не считаются evidence. Next recommended: компактный owner launch checklist восьми внешних входов.
+
 Текущая работа D-1007 (2026-11-14): **grouped gap register complete: owner25 + launch/external92 + TEST-09 7 + TEST-10 16 =140; duplicates0/unknown0.** Canonical per-AC decisions unchanged, full PASS0, TEST-08 closed. Next recommended: read-only launch-readiness inventory only.
 
 Текущая работа D-1006 (2026-11-14): **TEST-07 per-AC evidence reconciliation complete: exact140/140/140, missing/extra0, individualized remaining140, full PASS0.** Historical state matrix103/20/17 unchanged; this is not TEST-08 authorization. Next recommended step: bounded read-only grouped gap register, no feature/status expansion.
