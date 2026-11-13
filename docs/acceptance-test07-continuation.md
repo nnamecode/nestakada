@@ -1,5 +1,13 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-990: DEV-08 exact4 evidence mapping
+
+`AC-009` / `AT-009` has broad local partial server-render evidence across safe public read/HTTP/navigation/shared blocks, service catalog/details, exact price layouts, DEV-12 home and DEV-10 gallery. It does not prove the full accepted desktop/tablet/phone visual composition for every type, remaining deferred assets/infographics or real content after persistent publication.
+
+`AC-050` / `AT-050` has executed local partial HTTP evidence: composite ETag/no-cache/conditional GET+HEAD, page/shared Header/Footer/navigation changes invalidate validators, price/home source changes participate in the public stamp, public responses avoid session cookies, and private admin/request responses are no-store. Production intermediary/shared-cache behavior and every dynamic form context remain.
+
+`AC-056` / `AT-056` and `AC-OPS-011` / `AT-311` remain manual-device blocked. No dated real matrix for eight browser families×current+two versions, Safari on real iPhone, MIUI and Samsung Internet has been executed. Django HTTP tests and Playwright are explicitly not substituted for device/browser acceptance. First lookup used nonexistent `test_public_nav.py`; exact `test_public_navigation.py` was located without identical retry. Full PASS0; states/IDs unchanged.
+
 ### D-989: DEV-24 exact3 evidence mapping
 
 `AC-045` / `AT-045` has executed local partial evidence: closed readiness performs real app-process+target PostgreSQL `SELECT 1`, actual stopped DB returns bounded nonzero and restart returns success, with no writes or secret/raw-error output. Five-minute external scheduling, independent probe IDs, F/S streak state, two-failure/two-success notifications and static-reserve bypass remain assertion-only/unexecuted.
