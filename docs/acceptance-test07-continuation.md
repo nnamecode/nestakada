@@ -1,5 +1,13 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-987: DEV-12 exact3 evidence mapping
+
+`AC-012` / `AT-012` has executed local partial evidence: `test_dynamic_projection_changes_only_price_amount_and_visibility`, hidden-source and missing-source frozen-fallback tests, exact owner bind/unbind digest, delete guard and fixed public home rendering. Stable IDs prevent a new object at the same URL from inheriting a deleted source. Full AC remains open for persistent apply/publication and the complete normal→night-reserve route with deleted target404 in a launch-like environment.
+
+`AC-DTL-005` / `AT-105` has executed local partial evidence from closed price policy/schema/source tests: exact Decimal without float, zero/text/empty/`from`, matrices/classes/axes, row identity, owner-only home profile and amount-only projection. Full role/HTTP price-edit path against applied published content and end-to-end main update remain.
+
+`AC-PRO-011` / `AT-411` has executed local partial evidence: visible source requires exact visible fallback, hidden source requires explicitly saved hidden fallback, unbind removes dependency without URL/name capture, corrupt/racing home fails closed, retained asset/profile identity is protected. Actual published delete with all media/HTML consumers and launch-like observation remains. First test-file lookup used one nonexistent guessed filename; exact tracked home tests were located without identical retry. Full PASS0; states/IDs unchanged.
+
 ### D-986: DEV-30 exact2 evidence mapping
 
 `AC-057` / `AT-057` остаётся deferred/text-only. D-291–293 фиксируют будущие visits/sources/phone-click/accepted-request goals, no PII/ID, Webvisor off and analytics failure nonblocking, но actual counter ownership/config/goals/legal fake sink and execution отсутствуют. COOKIE-Q001 intentionally keeps first launch free of Metrika/Yandex/YouTube; negative absence evidence не является analytics PASS.
