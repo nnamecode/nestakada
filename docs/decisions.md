@@ -1,5 +1,7 @@
 # Принятые решения
 
+Статус D-991 (2026-11-13): DEV-17 exact4 (`AC-038`,`AC-039`,`AC-059`,`AC-OPS-007`) reconciled against DEV-28/REF-06B and D-925. Nine categories/typed safe events/unique IDs/owner read and UTC→Moscow display are local partial; badges/read-state remain intentionally deferred; per-category files/incomplete signal/export/midnight/Telegram/full code fixtures remain. Full PASS0; no full logging UX/background/service expansion, states/IDs unchanged.
+
 Статус D-990 (2026-11-13): DEV-08 exact4 (`AC-009`,`AC-050`,`AC-056`,`AC-OPS-011`) reconciled. Public composition and cache validators have broad/executed local partial evidence; full visual real-content publication and production shared-cache remain. Both browser-matrix ACs are explicitly blocked until TEST-10/manual real devices; Django or Playwright is not substituted. Full PASS0; no browser tool/product change, states/IDs unchanged. One guessed nav filename was absent; exact tracked file was located without identical retry.
 
 Статус D-989 (2026-11-13): DEV-24 exact3 (`AC-045`,`AC-OPS-001`,`AC-OPS-002`) mapped to REF-06C executed local evidence. Real app+target-DB readiness, bounded failure/recovery and no-write/constant-output behavior are local partial; no public endpoint means scans cannot invoke DB checks. External five-minute IDs/streak/notifications, authenticated endpoint/forwarded-IP, wrong-DB/over-budget/user-request isolation remain. Full PASS0; no endpoint/observer/state machine/product/live change, states/IDs unchanged.

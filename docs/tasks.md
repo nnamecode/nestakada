@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-991 (2026-11-13): **DEV-17 exact4 TEST-07 mapping complete; three local partial, AC-039 assertion-only/deferred, full PASS0.** Minimal owner audit remains; no badges/read-state/files/Telegram expansion.
+
 Текущая работа D-990 (2026-11-13): **DEV-08 exact4 TEST-07 mapping complete; composition/cache local partial, two browser AC blocked, full PASS0.** Real8×3 browser/device matrix remains TEST-10/manual; no Playwright or feature expansion.
 
 Текущая работа D-989 (2026-11-13): **DEV-24 exact3 TEST-07 mapping complete; all local partial, full PASS0.** Closed readiness and actual DB-down/recovery evidence mapped; external monitor/streak/auth/wrong-DB/timeout-isolation branches remain. No monitoring expansion.

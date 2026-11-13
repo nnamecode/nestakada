@@ -1,5 +1,15 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-991: DEV-17 exact4 evidence mapping
+
+`AC-038` / `AT-038` has executed local partial evidence: the exact nine approved categories, one-insert stable UUID, typed references, safe formatter rejecting raw/sensitive payloads, append-only model guards and owner-only bounded filtered read are tested. Per-category rotated files, storage-unavailable incomplete-vs-zero indication and full nine-source operational fixture remain.
+
+`AC-039` / `AT-039` remains assertion-only/deferred by owner no-bloat decision D-925: badge999+, grouped exact count, read cursor and concurrent mark-read boundary are not implemented in the minimal read-only audit screen.
+
+`AC-059` / `AT-059` has executed local partial evidence for aware server UTC, Europe/Moscow UI, stable sequence/order and manual dates not replacing server facts. Midnight-boundary profile and actual UTC/zoned audit export remain.
+
+`AC-OPS-007` / `AT-307` has executed local partial evidence for exact nine categories, stable unique event IDs, duplicate refusal and sensitive-value suppression in event/process/admin output. Full code-by-category fixture and Telegram/diagnostic transport inspection remain. Full PASS0; states/IDs unchanged, no badges/read-state/files/Telegram/full category UX added.
+
 ### D-990: DEV-08 exact4 evidence mapping
 
 `AC-009` / `AT-009` has broad local partial server-render evidence across safe public read/HTTP/navigation/shared blocks, service catalog/details, exact price layouts, DEV-12 home and DEV-10 gallery. It does not prove the full accepted desktop/tablet/phone visual composition for every type, remaining deferred assets/infographics or real content after persistent publication.
