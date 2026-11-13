@@ -64,37 +64,53 @@ def _telegram_token():
     return token
 
 
-def _live_configuration():
+def _email_configuration():
     recipient = RequestSettings.objects.filter(pk=1).values_list(
         'recipient_email', flat=True).first()
     host = settings.SERVICE_REQUEST_SMTP_HOST
     port = settings.SERVICE_REQUEST_SMTP_PORT
     user = settings.SERVICE_REQUEST_SMTP_USER
     security = settings.SERVICE_REQUEST_SMTP_SECURITY
-    chat_id = settings.SERVICE_REQUEST_TELEGRAM_CHAT_ID
     if (settings.SERVICE_REQUEST_LEGAL_PROFILE != 'approved-v1'
             or not recipient or type(host) is not str
             or _HOST.fullmatch(host) is None or type(port) is not str
             or not port.isdigit() or not 1 <= int(port) <= 65535
             or type(user) is not str or not user or len(user) > 254
-            or security not in ('tls', 'ssl') or type(chat_id) is not str
-            or _CHAT.fullmatch(chat_id) is None):
-        raise ValueError('REQUEST_NOTIFICATION_CONFIGURATION_INVALID')
+            or security not in ('tls', 'ssl')):
+        raise ValueError('REQUEST_EMAIL_CONFIGURATION_INVALID')
     return {
         'recipient': recipient, 'host': host, 'port': int(port),
-        'user': user, 'security': security, 'chat_id': chat_id,
+        'user': user, 'security': security,
     }
 
 
-def live_ready():
+def _telegram_configuration():
+    chat_id = settings.SERVICE_REQUEST_TELEGRAM_CHAT_ID
+    if (settings.SERVICE_REQUEST_LEGAL_PROFILE != 'approved-v1'
+            or type(chat_id) is not str or _CHAT.fullmatch(chat_id) is None):
+        raise ValueError('REQUEST_TELEGRAM_CONFIGURATION_INVALID')
+    return {'chat_id': chat_id}
+
+
+def _live_channel_ready(channel):
     try:
-        _live_configuration()
-        _credential('ESTAKADA_SMTP_PASSWORD_FILE', 'smtp-password',
-                    '/run/secrets/smtp-password')
-        _telegram_token()
+        if channel == 'email':
+            _email_configuration()
+            _credential('ESTAKADA_SMTP_PASSWORD_FILE', 'smtp-password',
+                        '/run/secrets/smtp-password')
+        elif channel == 'telegram':
+            _telegram_configuration()
+            _telegram_token()
+        else:
+            return False
         return True
     except Exception:
         return False
+
+
+def live_ready():
+    return any(_live_channel_ready(channel)
+               for channel in ('email', 'telegram'))
 
 
 def _text(payload):
@@ -107,7 +123,7 @@ def _text(payload):
 
 
 def _live_email(payload):
-    config = _live_configuration()
+    config = _email_configuration()
     password = _credential(
         'ESTAKADA_SMTP_PASSWORD_FILE', 'smtp-password',
         '/run/secrets/smtp-password')
@@ -126,7 +142,7 @@ def _live_email(payload):
 
 
 def _live_telegram(payload):
-    config = _live_configuration()
+    config = _telegram_configuration()
     token = _telegram_token()
     url = 'https://api.telegram.org/bot' + token + '/sendMessage'
     body = parse.urlencode({
@@ -157,9 +173,19 @@ def _adapter(channel):
     profile = settings.SERVICE_REQUEST_TRANSPORT_PROFILE
     if profile == 'synthetic':
         return _synthetic_email if channel == 'email' else _synthetic_telegram
-    if profile == 'live' and live_ready():
+    if profile == 'live' and _live_channel_ready(channel):
         return _live_email if channel == 'email' else _live_telegram
     raise ValueError('REQUEST_NOTIFICATION_PROFILE_DISABLED')
+
+
+def _configured_channels():
+    profile = settings.SERVICE_REQUEST_TRANSPORT_PROFILE
+    if profile == 'synthetic':
+        return ('email', 'telegram')
+    if profile == 'live':
+        return tuple(channel for channel in ('email', 'telegram')
+                     if _live_channel_ready(channel))
+    return ()
 
 
 def _audit(result):
@@ -175,7 +201,7 @@ def _audit(result):
 def deliver(row):
     payload = _payload(row)
     results = []
-    for channel in ('email', 'telegram'):
+    for channel in _configured_channels():
         try:
             _adapter(channel)(payload)
             outcome = DeliveryResult(channel, True)

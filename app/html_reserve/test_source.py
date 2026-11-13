@@ -116,6 +116,17 @@ class HtmlReserveSourceTests(TestCase):
             current_revision=changed, sequence=2)
         self.assertNotEqual(capture().stamp, first.stamp)
 
+    def test_page_name_aba_changes_source_stamp_via_postgresql_row_version(self):
+        page, _route, _revision = self.page('ABA A', '/aba/')
+        first = capture()
+        raw(Page).filter(pk=page.pk).update(name='ABA B')
+        middle = capture()
+        raw(Page).filter(pk=page.pk).update(name='ABA A')
+        final = capture()
+        self.assertNotEqual(middle.stamp, first.stamp)
+        self.assertNotEqual(final.stamp, first.stamp)
+        self.assertEqual(final.descriptor['pages'][0][4], 'ABA A')
+
     def test_route_cap_fails_closed_without_truncation(self):
         self.page('One', '/one/')
         self.page('Two', '/two/', position=1)

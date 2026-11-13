@@ -1,4 +1,5 @@
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError
@@ -87,3 +88,38 @@ class RetainedHtmlTests(TransactionTestCase):
             generation_id=previous), 1)
         self.assertEqual(services.release_retained_html(
             generation_id=previous), 0)
+
+    def test_existing_generation_and_global_reconcile_caps_fail_without_delete(self):
+        assets = [self.asset(), self.asset()]
+        generation = str(uuid4())
+        services.set_retained_html(
+            generation_id=generation,
+            asset_ids=[str(asset.pk) for asset in assets])
+        with patch.object(services, 'MAX_RETAINED_HTML_ASSETS', 1):
+            with self.assertRaisesRegex(
+                    ValidationError, 'MEDIA_RETAINED_GENERATION_LIMIT'):
+                services.release_retained_html(generation_id=generation)
+        self.assertEqual(AssetUsage.objects.filter(
+            kind=AssetUsage.Kind.RETAINED_HTML,
+            consumer_id=generation).count(), 2)
+
+        other = str(uuid4())
+        with patch.object(services, 'MAX_RETAINED_HTML_USAGES', 2):
+            with self.assertRaisesRegex(
+                    ValidationError, 'MEDIA_RETAINED_USAGE_LIMIT'):
+                services.set_retained_html(
+                    generation_id=other, asset_ids=[str(assets[0].pk)])
+        self.assertFalse(AssetUsage.objects.filter(
+            kind=AssetUsage.Kind.RETAINED_HTML,
+            consumer_id=other).exists())
+        services.set_retained_html(
+            generation_id=other, asset_ids=[str(assets[0].pk)])
+        before = set(AssetUsage.objects.filter(
+            kind=AssetUsage.Kind.RETAINED_HTML).values_list('pk', flat=True))
+        with patch.object(services, 'MAX_RETAINED_HTML_USAGES', 1):
+            with self.assertRaisesRegex(
+                    ValidationError, 'MEDIA_RETAINED_USAGE_LIMIT'):
+                services.reconcile_retained_html(active_generation_ids=[])
+        self.assertEqual(set(AssetUsage.objects.filter(
+            kind=AssetUsage.Kind.RETAINED_HTML).values_list('pk', flat=True)),
+            before)

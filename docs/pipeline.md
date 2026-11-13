@@ -1,5 +1,125 @@
 # Процесс полной разработки
 
+> **Текущая точка D-952 (2026-11-13): DEV-09M data remediation paused after repeated MAP-015 header finding.** Exact cause is shell expansion of `$1/$2`; all other findings closed. No third attempt. Current stage8 data gate; owner resume recommended for literal-only14-header patch, then fresh independent review.
+
+> **Текущая точка D-951 (2026-11-13): DEV-09M canonical data findings remediated, writer absent.** Exact affected MAP010/024/029/015/038 content fixed with one bounded existing-list nesting rule; package/content SHA updated. Current stage8 data-review gate; next repeat independent data review, then plan/code gate remains separate.
+
+> **Текущая точка D-950 (2026-11-13): DEV-09M data review paused by anti-loop, not failed.** Canonical JSON remains24/25 and writer absent; reviewer could not run host Python twice, so full blocks/tables/SHA review has no verdict. Current stage8 data-review gate; owner resume recommended with exact existing Node runtime only.
+
+> **Текущая точка D-949 (2026-11-13): DEV-09M canonical JSON data-gate prepared, writer code not started.** Pinned existing html5lib image produced exact24 Page/25 Route/315776 bytes with content digests; temp tool removed and containers0. Parent aggregate now exact-one OwnerDraft. Current stage8 data review gate; next independent JSON review, then plan/code approval remains separate.
+
+> **Текущая точка D-948 (2026-11-13): DEV-09M JSON data-gate paused after two equivalent legacy-HTML parse failures.** `DEV09M-Q002=1` accepted, but no-dependency parser cannot safely normalize malformed nesting; no third attempt. Temp tool removed, JSON/code absent. Current stage8 data preparation; resume only with a different extraction method and owner decision.
+
+> **Текущая точка D-947 (2026-11-13): DEV-09M plan paused by anti-loop after repeat review P1=2.** Same PLAN-001 gap repeated: structured page content is not frozen before JSON; PLAN-003 also misstates existing one-OwnerDraft aggregate. No third attempt. Current stage8 planning gate; owner choice `DEV09M-Q002=1` recommended: reviewed product JSON becomes the sole canonical data artifact before code, no duplicate manifest.
+
+> **Текущая точка D-946 (2026-11-13): DEV-09M plan remediation ready after P1=1/P2=3; product code not started.** Literal24 Page/25 Route manifest+digests, closed grammar/caps, full parent preflight/locks and exact file/wrapper set added. Current stage8 planning gate; next repeat independent plan review, then separate owner code approval.
+
+> **Текущая точка D-945 (2026-11-13): DEV-09M acceptance/minimal plan prepared, no product code.** Scope corrected to25 exact URLs /24 Page /25 Route: old+new wash URLs share one Page. MIGM-001–015 and IMP-001–008 are fixed with closed grammar, atomic writer, no new runtime/schema/dependency, wrapper-only regressions. Current stage8 planning gate; next independent plan review, then separate owner code approval.
+
+> **Текущая точка D-944 (2026-11-13): `DEV09M-Q001=1` accepted; plan prep paused by anti-loop.** Two equivalent Windows rg path-wildcard syntax errors (`docs/*selection*.md`, then `app/content/test_dev09*`); attempts2/no third. Product/package/DB/foundation untouched. Owner resume: literal directory + `-g` filters, finish acceptance/plan; independent review remains required before any code.
+
+> **Текущая точка D-942 (2026-11-13): DEV-09M exact25 selection proposed, no code.** Verified map115/package-covered75/formal remaining40; gallery query2 already DEV-10, public gated3, no-design legacy10, leaving exact25 services. Recommended one hidden atomic pass, existing schema/sanitizer/writer, source-restored omitted prices, no arbitrary importer/new runtime. Owner `DEV09M-Q001=1|2` required; then acceptance/plan/review/separate code approval.
+
+> **Текущая точка D-941 (2026-11-13): minimal FORM-01 local implementation PASS.** Fresh snapshot `7439edb2-...`; exactly one resumed named dev13 42/42, check0, migrations no changes. Only consent/policy same-origin links + two template tests; no JS/storage/route/page/model/migration/config/intake/live. Foundation stopped/containers0. REVIEWS external Yandex/YouTube composition deferred by COOKIE-Q001. Stage8 next: select another non-live bounded area; LEGAL remains external-facts blocked.
+
+> **Текущая точка D-940 (2026-11-13): `FORM-Q001=1` partial paused by anti-loop.** Worktree has only two legal links + two tests; intake/config/live unchanged. Two named dev13 runs each reached30 PASS then identical test31 missing-links FAIL because second run reused pre-patch frozen snapshot `9f3621c4-...`; exact frozen/worktree comparison proved cause. No third run. Foundation stopped/containers0. Owner resume required: fresh Start snapshot → exactly one named dev13.
+
+> **Текущая точка D-939 (2026-11-13): LEGAL Q008–010 recorded; minimal FORM-01 scope proposed, no code.** RKN status unknown/check later; SMTP/provider later with email replacement; current director responsible, FIO/order later. Recommended `FORM-Q001=1`: existing no-JS four-field server form + separate consent/policy links + neutral safe states; no AJAX/client storage/calendar/CAPTCHA/receipt framework. Owner `1|2` required. Intake/live remain off.
+
+> **Текущая точка D-937 (2026-11-13): `COOKIE-Q001=1` accepted; legal form drafts prepared, no code.** First launch no optional external runtime/no premature consent manager. One bounded `docs/legal-form-drafts.md` records actual fields/flows, draft separate consent+policy, and remaining gates Q007 external backup, Q008 RKN notification, Q009 SMTP provider/route/role, Q010 internal responsible person. Intake stays off; next owner factual answers, then legal review/design URLs/e2e before code.
+
+> **Текущая точка D-935 (2026-11-13): minimal cookie gate предложен, no code.** Recommended `COOKIE-Q001=1`: first launch without Metrika/Yandex/YouTube/other optional third-party runtime, therefore no consent manager built in advance; only actually used Django first-party session/CSRF cookies. D-291–293 deferred, not cancelled, to separate enablement/legal gate. Owner `1|2` required. Stage8; real intake remains closed by deferred external backup.
+
+> **Текущая точка D-934 (2026-11-13): `LEGAL-Q006=1` accepted; `LEGAL-Q007` deferred.** Monthly owner review, manual single-delete within30days after purpose ends/refusal, absolute90days without continuing need; no scheduler/CRM/bulk/auto cleanup. Independent encrypted external two-generation storage+country later; until selected/verified real intake remains closed. Code/config/DB/live unchanged.
+
+> **Текущая точка D-933 (2026-11-13): retention/external-backup proposal готов, no code.** Recommended `LEGAL-Q006=1`: monthly owner review, manual delete within30days after purpose ends, absolute90days if no continuing need; no scheduler/CRM/bulk cleanup. `LEGAL-Q007`: independent encrypted external two-generation location+country or choose later. Local current/previous+deletion ledger ready but external copy absent; real intake remains closed.
+
+> **Текущая точка D-932 (2026-11-13): `LEGAL-Q005=1` implemented PASS, foundation stopped.** Email and Telegram live readiness split; absent/invalid Telegram no longer blocks email or emits false failure, both remain independent when ready. No schema/field/service/queue/dependency. Named focused7/7, full dev13 40/40, check0, migrations no changes, diff PASS. Live/intake/VPS unchanged. Этап8; next LEGAL-01 retention/backup/cookie facts.
+
+> **Текущая точка D-931 (2026-11-13): email-only minimal channel amendment proposed, code not started.** `LEGAL-Q005=1` recommended: existing email independently ready, absent Telegram means not configured/no false failure; both independent when configured; no ready channel keeps intake closed. No schema/field/service/queue/dependency. Owner gate `1|2` required before implementation.
+
+> **Текущая точка D-930 (2026-11-13): LEGAL-Q003/Q004 закрыты owner-confirmed.** Request email initially `estakada10@yandex.ru`, later owner changes existing `/manage/requests/settings/`; no new field/model needed. VPS `firstvds.ru`, «Отрыв», Russia, not externally verified/deployed. Telegram off exposes existing email-only launch gap because live config requires both channels; separate owner scope required. No code/DB/live.
+
+> **Текущая точка D-929 (2026-11-13): LEGAL-Q001/Q002 закрыты owner-confirmed, без external verification/publication.** ООО «Эстакада», INN7729693853, OGRN1117746831905, address117105 Москва проспект60-летия Октября15Б; data-request email `estakada10@yandex.ru`. Открыты Q003 same request-notification email и Q004 production provider/country or not selected. Telegram request delivery off pending separate approval; no code/DB/live.
+
+> **Текущая точка D-928 (2026-11-13): первый factual gate LEGAL-01 открыт, без правового текста и кода.** Local archive has no confirmed operator requisites. Нужны `LEGAL-Q001` (ИП/ООО, official name/FIO, INN, OGRN/OGRNIP, address) и `LEGAL-Q002` (data-subject email or create later). До ответов operator/policy/consent не выдумываются; следующий legal block отдельно.
+
+> **Текущая точка D-927 (2026-11-13): CONTACT-Q001 закрыт; Q002–004 отложены.** Phone `+7 (499) 110-25-52`, href `tel:+74991102552`. MAX/Telegram URLs later; QR only after target. Contacts remain versioned PostgreSQL Header/Footer editable at `/manage/shared/header/edit/` and `/manage/shared/footer/edit/`; no duplicate config file, code, DB/live apply. Этап8; следующий внешний gate — LEGAL-01 owner facts.
+
+> **Текущая точка D-926 (2026-11-13): `EXT-Q001=1`, внешний gate CONTACT-01 открыт без кода.** Existing analytics decisions не переоткрываются. Нужны ответы `CONTACT-Q001–004`: actual phone/tel, MAX URL или defer, Telegram URL или defer, QR target. До фактических значений DEV-30/product/config/live не меняются. Этап8 остаётся20/27 complete,4 partial,3 pending; следующий шаг — owner contact answers, затем отдельно LEGAL-01.
+
+> **Текущая точка D-925 (2026-11-13): `LOG-Q001=1`, минимальный DEV-17 завершён; DEV-18 остаётся partial.** Owner-only AuditEvent screen принят как MVP; badges/Telegram/category delete/full views отложены. Rotation и fixed 30-day command готовы, scheduler/target daily verification впереди. No code/config/service/dependency added. Этап8:20/27 complete/replaced (~74% count),4 partial,3 pending. Остаток зависит от heterogeneous content, target operations или external/legal inputs; следующий scope требует owner gate.
+
+> **Текущая точка D-924 (2026-11-13): минимальный MVP-контур DEV-17/18 предложен, код не менялся.** Existing owner-only AuditEvent screen и rotation/30-day command проверены; ежедневного scheduler нет, поэтому DEV-18 остаётся partial. Рекомендуется принять DEV-17 minimal, отложить badges/Telegram/category delete/full views и не добавлять service/scheduler. Этап8 остановлен на owner gate `LOG-Q001=1|2`.
+
+> **Текущая точка D-923 (2026-11-13): DEV-26 отложен владельцем (`DEV26-Q004=1`).** No helper/runtime bloat; IMP004–008 закрыты, IMP001/002 остаются disconnected verified preparation. Operational Nginx unchanged, foundation/fixture stopped0. Этап8 продолжается; следующая backlog task требует отдельного выбора. Owner principle: prefer smaller scope/no-new-component when outcomes are comparable.
+
+> **Текущая точка D-922 (2026-11-13): PLAN-009 runtime FAILED; branch A closed.** Pinned zero+active nginx-t PASS, active stored response HTML503 again; immediate stop/no retry. Failed IMP003 delta rolled back to D919 baseline, fixture0/foundation stopped. Этап8 paused at owner B-vs-defer choice; recommended defer/no-bloat.
+
+> **Текущая точка D-921 (2026-11-13): DEV26A-PLAN-009 amendment proposal подготовлен.** Official docs support variable error_page→internal regex→capture alias, preserving vanilla/no-new-process. Exact repeat stop oracles recorded; no code after D-920, fixture0/foundation stopped. Этап8 paused at amendment review+owner approval; IMP004 blocked.
+
+> **Текущая точка D-920 (2026-11-13): DEV26A-IMP-003 early stop-gate FAILED; architecture review required.** Pinned vanilla Nginx zero+active config syntax PASS and empty fixed503 PASS, but first mapped active fallback returned HTML503 instead of stored200/body. Fixture cleanup0, foundation stopped. Этап8 приостановлен внутри DEV-26; IMP-004 blocked until owner choice, no njs/helper/compose workaround.
+
+> **Текущая точка D-919 (2026-11-13): DEV26A-IMP-002 PASS; следующий IMP-003.** Exact child-lock oracle + projection/delivery/CLI21/21, affected122/122, check/no-migrations/parser/diff PASS. Foundation stopped/containers0. Этап8; следующий early vanilla-Nginx config semantic stop-gate, compose/wrapper/live unchanged.
+
+> **Текущая точка D-918 (2026-11-13): DEV26A-IMP-002 partial приостановлен владельцу.** Fresh snapshot journal/crash16/16 и closed CLI/verify-active20/20 PASS. Последний real-child source-lock oracle откатан после второй одинаковой patch-placement error; third attempt forbidden. Foundation stopped/containers0. Этап8; resume exact unique-boundary edit, named+affected/checks; Nginx/compose/live unchanged.
+
+> **Текущая точка D-917 (2026-11-13): DEV26A-IMP-002 partial снова приостановлен владельцу.** pwsh Start PASS исправил ACL boundary. Два named runs дали одинаковую journal control-character error, потому что Base64 fix после первого run не вошёл в frozen snapshot; frozen/worktree difference доказан. Third run forbidden; foundation stopped/containers0. Этап8; resume fresh pwsh snapshot→one named suite, Nginx/compose/live unchanged.
+
+> **Текущая точка D-916 (2026-11-13): DEV26A-IMP-002 partial приостановлен владельцу.** Последний confirmed named result12/12 предшествует unverified journal/crash patch; patch прошёл только py_compile. Два Foundation Start повторили ACL runtime failure type/assembly, третья попытка запрещена. Active=False/containers0. Этап8; после owner resume рекомендуется exact pwsh Start и один named dev26-projection; Nginx/compose/live unchanged.
+
+> **Текущая точка D-915 (2026-11-13): DEV26A-IMP-001 PASS, IMP-002 начат tests first.** Projection5/5, check/no-migrations/parser/diff PASS, foundation stopped. Этап8; current safe source/delivery storage, Nginx/compose unchanged.
+
+> **Текущая точка D-914 (2026-11-13): owner approved `DEV26A-IMP-001–008`; IMP-001 начат tests first.** Pure projection/emitter only; filesystem/Docker/Nginx/compose/wrapper ещё не меняются. Этап8; next gate named IMP001 PASS.
+
+> **Текущая точка D-913 (2026-11-13): branch-A implementation plan final `APPROVED`, P1/P2/P3=0.** PLAN-001–008 closed without dependency/image/model/migration/service/daemon/scheduler/UI bridge. Этап8; code not started. Следующий обязательный gate — owner `DEV26A-IMP-001–008`, затем IMP-001 tests first.
+
+> **Текущая точка D-912 (2026-11-13): repeat plan review P2=1, acceptance range fixed.** IMP006 exact real-owner evidence now DEV26A-AT-001–022 including first empty rollback/restart/no-retry. Этап8; code not started, final repeat plan review next.
+
+> **Текущая точка D-911 (2026-11-13): repeat plan review P1=1/P2=1, first-activation rollback fixed.** Typed ABSENT/PRESENT selector, conditional unlink+parent-fsync, early IMP003 glob proof; no new mode/service. Этап8; code not started, next repeat plan review.
+
+> **Текущая точка D-910 (2026-11-13): repeat branch-A plan review P1=1, bootstrap remediation готова.** Reuse existing state-init exact chown; canonical empty delivery is no-write fixed Nginx state, no new service/mode. Этап8; code not started, next repeat plan review.
+
+> **Текущая точка D-909 (2026-11-13): first branch-A plan review P1=1/P2=3; bounded remediation готова.** No Django delivery bridge, exact files, fixed run--rm-only tools, Start lifecycle moved to IMP005 activation suite. Этап8; no code/bloat, следующий gate repeat plan review.
+
+> **Текущая точка D-908 (2026-11-12): branch-A scope APPROVED, minimal implementation plan готов.** Eight bounded slices, pinned existing images, two volumes, one wrapper, named suites only; no dependencies/models/migrations/daemon/scheduler/button. Этап8; следующий gate independent plan review, затем отдельное owner code approval.
+
+> **Итог D-907 (2026-11-12): final branch-A scope review `APPROVED`, P1/P2/P3=0.** Все R26A findings закрыты, no-bloat boundary сохранён; product/config/image не менялись.
+
+> **Текущая точка D-906 (2026-11-12): third branch-A scope review P1=1, durable fix готов.** Failed Start/Verify имеет только journal-transition→UNKNOWN; selector/release writes0. Все прежние findings закрыты без daemon/scheduler. Этап8; следующий gate final repeat scope review, код/config/image не начаты.
+
+> **Текущая точка D-905 (2026-11-12): second branch-A review P1=3, bounded remediation готова.** One-shot RO verify-active и control-writer journal/selector modes устраняют writer contradiction; все durable publications имеют post-rename parent fsync. Permanent service/scheduler нет. Этап8; следующий gate repeat scope review, код/config/image не начаты.
+
+> **Текущая точка D-904 (2026-11-12): `DEV26-Q003=1`, bounded integrity принята без раздувания.** Full SHA при Project/Activate/Start/Verify; permanent verifier/helper/module/scheduler запрещены. Post-activation host/disk corruption вне local request-time guarantee. R26A-S001–004 remediation готова; этап8, следующий gate repeat scope review, код/config/image не начаты.
+
+> **Текущая точка D-903 (2026-11-12): branch-A scope review P1=2/P2=2.** Journal/recovery, source RO shared lock и one-shot selector-writer исправляют три findings. Остался обязательный owner `DEV26-Q003`: рекомендованно принять activation-time/explicit-Verify integrity для local vanilla Nginx либо отклонить A ради request-time verifier. Этап8; код/config/image не начинались, repeat review после ответа.
+
+> **Текущая точка D-902 (2026-11-12): `DEV26-Q002=A`, architecture-specific scope подготовлен без кода.** Separate immutable delivery package исключает source cleanup race; offline projector existing app image и host-only `nginx -t`/selector/HUP/canary/rollback сохраняют vanilla Nginx и no-Docker-access у app. Текущий этап8; следующий gate — independent scope review, затем plan/review и отдельное разрешение реализации.
+
+> **Текущая точка D-901 (2026-11-12): DEV-26 feasibility review `APPROVED`, P1/P2/P3=0.** njs reject и bounded architecture branches A/B/C подтверждены; product/config/image не менялись, foundation stopped. Текущий этап проекта — 8; следующий обязательный gate — owner `DEV26-Q002`, затем новый scope/review выбранной ветки. Код до этих согласований не начинается.
+
+> **Текущая точка D-900 (2026-11-12): DEV-26 feasibility отклонила njs-кандидат до owner gate.** Buffer/SHA/descriptor read доступны, но официально не доказаны `O_NOFOLLOW`/`openat`; `lstat→open` нарушает R26-S001. Product/config/image не менялись, foundation stopped. Текущий этап проекта — 8; следующий шаг — owner `DEV26-Q002` по архитектуре A/B/C либо отложить, затем новый scope/plan gate.
+
+> **Итог D-899 (2026-11-12): repeat scope review DEV-26 `APPROVED`, P1/P2/P3=0.** R26-S001–008 закрыты; следующий gate был read-only runtime feasibility, не реализация.
+
+> **Текущая точка D-898 (2026-11-12): DEV-26 возобновлён, R26-S001–006 scope remediation готова.** Verified request-owned bytes, pre-owner njs feasibility, exact interception/headers, dedicated volume и real DEV-25 fixture записаны; DEV26-AT-001–014. Следующий gate — repeat independent scope review; Nginx/image/compose/live/VPS не менялись.
+
+> **Текущая точка D-897 (2026-11-12): DEV-26 scope remediation приостановлена владельцу.** Independent scope review `CHANGES REQUESTED`, P1=1/P2=5; два read-only поиска повторили Windows literal-wildcard error, поэтому третья попытка запрещена. Findings не исправлялись; для resume нужен ответ владельца и exact paths only. Nginx/image/compose/live/VPS не менялись.
+
+> **Текущая точка D-896 (2026-11-12): `NEXT-Q001=1`, подготовлен scope DEV-26/27 без реализации.** DEV26-AT-001–012 и минимальный per-request fallback записаны; vanilla Nginx не может прочитать DEV-25 JSON/hash/redirect mapping, поэтому pinned njs вынесен в отдельный owner gate. Следующий шаг — independent scope review, затем `DEV26-Q001`; Nginx/image/compose/live/VPS не менялись.
+
+> **Итог D-895 (2026-11-12): `DEV-25 / DEV25-IMP-001–008` завершён локально; final review `APPROVED`, P1/P2/P3=0.** R25-001–009 закрыты; DEV-25 52/52, affected122/122, guard401/401 и финальные checks PASS; foundation stopped. Для DEV-25 этапы 8–10 пройдены локально. Общий проект остаётся на этапе 8; следующая bounded задача требует отдельного выбора/согласования. DEV-26/Nginx/live/VPS не начаты.
+
+> **Текущая точка D-894 (2026-11-12): R25-008/009 remediation PASS; новый `DEV25-IMP-008` review начат.** DEV-25 52/52, affected122/122, guard401/401 и финальные checks PASS; foundation stopped. Следующий gate — independent final verdict; Nginx/live/VPS отсутствуют.
+
+> **Текущая точка D-893 (2026-11-12): repeat `DEV25-IMP-008` review — `CHANGES REQUESTED`, P1=0/P2=1/P3=1.** R25-001–007 закрыты; выполняются bounded R25-008 next-build retained reconcile и R25-009 previous UUID status, затем новый independent verdict. DEV-25 не завершён; Nginx/live/VPS отсутствуют.
+
+> **Текущая точка D-892 (2026-11-12): R25-001–007 remediation PASS; repeat `DEV25-IMP-008` review начат.** DEV-25 50/50, affected122/122, guard401/401 и финальные checks PASS; foundation stopped. Следующий gate — независимый final verdict; Nginx/live/VPS отсутствуют.
+
+> **Текущая точка D-891 (2026-11-12): первый `DEV25-IMP-008` review — CHANGES REQUESTED, P1=1/P2=6/P3=0.** Подтверждены R25-001–007 в existing DEV-25 layers; далее bounded remediation, targeted/final evidence и repeat independent review. До final APPROVED задача не завершена; Nginx/live/VPS отсутствуют.
+
+> **Текущая точка D-890 (2026-11-12): `DEV25-IMP-007` PASS; начат обязательный IMP-008.** Exact DEV-25 44/44, affected121/121 и full guard401/401 прошли только через именованные `scripts/test-editor.ps1` suites; check/no-migrations/PowerShell/diff PASS. Foundation stopped. До independent review `APPROVED` DEV-25 не завершён; Nginx/live/VPS отсутствуют.
+
 > **Конец смены D-887 (2026-11-12): сохранение и обычный push разрешены владельцем.** DEV25-IMP-001–005 PASS; следующий IMP-006 combined acceptance, затем IMP-007 regression и IMP-008 review. Foundation stopped; production/Nginx/VPS не затронуты.
 
 > **Текущая точка D-886 (2026-11-12): `DEV25-IMP-005` PASS; следующий IMP-006.** Owner-only HTTP/status/audit готовы; HTTP6/6, full DEV-25 43/43, affected accounts/audit41/41, check/no-migrations/diff PASS. Далее combined security/content acceptance; Nginx отсутствует.

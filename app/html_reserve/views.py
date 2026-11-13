@@ -73,17 +73,24 @@ def _status(root):
                       or stat.S_IMODE(info.st_mode) != 0o700
                       or any(os.scandir(entry.path))):
                     raise ContractError('HTML_RESERVE_STATUS_UNSAFE')
-            return {'available': True, 'current': None, 'stale': True}
+            return {
+                'available': True, 'current': None, 'previous': None,
+                'stale': True,
+            }
         raise ContractError('HTML_RESERVE_STATUS_UNAVAILABLE')
     with ReserveStore(root).locked() as locked:
         pointer = locked.read_pointer()
         if pointer['current'] is None:
-            return {'available': True, 'current': None, 'stale': True}
+            return {
+                'available': True, 'current': None, 'previous': None,
+                'stale': True,
+            }
         manifest = locked.generation_manifest(
             pointer['current'], pointer['current_manifest_sha256'])
     live = capture()
     return {
         'available': True, 'current': pointer['current'],
+        'previous': pointer['previous'],
         'built_at': manifest['built_at'],
         'stale': manifest['source_stamp'] != live.stamp,
         'warning': False,

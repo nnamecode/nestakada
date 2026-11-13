@@ -17,6 +17,9 @@ from .contracts import (
 
 MAX_ROOT_ENTRIES = 32
 MAX_GENERATIONS = 8
+MAX_STAGING = 4
+MAX_POINTER_TEMPS = 2
+MAX_RESOURCES = 1024
 MAX_FILES = 4096
 MAX_FILE_BYTES = 8 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -177,7 +180,8 @@ class _LockedStore:
             fd = self._open_dir(name)
             try:
                 entries = os.listdir(fd)
-                if len(entries) > MAX_GENERATIONS:
+                limit = MAX_STAGING if name == 'staging' else MAX_GENERATIONS
+                if len(entries) > limit:
                     raise ContractError('HTML_RESERVE_GENERATION_ENTRY_LIMIT')
                 for entry in entries:
                     _uuid(entry)
@@ -206,7 +210,7 @@ class _LockedStore:
             if match is not None:
                 _uuid(match.group(1))
                 names.append(name)
-        if len(names) > MAX_GENERATIONS:
+        if len(names) > MAX_POINTER_TEMPS:
             raise ContractError('HTML_RESERVE_POINTER_TEMP_LIMIT')
         for name in sorted(names):
             body = self._read_named(
@@ -215,6 +219,7 @@ class _LockedStore:
                 self._pointer_contract(body)
             except ContractError:
                 raise ContractError('HTML_RESERVE_POINTER_TEMP_INVALID') from None
+        for name in sorted(names):
             os.unlink(name, dir_fd=self.root_fd)
         if names:
             os.fsync(self.root_fd)
@@ -279,7 +284,8 @@ class _LockedStore:
                     os.fstat(directory_fd), 0o700,
                     'HTML_RESERVE_GENERATION_TREE_INVALID')
                 names = os.listdir(directory_fd)
-                if len(names) > MAX_FILES:
+                limit = MAX_RESOURCES if directory == 'resources' else MAX_FILES
+                if len(names) > limit:
                     raise ContractError('HTML_RESERVE_GENERATION_LIMIT')
                 for name in names:
                     if pattern.fullmatch(name) is None:
@@ -291,7 +297,8 @@ class _LockedStore:
                 os.close(directory_fd)
         return files
 
-    def _delete_uuid_tree(self, parent_fd, generation, *, require_complete):
+    def _delete_uuid_tree(self, parent_fd, generation, *, require_complete,
+                          delete=True):
         generation = _uuid(generation)
         try:
             generation_fd = os.open(
@@ -322,7 +329,8 @@ class _LockedStore:
                 opened[directory] = fd
                 _directory(os.fstat(fd), 0o700, 'HTML_RESERVE_ORPHAN_UNSAFE')
                 names = os.listdir(fd)
-                if len(names) > MAX_FILES:
+                limit = MAX_RESOURCES if directory == 'resources' else MAX_FILES
+                if len(names) > limit:
                     raise ContractError('HTML_RESERVE_GENERATION_LIMIT')
                 for name in names:
                     if pattern.fullmatch(name) is None:
@@ -341,6 +349,8 @@ class _LockedStore:
                     manifest = _decode_canonical(body, 'HTML_RESERVE_MANIFEST_INVALID')
                     files = self._read_generation_files(generation_fd)
                     self._validate_manifest(generation, manifest, files)
+            if not delete:
+                return
             for directory, fd in opened.items():
                 for name in os.listdir(fd):
                     os.unlink(name, dir_fd=fd)
@@ -366,20 +376,30 @@ class _LockedStore:
         active = {value for value in (pointer['current'], pointer['previous'])
                   if value is not None}
         removed = set()
-        for parent_name, require_complete in (('staging', False), ('generations', True)):
-            parent_fd = self._open_dir(parent_name)
-            try:
+        opened = []
+        candidates = []
+        try:
+            for parent_name, require_complete in (('staging', False), ('generations', True)):
+                parent_fd = self._open_dir(parent_name)
+                opened.append(parent_fd)
                 names = os.listdir(parent_fd)
-                if len(names) > MAX_GENERATIONS:
+                limit = MAX_STAGING if parent_name == 'staging' else MAX_GENERATIONS
+                if len(names) > limit:
                     raise ContractError('HTML_RESERVE_GENERATION_ENTRY_LIMIT')
                 for generation in sorted(names):
                     _uuid(generation)
                     if parent_name == 'generations' and generation in active:
                         continue
                     self._delete_uuid_tree(
-                        parent_fd, generation, require_complete=require_complete)
-                    removed.add(generation)
-            finally:
+                        parent_fd, generation, require_complete=require_complete,
+                        delete=False)
+                    candidates.append((parent_fd, generation, require_complete))
+            for parent_fd, generation, require_complete in candidates:
+                self._delete_uuid_tree(
+                    parent_fd, generation, require_complete=require_complete)
+                removed.add(generation)
+        finally:
+            for parent_fd in opened:
                 os.close(parent_fd)
         return tuple(sorted(removed))
 
@@ -482,6 +502,8 @@ class _LockedStore:
                     or any(ord(char) < 33 or ord(char) == 127 for char in row['url'])):
                 raise ContractError('HTML_RESERVE_RESOURCE_METADATA_INVALID')
             expected['resources/' + row['name']] = row
+        if len(manifest['resources']) > MAX_RESOURCES:
+            raise ContractError('HTML_RESERVE_RESOURCE_LIMIT')
         if set(expected) != set(files) or len(expected) != len(manifest['responses']) + len(manifest['resources']):
             raise ContractError('HTML_RESERVE_MANIFEST_FILE_SET_MISMATCH')
         total = 0
@@ -521,6 +543,10 @@ class _LockedStore:
         staging_fd, generations_fd = self._open_dir('staging'), self._open_dir('generations')
         generation_fd = None
         try:
+            if len(os.listdir(staging_fd)) >= MAX_STAGING:
+                raise ContractError('HTML_RESERVE_STAGING_LIMIT')
+            if len(os.listdir(generations_fd)) >= MAX_GENERATIONS:
+                raise ContractError('HTML_RESERVE_GENERATION_ENTRY_LIMIT')
             try:
                 os.stat(generation, dir_fd=generations_fd, follow_symlinks=False)
             except FileNotFoundError:

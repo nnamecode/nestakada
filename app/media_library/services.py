@@ -11,6 +11,7 @@ from .storage import MediaStorage
 
 SALT = 'estakada.media.cleanup.v1'
 MAX_RETAINED_HTML_ASSETS = 1024
+MAX_RETAINED_HTML_USAGES = 4096
 
 
 def _raw(model):
@@ -146,9 +147,16 @@ def set_retained_html(*, generation_id, asset_ids):
     ids = _retained_asset_ids(asset_ids)
     with transaction.atomic():
         lock_content('default')
-        existing = list(AssetUsage.objects.select_for_update().filter(
-            kind=AssetUsage.Kind.RETAINED_HTML,
-            consumer_id=generation).order_by('asset_id'))
+        retained = list(AssetUsage.objects.select_for_update().filter(
+            kind=AssetUsage.Kind.RETAINED_HTML).order_by('pk')[
+                :MAX_RETAINED_HTML_USAGES + 1])
+        if len(retained) > MAX_RETAINED_HTML_USAGES:
+            raise ValidationError('MEDIA_RETAINED_USAGE_LIMIT')
+        existing = sorted(
+            (row for row in retained if row.consumer_id == generation),
+            key=lambda row: str(row.asset_id))
+        if len(existing) > MAX_RETAINED_HTML_ASSETS:
+            raise ValidationError('MEDIA_RETAINED_GENERATION_LIMIT')
         expected = [(asset_id, asset_id) for asset_id in ids]
         actual = [(str(row.asset_id), row.slot) for row in existing]
         if existing:
@@ -156,6 +164,8 @@ def set_retained_html(*, generation_id, asset_ids):
                 raise ValidationError('MEDIA_RETAINED_GENERATION_CONFLICT')
             return {'generation_id': str(generation), 'asset_ids': ids,
                     'created': 0, 'replay': True}
+        if len(retained) + len(ids) > MAX_RETAINED_HTML_USAGES:
+            raise ValidationError('MEDIA_RETAINED_USAGE_LIMIT')
         assets = _locked_assets(ids) if ids else []
         if any(asset.status != Asset.Status.READY for asset in assets):
             raise ValidationError('MEDIA_RETAINED_REQUIRES_READY')
@@ -171,9 +181,15 @@ def release_retained_html(*, generation_id):
     generation = _generation_id(generation_id)
     with transaction.atomic():
         lock_content('default')
-        return _raw(AssetUsage).filter(
-            kind=AssetUsage.Kind.RETAINED_HTML,
-            consumer_id=generation).delete()[0]
+        rows = list(AssetUsage.objects.select_for_update().filter(
+            kind=AssetUsage.Kind.RETAINED_HTML).order_by('pk')[
+                :MAX_RETAINED_HTML_USAGES + 1])
+        if len(rows) > MAX_RETAINED_HTML_USAGES:
+            raise ValidationError('MEDIA_RETAINED_USAGE_LIMIT')
+        ids = [row.pk for row in rows if row.consumer_id == generation]
+        if len(ids) > MAX_RETAINED_HTML_ASSETS:
+            raise ValidationError('MEDIA_RETAINED_GENERATION_LIMIT')
+        return _raw(AssetUsage).filter(pk__in=ids).delete()[0]
 
 
 def reconcile_retained_html(*, active_generation_ids):
@@ -183,10 +199,14 @@ def reconcile_retained_html(*, active_generation_ids):
         raise ValidationError('MEDIA_RETAINED_ACTIVE_SET_INVALID')
     with transaction.atomic():
         lock_content('default')
-        rows = AssetUsage.objects.select_for_update().filter(
-            kind=AssetUsage.Kind.RETAINED_HTML)
-        stale = rows.exclude(consumer_id__in=generations)
-        return _raw(AssetUsage).filter(pk__in=list(stale.values_list('pk', flat=True))).delete()[0]
+        rows = list(AssetUsage.objects.select_for_update().filter(
+            kind=AssetUsage.Kind.RETAINED_HTML).order_by('pk')[
+                :MAX_RETAINED_HTML_USAGES + 1])
+        if len(rows) > MAX_RETAINED_HTML_USAGES:
+            raise ValidationError('MEDIA_RETAINED_USAGE_LIMIT')
+        stale_ids = [row.pk for row in rows
+                     if str(row.consumer_id) not in generations]
+        return _raw(AssetUsage).filter(pk__in=stale_ids).delete()[0]
 
 
 def prepare_cleanup(*, actor, asset_ids, expected_generation, storage=None):

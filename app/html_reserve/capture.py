@@ -1,5 +1,6 @@
 """Internal reserve rendering and read-only resource capture."""
 from html.parser import HTMLParser
+import hashlib
 import re
 from urllib.parse import urlsplit
 
@@ -55,14 +56,14 @@ def resource_policy(snapshot):
     descriptor = snapshot.descriptor
     files_by_asset = {}
     for row in descriptor.get('files', []):
-        if type(row) is not list or len(row) != 6:
+        if type(row) is not list or len(row) not in (6, 7):
             raise ContractError('HTML_RESERVE_SOURCE_FILE_INVALID')
         files_by_asset.setdefault(row[1], []).append(row[0])
     bare, contextual = set(), set()
     for row in descriptor.get('usages', []):
-        if type(row) is not list or len(row) != 5:
+        if type(row) is not list or len(row) not in (5, 6):
             raise ContractError('HTML_RESERVE_SOURCE_USAGE_INVALID')
-        _usage_id, kind, consumer_id, slot, asset_id = row
+        _usage_id, kind, consumer_id, slot, asset_id = row[:5]
         file_ids = files_by_asset.get(asset_id, ())
         if kind in ('current_page', 'shared_block'):
             bare.update(file_ids)
@@ -80,13 +81,24 @@ def _resource_url(value, origin):
     return value
 
 
+_FETCH_TAGS = frozenset(('iframe', 'object', 'embed', 'video', 'audio', 'track', 'base'))
+_FETCH_ATTRS = frozenset((
+    'srcset', 'imagesrcset', 'poster', 'data', 'background', 'manifest',
+    'ping', 'xlink:href',
+))
+_TEL = re.compile(r'^tel:\+[0-9]{7,15}$')
+
+
 class _Resources(HTMLParser):
-    def __init__(self, origin, bare_file_ids, contextual):
+    def __init__(self, origin, bare_file_ids, contextual, local_targets):
         super().__init__(convert_charrefs=True)
         self.origin = origin
         self.bare_file_ids = bare_file_ids
         self.contextual = contextual
+        self.local_targets = frozenset(local_targets)
         self.items = set()
+        self.in_json_ld = False
+        self.in_style = False
 
     def _add(self, value):
         self.items.add(parse_resource_url(
@@ -94,37 +106,95 @@ class _Resources(HTMLParser):
             bare_file_ids=self.bare_file_ids,
             contextual=self.contextual))
 
+    def _navigation(self, value):
+        if type(value) is not str or any(ord(c) < 32 or ord(c) == 127 for c in value):
+            raise ContractError('HTML_RESERVE_NAVIGATION_URL_INVALID')
+        if value.startswith('#') and len(value) > 1:
+            return
+        if value.startswith('/') and not value.startswith('//'):
+            if value not in self.local_targets:
+                raise ContractError('HTML_RESERVE_NAVIGATION_TARGET_UNKNOWN')
+            return
+        if _TEL.fullmatch(value) is not None:
+            return
+        parts = urlsplit(value)
+        if (parts.scheme not in ('http', 'https') or not parts.netloc
+                or parts.username is not None or parts.password is not None):
+            raise ContractError('HTML_RESERVE_NAVIGATION_URL_INVALID')
+        configured = urlsplit(self.origin)
+        if (parts.scheme, parts.netloc) == (configured.scheme, configured.netloc):
+            target = parts.path + (('?' + parts.query) if parts.query else '')
+            if parts.fragment or target not in self.local_targets:
+                raise ContractError('HTML_RESERVE_NAVIGATION_TARGET_UNKNOWN')
+
     def handle_starttag(self, tag, attrs):
         names = [name for name, _value in attrs]
         if len(names) != len(set(names)):
             raise ContractError('HTML_RESERVE_HTML_DUPLICATE_ATTRIBUTE')
         values = dict(attrs)
+        if tag in _FETCH_TAGS or _FETCH_ATTRS.intersection(values):
+            raise ContractError('HTML_RESERVE_FETCHABLE_HTML_FORBIDDEN')
         if tag == 'form':
             raise ContractError('HTML_RESERVE_WORKING_FORM_FORBIDDEN')
-        if tag == 'link' and values.get('rel') == 'stylesheet':
-            self._add(values.get('href'))
-        elif tag == 'script' and values.get('src') is not None:
-            self._add(values['src'])
+        if (tag == 'meta'
+                and str(values.get('http-equiv', '')).lower() == 'refresh'):
+            raise ContractError('HTML_RESERVE_FETCHABLE_HTML_FORBIDDEN')
+        if tag == 'style':
+            self.in_style = True
+        if tag == 'link':
+            if values.get('rel') == 'stylesheet' and values.get('href') is not None:
+                self._add(values['href'])
+            elif values.get('rel') == 'canonical' and values.get('href') is not None:
+                self._navigation(values['href'])
+            elif values.get('href') is not None:
+                raise ContractError('HTML_RESERVE_LINK_REL_FORBIDDEN')
+        elif tag == 'script':
+            if values.get('src') is not None:
+                self._add(values['src'])
+            elif values.get('type') == 'application/ld+json':
+                self.in_json_ld = True
+            else:
+                raise ContractError('HTML_RESERVE_INLINE_SCRIPT_FORBIDDEN')
         elif tag in ('img', 'source') and values.get('src') is not None:
             self._add(values['src'])
         elif (tag == 'meta' and values.get('property') == 'og:image'
               and values.get('content') is not None):
             self._add(values['content'])
+        elif tag == 'meta' and values.get('property') == 'og:url':
+            self._navigation(values.get('content'))
+        if tag == 'a' and values.get('href') is not None:
+            self._navigation(values['href'])
+        if 'href' in values and tag not in ('a', 'link'):
+            raise ContractError('HTML_RESERVE_FETCHABLE_HTML_FORBIDDEN')
+        if 'src' in values and tag not in ('script', 'img', 'source'):
+            raise ContractError('HTML_RESERVE_FETCHABLE_HTML_FORBIDDEN')
         if 'style' in values and _CSS_NETWORK.search(values['style'].encode('utf-8')):
             raise ContractError('HTML_RESERVE_INLINE_STYLE_RESOURCE_FORBIDDEN')
 
     def handle_startendtag(self, tag, attrs):
         self.handle_starttag(tag, attrs)
+        self.handle_endtag(tag)
+
+    def handle_endtag(self, tag):
+        if tag == 'script':
+            self.in_json_ld = False
+        if tag == 'style':
+            self.in_style = False
+
+    def handle_data(self, data):
+        if self.in_style and _CSS_NETWORK.search(data.encode('utf-8')):
+            raise ContractError('HTML_RESERVE_INLINE_STYLE_RESOURCE_FORBIDDEN')
 
 
-def extract_resources(html, *, origin, bare_file_ids, contextual):
+def extract_resources(html, *, origin, bare_file_ids, contextual,
+                      local_targets=()):
     if type(html) is not bytes or len(html) > MAX_HTML_BYTES:
         raise ContractError('HTML_RESERVE_HTML_SIZE_LIMIT')
     try:
         text = html.decode('utf-8')
     except UnicodeError:
         raise ContractError('HTML_RESERVE_HTML_UTF8_REQUIRED') from None
-    parser = _Resources(origin, bare_file_ids, contextual)
+    parser = _Resources(origin, bare_file_ids, contextual, local_targets)
     try:
         parser.feed(text)
         parser.close()
@@ -190,6 +260,12 @@ def resource_bytes(reference, snapshot):
             raise ContractError('HTML_RESERVE_MEDIA_SIZE_MISMATCH')
     else:
         raise ContractError('HTML_RESERVE_RESOURCE_KIND_INVALID')
+    static_names = {row[0]: row[1:] for row in snapshot.descriptor.get('statics', [])
+                    if type(row) is list and len(row) == 3}
+    if reference.kind in ('static-public', 'static-shared'):
+        expected = static_names.get(reference.name)
+        if (expected is None or expected != [hashlib.sha256(body).hexdigest(), len(body)]):
+            raise ContractError('HTML_RESERVE_STATIC_SOURCE_CHANGED')
     if reference.name is not None and reference.name.endswith('.css'):
         safe_css(body)
     if reference.name is not None and reference.name.endswith('.js'):

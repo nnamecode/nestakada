@@ -157,6 +157,72 @@ class ReserveStorageTests(TestCase):
                         ContractError, 'HTML_RESERVE_POINTER_MISSING_AFTER_BOOTSTRAP'):
                     locked.bootstrap()
 
+    def test_reconcile_validates_all_temps_and_orphans_before_any_delete(self):
+        for valid_first in (True, False):
+            with self.subTest(valid_first=valid_first), tempfile.TemporaryDirectory() as parent:
+                root = Path(parent) / 'reserve'
+                with ReserveStore(root).locked() as locked:
+                    locked.bootstrap()
+                valid_id = ('00000000-0000-4000-8000-000000000001' if valid_first
+                            else 'ffffffff-ffff-4fff-8fff-ffffffffffff')
+                invalid_id = ('ffffffff-ffff-4fff-8fff-ffffffffffff' if valid_first
+                              else '00000000-0000-4000-8000-000000000001')
+                valid = root / ('active.%s.tmp' % valid_id)
+                invalid = root / ('active.%s.tmp' % invalid_id)
+                valid.write_bytes(canonical_bytes(active_pointer(None, None, None, None)))
+                invalid.write_bytes(b'{}')
+                os.chmod(valid, 0o600)
+                os.chmod(invalid, 0o600)
+                with self.assertRaisesRegex(
+                        ContractError, 'HTML_RESERVE_POINTER_TEMP_INVALID'):
+                    with ReserveStore(root).locked() as locked:
+                        locked.bootstrap()
+                self.assertTrue(valid.exists())
+                self.assertTrue(invalid.exists())
+
+        with tempfile.TemporaryDirectory() as parent:
+            root = Path(parent) / 'reserve'
+            with ReserveStore(root).locked() as locked:
+                locked.bootstrap()
+            valid_id = '00000000-0000-4000-8000-000000000001'
+            invalid_id = 'ffffffff-ffff-4fff-8fff-ffffffffffff'
+            valid = root / 'staging' / valid_id
+            invalid = root / 'staging' / invalid_id
+            valid.mkdir(mode=0o700)
+            invalid.mkdir(mode=0o700)
+            (invalid / 'unknown').write_bytes(b'x')
+            with ReserveStore(root).locked() as locked:
+                with self.assertRaises(ContractError):
+                    locked.reconcile_orphans()
+            self.assertTrue(valid.exists())
+            self.assertTrue(invalid.exists())
+
+    def test_pointer_temp_and_staging_caps_are_exact(self):
+        with tempfile.TemporaryDirectory() as parent:
+            root = Path(parent) / 'reserve'
+            with ReserveStore(root).locked() as locked:
+                locked.bootstrap()
+            for index in range(3):
+                generation = '00000000-0000-4000-8000-%012d' % index
+                path = root / ('active.%s.tmp' % generation)
+                path.write_bytes(canonical_bytes(active_pointer(None, None, None, None)))
+                os.chmod(path, 0o600)
+            with self.assertRaisesRegex(ContractError, 'HTML_RESERVE_POINTER_TEMP_LIMIT'):
+                with ReserveStore(root).locked() as locked:
+                    locked.bootstrap()
+
+        with tempfile.TemporaryDirectory() as parent:
+            root = Path(parent) / 'reserve'
+            with ReserveStore(root).locked() as locked:
+                locked.bootstrap()
+            for index in range(5):
+                (root / 'staging' / (
+                    '00000000-0000-4000-8000-%012d' % index)).mkdir(mode=0o700)
+            with self.assertRaisesRegex(
+                    ContractError, 'HTML_RESERVE_GENERATION_ENTRY_LIMIT'):
+                with ReserveStore(root).locked():
+                    pass
+
         with tempfile.TemporaryDirectory() as parent:
             root = Path(parent) / 'reserve'
             with ReserveStore(root).locked() as locked:

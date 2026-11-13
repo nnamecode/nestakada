@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlencode
 from unittest.mock import patch
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -14,10 +15,23 @@ from accounts.test_support import editor_session
 from audit.models import AuditEvent
 
 from .activation import ActivationResult
-from .contracts import ContractError
+from .contracts import ContractError, active_pointer
+from .source import SourceSnapshot
+from .storage import ReserveStore
 
 
 class HtmlReserveHttpTests(TestCase):
+    def stored_generation(self, locked, generation, stamp):
+        manifest = {
+            'schema': 'html-reserve-manifest-v1',
+            'generation': generation,
+            'built_at': '2026-11-12T00:00:00Z',
+            'source_stamp': stamp,
+            'responses': [], 'resources': [], 'retained_asset_ids': [],
+            'totals': {'files': 0, 'bytes': 0},
+        }
+        return locked.write_generation(generation, manifest, {})
+
     def setUp(self):
         self.temporary = TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
@@ -53,6 +67,36 @@ class HtmlReserveHttpTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Cache-Control'], 'private, no-store')
         self.assertContains(response, 'Создать новую HTML-версию')
+
+    def test_dashboard_links_html_reserve_only_for_owner(self):
+        owner = self.browser(self.owner).get('/manage/')
+        employee = self.browser(self.employee).get('/manage/')
+        self.assertContains(owner, '/manage/html-reserve/')
+        self.assertNotContains(employee, '/manage/html-reserve/')
+
+    def test_status_shows_current_and_previous_or_neutral_absence(self):
+        stamp = 'a' * 64
+        current = '11111111-1111-4111-8111-111111111111'
+        previous = '22222222-2222-4222-8222-222222222222'
+        with ReserveStore(self.root).locked() as locked:
+            locked.bootstrap()
+            current_digest = self.stored_generation(locked, current, stamp)
+            previous_digest = self.stored_generation(locked, previous, stamp)
+            locked.write_pointer(active_pointer(
+                current, previous, current_digest, previous_digest),
+                str(uuid4()))
+        snapshot = SourceSnapshot(stamp, {}, ())
+        with patch('html_reserve.views.capture', return_value=snapshot):
+            response = self.browser(self.owner).get('/manage/html-reserve/')
+        self.assertContains(response, '11111111')
+        self.assertContains(response, '22222222')
+        self.assertContains(response, 'Предыдущее поколение')
+
+        with patch('html_reserve.views._status', return_value={
+                'available': True, 'current': current, 'previous': None,
+                'built_at': '2026-11-12T00:00:00Z', 'stale': False}):
+            response = self.browser(self.owner).get('/manage/html-reserve/')
+        self.assertContains(response, 'Нет')
 
     def test_csrf_exact_form_and_success_audit(self):
         browser = self.browser(self.owner, csrf=True)
@@ -121,3 +165,22 @@ class HtmlReserveHttpTests(TestCase):
         self.assertContains(response, 'создана и активирована')
         self.assertContains(response, 'требуется проверить предупреждение')
         self.assertNotContains(response, 'private-success-audit')
+
+    def test_owner_private_request_state_is_not_forwarded_to_builder(self):
+        browser = self.browser(self.owner)
+        browser.cookies['private-canary'] = 'OWNER-COOKIE-CANARY'
+        result = ActivationResult(
+            generation_id='11111111-1111-4111-8111-111111111111',
+            status='activated', durability_warning=False,
+            cleanup_warning=False)
+        with patch('html_reserve.views.build_run', return_value=result) as build:
+            response = browser.post(
+                '/manage/html-reserve/', urlencode({'action': 'build'}),
+                content_type='application/x-www-form-urlencoded',
+                HTTP_IF_NONE_MATCH='"OWNER-ETAG-CANARY"',
+                HTTP_X_PRIVATE_CANARY='OWNER-HEADER-CANARY')
+        self.assertEqual(response.status_code, 200)
+        build.assert_called_once_with(root=self.root)
+        for marker in ('OWNER-COOKIE-CANARY', 'OWNER-ETAG-CANARY',
+                       'OWNER-HEADER-CANARY'):
+            self.assertNotContains(response, marker)

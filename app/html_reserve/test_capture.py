@@ -7,7 +7,7 @@ from uuid import uuid4
 from django.test import TransactionTestCase, override_settings
 
 from content.models import Page
-from content import test_public_http as public_tests
+from content import public_views, test_public_http as public_tests
 from media_library.storage import MediaStorage
 from page_editor.test_media_http import PNG
 from shared_content import public as shared_public
@@ -30,6 +30,18 @@ class HtmlReserveCaptureTests(TransactionTestCase):
             side_effect=public_tests.fake_shared)
         shared.start()
         self.addCleanup(shared.stop)
+
+    def statics(self):
+        rows = []
+        for name, body in (
+                ('public.css', public_views.STYLESHEET),
+                ('public-gallery.js', public_views.GALLERY_SCRIPT),
+                ('public-home.js', public_views.HOME_SCRIPT)):
+            rows.append([name, hashlib.sha256(body).hexdigest(), len(body)])
+        for name in ('public-shared.css', 'public-shared.js'):
+            descriptor = shared_public.static_descriptor(name)
+            rows.append([name, descriptor['digest'], len(descriptor['body'])])
+        return sorted(rows)
 
     @override_settings(
         PUBLIC_ORIGIN='http://localhost:8767', SEO_ROBOTS_PROFILE='deny-all',
@@ -66,23 +78,40 @@ class HtmlReserveCaptureTests(TransactionTestCase):
             '<script src="/static/public-home.js"></script>'
             '<img src="%s"><meta property="og:image" '
             'content="http://localhost:8767%s">'
+            '<a href="/known/">local navigation</a>'
             '<a href="https://trusted.example/path">external navigation</a>'
             % (bare, contextual)).encode()
         resources = extract_resources(
             html, origin='http://localhost:8767',
             bare_file_ids={str(file_id)},
-            contextual={(str(file_id), str(page_id), 'main_image')})
+            contextual={(str(file_id), str(page_id), 'main_image')},
+            local_targets={'/known/'})
         self.assertEqual({item.kind for item in resources}, {
             'static-public', 'media-bare', 'media-contextual'})
         for bad in (
                 b'<script src="https://evil.test/x.js"></script>',
                 b'<img src="//evil.test/x.png">',
                 b'<form action="/request/submit/"></form>',
-                b'<img src="/public-media/00000000-0000-0000-0000-000000000000/">'):
+                b'<img src="/public-media/00000000-0000-0000-0000-000000000000/">',
+                b'<iframe src="https://evil.test/"></iframe>',
+                b'<img srcset="/x.webp 2x">',
+                b'<style>.x{background:url(/x.png)}</style>',
+                b'<object data="/x"></object>',
+                b'<meta http-equiv="refresh" content="0;url=https://evil.test/">',
+                b'<svg><image xlink:href="https://evil.test/x.svg"></image></svg>',
+                b'<link rel="preload stylesheet" href="/static/public.css">',
+                b'<a href="//evil.test/">bad</a>',
+                b'<a href="https://user@evil.test/">bad</a>',
+                b'<a href="http://localhost:8767/unknown/">bad</a>',
+                b'<a href="/unknown/">bad</a>'):
             with self.subTest(bad=bad), self.assertRaises(ContractError):
                 extract_resources(
                     bad, origin='http://localhost:8767',
                     bare_file_ids={str(file_id)}, contextual=set())
+        self.assertEqual(extract_resources(
+            b'<script type="application/ld+json">{"url":"https://safe.example/"}</script>',
+            origin='http://localhost:8767', bare_file_ids=set(),
+            contextual=set()), ())
 
     def test_frozen_policy_and_static_bytes_are_closed(self):
         file_id, asset_id, page_id = uuid4(), uuid4(), uuid4()
@@ -91,6 +120,7 @@ class HtmlReserveCaptureTests(TransactionTestCase):
                        'img/a/main.webp', 'b' * 64, 10]],
             'usages': [[str(uuid4()), 'current_page', str(page_id),
                         'main_image', str(asset_id)]],
+            'statics': self.statics(),
         }, ())
         bare, contextual = resource_policy(snapshot)
         self.assertEqual(bare, frozenset((str(file_id),)))
@@ -116,6 +146,14 @@ class HtmlReserveCaptureTests(TransactionTestCase):
                 descriptor['digest']), snapshot)
             self.assertEqual(body, descriptor['body'])
 
+        stale = SourceSnapshot('a' * 64, {
+            'files': [], 'usages': [], 'statics': self.statics()}, ())
+        with patch.object(public_views, 'STYLESHEET', b'changed'):
+            with self.assertRaisesRegex(
+                    ContractError, 'HTML_RESERVE_STATIC_SOURCE_CHANGED'):
+                resource_bytes(ResourceRef(
+                    'static-public', None, None, None, 'public.css', None), stale)
+
     def test_media_bytes_are_read_once_against_frozen_descriptor(self):
         file_id, asset_id = uuid4(), uuid4()
         key = 'img/%s/original.png' % asset_id
@@ -127,6 +165,7 @@ class HtmlReserveCaptureTests(TransactionTestCase):
                 'files': [[str(file_id), str(asset_id), 'legacy-public', key,
                            actual['sha256'], actual['byte_size']]],
                 'usages': [],
+                'statics': self.statics(),
             }, ())
             body, content_type = resource_bytes(ResourceRef(
                 'media-bare', str(file_id), None, None, None, None), snapshot)

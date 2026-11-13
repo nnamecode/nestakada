@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','dev11','dev12-candidates','dev12-media','dev12-projector','dev12-public','dev12-remediation','dev12-schema','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
+param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','dev11','dev12-candidates','dev12-media','dev12-projector','dev12-public','dev12-remediation','dev12-schema','dev13','dev13-notifications','dev25','dev25-affected','dev26-projection','check','migrations','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=Join-Path $repo 'work/foundation/test'
@@ -20,7 +20,7 @@ if($LASTEXITCODE -ne 0 -or $actual.Id -ne $image){throw 'Pinned candidate requir
 $network=docker.exe network inspect nestakada-foundation-test-db|ConvertFrom-Json
 if($LASTEXITCODE -ne 0 -or !$network.Internal -or $network.Labels.'nestakada.scope' -ne 'foundation-test'){throw 'Private test DB network required'}
 $quotaArgs=@()
-if($Suite -in @('guard','public-image','public-shared-page','shared-reservation','shared-public','shared-calibration','shared','all')){
+if($Suite -in @('guard','dev25-affected','public-image','public-shared-page','shared-reservation','shared-public','shared-calibration','shared','all')){
     $stateVolume=@(docker.exe volume inspect nestakada-foundation-test-state|ConvertFrom-Json)[0]
     if($LASTEXITCODE -ne 0 -or !$stateVolume -or $stateVolume.Name -ne 'nestakada-foundation-test-state' -or
        $stateVolume.Driver -ne 'local' -or $stateVolume.Labels.'nestakada.scope' -ne 'foundation-test'){throw 'Existing private test state volume required'}
@@ -51,8 +51,11 @@ $dockerArgs=@('run','--rm','--name',"nestakada-editor-tests-$Suite",'--network',
     '--workdir','/app','--env','DJANGO_SETTINGS_MODULE=estakada.settings.local_http',
     '--env','ESTAKADA_LOCAL_ENV=test','--env','ESTAKADA_DB_NAME=estakada_foundation_unit',
     '--env','ESTAKADA_DB_USER=app_migrator','--env','PYTHONDONTWRITEBYTECODE=1') + $quotaArgs + $guardArgs + @(
-    $image,'python','-B','manage.py','test')
-if($Suite -eq 'save'){$dockerArgs+=@('page_editor.test_save_http')}
+    $image,'python','-B','manage.py')
+if($Suite -notin @('check','migrations')){$dockerArgs+=@('test')}
+if($Suite -eq 'check'){$dockerArgs+=@('check')}
+elseif($Suite -eq 'migrations'){$dockerArgs+=@('makemigrations','--check','--dry-run')}
+elseif($Suite -eq 'save'){$dockerArgs+=@('page_editor.test_save_http')}
 elseif($Suite -eq 'draft'){$dockerArgs+=@('page_editor.test_draft_restore_http','page_editor.test_draft_cancel_admission')}
 elseif($Suite -eq 'races'){$dockerArgs+=@('page_editor.test_draft_restore_concurrency')}
 elseif($Suite -eq 'source'){$dockerArgs+=@('page_editor.test_source_admission')}
@@ -107,6 +110,22 @@ elseif($Suite -eq 'dev12-media'){$dockerArgs+=@('content.test_dev12_home_media_i
 elseif($Suite -eq 'dev12-projector'){$dockerArgs+=@('content.test_dev12_home_projection','content.test_dev12_home_delete_guard','content.test_simple_page_delete','--failfast')}
 elseif($Suite -eq 'dev12-public'){$dockerArgs+=@('content.test_dev12_home_public','--failfast')}
 elseif($Suite -eq 'dev12-remediation'){$dockerArgs+=@('page_versions.test_home_profile_schema','page_editor.test_home_sources','page_editor.test_home_save_http','--failfast')}
+elseif($Suite -eq 'dev13'){$dockerArgs+=@('service_requests','--failfast')}
+elseif($Suite -eq 'dev13-notifications'){$dockerArgs+=@('service_requests.test_notifications','--failfast')}
+elseif($Suite -eq 'dev25'){$dockerArgs+=@('html_reserve','--failfast')}
+elseif($Suite -eq 'dev26-projection'){$dockerArgs+=@('html_reserve.test_projection','html_reserve.test_delivery','html_reserve.test_delivery_tool','--failfast')}
+elseif($Suite -eq 'dev25-affected'){$dockerArgs+=@(
+    'content.test_public_http',
+    'content.test_public_shared',
+    'content.test_dev10_gallery_public',
+    'content.test_dev12_home_public',
+    'shared_content.test_shared_public',
+    'media_library.test_html_reserve',
+    'accounts.tests',
+    'audit.test_http',
+    'service_requests.tests',
+    'service_requests.test_intake_http',
+    '--failfast')}
 elseif($Suite -eq 'public-read'){$dockerArgs+=@('content.test_public_read','--failfast')}
 elseif($Suite -eq 'public-http'){$dockerArgs+=@('content.test_public_http','--failfast')}
 elseif($Suite -eq 'public-nav'){$dockerArgs+=@('content.test_public_navigation','--failfast')}
@@ -125,6 +144,6 @@ elseif($Suite -eq 'parser'){$dockerArgs+=@('page_editor.test_html_parser','--fai
 elseif($Suite -eq 'entity'){$dockerArgs+=@('page_editor.test_entity_http','--failfast')}
 elseif($Suite -eq 'editor'){$dockerArgs+=@('page_editor','--failfast')}
 else{$dockerArgs+=@('request_guard.tests','audit','content','accounts','media_library','page_versions','foundation_tests','editor_runtime','page_editor','shared_content','--failfast')}
-$dockerArgs+=@('--keepdb','--noinput','--verbosity','2')
+if($Suite -notin @('check','migrations')){$dockerArgs+=@('--keepdb','--noinput','--verbosity','2')}
 & docker.exe @dockerArgs
-if($LASTEXITCODE -ne 0){throw 'Editor tests failed; inspect evidence before any retry'}
+if($LASTEXITCODE -ne 0){throw 'Editor check failed; inspect evidence before any retry'}

@@ -8,7 +8,7 @@
     <label>Телефон<input name="phone" maxlength="32" inputmode="tel" autocomplete="tel" required></label>
     <label class="public-request-wide">Автомобиль, если хотите<input name="car" maxlength="300"></label>
     <label class="public-request-wide">Комментарий<textarea name="comment" maxlength="4000"></textarea></label>
-    <label class="public-request-consent"><input type="checkbox" name="consent" value="on" required> <span>Я подтверждаю отдельное согласие на обработку данных для этой заявки.</span></label>
+    <label class="public-request-consent"><input type="checkbox" name="consent" value="on" required> <span>Даю <a href="/consent-service-request/">согласие на обработку персональных данных</a> для этой заявки. <a href="/privacy/">Политика обработки персональных данных</a>.</span></label>
     <button type="submit">Отправить заявку</button>
   </form>
   {% else %}<p>Онлайн-запись пока недоступна. Пожалуйста, воспользуйтесь указанным на сайте телефоном.</p>{% endif %}

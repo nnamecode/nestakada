@@ -6,6 +6,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models.expressions import RawSQL
 
 from content.models import Page, Route, lock_content
 from content.public_gallery import (
@@ -16,9 +17,9 @@ from content.public_shared import HOST_POLICY
 from content import public_views
 from media_library.models import Asset, AssetFile, AssetUsage
 from page_versions import schema as page_schema
-from page_versions.models import PageContentState
+from page_versions.models import PageContentState, PageRevision
 from shared_content.content import validate_metadata
-from shared_content.models import SharedBlock
+from shared_content.models import SharedBlock, SharedRevision
 from shared_content.public import RENDERER_POLICY
 
 from .contracts import ContractError, TargetSpec, canonical_bytes
@@ -119,11 +120,12 @@ def _targets_from_rows(pages, routes):
 
 def _capture_rows():
     pages = _bounded(
-        Page.objects.order_by('id'),
+        Page.objects.annotate(row_version=RawSQL('xmin::text', [])).order_by('id'),
         _limit('HTML_RESERVE_MAX_PAGES', DEFAULT_MAX_PAGES),
         'SOURCE_PAGE_LIMIT')
     routes = _bounded(
-        Route.objects.exclude(kind=Route.Kind.SYSTEM).order_by('target', 'id'),
+        Route.objects.annotate(row_version=RawSQL('xmin::text', [])).exclude(
+            kind=Route.Kind.SYSTEM).order_by('target', 'id'),
         _limit('HTML_RESERVE_MAX_ROUTES', DEFAULT_MAX_ROUTES),
         'SOURCE_ROUTE_LIMIT')
     return pages, routes
@@ -155,10 +157,16 @@ def capture():
         pages, routes = _capture_rows()
         targets = _targets_from_rows(pages, routes)
         states = _bounded(
-            PageContentState.objects.select_related('current_revision').order_by('page_id'),
+            PageContentState.objects.annotate(
+                row_version=RawSQL(
+                    '"page_versions_pagecontentstate"."xmin"::text', [])).select_related(
+                    'current_revision').order_by('page_id'),
             _limit('HTML_RESERVE_MAX_PAGE_STATES', DEFAULT_MAX_STATES),
             'SOURCE_PAGE_STATE_LIMIT')
         page_ids = {page.pk for page in pages}
+        revision_versions = {str(row.pk): str(row.row_version) for row in
+            PageRevision.objects.annotate(row_version=RawSQL('xmin::text', [])).filter(
+                pk__in=[row.current_revision_id for row in states])}
         state_rows = []
         for state in states:
             revision = state.current_revision
@@ -176,12 +184,18 @@ def capture():
             state_rows.append([
                 str(state.pk), str(state.page_id), state.sequence,
                 str(revision.pk), revision.sequence, revision.schema_version,
-                revision.payload_hash, payload_digest,
+                revision.payload_hash, payload_digest, str(state.row_version),
+                revision_versions[str(revision.pk)],
             ])
-        blocks = list(SharedBlock.objects.select_related(
-            'current_revision').order_by('kind')[:3])
+        blocks = list(SharedBlock.objects.annotate(
+            row_version=RawSQL(
+                '"shared_content_sharedblock"."xmin"::text', [])).select_related(
+                'current_revision').order_by('kind')[:3])
         if [block.kind for block in blocks] != ['footer', 'header']:
             raise ContractError('SOURCE_SHARED_BLOCKS_INCOHERENT')
+        shared_revision_versions = {str(row.pk): str(row.row_version) for row in
+            SharedRevision.objects.annotate(row_version=RawSQL('xmin::text', [])).filter(
+                pk__in=[row.current_revision_id for row in blocks])}
         shared_rows = []
         for block in blocks:
             revision = block.current_revision
@@ -196,29 +210,32 @@ def capture():
                 str(revision.pk), revision.sequence, revision.schema_version,
                 revision.storage_kind, revision.file_key, revision.byte_size,
                 revision.file_sha256, revision.payload_hash,
+                str(block.row_version), shared_revision_versions[str(revision.pk)],
             ])
         usage_kinds = (
             AssetUsage.Kind.CURRENT_PAGE, AssetUsage.Kind.SHARED_BLOCK)
         usages = _bounded(
-            AssetUsage.objects.filter(kind__in=usage_kinds).order_by(
+            AssetUsage.objects.annotate(row_version=RawSQL('xmin::text', [])).filter(
+                kind__in=usage_kinds).order_by(
                 'kind', 'consumer_id', 'slot', 'asset_id'),
             _limit('HTML_RESERVE_MAX_PUBLIC_USAGES', DEFAULT_MAX_USAGES),
             'SOURCE_PUBLIC_USAGE_LIMIT')
         usage_rows = [[
             str(row.pk), row.kind, str(row.consumer_id), row.slot,
-            str(row.asset_id)] for row in usages]
+            str(row.asset_id), str(row.row_version)] for row in usages]
         asset_ids = {row.asset_id for row in usages}
         assets = _bounded(
-            Asset.objects.filter(pk__in=asset_ids).order_by('id'),
+            Asset.objects.annotate(row_version=RawSQL('xmin::text', [])).filter(
+                pk__in=asset_ids).order_by('id'),
             _limit('HTML_RESERVE_MAX_PUBLIC_ASSETS', DEFAULT_MAX_ASSETS),
             'SOURCE_PUBLIC_ASSET_LIMIT')
         if {row.pk for row in assets} != asset_ids or any(
                 row.status != Asset.Status.READY for row in assets):
             raise ContractError('SOURCE_PUBLIC_ASSET_INCOHERENT')
-        asset_rows = [[str(row.pk), row.status, row.is_legacy]
+        asset_rows = [[str(row.pk), row.status, row.is_legacy, str(row.row_version)]
                       for row in assets]
         files = _bounded(
-            AssetFile.objects.filter(
+            AssetFile.objects.annotate(row_version=RawSQL('xmin::text', [])).filter(
                 asset_id__in=asset_ids,
                 kind__in=(AssetFile.Kind.MAIN, AssetFile.Kind.LEGACY_PUBLIC)
             ).order_by('asset_id', 'id'),
@@ -226,17 +243,20 @@ def capture():
             'SOURCE_PUBLIC_FILE_LIMIT')
         file_rows = [[
             str(row.pk), str(row.asset_id), row.kind, row.key,
-            row.sha256, row.byte_size] for row in files]
+            row.sha256, row.byte_size, str(row.row_version)] for row in files]
         descriptor = {
-            'schema': 'html-reserve-source-v1',
-            'policies': [HOST_POLICY, RENDERER_POLICY],
+            'schema': 'html-reserve-source-v2',
+            'policies': [HOST_POLICY, RENDERER_POLICY,
+                         'html-reserve-extractor-v2'],
             'seo': [configuration.origin, configuration.robots_profile],
             'pages': [[
                 str(row.pk), None if row.parent_id is None else str(row.parent_id),
-                row.position, row.kind, row.name, row.is_published]
+                row.position, row.kind, row.name, row.is_published,
+                str(row.row_version)]
                 for row in pages],
             'routes': [[
-                str(row.pk), row.target, row.kind, str(row.page_id), row.is_legacy]
+                str(row.pk), row.target, row.kind, str(row.page_id), row.is_legacy,
+                str(row.row_version)]
                 for row in routes],
             'states': state_rows,
             'shared': shared_rows,
