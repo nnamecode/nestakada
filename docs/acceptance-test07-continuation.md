@@ -1,5 +1,13 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-988: DEV-16 exact3 evidence mapping
+
+`AC-037` / `AT-037` has executed local partial evidence: owner-only POST+CSRF signed confirmation, employee/anonymous/GET refusal, idempotent single delete, bounded no-PII ledger, fault rollback/retry, concurrent convergence and restore reconciliation. Full PASS is additionally blocked by oracle drift: the older AC still requires repeated password, while later owner decision D-595 explicitly replaced it with ordinary signed confirmation without password. The implementation follows D-595; the acceptance oracle must be reconciled before status promotion. Real old-backup restore and LEGAL/live remain.
+
+`AC-DTL-014` / `AT-114` has local partial deletion/tombstone evidence: repeated delete converges, restored row is removed by ledger reconciliation and request body is absent from the ledger. Its note/contact-correction branch is not implemented because the approved minimal DEV-13 scope removed notes/history/CRM; it cannot be claimed PASS without a requirements decision.
+
+`AC-DTL-020` / `AT-120` has local partial authorization/atomicity evidence: direct non-POST and wrong role fail, owner confirmation is bounded, ledger/DB fault does not announce final success, stale/missing trusted ledger root fails closed. Full legal-consent/live production flow and external restore execution remain. Full PASS0; states/IDs unchanged.
+
 ### D-987: DEV-12 exact3 evidence mapping
 
 `AC-012` / `AT-012` has executed local partial evidence: `test_dynamic_projection_changes_only_price_amount_and_visibility`, hidden-source and missing-source frozen-fallback tests, exact owner bind/unbind digest, delete guard and fixed public home rendering. Stable IDs prevent a new object at the same URL from inheriting a deleted source. Full AC remains open for persistent apply/publication and the complete normal→night-reserve route with deleted target404 in a launch-like environment.

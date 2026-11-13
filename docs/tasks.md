@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-988 (2026-11-13): **DEV-16 exact3 TEST-07 mapping complete; local partial, full PASS0.** Deletion/ledger guards are proven locally; repeat-password and note/history acceptance text need explicit reconciliation with later no-bloat decisions, and LEGAL/live restore remains.
+
 Текущая работа D-987 (2026-11-13): **DEV-12 exact3 TEST-07 mapping complete; all local partial, full PASS0.** Home source/price/fallback/delete evidence mapped; persistent publication, full role HTTP, reserve and real consumer deletion remain. No feature expansion.
 
 Текущая работа D-986 (2026-11-13): **DEV-30 exact2 TEST-07 mapping complete; AC-057 deferred, AC-OPS-012 local-negative partial, full PASS0.** First launch remains free of optional external runtime; no premature consent manager or analytics code.
