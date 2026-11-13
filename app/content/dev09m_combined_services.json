@@ -5,7 +5,7 @@
     "map_sha256": "c1d542d0761ffbdb9fc58c9227fc94144515ab18c3155952a93dc6fb4d1bbad8",
     "evidence_sha256": "c3a8a395fb4ed55fef6027a58014ce5decaadda7c559870bf06247c2fbeb79bc",
     "identity_manifest_sha256": "8e89d9db34b3b3e1e34574c933ce12a3ac37d7ebd8a3b68a1d6c7591233c2cfa",
-    "page_content_sha256": "ce786ef915f627af939946b93689448a019e18ca22707da58712d21bb4aeef37",
+    "page_content_sha256": "0ee0924d71cea90e81ab2596b7b4df6df282ebb6f81998d8b55ff54eea5d8c82",
     "route_content_sha256": "cc5d3255f01e40098a90fd3a48ff8efe2d4f117026b3c55cdaef16fbe42b6433"
   },
   "pages": [
@@ -3094,49 +3094,49 @@
               "scope": "col"
             },
             {
-              "text": "Снять / поставит о",
+              "text": "Снять / поставить 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Демонтаж / монта о",
+              "text": "Демонтаж / монтаж 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Балансировк о",
+              "text": "Балансировка 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Комплек о",
+              "text": "Комплекс 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Комплек а",
+              "text": "Комплекс 4 колеса",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Низкий профил а",
+              "text": "Низкий профиль 4 колеса",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Runfla а",
+              "text": "Runflat 4 колеса",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
@@ -3684,49 +3684,49 @@
               "scope": "col"
             },
             {
-              "text": "Снять / поставит о",
+              "text": "Снять / поставить 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Демонтаж / монта о",
+              "text": "Демонтаж / монтаж 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Балансировк о",
+              "text": "Балансировка 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Комплек о",
+              "text": "Комплекс 1 колесо",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Комплек а",
+              "text": "Комплекс 4 колеса",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Низкий профил а",
+              "text": "Низкий профиль 4 колеса",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
               "scope": "col"
             },
             {
-              "text": "Runfla а",
+              "text": "Runflat 4 колеса",
               "strong": false,
               "rowspan": 1,
               "colspan": 1,
@@ -7769,24 +7769,23 @@
         {
           "type": "table",
           "caption": null,
-          "header": [],
+          "header": [
+            {
+              "text": "Услуга",
+              "strong": false,
+              "rowspan": 1,
+              "colspan": 1,
+              "scope": "col"
+            },
+            {
+              "text": "Цена, руб.",
+              "strong": false,
+              "rowspan": 1,
+              "colspan": 1,
+              "scope": "col"
+            }
+          ],
           "rows": [
-            [
-              {
-                "text": "Услуга",
-                "strong": false,
-                "rowspan": 1,
-                "colspan": 1,
-                "scope": null
-              },
-              {
-                "text": "Цена, руб.",
-                "strong": false,
-                "rowspan": 1,
-                "colspan": 1,
-                "scope": null
-              }
-            ],
             [
               {
                 "text": "Диагностика и заправка",

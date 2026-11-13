@@ -1,6 +1,6 @@
 # DEV-09M: acceptance и минимальный implementation plan
 
-Дата: 2026-11-13. Статус: подготовлен после `DEV09M-Q001=1`; product code не начат. До реализации обязательны независимое ревью этого плана и отдельное разрешение владельца.
+Дата: 2026-11-13. Статус D-961: minimal local implementation завершена строго по плану и final independently `APPROVED`, P1=0/P2=0/P3=0; persistent apply/publication/live не входят и не выполнялись.
 
 ## Исправленная граница
 
@@ -21,7 +21,7 @@
 | MAP-115 primary + MAP-088 alias | 1 | 2 | master MAP-002, позиция 5; один Page автомойки |
 | Итого | 24 | 25 | без изменения существующих Page/Route |
 
-Identity inventory зафиксирован в `docs/dev09m-combined-services-manifest.md`. По `DEV09M-Q002=1/Q003=1` единственный canonical structured data authority до writer-кода — отдельно рассмотренный `app/content/dev09m_combined_services.json`: после D-951 package SHA256 `a59d13ef3c3b1d9d1dbde2e1b741358c751cd6f8f1b46360b85f0ba81f477677`, bytes318209, page-content SHA `ce786ef915f627af939946b93689448a019e18ca22707da58712d21bb4aeef37`, route-content SHA `cc5d3255f01e40098a90fd3a48ff8efe2d4f117026b3c55cdaef16fbe42b6433`. Он фиксирует name/h1/title/description/intro/blocks/tables/source-restored prices для24 Page и mapping25 Route; writer/tests могут только принять или отклонить эти bytes, но не строить другую projection.
+Identity inventory зафиксирован в `docs/dev09m-combined-services-manifest.md`. По `DEV09M-Q002=1/Q003=1/Q005=1/Q007=1` единственный canonical structured data authority до writer-кода — отдельно рассмотренный `app/content/dev09m_combined_services.json`: после D-957 package SHA256 `3fb682d6a092d78439fa45b541668554d793490b41eb89d311359738053f8e01`, bytes318359, page-content SHA `0ee0924d71cea90e81ab2596b7b4df6df282ebb6f81998d8b55ff54eea5d8c82`, route-content SHA `cc5d3255f01e40098a90fd3a48ff8efe2d4f117026b3c55cdaef16fbe42b6433`. MAP-073 visual heading row is represented by two header cells with scope=col, preserving exact text without a headerless exception. Пакет фиксирует name/h1/title/description/intro/blocks/tables/source-restored prices для24 Page и mapping25 Route; writer/tests могут только принять или отклонить эти bytes, но не строить другую projection.
 
 Все новые Page создаются скрытыми. До preflight writer в одном порядке блокирует все существующие parent Page, их primary Route, current PageContentState/PageRevision и sibling scopes. Для каждого родителя переиспользуется полный `_exact_aggregate` contract: ровно один OwnerDraft с exact base pin/metadata/reservations/audit; запрещены только посторонние extras и RestoreStage. Для позиций 0–4 проверяется точный существующий group/tile `name+href`; для новых MAP-015/016 проверяется точное отсутствие sibling positions5/6 и canonical JSON authority, без изменения payload родителя. Writer не исправляет и не создаёт родителей неявно.
 

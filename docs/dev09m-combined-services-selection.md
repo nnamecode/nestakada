@@ -1,6 +1,6 @@
 # DEV-09M: объединённый остаток страниц услуг
 
-Дата: 2026-11-13. `DEV09M-Q001=1`–`Q004=1` утверждены владельцем. Область содержит 25 точных URL, 24 объекта Page и 25 Route. D-952: repeat data review P2=1 owner-paused after second MAP015 header finding; other findings closed, writer code не начат. Recommended Q005 literal-only patch.
+Дата: 2026-11-13. `DEV09M-Q001=1`–`Q008=1` утверждены владельцем. Область содержит 25 точных URL, 24 объекта Page и 25 Route. D-961: minimal local writer/tests complete and independently APPROVED P1/P2/P3=0/0/0; persistent apply/publication/live remain excluded and separately gated.
 
 ## Пауза D-944
 

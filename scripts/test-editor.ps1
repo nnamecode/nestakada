@@ -86,7 +86,7 @@ elseif($Suite -eq 'shared-reservation'){$dockerArgs+=@('shared_content.test_shar
 elseif($Suite -eq 'final-media'){$dockerArgs+=@('page_editor.test_final_media_http','--failfast')}
 elseif($Suite -eq 'guard'){$dockerArgs+=@('request_guard.tests','audit','content','accounts','foundation_tests','--failfast')}
 elseif($Suite -eq 'dev09'){$dockerArgs+=@('content.test_dev09_migration_apply','--failfast')}
-elseif($Suite -eq 'dev09-services'){$dockerArgs+=@('content.test_dev09e_services_catalog','--failfast')}
+elseif($Suite -eq 'dev09-services'){$dockerArgs+=@('content.test_dev09e_services_catalog','content.test_dev09m_combined_services','--failfast')}
 elseif($Suite -eq 'dev11'){$dockerArgs+=@(
     'content.test_dev11_seo_projection',
     'content.test_dev11_auto_repair',

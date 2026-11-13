@@ -1,5 +1,21 @@
 # Процесс полной разработки
 
+> **Текущая точка D-961 (2026-11-13): stage8 DEV-09M minimal local implementation COMPLETE/APPROVED.** Final IMP-008 P1/P2/P3=0/0/0; named40/40+public9/21/7+check0+migrations0, foundation stopped. Persistent apply/publication/live remain closed behind a separate future owner gate.
+
+> **Текущая точка D-960 (2026-11-13): `DEV09M-Q008=1`, stage8 IMP-008 remediation resumed.** Exact test-only cap-oracle closure authorized; no product/canonical expansion. Next affected named checks then final independent review.
+
+> **Текущая точка D-959 (2026-11-13): stage8 DEV-09M IMP-008 paused by anti-loop.** Repeat review P1/P2/P3=0/1/0 repeats cap-oracle gap second time; no third remediation. Product logic passes named40/40/check/migrations and reviewer accepted recursive accounting. Await `DEV09M-Q008=1` exact test-only closure; foundation/live stopped.
+
+> **Текущая точка D-957 (2026-11-13): stage8 DEV-09M implementation resumed after amendment APPROVED.** MAP-073 normalized into shared table grammar without exception; independent P1/P2/P3=0/0/0 and new SHA fixed. Next static/code check then named `dev09-services`; foundation/live untouched.
+
+> **Текущая точка D-956 (2026-11-13): stage8 DEV-09M paused at canonical amendment gate before tests.** MAP-073 headerless canonical conflicts with approved header1–16 grammar; implementation did not add exception. Recommended `DEV09M-Q007=1` one-row semantic normalization, new SHA and repeat data/plan review; foundation/live untouched.
+
+> **Текущая точка D-955 (2026-11-13): `DEV09M-Q006=1`, stage8 implementation active.** Реализация ограничена approved existing-writer/test/wrapper/foundation file set; canonical bytes D-953 неизменны, no-bloat/live/publication gates closed. Следующий checkpoint — focused named `dev09-services` acceptance.
+
+> **Текущая точка D-954 (2026-11-13): DEV-09M plan gate APPROVED; owner code approval required.** Independent P1/P2/P3=0/0/0 confirms minimal existing-writer implementation and named wrapper-test strategy without bloat. Current stage8 code gate; recommended `DEV09M-Q006=1`, product code not started.
+
+> **Текущая точка D-953 (2026-11-13): DEV-09M canonical data gate APPROVED, writer отсутствует.** Literal-only MAP-015 remediation passed independent review P1/P2/P3=0/0/0; package/pages/routes SHA fixed. Current stage8 plan gate: next independent repeat implementation-plan review, then owner code approval; no tests/DB/foundation/live change.
+
 > **Текущая точка D-952 (2026-11-13): DEV-09M data remediation paused after repeated MAP-015 header finding.** Exact cause is shell expansion of `$1/$2`; all other findings closed. No third attempt. Current stage8 data gate; owner resume recommended for literal-only14-header patch, then fresh independent review.
 
 > **Текущая точка D-951 (2026-11-13): DEV-09M canonical data findings remediated, writer absent.** Exact affected MAP010/024/029/015/038 content fixed with one bounded existing-list nesting rule; package/content SHA updated. Current stage8 data-review gate; next repeat independent data review, then plan/code gate remains separate.

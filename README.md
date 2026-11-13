@@ -1,5 +1,21 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-961 (2026-11-13): DEV-09M minimal local implementation COMPLETE and independently APPROVED.** Final IMP-008 P1/P2/P3=0/0/0; canonical24 hidden Page/25 Route, one wash Page/two Route, closed grammar/caps, atomic create/replay/rollback/concurrency ready. Named evidence: dev09-services40/40, public-read9/9, public-http21/21, public-nav7/7, check0, migrations0; containers0. Persistent apply/publication/live remain closed and require a separate future gate.
+
+> **Текущая точка D-960 (2026-11-13): `DEV09M-Q008=1`; exact test-only remediation resumed.** Только package-byte helper и actual recursive/list/sections cap oracles, затем named checks+final review; product/canonical scope не расширяется.
+
+> **Текущая точка D-959 (2026-11-13): DEV-09M IMP-008 paused by anti-loop after repeated cap-oracle P2.** Remediation code passes named dev09-services40/40, check0, migrations0; prior public9/21/7 PASS, containers0. Repeat review P1/P2/P3=0/1/0: recursive accounting implementation accepted, but R09M-CODE-002 repeated second time because tests do not route nested/list/sections/package-byte exact/+1 boundaries through actual accounting/reader helper. No third remediation. Recommended `DEV09M-Q008=1`: explicitly resume one exact test-only remediation and final review; no product scope expansion.
+
+> **Текущая точка D-957 (2026-11-13): `DEV09M-Q007=1` amendment APPROVED; implementation resumed.** MAP-073 one visual heading row moved to exact2 header cells scope=col; text/prices unchanged, all21 tables share one closed grammar. Independent P1/P2/P3=0/0/0; package318359/SHA3fb682…, pages0ee092…, routes cc5d32…. Next static/code check then named `dev09-services` only.
+
+> **Текущая точка D-956 (2026-11-13): DEV-09M implementation paused before tests on canonical/plan mismatch.** Approved grammar требует table header1–16, но canonical MAP-073 содержит `header=[]` и первую `Услуга/Цена, руб.` строку в rows. Код не расширен под исключение, тесты не запускались. Recommended `DEV09M-Q007=1`: минимально перенести эту одну строку в header со scope=col, обновить SHA и повторить data/plan review; `=2` разрешить специальный headerless-table contract (не рекомендуется).
+
+> **Текущая точка D-955 (2026-11-13): `DEV09M-Q006=1`; minimal DEV-09M implementation начата.** Только existing writer, один bounded test module и wrapper/foundation allowlists по approved D-954 plan; никаких новых моделей, миграций, зависимостей, функций, publication/live. Следующий checkpoint — named `dev09-services` acceptance.
+
+> **Текущая точка D-954 (2026-11-13): DEV-09M implementation plan independently APPROVED; code gate.** P1/P2/P3=0/0/0: exact24 Page/25 Route/25 URL, D-953 bytes/SHA, hidden-only, fail-closed existing writer, bounded grammar and named wrapper tests confirmed; no schema/dependency/runtime/feature bloat. Product code не начат. Recommended `DEV09M-Q006=1`: разрешить минимальную реализацию строго по утверждённому плану.
+
+> **Текущая точка D-953 (2026-11-13): `DEV09M-Q005=1` canonical data gate APPROVED; writer code отсутствует.** Ровно 14 заголовков первых двух таблиц MAP-015 исправлены буквальными значениями без regex/shell substitution. Независимая проверка: P1/P2/P3=0/0/0; 24 Page/25 Route, package 318403 bytes/SHA 86f5ea…, pages f120da…, routes unchanged cc5d32…. Следующий этап — независимое повторное ревью implementation plan, затем отдельное разрешение владельца на код.
+
 > **Текущая точка D-952 (2026-11-13): repeat data review P2=1; paused by anti-loop, no writer code.** R09M-DATA-002 repeated second time: PowerShell expanded Node regex `$1/$2`, corrupting MAP-015 first-two-table headers instead of spacing BR text. DATA-001/003 closed; hashes/counts match. No third remediation. Recommended `DEV09M-Q005=1`: replace exact14 affected header literals through direct JSON patch, no regex/shell substitution, then fresh review.
 
 > **Текущая точка D-951 (2026-11-13): DEV-09M data review P1=1/P2=2 remediated; repeat review next, no writer code.** MAP-010/029 stage labels restored; MAP-024 exact7 ordered items with one bounded nested list; MAP-015 BR spaces and MAP-038 column scopes fixed. New package318209 bytes/SHA a59d13…, pages ce786e…, routes unchanged cc5d32…. No new type/runtime/dependency.

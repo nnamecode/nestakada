@@ -57,6 +57,11 @@ LEADING_PRICE_ROW_COUNTS = (11, 8, 21, 5, 1)
 DIAGNOSTICS_PACKAGE_NAME = 'dev09k_diagnostics_branch.json'
 DIAGNOSTICS_PACKAGE_SHA256 = '9980c60a1a2ee354ef156c7f9695cfc76ec051f798dfe3610a95f3e29c473e67'
 DIAGNOSTICS_PAGES_SHA256 = '21e3965116ada52d91054c0621f220d74545a47bf9502ac2d8cb012bd318266a'
+COMBINED_PACKAGE_NAME = 'dev09m_combined_services.json'
+COMBINED_PACKAGE_SHA256 = '3fb682d6a092d78439fa45b541668554d793490b41eb89d311359738053f8e01'
+COMBINED_PAGES_SHA256 = '0ee0924d71cea90e81ab2596b7b4df6df282ebb6f81998d8b55ff54eea5d8c82'
+COMBINED_ROUTES_SHA256 = 'cc5d3255f01e40098a90fd3a48ff8efe2d4f117026b3c55cdaef16fbe42b6433'
+COMBINED_MANIFEST_SHA256 = '8e89d9db34b3b3e1e34574c933ce12a3ac37d7ebd8a3b68a1d6c7591233c2cfa'
 SERVICE_ROOTS_EXPECTED = (
     ('729b10a3-709e-41c0-a71f-0d376a2b8586', 'MAP-012',
      '/services/remont/', 2, 'Ремонт', 'Ремонт',
@@ -404,6 +409,45 @@ def _read_diagnostics_package(catalog_package=None):
     if catalog_package is None:
         catalog_package = _read_services_package()
     return _validate_diagnostics_package(value, catalog_package)
+
+
+def _read_combined_services_package():
+    package = Path(__file__).resolve().with_name(COMBINED_PACKAGE_NAME)
+    if (package.name != COMBINED_PACKAGE_NAME
+            or package.parent != Path(__file__).resolve().parent):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    nofollow = getattr(os, 'O_NOFOLLOW', None)
+    if nofollow is None:
+        _fault('MIGRATION_PACKAGE_UNSUPPORTED')
+    descriptor = None
+    try:
+        descriptor = os.open(package, os.O_RDONLY | nofollow)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        _combined_enforce_package_bytes(info.st_size)
+        if Path(os.path.realpath(package)) != package:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        with os.fdopen(descriptor, 'rb') as stream:
+            descriptor = None
+            content = stream.read(524289)
+    except ValidationError:
+        raise
+    except (OSError, ValueError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    _combined_enforce_package_bytes(len(content))
+    if (b'\r' in content
+            or hashlib.sha256(content).hexdigest() != COMBINED_PACKAGE_SHA256):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    try:
+        value = json.loads(content.decode('utf-8', errors='strict'),
+                           object_pairs_hook=_pairs)
+    except (UnicodeError, json.JSONDecodeError, RecursionError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return _validate_combined_services_package(value)
 
 
 def _exact_keys(value, expected):
@@ -861,6 +905,306 @@ def _validate_planned_maintenance_package(value, catalog_package):
     return value
 
 
+def _combined_digest(value):
+    encoded = json.dumps(value, ensure_ascii=False,
+                         separators=(',', ':')).encode('utf-8')
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _combined_text(value, *, empty=False):
+    if (type(value) is not str or (not empty and not value)
+            or len(value.encode('utf-8')) > 8192
+            or '<' in value or '>' in value or '{{' in value or '{%' in value):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    schema.text(value, multiline=False)
+    return value
+
+
+def _validate_combined_segments(value):
+    if type(value) is not list or not 1 <= len(value) <= 128:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    for segment in value:
+        _exact_keys(segment, {'text', 'strong'})
+        if type(segment['strong']) is not bool:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        _combined_text(segment['text'])
+
+
+def _validate_combined_list(block, *, map_id, depth=1):
+    _exact_keys(block, {'type', 'items'})
+    if (block['type'] not in ('unordered_list', 'ordered_list')
+            or type(block['items']) is not list
+            or not 1 <= len(block['items']) <= 128):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    for index, item in enumerate(block['items']):
+        allowed = {'segments'}
+        if (map_id == 'MAP-024' and block['type'] == 'ordered_list'
+                and depth == 1 and index == 0):
+            allowed.add('children')
+        _exact_keys(item, allowed)
+        _validate_combined_segments(item['segments'])
+        if 'children' in item:
+            child = item['children']
+            if (type(child) is not list or len(child) != 1
+                    or type(child[0]) is not dict
+                    or child[0].get('type') != 'unordered_list'):
+                _fault('MIGRATION_PACKAGE_INVALID')
+            _validate_combined_list(child[0], map_id=map_id, depth=2)
+
+
+def _validate_combined_table(block):
+    _exact_keys(block, {'type', 'caption', 'header', 'rows'})
+    if block['type'] != 'table':
+        _fault('MIGRATION_PACKAGE_INVALID')
+    if block['caption'] is not None:
+        _validate_combined_segments(block['caption'])
+    if (type(block['header']) is not list
+            or not 1 <= len(block['header']) <= 16
+            or type(block['rows']) is not list
+            or not 1 <= len(block['rows']) <= 128):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    width = sum(cell.get('colspan', 0) if type(cell) is dict else 0
+                for cell in block['header'])
+    if not 1 <= width <= 16:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    _combined_enforce_table_caps(
+        rows=len(block['rows']), columns=width,
+        cells=len(block['header']) + sum(len(row) for row in block['rows']))
+
+    def validate_cell(cell, rows_left):
+        _exact_keys(cell, {'text', 'strong', 'rowspan', 'colspan', 'scope'})
+        if (type(cell['strong']) is not bool
+                or type(cell['rowspan']) is not int
+                or type(cell['colspan']) is not int
+                or not 1 <= cell['rowspan'] <= rows_left
+                or not 1 <= cell['colspan'] <= 16
+                or cell['scope'] not in (None, 'row', 'col')):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        _combined_text(cell['text'])
+
+    for cell in block['header']:
+        validate_cell(cell, 1)
+    occupied = [0] * width
+    for row_index, row in enumerate(block['rows']):
+        if type(row) is not list or not row:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        for cell in row:
+            validate_cell(cell, len(block['rows']) - row_index)
+            try:
+                start = occupied.index(0)
+            except ValueError:
+                _fault('MIGRATION_PACKAGE_INVALID')
+            end = start + cell['colspan']
+            if end > width or any(occupied[start:end]):
+                _fault('MIGRATION_PACKAGE_INVALID')
+            occupied[start:end] = [cell['rowspan']] * cell['colspan']
+        if any(value == 0 for value in occupied):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        occupied = [max(0, value - 1) for value in occupied]
+
+
+def _validate_combined_block(block, *, map_id, section=False):
+    if type(block) is not dict:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    kind = block.get('type')
+    if kind == 'heading' and not section:
+        _exact_keys(block, {'type', 'text'})
+        _combined_text(block['text'])
+    elif kind == 'paragraph':
+        _exact_keys(block, {'type', 'segments'})
+        _validate_combined_segments(block['segments'])
+    elif kind in ('unordered_list', 'ordered_list'):
+        _validate_combined_list(block, map_id=map_id)
+    elif kind == 'table' and not section:
+        _validate_combined_table(block)
+    elif kind == 'ordered_sections' and not section and map_id == 'MAP-041':
+        _exact_keys(block, {'type', 'items'})
+        if type(block['items']) is not list or not 1 <= len(block['items']) <= 32:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        for item in block['items']:
+            _exact_keys(item, {'heading', 'blocks'})
+            _combined_text(item['heading'])
+            if type(item['blocks']) is not list or not item['blocks']:
+                _fault('MIGRATION_PACKAGE_INVALID')
+            for child in item['blocks']:
+                if child.get('type') not in ('paragraph', 'unordered_list',
+                                             'ordered_list'):
+                    _fault('MIGRATION_PACKAGE_INVALID')
+                _validate_combined_block(child, map_id=map_id, section=True)
+    else:
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+
+def _combined_block_stats(block):
+    stats = {'plain': 0, 'blocks': 1, 'items': 0, 'sections': 0,
+             'tables': 0, 'cells': 0}
+
+    def add_text(value):
+        stats['plain'] += len(value.encode('utf-8'))
+
+    kind = block['type']
+    if kind == 'heading':
+        add_text(block['text'])
+    elif kind == 'paragraph':
+        for segment in block['segments']:
+            add_text(segment['text'])
+    elif kind in ('unordered_list', 'ordered_list'):
+        stats['items'] += len(block['items'])
+        for item in block['items']:
+            for segment in item['segments']:
+                add_text(segment['text'])
+            for child in item.get('children', []):
+                child_stats = _combined_block_stats(child)
+                for key in stats:
+                    stats[key] += child_stats[key]
+    elif kind == 'table':
+        stats['tables'] = 1
+        if block['caption'] is not None:
+            for segment in block['caption']:
+                add_text(segment['text'])
+        cells = [*block['header'], *(cell for row in block['rows'] for cell in row)]
+        stats['cells'] = len(cells)
+        for cell in cells:
+            add_text(cell['text'])
+    elif kind == 'ordered_sections':
+        stats['sections'] = len(block['items'])
+        for item in block['items']:
+            add_text(item['heading'])
+            for child in item['blocks']:
+                child_stats = _combined_block_stats(child)
+                for key in stats:
+                    stats[key] += child_stats[key]
+    return stats
+
+
+def _combined_enforce_page_caps(stats):
+    if (stats['plain'] > 65536 or stats['blocks'] > 128
+            or stats['items'] > 256 or stats['sections'] > 32
+            or stats['tables'] > 4):
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+
+def _combined_enforce_table_caps(*, rows, columns, cells):
+    if not 1 <= rows <= 128 or not 1 <= columns <= 16 or cells > 2048:
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+
+def _combined_enforce_package_caps(stats):
+    if stats['blocks'] > 2048 or stats['cells'] > 4096:
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+
+def _combined_enforce_rendered_caps(*, page_bytes=None, package_bytes=None):
+    if ((page_bytes is not None and page_bytes > 131072)
+            or (package_bytes is not None and package_bytes > 2097152)):
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+
+def _combined_enforce_package_bytes(size):
+    if type(size) is not int or not 1 <= size <= 524288:
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+
+def _validate_combined_services_package(value):
+    _exact_keys(value, {'schema', 'policy', 'inputs', 'pages', 'routes'})
+    expected_inputs = {
+        'map_sha256': MAP_SHA256,
+        'evidence_sha256': RTE_SHA256,
+        'identity_manifest_sha256': COMBINED_MANIFEST_SHA256,
+        'page_content_sha256': COMBINED_PAGES_SHA256,
+        'route_content_sha256': COMBINED_ROUTES_SHA256,
+    }
+    if (value['schema'] != 'dev09-combined-services-v1'
+            or value['policy'] != 'reviewed_canonical_structured_data_authority'
+            or value['inputs'] != expected_inputs
+            or type(value['pages']) is not list or len(value['pages']) != 24
+            or type(value['routes']) is not list or len(value['routes']) != 25
+            or _combined_digest(value['pages']) != COMBINED_PAGES_SHA256
+            or _combined_digest(value['routes']) != COMBINED_ROUTES_SHA256):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    page_ids, map_ids, positions, urls = set(), set(), set(), set()
+    package_stats = {'blocks': 0, 'cells': 0}
+    for page in value['pages']:
+        _exact_keys(page, {'page_id', 'map_id', 'url', 'kind', 'parent_id',
+                           'position', 'name', 'h1', 'title', 'description',
+                           'is_published', 'source', 'artifact', 'intro', 'blocks'})
+        _exact_keys(page['source'], {'relative_path', 'sha256'})
+        _exact_keys(page['artifact'], {'relative_path', 'sha256'})
+        if (not _canonical_uuid(page['page_id'])
+                or not _canonical_uuid(page['parent_id'])
+                or page['kind'] not in ('service_section_overview',
+                                        'service_detail',
+                                        'service_wash_legacy_alias')
+                or type(page['position']) is not int or page['position'] < 0
+                or page['is_published'] is not False
+                or type(page['blocks']) is not list
+                or not 1 <= len(page['blocks']) <= 128
+                or re.fullmatch(r'/services/[a-z0-9/-]+', page['url']) is None
+                or '//' in page['url'] or '..' in page['url']):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        for descriptor in (page['source'], page['artifact']):
+            if (type(descriptor['relative_path']) is not str
+                    or re.fullmatch(r'[a-z0-9_./-]+', descriptor['relative_path']) is None
+                    or descriptor['relative_path'].startswith('/')
+                    or '..' in descriptor['relative_path']
+                    or re.fullmatch(r'[a-f0-9]{64}', descriptor['sha256']) is None):
+                _fault('MIGRATION_PACKAGE_INVALID')
+        for field in ('name', 'h1', 'title', 'intro'):
+            _combined_text(page[field])
+        _combined_text(page['description'], empty=True)
+        identity = page['page_id']; position = (page['parent_id'], page['position'])
+        if (identity in page_ids or page['map_id'] in map_ids
+                or position in positions or page['url'] in urls):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        page_ids.add(identity); map_ids.add(page['map_id'])
+        positions.add(position); urls.add(page['url'])
+        page_stats = {
+            'plain': sum(len(page[field].encode('utf-8'))
+                         for field in ('name', 'h1', 'title', 'description', 'intro')),
+            'blocks': 0, 'items': 0, 'sections': 0, 'tables': 0, 'cells': 0,
+        }
+        for block in page['blocks']:
+            _validate_combined_block(block, map_id=page['map_id'])
+            block_stats = _combined_block_stats(block)
+            for key in page_stats:
+                page_stats[key] += block_stats[key]
+            if block.get('type') == 'table':
+                cells = len(block['header']) + sum(len(row) for row in block['rows'])
+                if cells > 2048:
+                    _fault('MIGRATION_PACKAGE_INVALID')
+        _combined_enforce_page_caps(page_stats)
+        package_stats['blocks'] += page_stats['blocks']
+        package_stats['cells'] += page_stats['cells']
+    _combined_enforce_package_caps(package_stats)
+    route_targets = set()
+    route_map_ids = set()
+    route_counts = {page_id: 0 for page_id in page_ids}
+    page_by_id = {page['page_id']: page for page in value['pages']}
+    for route in value['routes']:
+        _exact_keys(route, {'map_id', 'target', 'kind', 'is_legacy', 'page_id'})
+        page = page_by_id.get(route['page_id'])
+        expected_map = (page is not None and (
+            route['map_id'] == page['map_id']
+            if route['kind'] == 'primary'
+            else route['map_id'] == 'MAP-088' and page['map_id'] == 'MAP-115'))
+        if (not expected_map
+                or route['kind'] not in ('primary', 'alias')
+                or route['is_legacy'] is not True
+                or re.fullmatch(r'/services/[a-z0-9/-]+', route['target']) is None
+                or route['target'] in route_targets
+                or route['map_id'] in route_map_ids):
+            _fault('MIGRATION_PACKAGE_INVALID')
+        route_targets.add(route['target']); route_map_ids.add(route['map_id'])
+        route_counts[route['page_id']] += 1
+    primary = {route['page_id']: route['target'] for route in value['routes']
+               if route['kind'] == 'primary'}
+    if (len(primary) != 24
+            or any(primary.get(page['page_id']) != page['url'] for page in value['pages'])
+            or sorted(route_counts.values()) != [1] * 23 + [2]):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return value
+
+
 def _snapshot(page):
     def escaped_text(value):
         return escape(value, quote=False).replace('\u00a0', '&nbsp;')
@@ -988,6 +1332,77 @@ def _service_detail_payload(page):
     return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
 
 
+def _combined_payload(page):
+    def render_segments(segments):
+        return ''.join(
+            ('<strong>' + escape(segment['text'], quote=False) + '</strong>')
+            if segment['strong'] else escape(segment['text'], quote=False)
+            for segment in segments)
+
+    def render_list(block):
+        tag = 'ul' if block['type'] == 'unordered_list' else 'ol'
+        items = []
+        for item in block['items']:
+            children = ''.join(render_list(child)
+                               for child in item.get('children', []))
+            items.append('<li>' + render_segments(item['segments'])
+                         + children + '</li>')
+        return '<' + tag + '>' + ''.join(items) + '</' + tag + '>'
+
+    def render_block(block):
+        kind = block['type']
+        if kind == 'heading':
+            return '<h2>' + escape(block['text'], quote=False) + '</h2>'
+        if kind == 'paragraph':
+            return '<p>' + render_segments(block['segments']) + '</p>'
+        if kind in ('unordered_list', 'ordered_list'):
+            return render_list(block)
+        if kind == 'ordered_sections':
+            return '<ol>' + ''.join(
+                '<li><strong>' + escape(item['heading'], quote=False)
+                + '</strong>' + ''.join(render_block(child)
+                                         for child in item['blocks']) + '</li>'
+                for item in block['items']) + '</ol>'
+        if kind == 'table':
+            caption = ('' if block['caption'] is None else
+                       '<caption>' + render_segments(block['caption']) + '</caption>')
+
+            def cell_html(cell, tag):
+                attrs = ''
+                if cell['rowspan'] != 1:
+                    attrs += ' rowspan="' + str(cell['rowspan']) + '"'
+                if cell['colspan'] != 1:
+                    attrs += ' colspan="' + str(cell['colspan']) + '"'
+                if cell['scope'] is not None:
+                    attrs += ' scope="' + cell['scope'] + '"'
+                text = escape(cell['text'], quote=False)
+                if cell['strong']:
+                    text = '<strong>' + text + '</strong>'
+                return '<' + tag + attrs + '>' + text + '</' + tag + '>'
+
+            header = '<thead><tr>' + ''.join(
+                cell_html(cell, 'th') for cell in block['header']) + '</tr></thead>'
+            rows = '<tbody>' + ''.join(
+                '<tr>' + ''.join(cell_html(cell, 'td') for cell in row) + '</tr>'
+                for row in block['rows']) + '</tbody>'
+            return '<table>' + caption + header + rows + '</table>'
+        _fault('MIGRATION_PACKAGE_INVALID')
+
+    intro = '<p>' + escape(page['intro'], quote=False) + '</p>'
+    main = ''.join(render_block(block) for block in page['blocks'])
+    _combined_enforce_rendered_caps(
+        page_bytes=len(intro.encode('utf-8')) + len(main.encode('utf-8')))
+    if (restricted_clean(intro) != intro
+            or restricted_clean(main) != main):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    payload = initial_snapshot(
+        page['kind'], h1=page['h1'], title=page['title']).data(page['kind'])
+    payload['intro_text'] = intro
+    payload['main_text'] = main
+    payload['description'] = page['description']
+    return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
+
+
 def _diagnostics_payload(page):
     payload = _service_detail_payload(page)
     table = page.get('source_table')
@@ -1069,14 +1484,18 @@ def _preflight_absent(pages):
             _fault('MIGRATION_EXISTING_CONFLICT')
 
 
-def _create_aggregate(page_data, actor, payload):
+def _create_aggregate(page_data, actor, payload, routes=None):
     page = Page.objects.create(
         id=UUID(page_data['page_id']), name=page_data['name'],
         kind=page_data['kind'], parent_id=page_data['parent_id'],
         position=page_data['position'], is_published=False)
-    Route.objects.create(
-        page=page, target=page_data['url'], kind=Route.Kind.PRIMARY,
-        is_legacy=True)
+    if routes is None:
+        routes = [{'target': page_data['url'], 'kind': Route.Kind.PRIMARY,
+                   'is_legacy': True}]
+    for route in routes:
+        Route.objects.create(
+            page=page, target=route['target'], kind=route['kind'],
+            is_legacy=route['is_legacy'])
     revision = engine.new_revision(page, None, payload, PageRevision.Kind.INITIAL,
                                    actor)
     PageContentState.objects.create(
@@ -1109,7 +1528,7 @@ def _exact_event(page_id, actor_id):
             and row.count_is_lower_bound is False)
 
 
-def _exact_aggregate(page_data, actor, payload):
+def _exact_aggregate(page_data, actor, payload, routes=None):
     page_id = UUID(page_data['page_id'])
     page = Page.objects.filter(pk=page_id).first()
     if (page is None or page.name != page_data['name']
@@ -1118,16 +1537,22 @@ def _exact_aggregate(page_data, actor, payload):
             != page_data['parent_id']
             or page.position != page_data['position'] or page.is_published):
         return False
-    routes = list(Route.objects.filter(page=page))
+    actual_routes = list(Route.objects.filter(page=page).order_by('target'))
+    if routes is None:
+        routes = [{'target': page_data['url'], 'kind': Route.Kind.PRIMARY,
+                   'is_legacy': True}]
+    expected_routes = sorted(
+        ((route['target'], route['kind'], route['is_legacy']) for route in routes),
+        key=lambda row: row[0])
     revisions = list(PageRevision.objects.filter(page=page))
     states = list(PageContentState.objects.filter(page=page))
     drafts = list(OwnerDraft.objects.filter(page=page))
-    if len(routes) != 1 or len(revisions) != 1 or len(states) != 1 or len(drafts) != 1:
+    if ([(route.target, route.kind, route.is_legacy) for route in actual_routes]
+            != expected_routes or len(revisions) != 1
+            or len(states) != 1 or len(drafts) != 1):
         return False
-    route, revision, state, draft = routes[0], revisions[0], states[0], drafts[0]
-    if (route.kind != Route.Kind.PRIMARY or route.target != page_data['url']
-            or route.is_legacy is not True
-            or revision.sequence != 1 or revision.kind != PageRevision.Kind.INITIAL
+    revision, state, draft = revisions[0], states[0], drafts[0]
+    if (revision.sequence != 1 or revision.kind != PageRevision.Kind.INITIAL
             or revision.schema_version != payload['schema_version']
             or revision.payload != payload
             or revision.payload_hash != schema.digest(payload)
@@ -1427,3 +1852,123 @@ def apply_planned_maintenance():
             _create_aggregate(page, actor, payload)
         return {'status': 'pass', 'replayed': False, 'pages': len(pages),
                 'published': 0}
+
+
+def _combined_parent_context():
+    catalog_package = _read_services_package()
+    roots_package = _read_service_roots_package()
+    planned_package = _read_planned_maintenance_package(catalog_package)
+    diagnostics_package = _read_diagnostics_package(catalog_package)
+    catalog = catalog_package['page']
+    roots = {page['map_id']: page for page in roots_package['pages']}
+    planned = {page['map_id']: page for page in planned_package['pages']}
+    diagnostics = {page['map_id']: page for page in diagnostics_package['pages']}
+    contracts = {
+        catalog['page_id']: (catalog, _services_payload(catalog)),
+        roots['MAP-012']['page_id']:
+            (roots['MAP-012'], _service_root_payload(roots['MAP-012'])),
+        roots['MAP-014']['page_id']:
+            (roots['MAP-014'], _service_root_payload(roots['MAP-014'])),
+        planned['MAP-011']['page_id']:
+            (planned['MAP-011'], _service_detail_payload(planned['MAP-011'])),
+        diagnostics['MAP-013']['page_id']:
+            (diagnostics['MAP-013'], _diagnostics_payload(diagnostics['MAP-013'])),
+    }
+    return catalog, roots, contracts
+
+
+def _combined_expected_link(page, catalog, roots):
+    if page['map_id'] == 'MAP-010':
+        group = catalog['groups'][0]
+        return {'name': group['name'], 'href': group['href']}
+    if page['parent_id'] == next(
+            candidate['page_id'] for candidate in roots.values()
+            if candidate['map_id'] == 'MAP-014'):
+        if page['position'] in (5, 6):
+            return None
+        return roots['MAP-014']['tiles'][page['position']]
+    if page['parent_id'] == roots['MAP-012']['page_id']:
+        return roots['MAP-012']['tiles'][page['position']]
+    if page['parent_id'] == catalog['page_id'] and page['map_id'] == 'MAP-115':
+        return None
+    if page['parent_id'] == catalog['page_id']:
+        return None
+    group_by_parent = {
+        catalog['groups'][1]['href']: catalog['groups'][1],
+        catalog['groups'][3]['href']: catalog['groups'][3],
+    }
+    for group in group_by_parent.values():
+        if page['url'] in {item['href'] for item in group['items']}:
+            return group['items'][page['position']]
+    return None
+
+
+def apply_combined_services():
+    """Create the reviewed hidden DEV-09M aggregate, or exact-replay it."""
+    _enabled()
+    package = _read_combined_services_package()
+    catalog, roots, parent_contracts = _combined_parent_context()
+    pages = package['pages']
+    routes_by_page = {page['page_id']: [] for page in pages}
+    for route in package['routes']:
+        routes_by_page[route['page_id']].append(route)
+    payloads = [_combined_payload(page) for page in pages]
+    rendered_bytes = sum(
+        len(payload['intro_text'].encode('utf-8'))
+        + len(payload['main_text'].encode('utf-8')) for payload in payloads)
+    _combined_enforce_rendered_caps(package_bytes=rendered_bytes)
+    expected_links = {
+        page['page_id']: _combined_expected_link(page, catalog, roots)
+        for page in pages
+    }
+    group = catalog['groups'][0]
+    for page in pages:
+        if page['parent_id'] == pages[0]['page_id']:
+            expected_links[page['page_id']] = group['items'][page['position']]
+    for page in pages:
+        link = expected_links[page['page_id']]
+        if link is not None and link['href'] != page['url']:
+            _fault('MIGRATION_PARENT_REQUIRED')
+    with transaction.atomic():
+        _identity()
+        lock_content('default')
+        lock_auth()
+        actor = _owner()
+        parent_ids = [UUID(page_id) for page_id in parent_contracts]
+        list(Page.objects.select_for_update().filter(pk__in=parent_ids))
+        list(Route.objects.select_for_update().filter(page_id__in=parent_ids))
+        list(PageContentState.objects.select_for_update().filter(
+            page_id__in=parent_ids))
+        list(PageRevision.objects.select_for_update().filter(
+            page_id__in=parent_ids))
+        list(Page.objects.select_for_update().filter(parent_id__in=parent_ids))
+        if not all(_exact_aggregate(parent, actor, payload)
+                   for parent, payload in parent_contracts.values()):
+            _fault('MIGRATION_PARENT_REQUIRED')
+        page_ids = [UUID(page['page_id']) for page in pages]
+        existing = list(Page.objects.select_for_update().filter(pk__in=page_ids))
+        if len(existing) == len(pages):
+            if not all(_exact_aggregate(
+                    page, actor, payload, routes_by_page[page['page_id']])
+                    for page, payload in zip(pages, payloads, strict=True)):
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            children = {(str(pk), position) for pk, position in
+                        Page.objects.select_for_update().filter(
+                            parent_id=pages[0]['page_id']).values_list('pk', 'position')}
+            expected = {(page['page_id'], page['position']) for page in pages
+                        if page['parent_id'] == pages[0]['page_id']}
+            if children != expected:
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            return {'status': 'pass', 'replayed': True, 'pages': 24,
+                    'routes': 25, 'published': 0}
+        if existing:
+            _fault('MIGRATION_EXISTING_CONFLICT')
+        _preflight_absent(pages)
+        if Route.objects.filter(
+                target__in=[route['target'] for route in package['routes']]).exists():
+            _fault('MIGRATION_EXISTING_CONFLICT')
+        for page, payload in zip(pages, payloads, strict=True):
+            _create_aggregate(
+                page, actor, payload, routes_by_page[page['page_id']])
+        return {'status': 'pass', 'replayed': False, 'pages': 24,
+                'routes': 25, 'published': 0}

@@ -1,5 +1,21 @@
 # Таблица задач
 
+Текущая работа D-961 (2026-11-13): **DEV-09M minimal local implementation COMPLETE/APPROVED.** Final P1/P2/P3=0/0/0; named40/40+public9/21/7+check0+migrations0, containers0. Persistent apply/publication/live excluded and require separate future gate.
+
+Текущая работа D-960 (2026-11-13): **`DEV09M-Q008=1`; exact test-only remediation resumed.** Только recursive/list/sections/package-byte oracles/helper, затем named checks+final review; product/canonical scope unchanged.
+
+Текущая работа D-959 (2026-11-13): **DEV-09M IMP-008 paused owner after repeated R09M-CODE-002 P2.** Implementation/caps logic accepted and named40/40+check0+migrations0 PASS; remaining test-oracle gap repeated2, no third remediation. Await `DEV09M-Q008`; recommended `=1` exact test-only closure then final review.
+
+Текущая работа D-957 (2026-11-13): **`DEV09M-Q007=1` amendment APPROVED; implementation resumed.** Independent P1/P2/P3=0/0/0; one MAP073 header normalized, all21 tables one grammar, no new branch. Next static check then named `dev09-services`.
+
+Текущая работа D-956 (2026-11-13): **DEV-09M implementation paused before tests; canonical MAP073 header mismatch.** Partial approved-file-set code сохранён; DB/foundation untouched. Await `DEV09M-Q007`; recommended `=1` normalize one header row and repeat data/plan reviews, no new exception.
+
+Текущая работа D-955 (2026-11-13): **`DEV09M-Q006=1`; minimal implementation начата.** Scope строго D-954 exact files/existing writer; без новых функций, моделей, зависимостей, publication/live. Следующий checkpoint — focused named `dev09-services` acceptance после code slice.
+
+Текущая работа D-954 (2026-11-13): **DEV-09M plan APPROVED; ожидается owner code gate.** Independent P1/P2/P3=0/0/0; минимальный existing-writer scope подтверждён, product code отсутствует. `DEV09M-Q006=1` recommended для реализации строго по plan; `=2` pause.
+
+Текущая работа D-953 (2026-11-13): **DEV-09M canonical data gate APPROVED; writer code отсутствует.** `DEV09M-Q005=1` исправил только14 MAP015 header literals; independent P1/P2/P3=0/0/0,24 Page/25 Route, package/pages/routes SHA 86f5ea…/f120da…/cc5d32…. Следующий gate: повторное независимое ревью implementation plan, затем отдельное разрешение владельца на код.
+
 Текущая работа D-952 (2026-11-13): **repeat data review P2=1; приостановлено по anti-loop, writer code отсутствует.** DATA-002 repeated2: PowerShell expanded Node `$1/$2` and corrupted MAP015 first-two-table headers. DATA-001/003 closed; hashes/counts match. Recommended `DEV09M-Q005=1`: literal-only14-header JSON patch, no regex/shell substitution, then fresh review.
 
 Текущая работа D-942 (2026-11-13): **DEV-09M exact25 combined service selection готов; code not started.** From map115/packages75, formal40 remainder reduces to25 service URLs after already-closed gallery2, separately gated public3 and no-design legacy10. Recommended one hidden atomic existing-layer pass with closed blocks/source prices, no importer/schema/runtime bloat. Owner `1|2` required.
@@ -804,7 +820,7 @@ DEV-20, 2026-11-02: завершён в согласованной локаль�
 | DEV-08G | Подключить standalone Page images без нового media слоя | Выполнено: D-718; repeat review APPROVED | DEV-08F, D-708–D-718, DEV-06/07 media contracts | Existing media layer, exact context/MIME/coherence, bounded64/64 и queryless compatibility. Public-image17/17, shared-public10/10, layout16/16, guard268/268, Django/migrations/diff PASS. `docs/dev08-public-page-media-plan.md`. |
 | DEV-08H | Подключить approved service main-image hero без нового media слоя | Завершено: D-723; repeat review APPROVED | DEV-08G, D-148–D-208, D-235, D-257 | Hero только для service detail/section, in-flow copy без clipping; WASH/article/catalog/preview excluded. Public-image20/20, shared-public10/10, public-layout18/18, guard271/271, Django/migrations/diff PASS. `docs/dev08-public-hero-plan.md`. |
 | DEV-08I | Добавить утверждённые хлебные крошки без второго дерева | Завершено: D-726; code review APPROVED | DEV-08H, D-147/D-149–D-217, D-239/D-240 | Pure existing-snapshot projection; alias primary links, hidden promotion, semantic/escaped/responsive, malformed chain503. Public-nav7/7, layout18/18, guard272/272, Django/migrations/diff PASS. `docs/dev08-public-breadcrumbs-plan.md`. |
-| DEV-09 | Перенести структуру, тексты, прайсы и медиа | M data paused D-952; owner resume | DEV-08, DEV-06, MIG-01, UX-07, MEDIA-06, INFOGRAPHICS-01, D-781/D-784–D-803/D-942–D-952 | repeated MAP015 header P2 attempts2/no third; literal-only patch requires owner resume. Other data findings closed; writer/persistent apply/publication absent |
+| DEV-09 | Перенести структуру, тексты, прайсы и медиа | M minimal local complete D-961 | DEV-08, DEV-06, MIG-01, UX-07, MEDIA-06, INFOGRAPHICS-01, D-781/D-784–D-803/D-942–D-961 | canonical24 hidden Page/25 Route writer+tests independently APPROVED; named40/40+public9/21/7+check/migrations PASS; persistent apply/publication/live absent and separately gated |
 | DEV-09A | Проверить целостность migration MAP/RTE/source до импорта | Завершено: D-729; code review APPROVED | DEV-08I, DEV-09, TECH-07, READY-04/MIG-01 | Fixed read-only host preflight PASS:115 MAP/115 RTE/114 source SHA,81 integrity-ready/34 blockers, bounded blocked JSON; no DB/network/write/import. `docs/dev09-migration-preflight-plan.md`. |
 | DEV-09B | Подготовить первый скрытый пакет переноса статей | Завершено: D-734; repeat code review APPROVED | DEV-09A, D-729, MAP-001/MAP-006/MAP-031 | Exact hidden three-page package PASS: deferred2, source-text1, writes0/published0; strict hashes/path/grammar/canonical checks; no DB/importer. `docs/dev09-articles-slice-plan.md`. |
 | DEV-09C | Атомарно применить первый пакет в изолированную БД | Завершено: D-741; repeat code review APPROVED | DEV-09B, D-734 | UNIT-only atomic hidden create/exact replay; focused17/17, guard289/289, Django/migrations/diff PASS; no persistent apply. `docs/dev09-articles-apply-plan.md`. |
