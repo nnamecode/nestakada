@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1002 (2026-11-14): DEV-11 exact10 mapped to completed local SEO evidence.** Metadata/media/sitemap/robots/gallery and safe optional JSON-LD are partial; production migration/profile/crawl, real company facts and deferred emergency delivery keep full PASS0. No external runtime; TEST-08/stage9 closed.
+
 > **Текущая точка D-1001 (2026-11-14): DEV-29 exact9 mapped to simple REF-05H–N replacement evidence.** Local tree/publication/direct-URL/delete behavior is partial; migrated production/advertising/emergency/external-prohibition gates keep full PASS0. Heavy TRUST runtime remains stopped; TEST-08/stage9 closed.
 
 > **Текущая точка D-1000 (2026-11-14): DEV-07 exact8 mapped after explicit owner resume.** Exact-path inventory resolved D-999 without wildcard retry; completed local editor/shared/security/quota evidence is partial, while production/import/cache/physical faults/TEST-09/10 keep full PASS0. No product expansion; TEST-08/stage9 closed.

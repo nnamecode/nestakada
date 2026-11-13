@@ -1,5 +1,25 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-1002: DEV-11 exact10 evidence mapping
+
+`AC-010` / `AT-010` and `AC-DTL-003` / `AT-103` have executed local partial evidence across typed Page snapshots, simple creation and public metadata: title/H1/description boundaries are closed, empty description omits the meta tag, literal values are escaped, and later name/body changes do not become SEO authority. Full old-value migration inventory, persistent apply and the complete owner accept/reject suggestion flow remain.
+
+`AC-011` / `AT-011` has executed local partial evidence for explicit preview image → main image → none, with exact CURRENT_PAGE usage, READY variant, physical-byte and recapture checks; random embedded images are not selected. Noindex emits the approved header and omits canonical/og:url, while publication is separate. The confirmed common fallback image, persistent legacy settings and final owner UI remain.
+
+`AC-061` / `AT-061` is a locally executed aggregate partial: canonical/Open Graph/X-Robots, coherent bounded sitemap, fixed robots profiles, gallery special routes, safe optional AutoRepair serialization and alt/media authorization are covered. Full launch data, production profile, enabled real AutoRepair facts, emergency SEO behavior and all special/legacy URLs remain.
+
+`AC-SEO-001` / `AT-601` has executed local partial HTTP/projection evidence: trusted configured origin, ordinary self-canonical, exact CONTENT-WASH peer mapping, gallery canonical matrix, foreign Host/query/fragment refusal and both required wash URLs remaining200 are covered. The historical114-page canonical inventory and persistent migrated publication remain.
+
+`AC-SEO-002` / `AT-602` has executed local partial sitemap evidence: published indexable canonical representatives are captured coherently from bounded Page/PRIMARY/ALIAS/state/current-revision sets; hidden/noindex/redirect/unknown aliases are excluded, change races fail503 and cap overflow does not truncate XML. Production data, final external crawl and launch scheduling/serving remain.
+
+`AC-SEO-003` / `AT-603` has executed local partial evidence for exact deny-all and production robots bytes, allowed gallery query rules, no internal inventory, trusted-origin independence, HEAD and method boundaries, plus hidden/noindex HTTP headers. Actual production selection, proxy/static exposure and an external crawler check remain.
+
+`AC-SEO-004` / `AT-604` has executed local partial evidence across DEV-10 root, direct `?page=2`, modal and17 album routes plus the closed canonical matrix: page2 is not redirected and album pages do not self-authorize the root incorrectly. Persistent gallery publication, confirmed page1 chain and complete launch crawl remain.
+
+`AC-SEO-005` / `AT-605` has executed local negative/synthetic partial evidence: AutoRepair is absent by default, appears only for a coherent confirmed visible profile, uses a deterministic script-boundary-safe JSON-LD serializer, and editor/media rules protect schema/alt/viewport inputs. The real company profile intentionally remains disabled pending confirmed contacts; actual214 SHA and production page observation remain separate gates.
+
+`AC-SEO-006` / `AT-606` has executed local partial construction evidence from DEV-11 metadata rules and DEV-25 exact reserve responses: noindex/canonical metadata is frozen coherently and invalid data fails closed. No running DEV-26 controller serves redirect/current/503 decisions during a real Django/DB failure, so the complete emergency scenario remains deferred. Full PASS0; automation states/executable IDs remain unchanged, and no AutoRepair/contact/external runtime is enabled.
+
 ### D-1001: DEV-29 exact9 evidence mapping
 
 `AC-002` / `AT-002` has executed local partial public HTTP evidence for unknown, deleted and hidden page states, including fail-closed damaged routes/content and navigation suppression. Production cache/intermediary behavior, conditional-request leakage across every state and the emergency delivery path remain.

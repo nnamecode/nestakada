@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1002 (2026-11-14): **DEV-11 exact10 TEST-07 mapping complete; all executed local partial, full PASS0.** SEO metadata/media/sitemap/robots/gallery/safe optional JSON-LD evidence mapped; production migration/profile/crawl, real company facts and DEV-26 emergency path remain. No external runtime enabled.
+
 Текущая работа D-1001 (2026-11-14): **DEV-29 exact9 TEST-07 mapping complete; all executed local partial, full PASS0.** Simple REF-05H–N tree/publication/URL/delete replacement mapped; migrated production tree, advertising inventory, emergency/external prohibition/tombstone paths remain. No heavy TRUST restoration.
 
 Текущая работа D-1000 (2026-11-14): **DEV-07 exact8 TEST-07 mapping complete after owner resume; all executed local partial, full PASS0.** Exact-path inventory resolved D-999 without wildcard retry. Editor/shared/security/quota evidence mapped; production/import/cache/physical fault/TEST-09/10 remain. No feature expansion.
