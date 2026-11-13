@@ -1,5 +1,17 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-997: DEV-25 exact6 evidence mapping
+
+`AC-047` / `AT-047` has executed local partial evidence: the owner-triggered synchronous build captures only published public dependencies, excludes history/admin/requests, rejects A/B source drift before activation and atomically keeps validated current/previous generations with exact retained media. A night-only schedule, proof that daytime changes never trigger a build, production durability and operational execution remain; DEV-25 intentionally contains no scheduler or worker.
+
+`AC-048` / `AT-048` and `AC-HTML-008` / `AT-208` have executed local partial rendering/security evidence: reserve rendering is anonymous and unconditional, emits no working form, intent, CSRF token, private/admin/history data or external embedded channel, and the combined exact-set test preserves inert external navigation. Actual fallback POST behavior without/with JS, an already-open tab, a lost POST response, browser-persistence inspection and proof of no Telegram/email/other receiver require the not-activated DEV-26 delivery path and remain open.
+
+`AC-HTML-005` / `AT-205` has executed local partial evidence: bounded public source descriptors/stamps cover page, shared, route, price and resource inputs; a second capture under the content lock rejects drift, including a real PostgreSQL mutation race, so an inconsistent generation is not activated. The complete simultaneous page/shared/price/unpublish matrix in a production-like build remains.
+
+`AC-HTML-006` / `AT-206` has executed local partial evidence across immutable staging/generation storage, retained-reference transactions, pre/post-replace faults, child-process crash/reopen, cleanup refusal on ambiguity and current/previous preservation. Physical disk exhaustion at every named preparation/validation/retention/activation/cleanup phase and proving that a served previous set cannot bypass a revoked allowance remain; DEV-26 delivery is absent.
+
+`AC-PRO-012` / `AT-412` has executed local partial evidence by combining DEV-12 stable-ID/frozen-home behavior with DEV-25 exact route/status generation and disabled reserve form. It does not demonstrate a real Django/DB outage, Nginx selection of the nightly home copy, the deleted route returning 404 through that fallback, or the full TEST-10 path. The frozen DEV25-IMP-007 evidence is exact44/44; final bounded remediation brought DEV-25 to52/52 and independent review `APPROVED`. Full PASS0; automation states/executable IDs remain unchanged, and no scheduler/controller/Nginx/live feature is added.
+
 ### D-996: DEV-14 exact5 evidence mapping
 
 `AC-033` / `AT-033` has executed local partial evidence for the later approved D-596 model: owner and employee read-only list/detail, anonymous denial before data, escaped private/no-store responses and bounded pagination/query. Its older assigned-only/assignee/foreign-card oracle conflicts with D-596 employee access to all requests and cannot be promoted without requirements reconciliation. Telegram body safety is covered only by synthetic notification boundaries, not live delivery.

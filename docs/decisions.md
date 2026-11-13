@@ -1,5 +1,7 @@
 # Принятые решения
 
+Статус D-997 (2026-11-14): DEV-25 exact6 (`AC-047`,`AC-048`,`AC-HTML-005/006/008`,`AC-PRO-012`) mapped to completed local manual HTML-reserve evidence. Published-only source stamps, locked recapture/drift refusal, atomic current/previous, retained media, fault/crash recovery and disabled-form exact set are executed local partial. Night scheduling/daytime non-trigger, physical full-disk at every phase and actual fallback POST/Nginx/outage/TEST-10 remain; full PASS0. Frozen exact44/44 and final remediated52/52 evidence are distinguished; states/IDs unchanged and no scheduler/controller/Nginx/live expansion is added.
+
 Статус D-996 (2026-11-14): DEV-14 exact5 (`AC-033–036`,`AC-DTL-013`) reconciled against later D-596/minimal DEV-13 scope. Owner+employee read-only request list/detail is executed local partial, but AC-033 assigned-only oracle conflicts with D-596 all-request employee visibility. Status/assignee/notes/history/reopen AC branches were explicitly removed and remain assertion-only/deferred or requirements-conflict. Full PASS0; acceptance oracles are not silently rewritten and no CRM subsystem is restored.
 
 Статус D-995 (2026-11-14): DEV-06 exact5 (`AC-026–029`,`AC-DTL-007`) mapped to executed local media/upload/path/replace/cleanup evidence. Real codec/HTTP/FS/PG/editor/version/HTML-reserve guards provide local partial coverage; production storage/worker transport, whole214+all published consumers and release fault/risk gates remain. Full PASS0; no new media subsystem/product/live change, states/IDs unchanged.
