@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1014 (2026-11-14): five explicit acceptance conflicts routed to stable OWNER-CONFLICT-Q001–Q005, not decided.** Recommended all=1 preserves minimal D-595/596/859/896/923 and avoids assignment/history/password/state-machine/receipt subsystems. Next gate: explicit owner answer; no code/status change before it.
+
 > **Текущая точка D-1013 (2026-11-14): LAUNCH-IN-006 minimal managed-monitor choice defined; provider and protected readiness channel absent.** Public GET does not replace app/DB check; no custom monitoring stack/agent/controller is added. Next gate: owner chooses provider from seven facts, then separate minimal readiness-channel design.
 
 > **Текущая точка D-1012 (2026-11-14): LAUNCH-IN-005 minimal external-backup choice defined provider-neutral; provider not selected.** Existing two local points remain partial; required seven external encrypted points/separate key/full restore unchanged. Next gate: owner chooses managed storage from seven facts; no custom platform/service setup.

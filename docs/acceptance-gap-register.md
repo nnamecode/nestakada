@@ -13,6 +13,20 @@
 - Отложенный DEV-26/27 и внешний revoke/head/controller protocol: `AC-046`, `AC-HTML-003`, `AC-HTML-004`, `AC-HTML-009`, `AC-HTML-012`, `AC-OPS-003`, `AC-OPS-005`, `AC-PRO-006`, `AC-PRO-007`, `AC-PRO-008`, `AC-PRO-009`.
 - Отложенный optional analytics runtime: `AC-057`.
 
+### Пять явных конфликтов oracle
+
+Это предложения для отдельного решения владельца, не уже принятые изменения. Вариант 1 в каждом вопросе рекомендуется по постоянному no-bloat правилу D-923; вариант 2 означает вернуть отдельный тяжёлый объём с новым планом/приёмкой.
+
+| ID | AC | Вариант 1 — рекомендуется | Вариант 2 |
+| --- | --- | --- | --- |
+| `OWNER-CONFLICT-Q001` | `AC-033` | Сохранить D-596: любой активный сотрудник видит все заявки read-only; удалить из oracle назначения, «только свои» и чужую карточку как отдельную модель прав | Вернуть assignee-модель и assigned-only доступ |
+| `OWNER-CONFLICT-Q002` | `AC-036` | Отключение сотрудника немедленно закрывает доступ; заявки остаются владельцу без reassignment/status/history, повторное включение возвращает обычный D-596 read-only доступ ко всем | Вернуть назначения, статусы, историю и правила переназначения |
+| `OWNER-CONFLICT-Q003` | `AC-037` | Сохранить D-595: owner-session + CSRF + POST + подтверждение конкретной заявки без повторного пароля; остальные запреты/tombstone сохраняются | Вернуть повторный ввод пароля перед удалением |
+| `OWNER-CONFLICT-Q004` | `AC-049` | Сохранить D-896/D-923: DEV-26/27 отложены; при будущем возобновлении normal upstream сразу приоритетен per request, без two-success state machine и recovery notification | Вернуть двухуспешный stateful recovery-контроллер |
+| `OWNER-CONFLICT-Q005` | `AC-DTL-011` | Сохранить D-859: bounded one-time intent/idempotency без отдельного 30-minute issuance + 24-hour receipt lifecycle | Вернуть долговечный receipt/cache lifecycle 30m/24h |
+
+Пакетный ответ `OWNER-CONFLICT-Q001–Q005=1` принимает все пять рекомендуемых минимальных вариантов. До такого ответа старые строки остаются конфликтными, а не автоматически переписанными.
+
 ## 2. Launch/external gates — 92
 
 Это основной выпускной остаток: persistent apply/publication, реальные импортированные данные, LEGAL/RKN/SMTP/contacts/advertising export, production HTTPS/proxy/storage, внешние backup/monitoring/notifications/analytics, фактический Nginx fallback и launch smoke. Он не разрешает deployment или сбор реальных ПД без отдельного gate.

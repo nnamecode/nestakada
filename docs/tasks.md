@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1014 (2026-11-14): **five explicit oracle conflicts prepared as OWNER-CONFLICT-Q001–Q005; no decision/status change.** Variant1 for all keeps later minimal no-bloat D-595/596/859/896/923; variant2 restores separate heavy subsystems. Next required gate: explicit owner answer, recommended `OWNER-CONFLICT-Q001–Q005=1`.
+
 Текущая работа D-1013 (2026-11-14): **LAUNCH-IN-006 provider-neutral monitoring facts recorded; provider/readiness channel not chosen.** One managed external service recommended, no custom stack/agent/controller. Public GET is insufficient; protected app/DB readiness remains separate future gate. Next external choice: provider matching seven facts; IN-006 remains open.
 
 Текущая работа D-1012 (2026-11-14): **LAUNCH-IN-005 provider-neutral selection facts recorded, provider not chosen.** Seven external encrypted points/separate key/full restore kept; managed storage recommended over custom server, no service/tool/UI added. Next external choice: provider matching seven facts; IN-005 remains open.
