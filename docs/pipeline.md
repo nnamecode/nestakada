@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1013 (2026-11-14): LAUNCH-IN-006 minimal managed-monitor choice defined; provider and protected readiness channel absent.** Public GET does not replace app/DB check; no custom monitoring stack/agent/controller is added. Next gate: owner chooses provider from seven facts, then separate minimal readiness-channel design.
+
 > **Текущая точка D-1012 (2026-11-14): LAUNCH-IN-005 minimal external-backup choice defined provider-neutral; provider not selected.** Existing two local points remain partial; required seven external encrypted points/separate key/full restore unchanged. Next gate: owner chooses managed storage from seven facts; no custom platform/service setup.
 
 > **Текущая точка D-1011 (2026-11-14): LAUNCH-IN-002 old FirstVDS facts reconciled, current no-secret panel facts still absent.** Existing KVM/Москва/preliminary4vCPU/8GiB/80GiB/CentOS7-template snapshot is not production proof. Next gate: owner read-only five-fact panel capture; no SSH/VPS change/reinstall/delete.
