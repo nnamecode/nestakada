@@ -1,5 +1,11 @@
 # Продолжение подготовки тестов и независимого ревью TEST-07
 
+### D-982: LEGAL-01 and MONITOR-01 exact2 evidence mapping
+
+`AC-058` / `AT-058` имеет local partial factual evidence: `docs/legal-form-drafts.md` фиксирует реквизиты ООО «Эстакада», состав/цель/сроки данных, выключенный intake и проекты отдельного согласия/политики; COOKIE-Q001 подтверждает первый запуск без Метрики/Яндекс/YouTube и без преждевременного consent manager. Full AC blocked до LEGAL-Q007–010, проверки FirstVDS/RKN/SMTP/external backup, профильного legal review, постоянных URL и фактической launch-конфигурации.
+
+`AC-OPS-004` / `AT-304` имеет только design/assertion evidence: PR-03 разделяет local/external five-minute readiness streams и честно считает288+288=576 HTTP/SELECT в сутки; `acceptance-fallback-contracts.md` требует real I/O/virtual clock и запрещает подменять его арифметикой. Full AC blocked: внешний monitoring service/access/state placement/delivery не выбраны, реальные576 probes и fault-stand не исполнялись. Ни один сценарий не повышен до PASS; states/IDs не меняются.
+
 ### D-981: DEV-23 single-AC evidence mapping
 
 `AC-044` / `AT-044` сопоставлен с `docs/ref6-local-restore-check-results.md`. REF-06G реально восстановил оба immutable generation `current|previous` в одноразовую network-none DB/media среду:42 tables,30 migrations,15 media files/6240 bytes; SHA/archive/path проверки, transactional `pg_restore`, unchanged main DB/catalog и zero residual containers/networks/volumes подтверждены, independent review APPROVED. Это local partial evidence. Full AC остаётся открыт для owner-confirmed production procedure, admin и external break-glass path, safety/rollback, tombstone/deletion ledger, session/rights reset, code-version compatibility и HTTP/public smoke. Первое чтение ошиблось только именем файла; после поиска фактического tracked path одинаковая ошибка не повторялась.

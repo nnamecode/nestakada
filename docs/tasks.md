@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-982 (2026-11-13): **LEGAL-01 + MONITOR-01 exact2 TEST-07 mapping complete; full PASS0.** AC-058 is factual-draft/local partial and external/legal blocked; AC-OPS-004 is design-only and provider/real-I/O blocked. No consent manager, monitoring service or automation added.
+
 Текущая работа D-981 (2026-11-13): **DEV-23 exact1 TEST-07 evidence mapping complete; AC-044 local partial, full PASS0.** REF-06G executed isolated current/previous restore checks with zero main/catalog mutation or residue; production/admin/external recovery and destructive-recovery safeguards remain.
 
 Текущая работа D-980 (2026-11-13): **DEV-22 exact1 TEST-07 evidence mapping complete; AC-043 local partial/external blocked, full PASS0.** REF-06F proves two local immutable generations and last-good integrity; external encryption/key/schedule/faults/restore remain. No backup-platform expansion.
