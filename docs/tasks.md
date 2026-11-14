@@ -1,5 +1,13 @@
 # Таблица задач
 
+Текущая работа D-1052 (2026-11-14): **TEST-10A canonical registry stage APPROVED, P1/P2/P3=0/0/0.** Exact9/amended action order, 40 binding contracts, payload/body SHA, UI steps, fixture mapping и 6 observer contracts проходят PS5 validator679/679. Readiness=false и все bindings/observers unbound, поэтому Q003/execution закрыты. Следующий bounded этап: write-once evidence writer only + review.
+
+Текущая работа D-1051 (2026-11-14): **AC-015 action order corrected after new review P1=1.** Positive explicit save теперь до owner revoke; revoked denial остаётся отдельной последующей negative branch. Новых actions/routes/functions нет; repeat review required, readiness false/Q003 closed.
+
+Текущая работа D-1050 (2026-11-14): **TEST-10A registry amendment in progress после second review P1=2/P2=2/P3=0.** Добавляются только old/new login split, exact grant-revoke transitions, closed UI steps и fixture placeholder mapping; D-1047 action arrays/route family уточнены. Registry readiness false; code/fixture/Q003/writer/Docker/browser/HTTP/live закрыты.
+
+Текущая работа D-1049 (2026-11-14): **TEST-10A registry stage in remediation после first review P1=2/P2=3/P3=1.** Три tracked registry и offline validator существуют, но readiness честно false и все bindings/observers unbound. Исправляются только public Header/Footer surface, payload/body hashes, observer contract и fail-closed PS5-compatible validation; Q003/writer/execution/Docker/browser/HTTP закрыты.
+
 Текущая работа D-1048 (2026-11-14): **упрощён owner confirmation protocol.** «Продолжай»/«почини и продолжай» разрешают ближайший предложенный bounded этап без ввода ID; внутренние IDs сохраняются. Risky external/destructive/live/push scope требует отдельного явного разрешения. Техническая точка остаётся D-1047: registry stage ещё не начат.
 
 Текущая работа D-1047 (2026-11-14): **exact current-Chrome manifest proposal independently APPROVED, P1/P2/P3=0.** Следующий этап только после нового owner gate: три canonical hashed registry и offline tests. Writer/execution/Q003/Docker/Foundation/browser/direct HTTP закрыты.

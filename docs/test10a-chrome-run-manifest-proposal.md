@@ -1,6 +1,6 @@
 # TEST-10A — exact current-Chrome run manifest proposal
 
-Статус D-1047, 2026-11-14. Proposal одного будущего current-Chrome run прошёл повторное independent review: `APPROVED`, P1=0, P2=0, P3=0. Он не является run manifest, не создаёт fixture/stand/evidence и не разрешает Docker, Foundation, browser execution, direct HTTP или acceptance promotion. `TEST10-Q003` закрыт до реализации/review трёх registry и writer, затем отдельного owner gate.
+Статус D-1052, 2026-11-14. Amendment и три canonical registry прошли independent review: `APPROVED`, P1=0, P2=0, P3=0. Exact action arrays уточнены explicit grant-revoke transitions без нового продуктового поведения. Документ не является run manifest, не создаёт fixture/stand/evidence и не разрешает Docker, Foundation, browser execution, direct HTTP или acceptance promotion. Все 40 bindings и 6 observers пока `unbound`, `registryReady=false`; `TEST10-Q003` закрыт до реализации/review writer и фактических bindings/observers, затем отдельного owner gate.
 
 ## Closed identity
 
@@ -23,10 +23,10 @@ CLI не принимает произвольные paths, browser flags, URLs,
 |---:|---|---|---|
 | 1 | `T10C-AC013` | `AC-013` | `UI-013-SAFE`, `HTTP-013-ACTIVE`, `HTTP-013-HEADER`, `HTTP-013-FOOTER`, `UI-013-POSITIVE` |
 | 2 | `T10C-AC014` | `AC-014` | `UI-014-OWNER-RESET`, `HTTP-014-OLD-SESSIONS`, `HTTP-014-SELF-CHANGE`, `HTTP-014-SELF-RECOVERY`, `UI-014-NEW-LOGIN`, `OBS-014-SECRET-SINKS` |
-| 3 | `T10C-AC015` | `AC-015` | `UI-015-UNSAVED`, `HTTP-015-IDLE1801`, `HTTP-015-ABS43201`, `UI-015-RELOGIN`, `HTTP-015-OTHER-DENY`, `HTTP-015-REVOKED-DENY`, `UI-015-EXPLICIT-SAVE` |
+| 3 | `T10C-AC015` | `AC-015` | `UI-015-UNSAVED`, `HTTP-015-IDLE1801`, `HTTP-015-ABS43201`, `UI-015-RELOGIN`, `HTTP-015-OTHER-DENY`, `UI-015-EXPLICIT-SAVE`, `UI-015-OWNER-REVOKE`, `HTTP-015-REVOKED-DENY` |
 | 4 | `T10C-AC021` | `AC-021` | `UI-021-HISTORY`, `UI-021-OWNER-CONTROL`, `HTTP-021-VISITOR`, `HTTP-021-S-OTHER`, `OBS-021-CACHE` |
 | 5 | `T10C-AC022` | `AC-022` | `UI-022-COMPARE`, `UI-022-CANCEL`, `UI-022-STAGE`, `UI-022-SAVE`, `UI-022-OWNER-CONTROL`, `OBS-022-PROTECTED-UNCHANGED` |
-| 6 | `T10C-AC023` | `AC-023` | `UI-023-INCOMPATIBLE`, `UI-023-REVOKED`, `UI-023-COMPATIBLE-CONTROL` |
+| 6 | `T10C-AC023` | `AC-023` | `UI-023-INCOMPATIBLE`, `UI-023-COMPARE-BEFORE-REVOKE`, `UI-023-OWNER-REVOKE`, `UI-023-REVOKED`, `UI-023-COMPATIBLE-CONTROL` |
 | 7 | `T10C-DTL004` | `AC-DTL-004` | `UI-104-NORMALISE`, fixed payloads `P104-1M`, `P104-TEXT200K`, `P104-NODES20K`, `P104-DEPTH32`, `P104-ACTIVE-SET`, `UI-104-POSITIVE` |
 | 8 | `T10C-DTL006` | `AC-DTL-006` | `UI-106-SAFE-LINKS`, fixed payload set `P106-UNSAFE-SET`, `HTTP-106-PROTECTED-SET`, `OBS-106-CLIENT-NETWORK`, `OBS-106-SERVER-EGRESS`, `UI-106-POSITIVE` |
 | 9 | `T10C-DTL018` | `AC-DTL-018` | fresh branches `UI-118-VALIDATION`, `UI-118-EXPIRY`, `UI-118-CONFLICT`, `OBS-118-BROWSER-STORAGE` |
@@ -35,7 +35,7 @@ CLI не принимает произвольные paths, browser flags, URLs,
 
 Текущие IDs — scope labels, не готовые bindings. До предложения Q003 обязательны три отдельные tracked canonical JSON registry и independent review с P1/P2/P3=0:
 
-1. `bindings`: для каждого action фиксирует `kind=ui|http`, actor/context, literal route template, HTTP method, payload ID или UI steps, expected status/class, exact mutation/non-mutation fields и positive control. Допустимые route templates только `/manage/pages/{page}/edit/`, `/manage/pages/{page}/edit/check/`, `/manage/pages/{page}/edit/save/`, `/manage/pages/{page}/versions/…`, `/manage/employees/{employee}/password/`, `/manage/login/`, `/manage/shared/{header|footer}/…`, fixture public route `/test10/assigned/` и exact guessed Header/Footer public paths из registry. UUID/int placeholders разрешаются только из fixture `identifiers`, не из CLI.
+1. `bindings`: для каждого action фиксирует `kind=ui|http`, actor/context, literal route template, HTTP method, payload ID или UI steps, expected status/class, exact mutation/non-mutation fields и positive control. Допустимые route templates только `/manage/pages/{page}/edit/`, `/manage/pages/{page}/edit/check/`, `/manage/pages/{page}/edit/save/`, `/manage/pages/{page}/versions/…`, `/manage/employees/{employee}/password/`, `/manage/employees/{employee}/grants/`, `/manage/login/`, `/manage/shared/{header|footer}/…`, fixture public route `/test10/assigned/` и exact guessed Header/Footer public paths из registry. UUID/int placeholders разрешаются только из fixture `identifiers`, не из CLI. В AC-015 same-user positive explicit save выполняется до owner revoke; revoked denial — следующая отдельная negative branch. Для AC-023 revoke выполняется после отдельного successful compare и до rejected restore; compatible control начинается на fresh branch, а не после revoke.
 2. `payloadRegistry`: canonical UTF-8 JSON/body bytes и SHA-256 для каждого `P104-*`, `P106-*` и direct-request body. Свободный HTML/URL/body запрещён.
 3. `observerRegistry`: source file/function identity, input binding, exact sink set/origin set и output schema для каждого `OBS-*`.
 

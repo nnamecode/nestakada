@@ -1,0 +1,115 @@
+{
+  "schema": "test10a-payload-registry-v1",
+  "encoding": "utf-8",
+  "canonicalJson": true,
+  "placeholderBindings": [
+    {"token":"{identifiers.page}","receiptPath":"summary.identifiers.page","type":"uuid"},
+    {"token":"{identifiers.currentRevision}","receiptPath":"summary.identifiers.currentRevision","type":"uuid"},
+    {"token":"{identifiers.historicalRevision}","receiptPath":"summary.identifiers.historicalRevision","type":"uuid"},
+    {"token":"{identifiers.incompatibleRevision}","receiptPath":"summary.identifiers.incompatibleRevision","type":"uuid"},
+    {"token":"{identifiers.editUser}","receiptPath":"summary.identifiers.editUser","type":"positive-int"},
+    {"token":"{content.payload}","receiptPath":"binding.contentPayload","type":"canonical-registry-bytes"}
+  ],
+  "privateReferences": [
+    {"label":"OLD-SYNTHETIC-SECRET","source":"private.passwords.S-EDIT"},
+    {"label":"NEW-SYNTHETIC-SECRET","source":"run-private.generatedNextPassword.S-EDIT"}
+  ],
+  "payloads": [
+    {
+      "id": "P013-SAFE",
+      "kind": "literal-html",
+      "value": "<h2>EDITOR-SAFE-HEADING</h2><p>EDITOR-SAFE-PARAGRAPH <strong>важно</strong> <em>пояснение</em></p><ul><li>EDITOR-SAFE-LIST</li></ul><table><caption>EDITOR-SAFE-TABLE</caption><thead><tr><th scope=\"col\">Элемент</th><th scope=\"col\">Описание</th></tr></thead><tbody><tr><td>EDITOR-SAFE-CELL</td><td>Текст без цены</td></tr></tbody></table>",
+      "sha256": "d66dabef68b47f2352978324c3abf22c41195c392d16275c84580870f4b670b2"
+    },
+    {
+      "id": "P104-1M",
+      "kind": "boundary-pair",
+      "generator": "repeat",
+      "unit": "a",
+      "exactCount": 1048576,
+      "plusOneCount": 1048577,
+      "exactSha256": "9bc1b2a288b26af7257a36277ae3816a7d4f16e89c1e7e77d0a5c48bad62b360",
+      "plusOneSha256": "4a3f0c0c213adea174f9a3d4c13177315b588bdb2e9c1012d3d0bf0453ca0f6a"
+    },
+    {
+      "id": "P104-TEXT200K",
+      "kind": "boundary-pair",
+      "generator": "repeat",
+      "unit": "a",
+      "exactCount": 200000,
+      "plusOneCount": 200001,
+      "exactSha256": "2287d207f24a941ff3b56c04c8a25ad56b63e3023207b3bb5b4ac0c9869d74be",
+      "plusOneSha256": "299c0ddb1d4e35143ab7ea9f57c435d09dc425da1ad5d941c7028a234f4af719"
+    },
+    {
+      "id": "P104-NODES20K",
+      "kind": "boundary-pair",
+      "generator": "repeat",
+      "unit": "<p></p>",
+      "exactCount": 20000,
+      "plusOneCount": 20001,
+      "exactSha256": "59b11a20ca54e8cf93d7f3a63b5a8f53e08746cd5f65426f3bd34e7695b171c0",
+      "plusOneSha256": "4cda67289c705caf35ccddb9b939b69d520edeb55f3a48a21f4b7a3df8b14ee8"
+    },
+    {
+      "id": "P104-DEPTH32",
+      "kind": "boundary-pair",
+      "generator": "nested",
+      "open": "<span>",
+      "text": "x",
+      "close": "</span>",
+      "exactCount": 32,
+      "plusOneCount": 33,
+      "exactSha256": "f74574570179c48db9370a608c185ec7d44c97d3421fc5f20735d8ad926c8227",
+      "plusOneSha256": "20e30a50796e2d3529855524a961ef0902bc794a20fe99f5c6b78bedaed117b0"
+    },
+    {
+      "id": "P104-ACTIVE-SET",
+      "kind": "literal-html-set",
+      "values": [
+        {"id":"event","value":"<p onclick=\"window.EDITOR_EXECUTION_CANARY=1\">EDITOR-REJECT-CANARY</p>","sha256":"1831244310be8e144eaaae0b36334579cfbce2ac1983a5d7d7f67e867e3df2a0"},
+        {"id":"script","value":"<p>EDITOR-REJECT-CANARY</p><script>window.EDITOR_EXECUTION_CANARY=1</script>","sha256":"f8854e0a8b8b6aad43c8c7998f1d52e18b2d81b9f84d6c334019170f144e803b"},
+        {"id":"iframe","value":"<p>EDITOR-REJECT-CANARY</p><iframe src=\"https://example.invalid/editor-probe\"></iframe>","sha256":"974bc2cfc9578d2cbaa9de57ad4601c948bff04f73e50fce67ce45ec3dcf1c1b"},
+        {"id":"css-url","value":"<p style=\"background-image:url(https://example.invalid/editor-probe)\">EDITOR-REJECT-CANARY</p>","sha256":"9f0d0f742d5fe7bbceaa05600b2df962922fb37d4e0374e00b06bf763a29b8d4"},
+        {"id":"css-position","value":"<p style=\"position:fixed;z-index:999\">EDITOR-REJECT-CANARY</p>","sha256":"a6800b04c5d85a2d9ab399638dba513a8e54d5879c840f96add09f709c4d6ac1"},
+        {"id":"template-expression","value":"<p>EDITOR-REJECT-CANARY {{ request.user }}</p>","sha256":"f170251ff5dd7c2ac1a712d50c2d0c45a15d6d2977450f752c1208b6c855b0aa"},
+        {"id":"template-tag","value":"<p>EDITOR-REJECT-CANARY {% include \"synthetic.html\" %}</p>","sha256":"bbc5b0eed5eccce7ed95e82a6e7c7bfd72d3108d930f690da57c0d002ece5dd2"},
+        {"id":"template-comment","value":"<p>EDITOR-REJECT-CANARY {# synthetic #}</p>","sha256":"a19c4898b68d95f0d181322c0f3386cbd7b79a13066f9bee50112d92bf13a3f2"}
+      ]
+    },
+    {
+      "id": "P106-SAFE-LINKS",
+      "kind": "literal-url-set",
+      "values": [
+        {"id":"local","value":"/acceptance/link-target/","sha256":"b8e3271456c332cdf4cd7816aae0394760221a6ab5d3d0af159682115557a418"},
+        {"id":"http","value":"http://example.invalid/editor-reference","sha256":"b0ad8624a29d427174a0160992bc2bb193920f6d416738f7abe26069aac866eb"},
+        {"id":"https","value":"https://example.invalid/editor-reference","sha256":"eeee77d5cf89d69e82e7769536f54d4749494a7116bebf47a6eaf9306d3041db"}
+      ]
+    },
+    {
+      "id": "P106-UNSAFE-SET",
+      "kind": "literal-url-set",
+      "values": [
+        {"id":"javascript","value":"javascript:window.EDITOR_EXECUTION_CANARY=1","sha256":"2315ebacfe4d1cf327bad8a909550deefe37209297df22db30b256ab3873f6bb"},
+        {"id":"mixed-case","value":"JaVaScRiPt:window.EDITOR_EXECUTION_CANARY=1","sha256":"eef20187987990b32a2e67f9d2afa5e765c32701a504a9568415a3db42602365"},
+        {"id":"entity","value":"jav&#x61;script:window.EDITOR_EXECUTION_CANARY=1","sha256":"622a412f0af2d78e58057a5c2f8dd91c6c4fcee736e75f5b21fa736bf4f2873e"},
+        {"id":"encoded-control","value":"java&#x09;script:window.EDITOR_EXECUTION_CANARY=1","sha256":"b409f849683c1f002e1e9ca29b7670c037f565dfb130aa2803eb30185af3a044"},
+        {"id":"data","value":"data:text/html,EDITOR-REJECT-CANARY","sha256":"245af083e6e132ce8dcaf45babef4119f94d9385ebb4b68054ab796752d0d2c1"},
+        {"id":"file","value":"file:///synthetic-editor-probe","sha256":"03192780d4146e93b9b7723c70a6ba168e41d05d364ba1b436da942feaecd279"},
+        {"id":"vbscript","value":"vbscript:synthetic","sha256":"05a03b3d8db1fc27dea8116a2e8e12daceb8fbe7a2b1d48f33d37b2bbe1e5f05"},
+        {"id":"protocol-relative","value":"//example.invalid/editor-reference","sha256":"aa371903c422d092dad16f13ac65939f966b8652508112c92e7e81bd12822e89"},
+        {"id":"userinfo","value":"https://synthetic@example.invalid/editor-reference","sha256":"4e3c8e31f38d3924ff43f00d725820fa3dd3c17354676f15becf55b28242c660"},
+        {"id":"backslash","value":"https:\\example.invalid\\editor-reference","sha256":"33372a9f5a1dd3420f108d9d0bcac4152ad21fcfce7558dcdac1d41f1b9c6155"}
+      ]
+    },
+    {"id":"PBODY-RESET","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"employee={identifiers.editUser}&passwordRef=NEW-SYNTHETIC-SECRET","sha256":"92a6eef362f6103e075343c270f1f9ce5b78d4a6dc22fe0b63fcface7424589c"},
+    {"id":"PBODY-SELF-CHANGE","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"employee={identifiers.editUser}&passwordRef=NEW-SYNTHETIC-SECRET","sha256":"92a6eef362f6103e075343c270f1f9ce5b78d4a6dc22fe0b63fcface7424589c"},
+    {"id":"PBODY-LOGIN-OLD","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"username=test10-s-edit&passwordRef=OLD-SYNTHETIC-SECRET","sha256":"9610379eb7a9df6502933ce2b20e60ecade422dd6f0d006e75e1b1ac45c6adf1"},
+    {"id":"PBODY-LOGIN-NEW","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"username=test10-s-edit&passwordRef=NEW-SYNTHETIC-SECRET","sha256":"8f2cdf6b61425a20b03d834caaa0d29729965ea3f58da0e11385396f626301c0"},
+    {"id":"PBODY-SAVE","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"page={identifiers.page}&base={identifiers.currentRevision}&html={content.payload}","sha256":"69501ae5c38042e7103d310f7bb5eb61dcdb50c7b83ca5ae8c4b1ae831991b74"},
+    {"id":"PBODY-RESTORE-HISTORICAL","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"page={identifiers.page}&version={identifiers.historicalRevision}&confirmInputReplacement=true","sha256":"5b8e18c36cc673aeae369a4684a35803e2d6c638e512dde033140215668354e4"},
+    {"id":"PBODY-RESTORE-INCOMPATIBLE","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"page={identifiers.page}&version={identifiers.incompatibleRevision}&confirmInputReplacement=true","sha256":"09b6bb2cf5635319d0429ed05a6181cb02d7cce10464c7dad5211b03fdb92f00"},
+    {"id":"PBODY-REVOKE","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"employee={identifiers.editUser}&page={identifiers.page}&action=revoke","sha256":"ad09a627167075dec05644b9d0029e7c977bbf2397133995ac9c889fb2bc3039"},
+    {"id":"PBODY-EDITOR-CANARY","kind":"request-template","contentType":"application/x-www-form-urlencoded","value":"page={identifiers.page}&base={identifiers.currentRevision}&html=UNSAVED-SYNTHETIC-CANARY","sha256":"46244b8093c964dba0658b4a9a2979fa644e136b1fdcae7908110824312fc728"}
+  ]
+}

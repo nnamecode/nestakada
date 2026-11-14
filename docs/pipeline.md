@@ -1,5 +1,13 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1052 (2026-11-14): TEST-10A canonical registry stage independently APPROVED, P1/P2/P3=0/0/0.** Exact9/amended order, bindings40, payload/body hashes, UI steps, fixture mapping и observers6 проходят PS5 offline679/679. RegistryReady=false, all unbound, DockerCalled=false; Q003/writer/execution/Foundation/browser/HTTP/live closed. Следующий bounded этап — write-once evidence writer only + independent review.
+
+> **Текущая точка D-1051 (2026-11-14): новый AC-015 ordering P1 исправлен.** Same-user explicit save закреплён до revoke; затем отдельная revoked denial branch. Repeat review required; registry readiness false, Q003/execution closed.
+
+> **Текущая точка D-1050 (2026-11-14): TEST-10A registry amendment выполняется после second review P1=2/P2=2/P3=0.** D-1047 exact arrays уточнены только explicit revoke transitions; old/new login, UI steps и fixture placeholders закрываются в registry. Readiness false; product/fixture/writer/Q003/Docker/Foundation/browser/HTTP/live закрыты.
+
+> **Текущая точка D-1049 (2026-11-14): TEST-10A registry stage начат и находится в remediation.** Созданы three tracked registry + offline validator; first independent review P1=2/P2=3/P3=1. Readiness остаётся false, bindings/observers unbound; исправляется только registry integrity. Q003/writer/execution/Docker/Foundation/browser/HTTP/live закрыты.
+
 > **Текущая точка D-1048 (2026-11-14): owner confirmation protocol упрощён.** «Продолжай»/«почини и продолжай» принимаются для ближайшего предложенного bounded этап без требования gate ID; internal trace IDs сохраняются. Техническая точка остаётся D-1047, registry stage не начат; risky/live/external/destructive/push actions требуют отдельного подтверждения.
 
 > **Текущая точка D-1047 (2026-11-14): exact current-Chrome manifest proposal independently APPROVED, P1/P2/P3=0.** Следующий этап только после нового owner gate: проектирование/реализация трёх canonical hashed registry и offline tests. Writer/execution/Q003/Docker/Foundation/browser/direct HTTP закрыты.

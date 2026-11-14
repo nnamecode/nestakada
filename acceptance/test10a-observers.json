@@ -1,0 +1,61 @@
+{
+  "schema": "test10a-observer-registry-v1",
+  "registryReady": false,
+  "observers": [
+    {
+      "id": "OBS-014-SECRET-SINKS",
+      "implementationStatus": "unbound",
+      "source": null,
+      "inputBinding": "UI-014-OWNER-RESET",
+      "sinkSet": ["audit", "application-log", "response", "browser-view"],
+      "output": ["status", "sinkSetSha256", "complete", "canaryPresentBySink"],
+      "semantics": "incomplete-or-drift=BLOCKED; any-present=FAIL; complete-and-all-false=PASS"
+    },
+    {
+      "id": "OBS-021-CACHE",
+      "implementationStatus": "unbound",
+      "source": null,
+      "inputBinding": "HTTP-021-S-OTHER",
+      "sinkSet": ["denial-response-cache-policy"],
+      "output": ["status", "class", "cachePrivate", "noStore"],
+      "semantics": "gap=BLOCKED; unexpected-access-or-false-flag=FAIL; denial-and-both-true=PASS"
+    },
+    {
+      "id": "OBS-022-PROTECTED-UNCHANGED",
+      "implementationStatus": "unbound",
+      "source": null,
+      "inputBinding": "UI-022-SAVE",
+      "sinkSet": ["url", "parent", "published", "grants", "stable", "employee-protected-fields"],
+      "output": ["status", "complete", "unchangedByField"],
+      "semantics": "gap=BLOCKED; any-changed=FAIL; complete-and-all-unchanged=PASS"
+    },
+    {
+      "id": "OBS-106-CLIENT-NETWORK",
+      "implementationStatus": "unbound",
+      "source": null,
+      "inputBinding": "UI-106-SAFE-LINKS",
+      "sinkSet": ["actual-actor-tab-http", "actual-actor-tab-websocket"],
+      "output": ["status", "complete", "requests.method", "requests.pathWithoutQueryOrFragment", "requests.statusClass", "requests.destinationOrigin"],
+      "semantics": "incomplete=BLOCKED; external-request=FAIL; complete-and-zero-external=PASS"
+    },
+    {
+      "id": "OBS-106-SERVER-EGRESS",
+      "implementationStatus": "unbound",
+      "source": null,
+      "inputBinding": "HTTP-106-PROTECTED-SET",
+      "sinkSet": ["isolated-stand-server-egress"],
+      "output": ["status", "serverFetchObserved"],
+      "semantics": "unavailable-or-drift=BLOCKED; true=FAIL; false=PASS"
+    },
+    {
+      "id": "OBS-118-BROWSER-STORAGE",
+      "implementationStatus": "unbound",
+      "source": null,
+      "candidateSource": "acceptance/browser-memory.js#inspectBrowserPersistence",
+      "inputBinding": "UI-118-CONFLICT",
+      "sinkSet": ["location-url", "localStorage", "sessionStorage"],
+      "output": ["status", "complete", "urlContainsCanary", "localStorageContainsCanary", "sessionStorageContainsCanary"],
+      "semantics": "missing-scope=BLOCKED; any-present=FAIL; complete-and-all-false=PASS"
+    }
+  ]
+}

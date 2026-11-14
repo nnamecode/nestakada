@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1052 (2026-11-14): TEST-10A canonical registry stage independently APPROVED, P1/P2/P3=0/0/0.** Exact9 scenario order, 40 unbound bindings, canonical payload/body hashes, closed UI steps, fixture placeholder mapping и 6 unbound observer contracts проходят Windows PowerShell5.1 offline validator679/679; registryReady=false, DockerCalled=false. Q003/writer/fixture execution/Foundation/browser/HTTP/live закрыты. Следующий bounded этап — только design/implementation write-once evidence writer с отдельным review.
+
 > **Текущая точка D-961 (2026-11-13): DEV-09M minimal local implementation COMPLETE and independently APPROVED.** Final IMP-008 P1/P2/P3=0/0/0; canonical24 hidden Page/25 Route, one wash Page/two Route, closed grammar/caps, atomic create/replay/rollback/concurrency ready. Named evidence: dev09-services40/40, public-read9/9, public-http21/21, public-nav7/7, check0, migrations0; containers0. Persistent apply/publication/live remain closed and require a separate future gate.
 
 > **Текущая точка D-960 (2026-11-13): `DEV09M-Q008=1`; exact test-only remediation resumed.** Только package-byte helper и actual recursive/list/sections cap oracles, затем named checks+final review; product/canonical scope не расширяется.
