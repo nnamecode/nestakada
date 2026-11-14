@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1040 (2026-11-14): TEST10-Q002 приостановлен владельцу по anti-loop до code changes.** Две эквивалентные ошибки missing assumed path: `app/page_editor/test_support.py`, затем `app/page_editor/tests.py`; третьей попытки нет. Рекомендованное возобновление `TEST10-Q002-R001=1`: exact `rg --files app/page_editor`, затем confirmed paths. Browser/Foundation/Docker/regressions закрыты.
+
 > **Текущая точка D-1039 (2026-11-14): bounded T10-A manual run plan independently approved, P1/P2/P3=0.** Следующий этап — owner gate `TEST10-Q002=1`, только fixed fixture design/implementation и offline tests. Q003/browser/Foundation execution, acceptance promotion и product changes закрыты; TEST-09 остаётся BLOCKED без backend.
 
 > **Текущая точка D-1038 (2026-11-14): T10-A plan review findings remediated без code/execution.** Header/Footer route, server-egress BLOCKED boundary, derived evidence, evidence-safe cleanup и exact Q003 manifest добавлены. Следующий этап — repeat independent plan review; Q002/Q003 closed.

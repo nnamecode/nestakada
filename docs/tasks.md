@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1040 (2026-11-14): **TEST10-Q002 приостановлен владельцу по anti-loop до code changes.** Дважды эквивалентно предположен отсутствующий файл `app/page_editor` (`test_support.py`, затем `tests.py`); третьей попытки нет. Возобновление только по `TEST10-Q002-R001=1`: exact file inventory, затем confirmed paths. Browser/Foundation/Docker/regressions закрыты.
+
 Текущая работа D-1039 (2026-11-14): **bounded T10-A manual run plan independently approved, P1/P2/P3=0.** Следующий этап только после `TEST10-Q002=1`: fixed fixture design/implementation и offline tests. Q003/browser/Foundation execution, acceptance promotion и product changes закрыты; TEST-09 BLOCKED без backend.
 
 Текущая работа D-1038 (2026-11-14): **T10-A plan review findings remediated без code/execution.** Added Header/Footer route, server-egress BLOCKED boundary, derived evidence booleans, evidence-safe cleanup и exact Q003 manifest. Следующий этап: repeat independent plan review; Q002/Q003 closed.
