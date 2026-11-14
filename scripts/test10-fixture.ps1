@@ -53,16 +53,10 @@ function Assert-DeepestExistingChain([string]$Root, [string]$Target) {
 }
 function Write-Receipt([string]$Path, [object]$Value) {
     $temporary = $Path + '.new'
-    $backup = $Path + '.old'
     if (Test-Path -LiteralPath $temporary) { throw 'T10_RECEIPT_TEMP_EXISTS' }
-    if (Test-Path -LiteralPath $backup) {
-        Assert-Ordinary $backup $false
-        [IO.File]::Delete($backup)
-    }
     [IO.File]::WriteAllText($temporary, ($Value | ConvertTo-Json -Depth 8), $utf8)
     if (Test-Path -LiteralPath $Path) {
-        [IO.File]::Replace($temporary, $Path, $backup)
-        [IO.File]::Delete($backup)
+        Move-Item -LiteralPath $temporary -Destination $Path -Force
     } else {
         [IO.File]::Move($temporary, $Path)
     }
@@ -160,7 +154,11 @@ if ($Mode -eq 'StaticTest') {
             $failures.Add('phase-repeat-read')
         }
     } catch {$failures.Add('phase-roundtrip')}
-    finally {if (Test-Path -LiteralPath $phasePath) {Remove-Item -LiteralPath $phasePath}}
+    finally {
+        foreach ($path in @($phasePath,($phasePath + '.new'),($phasePath + '.old'))) {
+            if (Test-Path -LiteralPath $path) {Remove-Item -LiteralPath $path}
+        }
+    }
     $ast = [Management.Automation.Language.Parser]::ParseFile(
         $PSCommandPath, [ref]$null, [ref]$null)
     $commands = @($ast.FindAll({param($node) $node -is [Management.Automation.Language.CommandAst]},$true) |
