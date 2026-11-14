@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1071 (2026-11-14): **AC-022 no-bloat direct-restore decision accepted; requirements reconciliation in review.** Compare read-only, explicit confirm creates one new current revision atomically; no editor staging/second save. Both roles preserve URL/tree position/publication/grants/Stable/shared; employee restores granted fields only, owner restores full compatible Page content per D-261. Product/registry/execution unchanged. Next: repeat independent docs review, then exact all40 semantic table before any binding amendment.
+
 Текущая работа D-1070 (2026-11-14): **D-1069 semantic findings remediation, docs only.** Mechanical26/14 accepted, ready0 claimed. All40 remain unbound. Open groups: request-contract12, one-Prepare revoke/order isolation, AC-022 stage-vs-direct-restore mismatch BLOCKED. Next gate repeat review of corrected audit; then all40 semantic table proposal, not registry patch.
 
 Работа D-1069 (2026-11-14): **mechanical binding audit40 complete read-only; semantic audit incomplete.** Route/method26 vs conceptual14 не означает readiness. D-1070 requires all40 semantic table; registry write0, execution0.

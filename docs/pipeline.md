@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1071 (2026-11-14): AC-022 owner decision снял stage/direct-restore conflict в пользу no-bloat direct restore.** Compare не мутирует; explicit confirmation атомарно создаёт новую current revision. Both roles preserve URL/tree position/publication/grants/Stable/shared; employee restores granted fields only, owner restores full compatible Page content per D-261. Editor stage/second save не требуются. Product/registry/execution unchanged; gate — repeat independent requirements review, затем all40 semantic table. Q003/browser/Docker/Foundation/HTTP/live closed.
+
 > **Текущая точка D-1070 (2026-11-14): TEST-10A semantic binding review findings3 recorded.** Request contracts12, post-revoke one-Prepare order and AC-022 stage/direct-restore conflict prevent exact14 amendment. All40 table required before any registry write; AC-022 BLOCKED pending owner decision. Product/registry/execution unchanged; Q003/browser/Docker/Foundation/HTTP/live closed.
 
 > **Точка D-1069 (2026-11-14): TEST-10A mechanical route audit40 завершён без изменений registry.** Mechanical26/14 split принят только как route inventory; D-1070 отменяет вывод об exact14 amendment. Q003/browser/Docker/Foundation/HTTP/live closed.

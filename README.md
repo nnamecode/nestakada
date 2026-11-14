@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1071 (2026-11-14): владелец выбрал no-bloat direct restore для AC-022.** После read-only comparison и явного подтверждения система сразу и атомарно создаёт новую текущую редакцию; отдельная подстановка в редактор и второе save не входят в требование. Обе роли сохраняют URL/tree position/publication/grants/Stable/shared; сотрудник восстанавливает только разрешённые ему поля, а владелец — всё совместимое содержимое снимка по D-261. Product/registry/execution unchanged; следующий bounded этап — all40 semantic table до registry amendment.
+
 > **Текущая точка D-1070 (2026-11-14): D-1069 semantic review findings записываются, registry/code unchanged.** Mechanical40/26/14 count верен, но semantically ready count не доказан: account7 bodies и editor-save5 content type/body несовместимы с strict endpoints; AC-015 revoke ломает последующие employee scenarios в one-Prepare order; AC-022 stage→explicit-save oracle не поддерживается current restore HTTP. Следующий gate — exact all40 semantic table и отдельное owner decision по AC-022, не registry-only exact14 patch. All40/observers6 remain unbound; Q003/execution closed.
 
 > **Точка D-1069 (2026-11-14): TEST-10A mechanical route audit выполнен read-only, registry не изменён.** Из40 unbound rows mechanical route+method candidates26 и conceptual mismatches14; D-1070 уточняет, что это не semantic-ready classification и exact14 amendment недостаточен. Q003/browser/Docker/HTTP/live закрыты.

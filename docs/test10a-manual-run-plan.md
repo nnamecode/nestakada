@@ -10,7 +10,7 @@ T10-A содержит только девять AC из approved D-1036 feasibi
 |---|---|---|
 | T10-A1 editor safety | `AC-013`, `AC-DTL-004`, `AC-DTL-006` | разрешённое форматирование и ссылки сохраняются; active/template/unsafe URL не исполняются и не публикуются |
 | T10-A2 auth/session/tab memory | `AC-014`, `AC-015`, `AC-DTL-018` | reset/session boundaries/re-login/conflict сохраняют server authority и допустимый ввод только в открытой вкладке |
-| T10-A3 history/compare/rights | `AC-021`, `AC-022`, `AC-023` | история приватна, compare не мутирует, restore требует explicit save, incompatible/revoked state fail-closed |
+| T10-A3 history/compare/rights | `AC-021`, `AC-022`, `AC-023` | история приватна, compare не мутирует, explicit confirmed direct restore создаёт одну новую current revision, incompatible/revoked/stale state fail-closed |
 
 T10-B forms, T10-C gallery, T10-D full8×3 matrix и T10-E fallback не входят и не наследуют будущие approvals T10-A.
 
@@ -60,7 +60,7 @@ T10-B forms, T10-C gallery, T10-D full8×3 matrix и T10-E fallback не вхо�
 
 `T10A-018`: `AT-021`: S-EDIT видит ordinary/manual/Stable labels только назначенной page; owner positive control читает exact history/preview canary. Visitor/S-OTHER direct same ID/path denied; reviewed response observer сохраняет только status/class и derived `cachePrivate=true`, `noStore=true`. Отсутствие кнопки не заменяет direct denial.
 
-`T10A-019`: `AT-022`: с unsaved canary выбрать historical version, inspect comparison/substitution warning и cancel — site/history unchanged. Explicit save создаёт новую version, но URL/parent/published/grants/Stable и employee-protected fields unchanged; owner branch проверяется отдельно.
+`T10A-019`: `AT-022`: выбрать historical version, inspect comparison и cancel — site/history unchanged. Затем на fresh branch явно подтвердить direct restore: ровно одна новая current version, а URL/parent/page-position/published/grants/Stable/shared unchanged для обеих ролей. Employee branch restores only granted fields and preserves owner-only H1/SEO/block layout/media; owner branch separately proves full compatible historical Page content is restored per D-261. Отдельные editor stage и second save не входят в oracle D-1071.
 
 `T10A-020`: `AT-023`: fixed incompatible-schema snapshot и grant revoked after compare дают whole-operation denial with reasons, zero partial mutation и preserved current tab input. Allowed text remains manually readable/copyable within current rights; positive compatible/current-right control обязателен.
 

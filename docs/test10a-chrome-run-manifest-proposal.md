@@ -29,7 +29,7 @@
 
 1. Twelve nominal route candidates имеют несовместимый request contract: account payloads используют registry references/extra fields, которые strict form parser не принимает как literal endpoint body; five editor-save rows объявлены form-urlencoded, хотя editor POST admission и save contract JSON. Registry reference material нельзя отправлять буквально.
 2. One-Prepare order отзывает единственный S-EDIT grant в AC-015 до history/restore scenarios. Regrant/reset отсутствует и generation изменён. До reviewed isolation transition поздние employee rows остаются unreachable/BLOCKED; второй Prepare/run не разрешён.
-3. AC-022 сохраняет oracle compare → historical text into editor → explicit save. Current `restore/stage/` не создаёт новую stage (410), а `restore/apply/` сразу создаёт revision. Это product/acceptance mismatch, не URL typo. Он остаётся BLOCKED до явного owner decision; registry-only remap, test endpoint и молчаливое изменение oracle запрещены.
+3. D-1071 снял AC-022 product/acceptance mismatch явным owner decision: current oracle — compare read-only → explicit confirmation → one atomic direct restore/new current revision. Отдельные editor stage и second save исключены; `restore/stage/` не возвращается. Oracle `OBS-022-PROTECTED-UNCHANGED` должен быть role-aware: common unchanged URL/tree position/publication/grants/Stable/shared; employee-only unchanged owner-protected H1/SEO/block layout/media; owner branch проверяет их восстановление из compatible snapshot по D-261. Registry rows всё ещё не меняются до all40 semantic table и independent review.
 
 All40 bindings и six observers остаются `unbound`, `registryReady=false`. Следующий документарный этап после repeat review — all40 semantic table proposal; product code и JSON registry пока не меняются.
 
@@ -70,7 +70,7 @@ CLI не принимает произвольные paths, browser flags, URLs,
 2. `payloadRegistry`: canonical UTF-8 JSON/body bytes и SHA-256 для каждого `P104-*`, `P106-*` и direct-request body. Свободный HTML/URL/body запрещён.
 3. `observerRegistry`: source file/function identity, input binding, exact sink set/origin set и output schema для каждого `OBS-*`.
 
-Для `HTTP-013-HEADER`/`FOOTER` registry обязан требовать non-standalone response/no component content, а `UI-013-SAFE` — присутствие реального shared header/footer на обычной published page. Для `HTTP-015-OTHER-DENY`/`REVOKED-DENY` закрытые данные отсутствуют. `OBS-022-PROTECTED-UNCHANGED` сравнивает URL, parent, published, grants, Stable и employee-protected fields до/после. Любой отсутствующий/непроверенный binding/hash не просто блокирует case: Q003 не предлагается вообще.
+Для `HTTP-013-HEADER`/`FOOTER` registry обязан требовать non-standalone response/no component content, а `UI-013-SAFE` — присутствие реального shared header/footer на обычной published page. Для `HTTP-015-OTHER-DENY`/`REVOKED-DENY` закрытые данные отсутствуют. `OBS-022-PROTECTED-UNCHANGED` имеет role-aware oracle: для обеих ролей до/после неизменны URL, parent, page position, publication, grants, Stable и shared Header/Footer; для employee дополнительно неизменны current owner-only H1/SEO/block layout/protected media, а owner branch доказывает их восстановление из compatible snapshot по D-261. Любой отсутствующий/непроверенный binding/hash не просто блокирует case: Q003 не предлагается вообще.
 
 Direct HTTP не является regression runner: будущий manifest включает только registry actions соответствующего case; произвольные method/path/body запрещены.
 
