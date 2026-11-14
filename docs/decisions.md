@@ -1,6 +1,12 @@
 # Принятые решения
 
-Решение D-1026 (2026-11-14): final independent code review D-1025 — `APPROVED`, новых P1/P2/P3=0. Подтверждены closed CLI/Docker read allowlist, global running-containers0, PS5 JSON, trusted receipt/hash admission, full ancestor/reparse checks, BLOCKED/FAIL mapping, safe output и отсутствие mutation/retry. Offline `-StaticTest` PASS 17/17, `dockerCalled=false`. Q003 разрешал только offline/static tests, поэтому live preflight и Docker-регрессии не запускались. Следующий gate: owner `TEST09-Q004=1` разрешает один read-only preflight; Q002 physical execution закрыт.
+Решение D-1029 (2026-11-14): independent review D-1028 — `APPROVED`, P1/P2/P3=0. Native Docker stderr/nonzero теперь закрыто маппится в `BLOCKED/T09_DOCKER_READ_FAILED`, исходный ErrorActionPreference восстанавливается; output успеха сохраняется, mutation/retry/new verbs нет. Offline static PASS 17/17, live повтор не выполнялся. Следующий owner gate `TEST09-Q005=1` разрешит одну повторную read-only preflight попытку с доступом к Docker API; Q002 закрыт.
+
+Статус D-1027 (2026-11-14): owner «Продолжай» после прямого gate принят как `TEST09-Q004=1`; выполнена одна read-only preflight попытка. Workspace containment и stopped Foundation подтверждены, затем Docker API вернул host/sandbox `permission denied`. Product/контейнеры не изменялись. Из-за Windows PowerShell NativeCommandError coordinator ошибочно выдал `FAIL/T09_PREFLIGHT_INTERNAL_ERROR` вместо prerequisite `BLOCKED`; это harness-classification defect, не product failure. Причина подтверждена одним read-only `docker version/info` diagnostic, повтор preflight не выполнялся. Remediation approved D-1029.
+
+Статус D-1028 (2026-11-14): remediation D-1027 меняет только `Invoke-DockerReadOnly`; independent review D-1029 approved. Повтор live preflight требует owner `TEST09-Q005=1`; Q002 закрыт.
+
+Решение D-1026 (2026-11-14): final independent code review D-1025 — `APPROVED`, новых P1/P2/P3=0. Подтверждены closed CLI/Docker read allowlist, global running-containers0, PS5 JSON, trusted receipt/hash admission, full ancestor/reparse checks, BLOCKED/FAIL mapping, safe output и отсутствие mutation/retry. Offline `-StaticTest` PASS 17/17, `dockerCalled=false`. Следующий gate Q004 был принят D-1027.
 
 Статус D-1025 (2026-11-14): final re-review D-1024 закрыл прежние findings и нашёл один новый P2. Missing prerequisite/unsafe existing path разведены; final review D-1026 approved.
 

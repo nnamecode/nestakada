@@ -74,8 +74,20 @@ function Get-DockerShape([string[]]$Arguments) {
 
 function Invoke-DockerReadOnly([string[]]$Arguments) {
     Get-DockerShape $Arguments | Out-Null
-    $output = @(& docker.exe @Arguments 2>&1)
-    if ($LASTEXITCODE -ne 0) { throw 'T09_DOCKER_READ_FAILED' }
+    $priorErrorAction = $ErrorActionPreference
+    try {
+        # Windows PowerShell can promote native stderr to a terminating
+        # NativeCommandError under the script-wide Stop preference. Capture the
+        # process result first, then map every read failure to the closed code.
+        $ErrorActionPreference = 'Continue'
+        $output = @(& docker.exe @Arguments 2>&1)
+        $exitCode = $LASTEXITCODE
+    } catch {
+        throw 'T09_DOCKER_READ_FAILED'
+    } finally {
+        $ErrorActionPreference = $priorErrorAction
+    }
+    if ($exitCode -ne 0) { throw 'T09_DOCKER_READ_FAILED' }
     return $output
 }
 

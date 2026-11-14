@@ -1,6 +1,12 @@
 # Процесс полной разработки
 
-> **Текущая точка D-1026 (2026-11-14): read-only TEST-09 preflight independently APPROVED, без live/Docker run.** Offline static PASS 17/17 (`dockerCalled=false`). Следующий gate — owner `TEST09-Q004=1` на один read-only preflight; Q002 physical execution закрыт.
+> **Текущая точка D-1029 (2026-11-14): Docker permission classification fix independently APPROVED; повтор не выполнен.** Следующий gate — owner `TEST09-Q005=1` на одну read-only preflight попытку с Docker API access; Q002 закрыт.
+
+> **Точка D-1028 (2026-11-14): classification fix принят independent review D-1029.**
+
+> **Точка D-1027 (2026-11-14): TEST09-Q004=1 принят; одна попытка дошла до Docker metadata и остановилась на host permission.**
+
+> **Точка D-1026 (2026-11-14): preflight code approved; Q004 использован D-1027.**
 
 > **Точка D-1025 (2026-11-14): missing prerequisite remediation принята final review D-1026.**
 
