@@ -1,6 +1,10 @@
 # Таблица задач
 
-Текущая работа D-1034 (2026-11-14): **TEST-09 preflight complete; physical storage scope BLOCKED и задача приостановлена без раздувания.** Acceptance не повышен, backend не устанавливается, повторов нет. Следующий gate: owner `TEST09-Q009=1` — оставить backend невыбранным и перейти к следующему согласованному нефизическому этапу; Q002 закрыт.
+Текущая работа D-1036 (2026-11-14): **TEST-10 exact18 feasibility independently APPROVED; all24 matrix rows not_run.** Следующий gate: owner `TEST10-Q001=1` только на bounded manual run plan T10-A; browser/Foundation execution не разрешены. TEST-09/Q002 остаются BLOCKED/closed.
+
+Текущая работа D-1035 (2026-11-14): **feasibility proposal принят independent review D-1036.**
+
+Текущая работа D-1034 (2026-11-14): **Q009 принят D-1035; TEST-09 остаётся BLOCKED без backend.**
 
 Текущая работа D-1033 (2026-11-14): **Q008 evidence accepted D-1034.**
 

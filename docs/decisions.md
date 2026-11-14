@@ -1,6 +1,10 @@
 # Принятые решения
 
-Решение D-1034 (2026-11-14): independent reconciliation D-1033 — `APPROVED`, P1/P2/P3=0. Q008 evidence закрывает T09H-001–005: environment/images/containers подтверждены, но independently capped disk backend и HTML measured set bytes отсутствуют; preflight complete, physical storage scope честно `BLOCKED`, не product FAIL. Acceptance registry/status не меняются, exact7 AC не повышаются. По no-bloat recommendation TEST-09 приостановлен без повторов, backend installation или T09-A–D implementation. Q002 закрыт. Следующий owner gate `TEST09-Q009=1` подтвердит оставить backend невыбранным и перейти к следующему согласованному нефизическому этапу проекта.
+Решение D-1036 (2026-11-14): independent review D-1035 TEST-10 feasibility — `APPROVED`, P1/P2/P3=0. Exact18 и grouping T10-A9/B3/C3/D2/E1 совпадают с canonical cases; exact24 matrix rows остаются `not_run`. Chrome/Edge указаны только как one-version local candidates, не current/PASS; остальные combinations отсутствуют честно. Install/old versions/VM/cloud/Playwright/emulation/execution/status promotion запрещены; forms/gallery/fallback prerequisites закрыты. Следующий owner gate `TEST10-Q001=1` разрешит только подготовку bounded manual run plan T10-A, не browser/Foundation execution. TEST-09/Q002 остаются BLOCKED/closed.
+
+Статус D-1035 (2026-11-14): TEST-10 feasibility proposal independently approved D-1036.
+
+Решение D-1034 (2026-11-14): Q009 принят D-1035; TEST-09 остаётся BLOCKED без backend.
 
 Статус D-1033 (2026-11-14): Q008 preflight evidence independently approved D-1034; feasibility завершена BLOCKED.
 
