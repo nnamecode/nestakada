@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1061 (2026-11-14): LAUNCH-IN-002 panel evidence получен частично.** Подтверждены legacy EL7/CentOS7-compatible stack, x86_64, 3vCPU, RAM total2845MB и disk size89.94GB; это не ready production host. Следующий bounded шаг — только оставшиеся panel/provider facts: free disk, old site/DB, snapshot/recovery, firewall controls, supported OS options и feasibility перехода без потери нужных данных после их сохранения. SSH/reinstall/delete/live закрыты; IN-007 остаётся open.
+
 > **Текущая точка D-1060 (2026-11-14): TEST-10A отложен; следующий gate — существующие внешние launch inputs.** Сначала `LAUNCH-IN-007` read-only список рекламных destination URL, если он доступен; затем IN-002 FirstVDS, IN-005 backup, IN-006 monitor и IN-008 final authorization. Без внешнего входа новая реализация не начинается. Product/live/deployment unchanged; Docker named-pipe denial — host limitation, no retry.
 
 > **Текущая точка D-1059 (2026-11-14): TEST-10A writer/launcher снова приостановлен владельцу по anti-loop.** PS5 StaticTest PASS110, Docker/browser/HTTP=false; repeat review P1/P2/P3=0/4/0 повторил launcher branch acceptance, AST provenance/mutations и negative/reparse completeness. No third remediation/run. Partial code не approved; real WriteManifest/evidence/Q003 closed. Рекомендуемый no-bloat следующий этап — отложить writer и продолжить другую уже утверждённую работу.
