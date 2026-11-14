@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1080 (2026-11-15): LAUNCH-IN-006 external connection отложено до завершения проекта.** Free Monisite is the preferred public-uptime candidate; protected app/DB monitor remains optional later evaluation, not current code. Account/monitor/secret/endpoint0. Local development continues; external monitoring remains open and must be revisited before publication, without Prometheus/Grafana/agent/controller. Next work returns to a bounded local stage without new features.
+
 > **Текущая точка D-1079 (2026-11-15): LAUNCH-IN-006 provider comparison готов; provider not selected.** Minimal recommendation is Notifar: external probes, custom request header, five-minute schedule, owner email and retained incident history; published estimate about86 ₽/month one point or173 ₽ two points. Free REG monitoring is public-only/REG.RU-domain-bound and does not close protected app/DB readiness. No account/monitor/secret/endpoint/VPS/product/test/live change. Next gate: owner selects or defers provider; any protected readiness channel remains a separate design/review step.
 
 > **Текущая точка D-1078 (2026-11-15): LAUNCH-IN-005 provider choice отложен владельцем.** D-1077 comparison сохранено только как справка; Selectel/Yandex не утверждены, account/order/bucket/key/tool0. Local product development may continue, but independent encrypted external backup remains an open mandatory gate before production launch and real intake. Next work returns to another already-approved bounded local stage without new features.
