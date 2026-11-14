@@ -1,6 +1,6 @@
 # TEST-09 — план ограниченного harness
 
-Статус D-1032, 2026-11-14: Q007 admission diagnosis/fix independently `APPROVED`, P1/P2/P3=0. Offline PASS 19/19; lock/editor/worker/five-image diagnostics PASS. Полный live preflight не повторялся. Следующий gate — owner `TEST09-Q008=1` на одну read-only preflight попытку; physical execution требует отдельного `TEST09-Q002=1`.
+Статус D-1034, 2026-11-14: Q008 evidence independently accepted. Preflight complete; physical storage scope `BLOCKED`, acceptance не повышен. TEST-09 приостановлен без backend installation, повторов и T09-A–D implementation. Следующий gate — owner `TEST09-Q009=1` на no-backend переход к следующему согласованному нефизическому этапу; Q002 закрыт.
 
 ## Архитектура без второго framework
 
@@ -101,4 +101,4 @@ Product routes, settings, models, migrations, management commands, services и D
 4. Если storage backend пригоден, отдельно спланировать и согласовывать реализацию T09-A, B, C-HTML, C-logs, D; approval preflight не распространяется на эти packages.
 5. Только после полного harness review и точного disk/time manifest запросить `TEST09-Q002=1` на physical execution.
 
-Текущий следующий gate — owner `TEST09-Q008=1` на одну read-only preflight попытку. Docker-регрессии и physical packages не разрешены, Q002 закрыт.
+Текущий следующий gate — owner `TEST09-Q009=1`: оставить storage backend невыбранным и перейти к следующему согласованному нефизическому этапу. Docker-регрессии и physical packages не разрешены, Q002 закрыт.

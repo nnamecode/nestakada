@@ -1,6 +1,10 @@
 # Таблица задач
 
-Текущая работа D-1032 (2026-11-14): **FileInfo ancestor fix independently APPROVED; live preflight не повторялся.** Offline PASS 19/19; lock/receipts/five images diagnostics PASS. Следующий gate: owner `TEST09-Q008=1` на одну read-only preflight попытку; Q002 закрыт.
+Текущая работа D-1034 (2026-11-14): **TEST-09 preflight complete; physical storage scope BLOCKED и задача приостановлена без раздувания.** Acceptance не повышен, backend не устанавливается, повторов нет. Следующий gate: owner `TEST09-Q009=1` — оставить backend невыбранным и перейти к следующему согласованному нефизическому этапу; Q002 закрыт.
+
+Текущая работа D-1033 (2026-11-14): **Q008 evidence accepted D-1034.**
+
+Текущая работа D-1032 (2026-11-14): **Q008 использован D-1033; feasibility BLOCKED.**
 
 Текущая работа D-1031 (2026-11-14): **Q007 diagnosis/fix принят independent review D-1032.**
 

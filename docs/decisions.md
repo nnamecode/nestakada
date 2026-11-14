@@ -1,6 +1,10 @@
 # Принятые решения
 
-Решение D-1032 (2026-11-14): independent review D-1031 — `APPROVED`, P1/P2/P3=0. Подтверждены корректный FileInfo→Directory/DirectoryInfo→Parent traversal, reparse/root/null guards, offline PASS 19/19 и неизменный read-only scope. Lock/editor/worker/five-image diagnostics PASS, но нового полного live preflight не было. Следующий owner gate `TEST09-Q008=1` разрешит одну read-only preflight попытку; Q002 закрыт.
+Решение D-1034 (2026-11-14): independent reconciliation D-1033 — `APPROVED`, P1/P2/P3=0. Q008 evidence закрывает T09H-001–005: environment/images/containers подтверждены, но independently capped disk backend и HTML measured set bytes отсутствуют; preflight complete, physical storage scope честно `BLOCKED`, не product FAIL. Acceptance registry/status не меняются, exact7 AC не повышаются. По no-bloat recommendation TEST-09 приостановлен без повторов, backend installation или T09-A–D implementation. Q002 закрыт. Следующий owner gate `TEST09-Q009=1` подтвердит оставить backend невыбранным и перейти к следующему согласованному нефизическому этапу проекта.
+
+Статус D-1033 (2026-11-14): Q008 preflight evidence independently approved D-1034; feasibility завершена BLOCKED.
+
+Решение D-1032 (2026-11-14): independent review D-1031 — `APPROVED`, P1/P2/P3=0. Q008 использован D-1033 и дал ожидаемый BLOCKED feasibility result.
 
 Статус D-1031 (2026-11-14): Q007 admission diagnosis/fix завершён и independently approved D-1032; новый live preflight отдельно требует Q008.
 
