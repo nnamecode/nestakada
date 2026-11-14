@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1018 (2026-11-14): **TEST09-Q001=1 accepted; bounded harness implementation plan T09H-001–018 ready, code not started.** First slice only read-only storage feasibility; unsafe/unavailable hard-cap blocks physical scope. No Playwright/product surface/Compose change. Next: independent plan review; Q002 remains closed.
+
 Текущая работа D-1017 (2026-11-14): **exact7 TEST-09 bounded profile proposal ready; no execution/code.** T09-A–D cover atomic faults, quota debt, ENOSPC/log physical faults and capped load; receipt/Playwright/universal fault API excluded. Next gate: owner `TEST09-Q001=1` permits only bounded harness plan/review, not physical run.
 
 Текущая работа D-1016 (2026-11-14): **removed receipt/cache downstream oracles retired; no subsystem restored.** Historical receipt-count/bytes JS cases are forbidden to implement/run; current acceptance uses signed intent30m+request digest, durable delete ledger and throttle/temp only. States/IDs/full PASS unchanged. Next: bounded TEST-09 profile proposal for exact7 AC, no execution.

@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1018 (2026-11-14): TEST09-Q001=1 accepted; T09H-001–018 harness plan ready, no code/run.** Mandatory first slice is read-only hard-cap feasibility; unsafe log storage returns BLOCKED, never fills host/Docker/workspace. Next gate independent plan review; physical Q002 remains closed.
+
 > **Текущая точка D-1017 (2026-11-14): exact7 TEST-09 profile proposal ready, no run/code.** Four bounded packages A–D preserve existing architecture and exclude receipt/Playwright/universal fault API; physical log test needs explicit disk budget. Next gate `TEST09-Q001=1` authorizes only bounded harness planning/review; physical run separately requires Q002.
 
 > **Текущая точка D-1016 (2026-11-14): downstream receipt/cache oracles retired after D-1015; no removed subsystem restored.** Historical receipt-count/bytes tests are not authorized; current contract uses signed intent30m+request digest and TEST-09 throttle/temp only. States/full PASS unchanged. Next: exact7 TEST-09 profile proposal, not execution.
