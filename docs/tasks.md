@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1048 (2026-11-14): **упрощён owner confirmation protocol.** «Продолжай»/«почини и продолжай» разрешают ближайший предложенный bounded этап без ввода ID; внутренние IDs сохраняются. Risky external/destructive/live/push scope требует отдельного явного разрешения. Техническая точка остаётся D-1047: registry stage ещё не начат.
+
 Текущая работа D-1047 (2026-11-14): **exact current-Chrome manifest proposal independently APPROVED, P1/P2/P3=0.** Следующий этап только после нового owner gate: три canonical hashed registry и offline tests. Writer/execution/Q003/Docker/Foundation/browser/direct HTTP закрыты.
 
 Текущая работа D-1046 (2026-11-14): **D-1045 manifest proposal review findings remediated без code/execution.** Canonical ID order, mandatory hashed registries/review before Q003, observer outcomes, no-raw evidence и exact cleanup boundary уточнены. Следующий этап — repeat independent review; Q003 closed.

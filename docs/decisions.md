@@ -1,5 +1,7 @@
 # Принятые решения
 
+Решение D-1048 (2026-11-14): владелец просит упростить вопросы — не требовать ввода служебных gate ID для обычного продолжения/ремонта. Простые ответы «продолжай» и «почини и продолжай» считаются согласием на непосредственно предложенный ближайший bounded этап; ID продолжают записываться внутренне для traceability. Правило не расширяет разрешение на live/deploy, push, внешние установки, destructive actions или materially broader scope: для них сохраняется отдельное явное подтверждение.
+
 Статус D-1047 (2026-11-14): repeat independent review D-1046 exact current-Chrome manifest proposal — `APPROVED`, P1=0, P2=0, P3=0. Canonical exact9 identity/order, mandatory hashed registries, carried oracles, actual observer semantics, no-raw evidence, exact no-delete cleanup и one-lifecycle Q003 boundary приняты. Следующий этап требует отдельного owner gate только на проектирование/реализацию трёх canonical registry и offline tests; writer/execution/Q003/Docker/Foundation/browser/direct HTTP остаются закрыты.
 
 Статус D-1046 (2026-11-14): D-1045 independent review вернул `CHANGES_REQUIRED`, P1=2/P2=2/P3=0. Proposal уточнён без code/execution: canonical `acceptanceCaseIds` совпадают с approved fixture order, `runScenarioIds` отделены; Q003 закрыт до tracked hashed binding/payload/observer registries и их review; actual observer PASS/FAIL/BLOCKED semantics, no-raw screenshot/query boundary и exact no-delete cleanup rules добавлены. Требуется repeat review; Q003/Docker/Foundation/browser/direct HTTP closed.

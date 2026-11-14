@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1048 (2026-11-14): owner confirmation protocol упрощён.** «Продолжай»/«почини и продолжай» принимаются для ближайшего предложенного bounded этап без требования gate ID; internal trace IDs сохраняются. Техническая точка остаётся D-1047, registry stage не начат; risky/live/external/destructive/push actions требуют отдельного подтверждения.
+
 > **Текущая точка D-1047 (2026-11-14): exact current-Chrome manifest proposal independently APPROVED, P1/P2/P3=0.** Следующий этап только после нового owner gate: проектирование/реализация трёх canonical hashed registry и offline tests. Writer/execution/Q003/Docker/Foundation/browser/direct HTTP закрыты.
 
 > **Текущая точка D-1046 (2026-11-14): D-1045 manifest proposal review findings remediated без code/execution.** Canonical ID order, mandatory hashed registries/review before Q003, observer outcomes, no-raw evidence и exact cleanup boundary уточнены. Следующий этап — repeat independent review; Q003 closed.
