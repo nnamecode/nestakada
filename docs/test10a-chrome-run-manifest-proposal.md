@@ -2,6 +2,37 @@
 
 Статус D-1068 amendment, 2026-11-14. Три canonical registry ранее прошли independent review: `APPROVED`, P1=0, P2=0, P3=0. Exact action arrays сохраняются без нового продуктового поведения. Документ не является run manifest, не создаёт fixture/stand/evidence и не разрешает Docker, Foundation, browser execution, direct HTTP или acceptance promotion. D-1055–1059 partial writer retired по no-bloat D-1068; approved D-1054 policy сохранена. Все 40 bindings и 6 observers пока `unbound`, `registryReady=false`; `TEST10-Q003` закрыт до отдельного simplified evidence protocol review и фактических bindings/observers, затем отдельного owner gate.
 
+## D-1069 read-only route-binding audit
+
+Фактический `app/estakada/urls.py` включает editor под `/manage/pages/<uuid>/edit/`, versions под `/manage/pages/<uuid>/versions/`, accounts под `/manage/` и public catch-all. Fixture `app/page_editor/test10_fixture.py` создаёт published primary route `/test10/assigned/` и нужные owner/edit/other sessions/history.
+
+Из40 binding rows ровно26 механически имеют существующую route+method пару без добавления endpoint:
+
+- public GET3: assigned page, `/header/`, `/footer/`;
+- accounts7: login3, employee password2, grants2;
+- editor GET6: active/expired/other/revoked access and unsaved-tab entry;
+- editor `save/` POST5;
+- versions history GET5.
+
+Остальные14 пока conceptual и не исполняются честно в записанном виде:
+
+- seven UI rows задают `POST /manage/pages/{page}/edit/`, но editor root допускает GET; нормализация/валидация/сохранение используют existing `check/` или `save/`, а сохранение ввода вкладки является browser observation;
+- seven rows задают generic `/manage/pages/{page}/versions/{version}/`; GET там только read, POST route отсутствует. Сравнение использует `compare/`, восстановление — reviewed sequence через `restore/prepare/` и `restore/apply/` (historical `restore/stage/` не подменяется догадкой), cancel не создаёт отдельный HTTP mutation.
+
+Это mechanical audit, не readiness и не amendment: existing JSON/hashes/status не меняются. Independent review D-1070 установил, что registry write нельзя ограничить14 rows.
+
+### D-1070 semantic corrections
+
+До любого registry amendment нужна exact all40 table. Для каждого ID она фиксирует existing endpoint/UI-only step, method, content type, exact allowed fields/body, dynamic receipt/CSRF/session prerequisites, pre-state, post-state, oracle и scenario-isolation transition.
+
+Три открытых класса:
+
+1. Twelve nominal route candidates имеют несовместимый request contract: account payloads используют registry references/extra fields, которые strict form parser не принимает как literal endpoint body; five editor-save rows объявлены form-urlencoded, хотя editor POST admission и save contract JSON. Registry reference material нельзя отправлять буквально.
+2. One-Prepare order отзывает единственный S-EDIT grant в AC-015 до history/restore scenarios. Regrant/reset отсутствует и generation изменён. До reviewed isolation transition поздние employee rows остаются unreachable/BLOCKED; второй Prepare/run не разрешён.
+3. AC-022 сохраняет oracle compare → historical text into editor → explicit save. Current `restore/stage/` не создаёт новую stage (410), а `restore/apply/` сразу создаёт revision. Это product/acceptance mismatch, не URL typo. Он остаётся BLOCKED до явного owner decision; registry-only remap, test endpoint и молчаливое изменение oracle запрещены.
+
+All40 bindings и six observers остаются `unbound`, `registryReady=false`. Следующий документарный этап после repeat review — all40 semantic table proposal; product code и JSON registry пока не меняются.
+
 ## Closed identity
 
 Будущий write-once JSON имеет schema `test10a-chrome-run-v1` и создаётся только после всех preflight checks. Обязательные поля:

@@ -1,5 +1,9 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1070 (2026-11-14): TEST-10A semantic binding review findings3 recorded.** Request contracts12, post-revoke one-Prepare order and AC-022 stage/direct-restore conflict prevent exact14 amendment. All40 table required before any registry write; AC-022 BLOCKED pending owner decision. Product/registry/execution unchanged; Q003/browser/Docker/Foundation/HTTP/live closed.
+
+> **Точка D-1069 (2026-11-14): TEST-10A mechanical route audit40 завершён без изменений registry.** Mechanical26/14 split принят только как route inventory; D-1070 отменяет вывод об exact14 amendment. Q003/browser/Docker/Foundation/HTTP/live closed.
+
 > **Текущая точка D-1068 (2026-11-14): exact2 unapproved TEST-10A scripts удалены по approved no-bloat plan.** Retained: D-1054 policy, fixture, registries, manual9, product. Added framework0; executions0. Current gate — independent deletion/reconciliation review; Q003 и browser/Docker/Foundation/HTTP/live закрыты.
 
 > **Текущая точка D-1067 (2026-11-14): TEST-10A partial writer retirement предложен, не выполнен.** No-bloat candidate удаляет exact2 unapproved scripts (40120B) вместо исправления повторных AST/launcher/matrix P2; approved D-1054 evidence policy, fixture/registries/manual9 сохраняются, product behavior unchanged. Gate: independent scope review → только затем bounded deletion/reconciliation. Q003, browser, Docker, HTTP, Foundation, live закрыты.

@@ -1,5 +1,9 @@
 # Таблица задач
 
+Текущая работа D-1070 (2026-11-14): **D-1069 semantic findings remediation, docs only.** Mechanical26/14 accepted, ready0 claimed. All40 remain unbound. Open groups: request-contract12, one-Prepare revoke/order isolation, AC-022 stage-vs-direct-restore mismatch BLOCKED. Next gate repeat review of corrected audit; then all40 semantic table proposal, not registry patch.
+
+Работа D-1069 (2026-11-14): **mechanical binding audit40 complete read-only; semantic audit incomplete.** Route/method26 vs conceptual14 не означает readiness. D-1070 requires all40 semantic table; registry write0, execution0.
+
 Текущая работа D-1068 (2026-11-14): **TEST-10A unapproved writer debt retired без replacement framework.** Exact2 scripts/40120B removed; approved policy/fixture/registries/manual9/product retained. No test/browser/Docker/HTTP/live execution. Следующий gate — independent deletion/reconciliation review; Q003 остаётся closed.
 
 Текущая работа D-1067 (2026-11-14): **no-bloat retirement proposal для unapproved TEST-10A writer debt; files untouched.** Candidate removal exact2: writer35828B и launcher4292B. Approved D-1054 policy1118B, fixture, canonical registries, manual nine-case scope и product code сохраняются. No replacement framework, no browser/Docker/HTTP/run/Q003. Следующий gate — independent scope review; только после APPROVED возможна отдельная bounded deletion/document reconciliation.
