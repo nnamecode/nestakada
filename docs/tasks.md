@@ -1,5 +1,11 @@
 # Таблица задач
 
+Текущая работа D-1047 (2026-11-14): **exact current-Chrome manifest proposal independently APPROVED, P1/P2/P3=0.** Следующий этап только после нового owner gate: три canonical hashed registry и offline tests. Writer/execution/Q003/Docker/Foundation/browser/direct HTTP закрыты.
+
+Текущая работа D-1046 (2026-11-14): **D-1045 manifest proposal review findings remediated без code/execution.** Canonical ID order, mandatory hashed registries/review before Q003, observer outcomes, no-raw evidence и exact cleanup boundary уточнены. Следующий этап — repeat independent review; Q003 closed.
+
+Текущая работа D-1045 (2026-11-14): **exact current-Chrome run manifest proposal подготовлен без code/execution.** Exact9 cases, fixed actions/payloads/observers, safe evidence и future write-once fsync gate заданы. Следующий этап — independent proposal review; Q003/Docker/Foundation/browser/direct HTTP закрыты.
+
 Текущая работа D-1044 (2026-11-14): **TEST10-Q002 fixed fixture code stage independently APPROVED, P1/P2/P3=0.** Offline StaticTest11/11 PASS, DockerCalled=false; Docker/Foundation/browser/regression0. Preparation/teardown execution, Q003, fsync/write-once evidence, acceptance promotion и product changes закрыты. Следующий этап — exact run manifest + independent review, затем отдельный owner gate Q003.
 
 Текущая работа D-1043 (2026-11-14): **TEST10-Q002-R002 приостановлен владельцу по anti-loop.** Previous teardown design finding закрыт; новый offline phase round-trip дважды завершился одинаковым `T10_STATIC_TEST_FAILED:phase-roundtrip`, включая повтор после исправления подтверждённого null-backup defect. Третьего запуска нет. Partial remediation сохранена; Docker/Foundation/browser/regression0, Q003 closed. Resume только `TEST10-Q002-R003=1`: read-only writer diagnosis, затем одна changed-condition offline попытка и review.
