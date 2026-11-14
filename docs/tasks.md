@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1060 (2026-11-14): **TEST-10A отложен; активен внешний launch-input gate без кода.** Ближайший existing шаг `LAUNCH-IN-007`: owner помещает только destination URL рекламы в ignored `work/launch-inputs/advertising-urls.csv` или сообщает, что списка пока нет. После наличия файла выполняется read-only exact comparison по `docs/advertising-url-reconciliation.md`. Затем остаются IN-002/005/006/008. Product/live/deployment/новые функции не разрешены; Docker host limitation не повторять.
+
 Текущая работа D-1059 (2026-11-14): **TEST-10A writer/launcher implementation приостановлен владельцу по anti-loop.** Offline PS5 StaticTest PASS110 (`negative19`, `reparse34`, `fault3`, physical link unsupported, Docker/browser/HTTP=false), но repeat review `CHANGES REQUESTED`, P1/P2/P3=0/4/0. Повторены launcher branch acceptance, AST assignment-provenance/mutations и complete negative/reparse matrix; третья remediation запрещена. Partial code retained, не approved; real WriteManifest/evidence/Q003 closed. No-bloat next: отложить writer и выбрать следующий уже утверждённый этап.
 
 Текущая работа D-1058 (2026-11-14): **bounded TEST-10A writer validator/launcher redesign proposed, no code yet.** Exact safe launcher, table negative matrix, injected+physical reparse receipt и reachable AST type/provenance validator описаны. Independent plan review required; Q003/execution closed.
