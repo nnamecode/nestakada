@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1073 (2026-11-14): TEST-10A minimal registry v2 amendment plan APPROVED, P1/P2/P3=0/0/0.** Four existing files only, no new framework. Exact tagged steps/payload projections/all P104 members/role-aware OBS-022/BLOCKED OBS-REV-E1 and offline validator gates defined. Next gate — bounded four-file amendment + one offline validator + independent review. RegistryReady=false, bindings40/observers7 unbound; Q003/browser/Docker/Foundation/HTTP/live closed.
+
 > **Текущая точка D-1072 (2026-11-14): all40 TEST-10A semantic table APPROVED, P1/P2/P3=0/0/0.** IDs40/40, exact global order40, amendment27/read-binding13, overlap0; semantic-ready0. Existing product/fixture/three JSON registry unchanged; proposed `OBS-REV-E1` BLOCKED until observer review. Next gate — exact payload/binding/observer JSON amendment proposal and independent review, not write/run. Q003/browser/Docker/Foundation/HTTP/live closed.
 
 > **Текущая точка D-1071 (2026-11-14): AC-022 owner decision снял stage/direct-restore conflict в пользу no-bloat direct restore.** Compare не мутирует; explicit confirmation атомарно создаёт новую current revision. Both roles preserve URL/tree position/publication/grants/Stable/shared; employee restores granted fields only, owner restores full compatible Page content per D-261. Editor stage/second save не требуются. Product/registry/execution unchanged; gate — repeat independent requirements review, затем all40 semantic table. Q003/browser/Docker/Foundation/HTTP/live closed.

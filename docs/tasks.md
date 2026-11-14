@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1073 (2026-11-14): **four-file TEST-10A registry v2 amendment plan APPROVED.** Exact scope3 JSON+existing validator, added files0, runtime/product0. Stable40/execution order/P104 members/role-aware observer/revoke reference rules closed. Next: implement four-file patch, run only offline validator, independent review; Q003/execution closed.
+
 Текущая работа D-1072 (2026-11-14): **TEST-10A all40 semantic table independently APPROVED.** Complete40/unique40; global order40; classification27 amendment +13 binding, overlap0; ready0. Product/registry/execution unchanged, `OBS-REV-E1` remains proposal/BLOCKED. Next: exact JSON amendment proposal and independent review; Q003/run closed.
 
 Текущая работа D-1071 (2026-11-14): **AC-022 no-bloat direct-restore decision accepted; requirements reconciliation in review.** Compare read-only, explicit confirm creates one new current revision atomically; no editor staging/second save. Both roles preserve URL/tree position/publication/grants/Stable/shared; employee restores granted fields only, owner restores full compatible Page content per D-261. Product/registry/execution unchanged. Next: repeat independent docs review, then exact all40 semantic table before any binding amendment.
