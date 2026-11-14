@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1063 (2026-11-14): «Разгон10.0» выбран как target candidate, not ordered.** Exact capacity/components/settings moved to separate project chat. Current product work continues locally; future transfer requires completion, tests, independent backup/restore rehearsal, migration/rollback+smoke plans and explicit release permission. Old VPS unchanged.
+
 > **Текущая точка D-1062 (2026-11-14): отдельная новая VPS предложена без заказа.** Higher-margin candidate: FirstVDS SSD «Отрыв10.0» 4vCPU/8GB/80GB + Ubuntu Server26.04LTS amd64; lower-margin candidate «Разгон10.0» 2vCPU/4GB/60GB. Bounded exact RAM/disk/peak budget обязателен для обоих до owner tariff choice. Old VPS unchanged; order/payment/SSH/config/deploy/live closed.
 
 > **Текущая точка D-1061 (2026-11-14): LAUNCH-IN-002 panel evidence получен частично.** Подтверждены legacy EL7/CentOS7-compatible stack, x86_64, 3vCPU, RAM total2845MB и disk size89.94GB; это не ready production host. Следующий bounded шаг — только оставшиеся panel/provider facts: free disk, old site/DB, snapshot/recovery, firewall controls, supported OS options и feasibility перехода без потери нужных данных после их сохранения. SSH/reinstall/delete/live закрыты; IN-007 остаётся open.

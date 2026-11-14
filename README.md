@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1063 (2026-11-14): владелец выбрал FirstVDS «Разгон10.0» как целевой кандидат, без заказа.** 2vCPU/4GB/60GB, Ubuntu Server26.04LTS amd64, no ISPmanager; exact capacity budget и server settings вынесены в отдельный проектный чат. Разработка сайта продолжается локально в текущем изолированном Docker/VM workflow. Перенос выполняется только после завершения, проверок, backup/restore rehearsal, migration/rollback plan и отдельного release permission; старая VPS unchanged.
+
 > **Текущая точка D-1062 (2026-11-14): обсуждается отдельная новая production-VPS, без заказа.** Preferred higher-margin candidate: FirstVDS SSD «Отрыв10.0» 4vCPU/8GB/80GB, Ubuntu Server26.04LTS amd64, без ISPmanager/PHP/MySQL; lower-margin candidate — «Разгон10.0» 2vCPU/4GB/60GB. Bounded exact RAM/disk/peak budget обязателен для обоих до выбора тарифа. Старую VPS не менять; order/payment/SSH/config/deploy/live закрыты.
 
 > **Текущая точка D-1061 (2026-11-14): FirstVDS read-only evidence получен частично.** Фактическая VM показывает legacy EL7/CentOS7-compatible stack, x86_64, 3vCPU, RAM total2845MB и disk size89.94GB; она не готова как подтверждённая production-среда нового сайта. Нужны ещё только сведения панели: free disk, old site/DB state, snapshot/recovery, firewall controls, supported OS options и возможность будущего перехода на поддерживаемую ОС без потери нужных данных после их сохранения. SSH/reinstall/delete/live не разрешены.
