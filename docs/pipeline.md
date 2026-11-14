@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1057 (2026-11-14): TEST-10A evidence writer remediation повторно paused by anti-loop.** PS5 StaticTest54/54 PASS; repeat review P1/P2/P3=0/3/0 repeated T10W-003/004 completeness and exact AST call-graph/type provenance, safe bounded error output open. No third remediation. Writer not approved; real manifest/evidence/Docker/browser/HTTP0, Q003 closed. No-bloat default: defer or separately approve bounded validator/launcher redesign.
+
 > **Текущая точка D-1055 (2026-11-14): TEST-10A evidence writer implementation приостановлена владельцу по anti-loop.** Plan/policy APPROVED P1/P2/P3=0/0/0; partial PS5 writer retained, code stage not approved. Equivalent schema mismatch attempts2, no third run. Manifest/evidence/Docker/browser/HTTP0, Q003 closed. Recommended resume: contextual schema diagnostics + static PS5 projection, one exact patch/run.
 
 > **Текущая точка D-1052 (2026-11-14): TEST-10A canonical registry stage independently APPROVED, P1/P2/P3=0/0/0.** Exact9/amended order, bindings40, payload/body hashes, UI steps, fixture mapping и observers6 проходят PS5 offline679/679. RegistryReady=false, all unbound, DockerCalled=false; Q003/writer/execution/Foundation/browser/HTTP/live closed. Следующий bounded этап — write-once evidence writer only + independent review.

@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1057 (2026-11-14): **TEST-10A writer remediation повторно приостановлен по anti-loop.** PS5 StaticTest54/54 PASS, но code stage CHANGES REQUESTED P1/P2/P3=0/3/0: repeated T10W-003/004 completeness и exact AST call-graph/type provenance; safe bounded error output open. No third remediation. Real manifest/evidence/Docker/browser/HTTP0, Q003 closed. No-bloat default — отложить либо отдельно разрешить bounded validator/launcher redesign.
+
 Текущая работа D-1055 (2026-11-14): **TEST-10A evidence writer code приостановлен владельцу по anti-loop.** Approved plan/policy сохранены, partial PS5 writer не принят. Equivalent schema mismatch attempts2 (`SCHEMA` → diagnostic `SCHEMA_schema`), third run0. Recommended resume: contextual schema diagnostics/static PS5 projection, one exact patch + one StaticTest. Manifest/evidence/Docker/browser/HTTP0; Q003 closed.
 
 Текущая работа D-1052 (2026-11-14): **TEST-10A canonical registry stage APPROVED, P1/P2/P3=0/0/0.** Exact9/amended action order, 40 binding contracts, payload/body SHA, UI steps, fixture mapping и 6 observer contracts проходят PS5 validator679/679. Readiness=false и все bindings/observers unbound, поэтому Q003/execution закрыты. Следующий bounded этап: write-once evidence writer only + review.
