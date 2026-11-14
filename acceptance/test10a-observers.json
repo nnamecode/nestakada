@@ -1,50 +1,130 @@
 {
-  "schema": "test10a-observer-registry-v1",
+  "schema": "test10a-observer-registry-v2",
   "registryReady": false,
   "observers": [
     {
       "id": "OBS-014-SECRET-SINKS",
       "implementationStatus": "unbound",
       "source": null,
-      "inputBinding": "UI-014-OWNER-RESET",
-      "sinkSet": ["audit", "application-log", "response", "browser-view"],
-      "output": ["status", "sinkSetSha256", "complete", "canaryPresentBySink"],
+      "inputBindings": [
+        "UI-014-OWNER-RESET"
+      ],
+      "sinkSet": [
+        "audit",
+        "application-log",
+        "response",
+        "browser-view"
+      ],
+      "output": [
+        "status",
+        "sinkSetSha256",
+        "complete",
+        "canaryPresentBySink"
+      ],
       "semantics": "incomplete-or-drift=BLOCKED; any-present=FAIL; complete-and-all-false=PASS"
     },
     {
       "id": "OBS-021-CACHE",
       "implementationStatus": "unbound",
       "source": null,
-      "inputBinding": "HTTP-021-S-OTHER",
-      "sinkSet": ["denial-response-cache-policy"],
-      "output": ["status", "class", "cachePrivate", "noStore"],
+      "inputBindings": [
+        "HTTP-021-S-OTHER"
+      ],
+      "sinkSet": [
+        "denial-response-cache-policy"
+      ],
+      "output": [
+        "status",
+        "class",
+        "cachePrivate",
+        "noStore"
+      ],
       "semantics": "gap=BLOCKED; unexpected-access-or-false-flag=FAIL; denial-and-both-true=PASS"
     },
     {
       "id": "OBS-022-PROTECTED-UNCHANGED",
       "implementationStatus": "unbound",
       "source": null,
-      "inputBinding": "UI-022-SAVE",
-      "sinkSet": ["url", "parent", "published", "grants", "stable", "employee-protected-fields"],
-      "output": ["status", "complete", "unchangedByField"],
-      "semantics": "gap=BLOCKED; any-changed=FAIL; complete-and-all-unchanged=PASS"
+      "inputBindings": [
+        "UI-022-STAGE",
+        "UI-022-OWNER-CONTROL"
+      ],
+      "sinkSet": [
+        "url",
+        "parent",
+        "page-position",
+        "publication",
+        "grants",
+        "stable",
+        "shared-header-footer",
+        "employee-owner-fields",
+        "owner-snapshot-fields"
+      ],
+      "output": [
+        "status",
+        "complete",
+        "commonUnchangedByField",
+        "employeeOwnerFieldsUnchangedByField",
+        "ownerSnapshotFieldsRestoredByField"
+      ],
+      "commonFields": [
+        "url",
+        "parent",
+        "page-position",
+        "publication",
+        "grants",
+        "stable",
+        "shared-header-footer"
+      ],
+      "employeeOwnerFields": [
+        "h1",
+        "seo",
+        "block-layout",
+        "protected-media"
+      ],
+      "ownerSnapshotFields": [
+        "h1",
+        "seo",
+        "block-layout",
+        "protected-media"
+      ],
+      "semantics": "missing-branch-or-field=BLOCKED; complete-false=FAIL; complete-and-all-branch-booleans-true=PASS"
     },
     {
       "id": "OBS-106-CLIENT-NETWORK",
       "implementationStatus": "unbound",
       "source": null,
-      "inputBinding": "UI-106-SAFE-LINKS",
-      "sinkSet": ["actual-actor-tab-http", "actual-actor-tab-websocket"],
-      "output": ["status", "complete", "requests.method", "requests.pathWithoutQueryOrFragment", "requests.statusClass", "requests.destinationOrigin"],
+      "inputBindings": [
+        "UI-106-SAFE-LINKS"
+      ],
+      "sinkSet": [
+        "actual-actor-tab-http",
+        "actual-actor-tab-websocket"
+      ],
+      "output": [
+        "status",
+        "complete",
+        "requests.method",
+        "requests.pathWithoutQueryOrFragment",
+        "requests.statusClass",
+        "requests.destinationOrigin"
+      ],
       "semantics": "incomplete=BLOCKED; external-request=FAIL; complete-and-zero-external=PASS"
     },
     {
       "id": "OBS-106-SERVER-EGRESS",
       "implementationStatus": "unbound",
       "source": null,
-      "inputBinding": "HTTP-106-PROTECTED-SET",
-      "sinkSet": ["isolated-stand-server-egress"],
-      "output": ["status", "serverFetchObserved"],
+      "inputBindings": [
+        "HTTP-106-PROTECTED-SET"
+      ],
+      "sinkSet": [
+        "isolated-stand-server-egress"
+      ],
+      "output": [
+        "status",
+        "serverFetchObserved"
+      ],
       "semantics": "unavailable-or-drift=BLOCKED; true=FAIL; false=PASS"
     },
     {
@@ -52,10 +132,62 @@
       "implementationStatus": "unbound",
       "source": null,
       "candidateSource": "acceptance/browser-memory.js#inspectBrowserPersistence",
-      "inputBinding": "UI-118-CONFLICT",
-      "sinkSet": ["location-url", "localStorage", "sessionStorage"],
-      "output": ["status", "complete", "urlContainsCanary", "localStorageContainsCanary", "sessionStorageContainsCanary"],
+      "inputBindings": [
+        "UI-118-CONFLICT"
+      ],
+      "sinkSet": [
+        "location-url",
+        "localStorage",
+        "sessionStorage"
+      ],
+      "output": [
+        "status",
+        "complete",
+        "urlContainsCanary",
+        "localStorageContainsCanary",
+        "sessionStorageContainsCanary"
+      ],
       "semantics": "missing-scope=BLOCKED; any-present=FAIL; complete-and-all-false=PASS"
+    },
+    {
+      "id": "OBS-REV-E1",
+      "implementationStatus": "unbound",
+      "source": null,
+      "candidateSources": [
+        "accounts.models.PageGrant",
+        "accounts.models.UserProfile",
+        "audit.models.AuditEvent"
+      ],
+      "inputBindings": [
+        "UI-023-OWNER-REVOKE"
+      ],
+      "sinkSet": [
+        "page-grant",
+        "employee-generation",
+        "cursor-bounded-audit-event"
+      ],
+      "output": [
+        "status",
+        "grantCountBefore",
+        "grantCountAfter",
+        "generationBefore",
+        "generationAfter",
+        "matchingAuditEvents",
+        "complete"
+      ],
+      "eventTuple": {
+        "category": "access",
+        "level": "INFO",
+        "code": "AUTH_GRANT_REVOKED",
+        "source": "application",
+        "result": "SUCCESS",
+        "actorId": "{identifiers.ownerUser}",
+        "objectKind": "user",
+        "objectRef": "id:{identifiers.editUser}",
+        "occurrenceCount": 1,
+        "countIsLowerBound": false
+      },
+      "semantics": "missing-authority-or-drift-or-concurrency=BLOCKED; complete-wrong-mutation=FAIL; grant-1-to-0-and-generation-plus-1-and-exact-one-event=PASS"
     }
   ]
 }
