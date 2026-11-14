@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1064 (2026-11-14): в отдельном VPS-чате bounded 2vCPU/4GB/60GB proposal подготовлен без вывода о достаточности.** Exact basis4096MiB/54GiB usable; normal/peak RAM2816/3328MiB, untouched768MiB, swap2048MiB; disk54GiB включает two-local+one-staging backup peak12GiB и recovery reserve10GiB. В этом чате только новая VPS/настройка сервера; product work продолжается в «ворк2». Следующий gate — owner review бюджета; после принятия только provider-neutral host/settings plan. VPS order/SSH/config/deploy/live закрыты.
+
 > **Текущая точка D-1063 (2026-11-14): «Разгон10.0» выбран как target candidate, not ordered.** Exact capacity/components/settings moved to separate project chat. Current product work continues locally; future transfer requires completion, tests, independent backup/restore rehearsal, migration/rollback+smoke plans and explicit release permission. Old VPS unchanged.
 
 > **Текущая точка D-1062 (2026-11-14): отдельная новая VPS предложена без заказа.** Higher-margin candidate: FirstVDS SSD «Отрыв10.0» 4vCPU/8GB/80GB + Ubuntu Server26.04LTS amd64; lower-margin candidate «Разгон10.0» 2vCPU/4GB/60GB. Bounded exact RAM/disk/peak budget обязателен для обоих до owner tariff choice. Old VPS unchanged; order/payment/SSH/config/deploy/live closed.

@@ -1,6 +1,8 @@
 # Таблица задач
 
-Текущая работа D-1063 (2026-11-14): **«Разгон10.0» выбран как target candidate; infrastructure planning вынесен в отдельный чат.** 2vCPU/4GB/60GB adequacy не доказана и требует exact budget до order. В этом чате продолжается только локальная разработка проекта; production transfer/live остаются за completion/tests/backup-restore/migration-rollback/smoke и отдельным permission. Old VPS untouched.
+Текущая работа D-1064 (2026-11-14): **в отдельном VPS-чате для «Разгон 10.0» подготовлен exact bounded RAM/disk/peak proposal; SUFFICIENCY NOT PROVEN.** Proposal `docs/production-vps-resource-budget.md`: basis4096MiB/54GiB usable, normal/peak2816/3328MiB, swap2GiB, serialized jobs, exact54GiB disk budget с10GiB untouched reserve. Этот чат ограничен новой VPS/серверной эксплуатацией; product work продолжается в «ворк2». Код/VPS/live не менялись. Следующий этап только после owner review: provider-neutral минимальный host/config plan.
+
+Текущая работа D-1063 (2026-11-14): **«Разгон10.0» выбран как target candidate; infrastructure planning вынесен в отдельный чат.** 2vCPU/4GB/60GB adequacy не доказана и требует exact budget до order. В чате «ворк2» продолжается только локальная разработка проекта; production transfer/live остаются за completion/tests/backup-restore/migration-rollback/smoke и отдельным permission. Old VPS untouched.
 
 Текущая работа D-1062 (2026-11-14): **отдельная новая production-VPS обсуждается, не заказана.** Higher-margin candidate: FirstVDS SSD «Отрыв10.0» 4vCPU/8GB/80GB + Ubuntu Server26.04LTS amd64, без ISPmanager; lower-margin candidate «Разгон10.0» 2vCPU/4GB/60GB. Bounded exact RAM/disk/peak budget обязателен для обоих до owner tariff choice. Старую VPS не менять; order/payment/SSH/config/deploy/live закрыты.
 

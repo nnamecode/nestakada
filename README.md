@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1064 (2026-11-14): в отдельном VPS-чате для FirstVDS «Разгон 10.0» подготовлен bounded resource-budget proposal, достаточность не объявлена.** Basis: exact4096MiB RAM, future admission `>=54GiB usable`, normal/peak RAM2816/3328MiB, 768MiB untouched headroom, swap2048MiB, exact54GiB disk allocation с10GiB recovery reserve и serialized maintenance. Этот чат ограничен новой VPS/серверной эксплуатацией; продукт продолжается в «ворк2». Нужны owner review, затем отдельный provider-neutral host/config proposal; order/payment/SSH/config/deploy/live закрыты.
+
 > **Текущая точка D-1063 (2026-11-14): владелец выбрал FirstVDS «Разгон10.0» как целевой кандидат, без заказа.** 2vCPU/4GB/60GB, Ubuntu Server26.04LTS amd64, no ISPmanager; exact capacity budget и server settings вынесены в отдельный проектный чат. Разработка сайта продолжается локально в текущем изолированном Docker/VM workflow. Перенос выполняется только после завершения, проверок, backup/restore rehearsal, migration/rollback plan и отдельного release permission; старая VPS unchanged.
 
 > **Текущая точка D-1062 (2026-11-14): обсуждается отдельная новая production-VPS, без заказа.** Preferred higher-margin candidate: FirstVDS SSD «Отрыв10.0» 4vCPU/8GB/80GB, Ubuntu Server26.04LTS amd64, без ISPmanager/PHP/MySQL; lower-margin candidate — «Разгон10.0» 2vCPU/4GB/60GB. Bounded exact RAM/disk/peak budget обязателен для обоих до выбора тарифа. Старую VPS не менять; order/payment/SSH/config/deploy/live закрыты.
