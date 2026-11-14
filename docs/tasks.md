@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1076 (2026-11-15): **TEST-10 binding implementation DEFERRED по independently approved no-bloat plan.** P1/P2/P3=0/0/0. Row39 active-session aging и actual server-egress — hard gaps; all7 observer sources incomplete, partial code не создаётся. RegistryReady=false, bindings/observers unbound, Q003/run closed. TEST-10 restart only after changed capability + separate owner decision. Следующая работа — другая already-approved product task.
+
 Текущая работа D-1075 (2026-11-15): **TEST-10A binding source audit APPROVED; status promotion0.** Exact40/7 complete. Request/UI/reference sources mapped; row39 expiry transition `BLOCKED/source-gap`; all7 observer source contracts incomplete and remain unbound. Product/registry/fixture/runtime/tests/Docker/browser/HTTP0, registryReady=false, Q003 closed. Next: minimal observer-source plan and independent review, without writer/runner/new product surface.
 
 Текущая работа D-1074 (2026-11-14): **TEST-10A registry v2 four-file amendment COMPLETE and independently APPROVED.** Existing files4 changed, added0, product/runtime/fixture0. Offline PS5 validator `PASS` 1161, bindings40/order40, observers7, all unbound, `registryReady=false`, `dockerCalled=false`; independent verdict P1/P2/P3=0/0/0. Regression/browser/HTTP/Foundation/live не запускались. Следующий gate: отдельное разрешение владельца на bounded binding implementation; Q003 и TEST-10 execution пока closed.
