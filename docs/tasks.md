@@ -1,6 +1,14 @@
 # Таблица задач
 
-Текущая работа D-1022 (2026-11-14): **TEST-09 harness plan independently APPROVED, P1/P2/P3=0; code/run не начаты.** Следующий gate: owner `TEST09-Q003=1` только на реализацию read-only preflight и offline/static tests. Q004 запуска и Q002 physical execution закрыты.
+Текущая работа D-1026 (2026-11-14): **read-only TEST-09 preflight independently APPROVED; live run не начат.** Offline `-StaticTest` PASS 17/17, Docker не вызван. Следующий gate: owner `TEST09-Q004=1` на один read-only preflight; Q002 physical execution закрыт.
+
+Текущая работа D-1025 (2026-11-14): **missing prerequisite remediation принята final review D-1026.**
+
+Текущая работа D-1024 (2026-11-14): **основная remediation принята; prerequisite edge перенесён в D-1025.**
+
+Текущая работа D-1023 (2026-11-14): **TEST09-Q003=1 accepted; initial code review remediated by D-1024.**
+
+Текущая работа D-1022 (2026-11-14): **TEST-09 harness plan independently APPROVED; Q003 принят D-1023.**
 
 Текущая работа D-1021 (2026-11-14): **physical mapping TEST-09 plan минимально исправлен и принят final review D-1022.**
 

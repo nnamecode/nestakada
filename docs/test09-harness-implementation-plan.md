@@ -1,6 +1,6 @@
 # TEST-09 — план ограниченного harness
 
-Статус D-1022, 2026-11-14: independent review D-1021 — `APPROVED`, P1/P2/P3=0. Владелец ответом «Продолжай» после прямого gate ранее принял `TEST09-Q001=1`: были разрешены только планирование и независимое ревью bounded harness по D-1017. Ни реализацию, ни запуск это решение не разрешает. Следующий отдельный gate `TEST09-Q003=1` сможет разрешить только реализацию read-only preflight; его запуск потребует отдельного `TEST09-Q004=1`. Физический запуск по-прежнему требует отдельного `TEST09-Q002=1`.
+Статус D-1026, 2026-11-14: read-only preflight в `scripts/test09.ps1` independently `APPROVED`, P1/P2/P3=0. Offline `-StaticTest` PASS 17/17 без Docker; live preflight и Docker-регрессии не запускались по границе Q003. Следующий gate — owner `TEST09-Q004=1` на один read-only preflight; физический запуск по-прежнему требует отдельного `TEST09-Q002=1`.
 
 ## Архитектура без второго framework
 
@@ -101,4 +101,4 @@ Product routes, settings, models, migrations, management commands, services и D
 4. Если storage backend пригоден, отдельно спланировать и согласовывать реализацию T09-A, B, C-HTML, C-logs, D; approval preflight не распространяется на эти packages.
 5. Только после полного harness review и точного disk/time manifest запросить `TEST09-Q002=1` на physical execution.
 
-Текущий следующий gate — owner `TEST09-Q003=1` только на реализацию read-only preflight и offline/static tests. Product/test harness code не начат; Docker и тесты не запускались.
+Текущий следующий gate — owner `TEST09-Q004=1` на один read-only preflight. Docker-регрессии и physical packages не разрешены; Q002 закрыт.
