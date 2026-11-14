@@ -1,5 +1,9 @@
 # Таблица задач
 
+Текущая работа D-1042 (2026-11-14): **TEST10-Q002-R001 приостановлен владельцу по anti-loop; code stage не approved.** Повторный finding: crash gap exact DB DROP→durable receipt; третьей remediation нет. Partial fixture/orchestrator code сохранён, offline static6/6 PASS, Docker/Foundation/browser/regression0. Открыты terminal/missing-DB recovery, pre-create ancestor check, bounded trust/phase tests, postgres-owned marker schema и future fsync evidence. Рекомендованный resume `TEST10-Q002-R002=1` с minimal no-bloat missing-DB recovery.
+
+Текущая работа D-1041 (2026-11-14): **owner снял D-1040 pause; bounded fixture implementation/review выполнены частично.** Session/hash и cross-DB/source/image/path findings закрыты; D-1042 pause сохраняет незавершённый code stage.
+
 Текущая работа D-1040 (2026-11-14): **TEST10-Q002 приостановлен владельцу по anti-loop до code changes.** Дважды эквивалентно предположен отсутствующий файл `app/page_editor` (`test_support.py`, затем `tests.py`); третьей попытки нет. Возобновление только по `TEST10-Q002-R001=1`: exact file inventory, затем confirmed paths. Browser/Foundation/Docker/regressions закрыты.
 
 Текущая работа D-1039 (2026-11-14): **bounded T10-A manual run plan independently approved, P1/P2/P3=0.** Следующий этап только после `TEST10-Q002=1`: fixed fixture design/implementation и offline tests. Q003/browser/Foundation execution, acceptance promotion и product changes закрыты; TEST-09 BLOCKED без backend.

@@ -1,5 +1,9 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1042 (2026-11-14): TEST10-Q002-R001 приостановлен владельцу по anti-loop; code stage не approved.** Второй эквивалентный finding — crash gap exact DB DROP→durable receipt; третьей remediation нет. Partial code сохранён, offline static6/6 PASS, Docker/Foundation/browser/regression0. Следующий возможный этап только после `TEST10-Q002-R002=1`: minimal no-bloat missing-DB recovery, terminal idempotence, pre-write ancestor guard, postgres-owned marker schema и bounded offline tests. Q003 закрыт.
+
+> **Точка D-1041 (2026-11-14): owner снял D-1040 pause; bounded fixture implementation/review выполнены частично.** Session/hash и cross-DB/source/image/path findings закрыты; D-1042 pause сохраняет незавершённый code stage.
+
 > **Текущая точка D-1040 (2026-11-14): TEST10-Q002 приостановлен владельцу по anti-loop до code changes.** Две эквивалентные ошибки missing assumed path: `app/page_editor/test_support.py`, затем `app/page_editor/tests.py`; третьей попытки нет. Рекомендованное возобновление `TEST10-Q002-R001=1`: exact `rg --files app/page_editor`, затем confirmed paths. Browser/Foundation/Docker/regressions закрыты.
 
 > **Текущая точка D-1039 (2026-11-14): bounded T10-A manual run plan independently approved, P1/P2/P3=0.** Следующий этап — owner gate `TEST10-Q002=1`, только fixed fixture design/implementation и offline tests. Q003/browser/Foundation execution, acceptance promotion и product changes закрыты; TEST-09 остаётся BLOCKED без backend.
