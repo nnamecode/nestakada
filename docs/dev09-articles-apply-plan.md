@@ -58,4 +58,4 @@
 
 ## Не входит
 
-Импорт остальных 112 MAP, заполнение deferred home/catalog, media, SEO, publication, employee grants, Stable/manual versions, универсальные recovery/rollback/continuation workflows и обход READY-04/MIG-01/ANA-Q041.
+Импорт остальных 112 MAP, заполнение deferred home/catalog, media, SEO, publication, employee grants, Stable/manual versions, универсальные recovery/rollback/continuation workflows и обход фактических READY-04/MIG-01 verification gates. ANA-Q041 retired D-1066.

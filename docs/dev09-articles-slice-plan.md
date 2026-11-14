@@ -54,7 +54,7 @@
 - `MIGA-007`: повреждение MAP, RTE, snapshot либо package schema/exact values/source comparisons закрывает весь результат без частичного ready. Самохэш пакета и несуществующий внешний package-SHA не используются.
 - `MIGA-008`: invalid CLI и внутренние ошибки не печатают source text, absolute paths или stack trace.
 - `MIGA-009`: `--selfcheck` проверяет positive/negative grammar/schema/path fixtures в памяти, включая escape/symlink/realpath rejection через fake filesystem boundary, и не читает/не пишет рабочие данные.
-- `MIGA-010`: проверка доказывает только готовность пакета; БД, публикация, MEDIA-06, READY-04/MIG-01/ANA-Q041 и остальные 112 MAP остаются вне результата.
+- `MIGA-010`: проверка доказывает только готовность пакета; БД, публикация, MEDIA-06, фактическая READY-04/MIG-01 verification и остальные 112 MAP остаются вне результата. ANA-Q041 retired D-1066.
 
 ## Явно не входит
 

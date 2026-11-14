@@ -1,6 +1,8 @@
 # Процесс полной разработки
 
-> **Текущая точка D-1065 (2026-11-14): local exact-URL baseline PASS.** Owner confirmed >half pages in advertising and literal1:1 preservation. Inventory114 unique→map known missing0, duplicates0; map115 has only approved extra wash URL; gallery query paths exact. External export still required before migration/release for unknown ad-only URLs. No product/runtime/test/live change.
+> **Текущая точка D-1066 (2026-11-14): `LAUNCH-IN-007` retired/not applicable.** По уточнению владельца рекламные проекты/кабинеты/выгрузки вне scope разработки и системного администрирования. Инженерный URL-gate использует утверждённые inventory114 и route map115: missing0, duplicates0, exact query paths, один approved extra wash URL без замены старого. `AC-051`/`AC-MIG-006` проверяются при migration/publication по этим локальным данным; внешний рекламный export не блокирует работу. Следующий этап — ближайшая незавершённая product/acceptance работа без scope expansion.
+
+> **Точка D-1065 (2026-11-14): local exact-URL baseline PASS.** Inventory114 unique→map known missing0, duplicates0; map115 has only approved extra wash URL; gallery query paths exact. Прежний external-export остаток superseded D-1066. No product/runtime/test/live change.
 
 > **Текущая точка D-1064 (2026-11-14): в отдельном VPS-чате bounded 2vCPU/4GB/60GB proposal подготовлен без вывода о достаточности.** Exact basis4096MiB/54GiB usable; normal/peak RAM2816/3328MiB, untouched768MiB, swap2048MiB; disk54GiB включает two-local+one-staging backup peak12GiB и recovery reserve10GiB. В этом чате только новая VPS/настройка сервера; product work продолжается в «ворк2». Следующий gate — owner review бюджета; после принятия только provider-neutral host/settings plan. VPS order/SSH/config/deploy/live закрыты.
 
@@ -10,7 +12,7 @@
 
 > **Текущая точка D-1061 (2026-11-14): LAUNCH-IN-002 panel evidence получен частично.** Подтверждены legacy EL7/CentOS7-compatible stack, x86_64, 3vCPU, RAM total2845MB и disk size89.94GB; это не ready production host. Следующий bounded шаг — только оставшиеся panel/provider facts: free disk, old site/DB, snapshot/recovery, firewall controls, supported OS options и feasibility перехода без потери нужных данных после их сохранения. SSH/reinstall/delete/live закрыты; IN-007 остаётся open.
 
-> **Текущая точка D-1060 (2026-11-14): TEST-10A отложен; следующий gate — существующие внешние launch inputs.** Сначала `LAUNCH-IN-007` read-only список рекламных destination URL, если он доступен; затем IN-002 FirstVDS, IN-005 backup, IN-006 monitor и IN-008 final authorization. Без внешнего входа новая реализация не начинается. Product/live/deployment unchanged; Docker named-pipe denial — host limitation, no retry.
+> **Точка D-1060 (2026-11-14): TEST-10A был отложен; очередь launch inputs позже исправлена D-1066.** `LAUNCH-IN-007` больше не существует как gate; остаются IN-002 FirstVDS, IN-005 backup, IN-006 monitor и IN-008 final authorization. Product/live/deployment unchanged; Docker named-pipe denial — host limitation, no retry.
 
 > **Текущая точка D-1059 (2026-11-14): TEST-10A writer/launcher снова приостановлен владельцу по anti-loop.** PS5 StaticTest PASS110, Docker/browser/HTTP=false; repeat review P1/P2/P3=0/4/0 повторил launcher branch acceptance, AST provenance/mutations и negative/reparse completeness. No third remediation/run. Partial code не approved; real WriteManifest/evidence/Q003 closed. Рекомендуемый no-bloat следующий этап — отложить writer и продолжить другую уже утверждённую работу.
 
@@ -104,9 +106,9 @@
 
 > **Текущая точка D-1011 (2026-11-14): LAUNCH-IN-002 old FirstVDS facts reconciled, current no-secret panel facts still absent.** Existing KVM/Москва/preliminary4vCPU/8GiB/80GiB/CentOS7-template snapshot is not production proof. Next gate: owner read-only five-fact panel capture; no SSH/VPS change/reinstall/delete.
 
-> **Текущая точка D-1010 (2026-11-14): LAUNCH-IN-007 protocol готов, но advertising export не получен.** Local baseline exact114 requested/113 effective/query2/redirect1; future input is URL-only ignored file, no API/secrets/stats. AC-051/AC-MIG-006/full PASS unchanged. Next gate: owner-provided destination list, then read-only compare.
+> **Историческая точка D-1010 (2026-11-14):** local baseline exact114 requested/113 effective/query2/redirect1 был подготовлен; предложение `LAUNCH-IN-007` отменено D-1066 и вход от рекламных систем не требуется.
 
-> **Текущая точка D-1009 (2026-11-14): owner launch checklist LAUNCH-IN-001–008 готов; новых функций и approvals нет.** Базовый no-intake профиль не блокируется MAX/Telegram/SMTP/analytics; production release закрыт IN-002/005/006/007/008. Next external gate: advertising URL export/read-only reconciliation; VPS/live не трогать.
+> **Историческая точка D-1009 (2026-11-14): owner launch checklist подготовлен.** После D-1066 production release закрыт только IN-002/005/006/008; IN-007 retired/not applicable. VPS/live не трогать.
 
 > **Текущая точка D-1008 (2026-11-14): launch/external inventory группы2 завершён read-only, статусы92 AC/full PASS0 неизменны.** Local readiness отделён от восьми внешних входов; intake/optional runtime off, DEV-26/27 deferred, deployment не разрешён. Docker running0. Next no-bloat step: owner-facing external-input checklist, не реализация.
 
@@ -122,7 +124,7 @@
 
 > **Текущая точка D-1002 (2026-11-14): DEV-11 exact10 mapped to completed local SEO evidence.** Metadata/media/sitemap/robots/gallery and safe optional JSON-LD are partial; production migration/profile/crawl, real company facts and deferred emergency delivery keep full PASS0. No external runtime; TEST-08/stage9 closed.
 
-> **Текущая точка D-1001 (2026-11-14): DEV-29 exact9 mapped to simple REF-05H–N replacement evidence.** Local tree/publication/direct-URL/delete behavior is partial; migrated production/advertising/emergency/external-prohibition gates keep full PASS0. Heavy TRUST runtime remains stopped; TEST-08/stage9 closed.
+> **Историческая точка D-1001 (2026-11-14): DEV-29 exact9 mapped to simple REF-05H–N replacement evidence.** Local tree/publication/direct-URL/delete behavior is partial; migrated production/emergency/external-prohibition gates keep full PASS0. Advertising-inventory остаток superseded D-1066. Heavy TRUST runtime remains stopped; TEST-08/stage9 closed.
 
 > **Текущая точка D-1000 (2026-11-14): DEV-07 exact8 mapped after explicit owner resume.** Exact-path inventory resolved D-999 without wildcard retry; completed local editor/shared/security/quota evidence is partial, while production/import/cache/physical faults/TEST-09/10 keep full PASS0. No product expansion; TEST-08/stage9 closed.
 
@@ -172,7 +174,7 @@
 
 > **Текущая точка D-977 (2026-11-13): DEV-09 exact12 TEST-07 evidence mapping complete, TEST-08/stage9 closed.** Ten local-partial and two external-fact-blocked AC are mapped to exact existing evidence; full PASS0. Registry states17/20/103 remain historical and unchanged; no framework/Playwright/product/live expansion.
 
-> **Текущая точка D-976 (2026-11-13): no-bloat TEST-07 reconciliation active, TEST-08/stage9 still closed.** Exact140 trace/case/status rows match with zero gaps; first exact12 DEV-09 AC split into10 local-partial and2 advertising/unknown-URL blocked. No full AC promoted, no Playwright/framework/product/live change.
+> **Историческая точка D-976 (2026-11-13): no-bloat TEST-07 reconciliation active, TEST-08/stage9 still closed.** Exact140 trace/case/status rows match with zero gaps; прежняя advertising/unknown-URL блокировка двух AC superseded D-1066. No full AC promoted; фактическая migration/publication/content/media verification остаётся, no Playwright/framework/product/live change.
 
 > **Текущая точка D-975 (2026-11-13): `NEXT-Q001=1`; additional23 infographics owner-deferred, stage8 remains active.** DEV-09 now complete; exact stage8 count21/27 (~78%),3 partial DEV-18/22/23,3 deferred/pending DEV-26/27/30. TEST-08/stage9 remain dependency-blocked; no automatic product/persistent/live expansion.
 
