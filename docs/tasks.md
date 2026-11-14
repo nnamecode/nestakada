@@ -1,6 +1,12 @@
 # Таблица задач
 
-Текущая работа D-1036 (2026-11-14): **TEST-10 exact18 feasibility independently APPROVED; all24 matrix rows not_run.** Следующий gate: owner `TEST10-Q001=1` только на bounded manual run plan T10-A; browser/Foundation execution не разрешены. TEST-09/Q002 остаются BLOCKED/closed.
+Текущая работа D-1039 (2026-11-14): **bounded T10-A manual run plan independently approved, P1/P2/P3=0.** Следующий этап только после `TEST10-Q002=1`: fixed fixture design/implementation и offline tests. Q003/browser/Foundation execution, acceptance promotion и product changes закрыты; TEST-09 BLOCKED без backend.
+
+Текущая работа D-1038 (2026-11-14): **T10-A plan review findings remediated без code/execution.** Added Header/Footer route, server-egress BLOCKED boundary, derived evidence booleans, evidence-safe cleanup и exact Q003 manifest. Следующий этап: repeat independent plan review; Q002/Q003 closed.
+
+Текущая работа D-1037 (2026-11-14): **initial plan review remediated D-1038.**
+
+Текущая работа D-1036 (2026-11-14): **Q001 принят D-1037; feasibility границы сохраняются.**
 
 Текущая работа D-1035 (2026-11-14): **feasibility proposal принят independent review D-1036.**
 

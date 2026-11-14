@@ -1,6 +1,12 @@
 # Принятые решения
 
-Решение D-1036 (2026-11-14): independent review D-1035 TEST-10 feasibility — `APPROVED`, P1/P2/P3=0. Exact18 и grouping T10-A9/B3/C3/D2/E1 совпадают с canonical cases; exact24 matrix rows остаются `not_run`. Chrome/Edge указаны только как one-version local candidates, не current/PASS; остальные combinations отсутствуют честно. Install/old versions/VM/cloud/Playwright/emulation/execution/status promotion запрещены; forms/gallery/fallback prerequisites закрыты. Следующий owner gate `TEST10-Q001=1` разрешит только подготовку bounded manual run plan T10-A, не browser/Foundation execution. TEST-09/Q002 остаются BLOCKED/closed.
+Статус D-1039 (2026-11-14): повторное independent review bounded T10-A manual run plan — `APPROVED`, P1=0, P2=0, P3=0. Закрыты Header/Footer non-page и server-egress oracles, safe derived evidence/secret-canary coverage, retained sole raw evidence и exact-manifest boundary Q003. Следующий owner gate `TEST10-Q002=1` может разрешить только fixed fixture design/implementation и offline tests; Q003/browser/Foundation execution, acceptance promotion и product changes закрыты. TEST-09 остаётся BLOCKED без backend.
+
+Статус D-1038 (2026-11-14): independent plan review D-1037 вернул `CHANGES_REQUIRED` (P1=1, P2=2, P3=1). План уточнён без code/execution: AT-013 получил Header/Footer non-page direct-route oracle; AT-106 server-fetch требует existing closed egress observer либо BLOCKED; evidence хранит derived private/no-store и secret-canary booleans без raw values; evidence root исключён из cleanup; Q003 ограничен exact manifest manual Chrome UI+listed fixed HTTP actions, не arbitrary runner. Требуется repeat independent review; Q002/Q003 закрыты, TEST-09/Q002 closed.
+
+Статус D-1037 (2026-11-14): TEST10-Q001=1 plan подготовлен; review findings remediated D-1038.
+
+Решение D-1036 (2026-11-14): TEST10-Q001 принят D-1037; feasibility границы сохраняются.
 
 Статус D-1035 (2026-11-14): TEST-10 feasibility proposal independently approved D-1036.
 
