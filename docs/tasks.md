@@ -1,5 +1,9 @@
 # Таблица задач
 
+Текущая работа D-1059 (2026-11-14): **TEST-10A writer/launcher implementation приостановлен владельцу по anti-loop.** Offline PS5 StaticTest PASS110 (`negative19`, `reparse34`, `fault3`, physical link unsupported, Docker/browser/HTTP=false), но repeat review `CHANGES REQUESTED`, P1/P2/P3=0/4/0. Повторены launcher branch acceptance, AST assignment-provenance/mutations и complete negative/reparse matrix; третья remediation запрещена. Partial code retained, не approved; real WriteManifest/evidence/Q003 closed. No-bloat next: отложить writer и выбрать следующий уже утверждённый этап.
+
+Текущая работа D-1058 (2026-11-14): **bounded TEST-10A writer validator/launcher redesign proposed, no code yet.** Exact safe launcher, table negative matrix, injected+physical reparse receipt и reachable AST type/provenance validator описаны. Independent plan review required; Q003/execution closed.
+
 Текущая работа D-1057 (2026-11-14): **TEST-10A writer remediation повторно приостановлен по anti-loop.** PS5 StaticTest54/54 PASS, но code stage CHANGES REQUESTED P1/P2/P3=0/3/0: repeated T10W-003/004 completeness и exact AST call-graph/type provenance; safe bounded error output open. No third remediation. Real manifest/evidence/Docker/browser/HTTP0, Q003 closed. No-bloat default — отложить либо отдельно разрешить bounded validator/launcher redesign.
 
 Текущая работа D-1055 (2026-11-14): **TEST-10A evidence writer code приостановлен владельцу по anti-loop.** Approved plan/policy сохранены, partial PS5 writer не принят. Equivalent schema mismatch attempts2 (`SCHEMA` → diagnostic `SCHEMA_schema`), third run0. Recommended resume: contextual schema diagnostics/static PS5 projection, one exact patch + one StaticTest. Manifest/evidence/Docker/browser/HTTP0; Q003 closed.

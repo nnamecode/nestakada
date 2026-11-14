@@ -1,5 +1,9 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1059 (2026-11-14): TEST-10A writer/launcher снова приостановлен владельцу по anti-loop.** PS5 StaticTest PASS110, Docker/browser/HTTP=false; repeat review P1/P2/P3=0/4/0 повторил launcher branch acceptance, AST provenance/mutations и negative/reparse completeness. No third remediation/run. Partial code не approved; real WriteManifest/evidence/Q003 closed. Рекомендуемый no-bloat следующий этап — отложить writer и продолжить другую уже утверждённую работу.
+
+> **Текущая точка D-1058 (2026-11-14): owner разрешил отдельный bounded validator/launcher redesign.** Proposal only: exact safe child launcher, table T10W-003, injected every-position + physical reparse receipt, reachable AST type/provenance. Code unchanged pending independent plan review; Q003/execution closed.
+
 > **Текущая точка D-1057 (2026-11-14): TEST-10A evidence writer remediation повторно paused by anti-loop.** PS5 StaticTest54/54 PASS; repeat review P1/P2/P3=0/3/0 repeated T10W-003/004 completeness and exact AST call-graph/type provenance, safe bounded error output open. No third remediation. Writer not approved; real manifest/evidence/Docker/browser/HTTP0, Q003 closed. No-bloat default: defer or separately approve bounded validator/launcher redesign.
 
 > **Текущая точка D-1055 (2026-11-14): TEST-10A evidence writer implementation приостановлена владельцу по anti-loop.** Plan/policy APPROVED P1/P2/P3=0/0/0; partial PS5 writer retained, code stage not approved. Equivalent schema mismatch attempts2, no third run. Manifest/evidence/Docker/browser/HTTP0, Q003 closed. Recommended resume: contextual schema diagnostics + static PS5 projection, one exact patch/run.
