@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1062 (2026-11-14): **отдельная новая production-VPS обсуждается, не заказана.** Higher-margin candidate: FirstVDS SSD «Отрыв10.0» 4vCPU/8GB/80GB + Ubuntu Server26.04LTS amd64, без ISPmanager; lower-margin candidate «Разгон10.0» 2vCPU/4GB/60GB. Bounded exact RAM/disk/peak budget обязателен для обоих до owner tariff choice. Старую VPS не менять; order/payment/SSH/config/deploy/live закрыты.
+
 Текущая работа D-1061 (2026-11-14): **LAUNCH-IN-002 частично подтверждён актуальным скриншотом, без доступа к VPS.** Legacy EL7/CentOS7-compatible runtime и фактические 3vCPU/~2.8GB RAM/89.94GB total disk зафиксированы; production readiness не подтверждён. Нужны ещё panel/provider-only: free disk, old site/DB state, snapshot/recovery, firewall controls, supported OS options и feasibility перехода без потери нужных данных после их сохранения. Никаких SSH/изменений/reinstall/delete; IN-007 остаётся open/deferred.
 
 Текущая работа D-1060 (2026-11-14): **TEST-10A отложен; активен внешний launch-input gate без кода.** Ближайший existing шаг `LAUNCH-IN-007`: owner помещает только destination URL рекламы в ignored `work/launch-inputs/advertising-urls.csv` или сообщает, что списка пока нет. После наличия файла выполняется read-only exact comparison по `docs/advertising-url-reconciliation.md`. Затем остаются IN-002/005/006/008. Product/live/deployment/новые функции не разрешены; Docker host limitation не повторять.
