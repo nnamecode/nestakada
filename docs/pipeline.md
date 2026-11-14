@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1072 (2026-11-14): all40 TEST-10A semantic table APPROVED, P1/P2/P3=0/0/0.** IDs40/40, exact global order40, amendment27/read-binding13, overlap0; semantic-ready0. Existing product/fixture/three JSON registry unchanged; proposed `OBS-REV-E1` BLOCKED until observer review. Next gate — exact payload/binding/observer JSON amendment proposal and independent review, not write/run. Q003/browser/Docker/Foundation/HTTP/live closed.
+
 > **Текущая точка D-1071 (2026-11-14): AC-022 owner decision снял stage/direct-restore conflict в пользу no-bloat direct restore.** Compare не мутирует; explicit confirmation атомарно создаёт новую current revision. Both roles preserve URL/tree position/publication/grants/Stable/shared; employee restores granted fields only, owner restores full compatible Page content per D-261. Editor stage/second save не требуются. Product/registry/execution unchanged; gate — repeat independent requirements review, затем all40 semantic table. Q003/browser/Docker/Foundation/HTTP/live closed.
 
 > **Текущая точка D-1070 (2026-11-14): TEST-10A semantic binding review findings3 recorded.** Request contracts12, post-revoke one-Prepare order and AC-022 stage/direct-restore conflict prevent exact14 amendment. All40 table required before any registry write; AC-022 BLOCKED pending owner decision. Product/registry/execution unchanged; Q003/browser/Docker/Foundation/HTTP/live closed.

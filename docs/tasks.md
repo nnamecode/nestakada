@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1072 (2026-11-14): **TEST-10A all40 semantic table independently APPROVED.** Complete40/unique40; global order40; classification27 amendment +13 binding, overlap0; ready0. Product/registry/execution unchanged, `OBS-REV-E1` remains proposal/BLOCKED. Next: exact JSON amendment proposal and independent review; Q003/run closed.
+
 Текущая работа D-1071 (2026-11-14): **AC-022 no-bloat direct-restore decision accepted; requirements reconciliation in review.** Compare read-only, explicit confirm creates one new current revision atomically; no editor staging/second save. Both roles preserve URL/tree position/publication/grants/Stable/shared; employee restores granted fields only, owner restores full compatible Page content per D-261. Product/registry/execution unchanged. Next: repeat independent docs review, then exact all40 semantic table before any binding amendment.
 
 Текущая работа D-1070 (2026-11-14): **D-1069 semantic findings remediation, docs only.** Mechanical26/14 accepted, ready0 claimed. All40 remain unbound. Open groups: request-contract12, one-Prepare revoke/order isolation, AC-022 stage-vs-direct-restore mismatch BLOCKED. Next gate repeat review of corrected audit; then all40 semantic table proposal, not registry patch.
