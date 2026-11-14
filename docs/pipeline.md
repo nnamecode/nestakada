@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1016 (2026-11-14): downstream receipt/cache oracles retired after D-1015; no removed subsystem restored.** Historical receipt-count/bytes tests are not authorized; current contract uses signed intent30m+request digest and TEST-09 throttle/temp only. States/full PASS unchanged. Next: exact7 TEST-09 profile proposal, not execution.
+
 > **Текущая точка D-1015 (2026-11-14): OWNER-CONFLICT-Q001–Q005=1 accepted; five old oracles replaced by minimal D-595/596/859/896/923.** Routing exact owner21/launch94/TEST09 7/TEST10 18=140; automation/full PASS unchanged. No product/test run. Next gate needs external launch inputs or separate TEST-09/10 approval.
 
 > **Текущая точка D-1014 (2026-11-14): five explicit acceptance conflicts routed to stable OWNER-CONFLICT-Q001–Q005, not decided.** Recommended all=1 preserves minimal D-595/596/859/896/923 and avoids assignment/history/password/state-machine/receipt subsystems. Next gate: explicit owner answer; no code/status change before it.
