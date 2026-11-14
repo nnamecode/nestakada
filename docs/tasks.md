@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1074 (2026-11-14): **TEST-10A registry v2 four-file amendment COMPLETE and independently APPROVED.** Existing files4 changed, added0, product/runtime/fixture0. Offline PS5 validator `PASS` 1161, bindings40/order40, observers7, all unbound, `registryReady=false`, `dockerCalled=false`; independent verdict P1/P2/P3=0/0/0. Regression/browser/HTTP/Foundation/live не запускались. Следующий gate: отдельное разрешение владельца на bounded binding implementation; Q003 и TEST-10 execution пока closed.
+
 Текущая работа D-1073 (2026-11-14): **four-file TEST-10A registry v2 amendment plan APPROVED.** Exact scope3 JSON+existing validator, added files0, runtime/product0. Stable40/execution order/P104 members/role-aware observer/revoke reference rules closed. Next: implement four-file patch, run only offline validator, independent review; Q003/execution closed.
 
 Текущая работа D-1072 (2026-11-14): **TEST-10A all40 semantic table independently APPROVED.** Complete40/unique40; global order40; classification27 amendment +13 binding, overlap0; ready0. Product/registry/execution unchanged, `OBS-REV-E1` remains proposal/BLOCKED. Next: exact JSON amendment proposal and independent review; Q003/run closed.

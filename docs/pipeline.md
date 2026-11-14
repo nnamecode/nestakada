@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1074 (2026-11-14): TEST-10A registry v2 amendment COMPLETE и independently APPROVED, P1/P2/P3=0/0/0.** Four existing files only; new framework/product/runtime/fixture0. Offline PS5 validator `PASS` 1161 assertions with exact bindings40/order40, observers7, closed payload/step/oracle contracts, `registryReady=false`, all bindings/observers unbound and `dockerCalled=false`. Regression/browser/HTTP/Foundation/live0. Registry execution и Q003 остаются закрыты; следующая binding implementation или TEST-10 run возможна только через отдельный owner gate.
+
 > **Текущая точка D-1073 (2026-11-14): TEST-10A minimal registry v2 amendment plan APPROVED, P1/P2/P3=0/0/0.** Four existing files only, no new framework. Exact tagged steps/payload projections/all P104 members/role-aware OBS-022/BLOCKED OBS-REV-E1 and offline validator gates defined. Next gate — bounded four-file amendment + one offline validator + independent review. RegistryReady=false, bindings40/observers7 unbound; Q003/browser/Docker/Foundation/HTTP/live closed.
 
 > **Текущая точка D-1072 (2026-11-14): all40 TEST-10A semantic table APPROVED, P1/P2/P3=0/0/0.** IDs40/40, exact global order40, amendment27/read-binding13, overlap0; semantic-ready0. Existing product/fixture/three JSON registry unchanged; proposed `OBS-REV-E1` BLOCKED until observer review. Next gate — exact payload/binding/observer JSON amendment proposal and independent review, not write/run. Q003/browser/Docker/Foundation/HTTP/live closed.
