@@ -41,12 +41,28 @@ function Assert-SafeChain([string]$Root, [string]$Path) {
         if ($null -eq $current) { throw 'T10_PATH_REJECTED' }
     }
 }
-function Write-Receipt([string]$Path, [System.Collections.IDictionary]$Value) {
+function Assert-DeepestExistingChain([string]$Root, [string]$Target) {
+    Assert-Contained $Root $Target
+    $current = [IO.Path]::GetFullPath($Target)
+    while (!(Test-Path -LiteralPath $current)) {
+        $parent = [IO.Path]::GetDirectoryName($current)
+        if ([string]::IsNullOrWhiteSpace($parent) -or $parent -eq $current) { throw 'T10_PATH_REJECTED' }
+        $current = $parent
+    }
+    Assert-SafeChain $Root $current
+}
+function Write-Receipt([string]$Path, [object]$Value) {
     $temporary = $Path + '.new'
+    $backup = $Path + '.old'
     if (Test-Path -LiteralPath $temporary) { throw 'T10_RECEIPT_TEMP_EXISTS' }
+    if (Test-Path -LiteralPath $backup) {
+        Assert-Ordinary $backup $false
+        [IO.File]::Delete($backup)
+    }
     [IO.File]::WriteAllText($temporary, ($Value | ConvertTo-Json -Depth 8), $utf8)
     if (Test-Path -LiteralPath $Path) {
-        [IO.File]::Replace($temporary, $Path, $null)
+        [IO.File]::Replace($temporary, $Path, $backup)
+        [IO.File]::Delete($backup)
     } else {
         [IO.File]::Move($temporary, $Path)
     }
@@ -122,13 +138,36 @@ if ($Mode -eq 'StaticTest') {
     try { Assert-Contained $repo (Join-Path $runsRoot ('a' * 32)) } catch { $failures.Add('contained-run-root') }
     try { Assert-SafeChain $repo $PSCommandPath } catch { $failures.Add('safe-script-chain') }
     try { Assert-Contained $runsRoot $repo; $failures.Add('outside-accepted') } catch {}
+    try { Assert-DeepestExistingChain $repo (Join-Path $repo 'work/test10/static/deep') } catch { $failures.Add('deepest-existing-chain') }
+    $phasePath = Join-Path ([IO.Path]::GetTempPath()) ('test10-phase-' + [guid]::NewGuid().ToString('N') + '.json')
+    try {
+        $phase = [ordered]@{status='prepared';databaseRemovalOutcome=$null;databaseRemovedAt=$null;
+            secretsRemovedAt=$null;removedAt=$null}
+        Write-Receipt $phasePath $phase
+        $phase = Get-Content -Raw -LiteralPath $phasePath | ConvertFrom-Json
+        $phase.databaseRemovalOutcome='recovered_absent';$phase.databaseRemovedAt='controlled'
+        $phase.status='database_removed';Write-Receipt $phasePath $phase
+        $phase = Get-Content -Raw -LiteralPath $phasePath | ConvertFrom-Json
+        $phase.secretsRemovedAt='controlled';$phase.status='secrets_removed';Write-Receipt $phasePath $phase
+        $phase = Get-Content -Raw -LiteralPath $phasePath | ConvertFrom-Json
+        $phase.removedAt='controlled';$phase.status='removed';Write-Receipt $phasePath $phase
+        $phase = Get-Content -Raw -LiteralPath $phasePath | ConvertFrom-Json
+        if ($phase.status -cne 'removed') {$failures.Add('phase-terminal')}
+        if ($phase.databaseRemovalOutcome -cne 'recovered_absent') {$failures.Add('phase-absent-outcome')}
+        if ($phase.databaseRemovedAt -cne 'controlled' -or $phase.secretsRemovedAt -cne 'controlled' -or
+            $phase.removedAt -cne 'controlled') {$failures.Add('phase-fields')}
+        if ((Get-Content -Raw -LiteralPath $phasePath | ConvertFrom-Json).status -cne 'removed') {
+            $failures.Add('phase-repeat-read')
+        }
+    } catch {$failures.Add('phase-roundtrip')}
+    finally {if (Test-Path -LiteralPath $phasePath) {Remove-Item -LiteralPath $phasePath}}
     $ast = [Management.Automation.Language.Parser]::ParseFile(
         $PSCommandPath, [ref]$null, [ref]$null)
     $commands = @($ast.FindAll({param($node) $node -is [Management.Automation.Language.CommandAst]},$true) |
         ForEach-Object {$_.GetCommandName()} | Where-Object {$_})
     if ($commands -contains 'Invoke-Expression') { $failures.Add('invoke-expression') }
     if ($failures.Count) { throw ('T10_STATIC_TEST_FAILED:' + ($failures -join ',')) }
-    [ordered]@{schema='test10a-fixture-static-v1';status='PASS';assertions=6;dockerCalled=$false} |
+    [ordered]@{schema='test10a-fixture-static-v1';status='PASS';assertions=11;dockerCalled=$false} |
         ConvertTo-Json -Compress
     return
 }
@@ -172,9 +211,13 @@ if ($image.Count -ne 1 -or $image[0].Id -cne [string]$manifest.selectedAppImage 
 }
 if (!(Test-Path -LiteralPath $runsRoot)) {
     $test10Root = Join-Path $repo 'work/test10'
-    if (!(Test-Path -LiteralPath $test10Root)) { New-Item -ItemType Directory -Path $test10Root | Out-Null }
-    Assert-Ordinary $test10Root $true
+    Assert-DeepestExistingChain $repo $runsRoot
+    if (!(Test-Path -LiteralPath $test10Root)) {
+        New-Item -ItemType Directory -Path $test10Root | Out-Null
+        Assert-SafeChain $repo $test10Root
+    }
     New-Item -ItemType Directory -Path $runsRoot | Out-Null
+    Assert-SafeChain $repo $runsRoot
 }
 Assert-Ordinary $runsRoot $true
 Assert-SafeChain $repo $runsRoot
@@ -196,7 +239,8 @@ if ($Mode -eq 'Prepare') {
     $marker = [BitConverter]::ToString($markerBytes).Replace('-','').ToLowerInvariant()
     $receipt = [ordered]@{schema='test10a-fixture-receipt-v1';runId=$RunId;database=$database;
         sourceSha256=[string]$manifest.sourceSha256;appImage=[string]$manifest.selectedAppImage;
-        marker=$marker;privateRelative='private/actors.json';evidenceRootRelative='.';status='database_pending'}
+        marker=$marker;privateRelative='private/actors.json';evidenceRootRelative='.';status='database_pending';
+        databaseRemovalOutcome=$null;databaseRemovedAt=$null;secretsRemovedAt=$null;removedAt=$null}
     Write-Receipt $receiptPath $receipt
     Assert-SafeChain $runRoot $receiptPath
     Docker (Admin-Arguments $manifest 'prepare' $RunId $receipt.sourceSha256 $receipt.marker) | Out-Null
@@ -223,13 +267,26 @@ if ($receipt.schema -cne 'test10a-fixture-receipt-v1' -or $receipt.runId -cne $R
     $receipt.appImage -cne [string]$manifest.selectedAppImage -or
     [string]$receipt.sourceSha256 -cnotmatch '^[a-f0-9]{64}$' -or
     [string]$receipt.marker -cnotmatch '^[a-f0-9]{64}$' -or
-    $receipt.status -cnotin @('database_pending','database_created','prepared','prepare_failed','database_removed','secrets_removed')) { throw 'T10_RECEIPT_IDENTITY_REJECTED' }
+    $receipt.status -cnotin @('database_pending','database_created','prepared','prepare_failed','database_removed','secrets_removed','removed')) { throw 'T10_RECEIPT_IDENTITY_REJECTED' }
+$actors = Join-Path $privateRoot 'actors.json'
+if ($receipt.status -ceq 'removed') {
+    if (Test-Path -LiteralPath $actors) { throw 'T10_TERMINAL_SECRET_DRIFT' }
+    [ordered]@{schema='test10a-fixture-teardown-v1';status='PASS';runId=$RunId;
+        databaseRemoved=$true;privateSecretsRemoved=$true;evidenceRetained=$true;alreadyRemoved=$true} |
+        ConvertTo-Json -Compress
+    return
+}
 if ($receipt.status -cnotin @('database_removed','secrets_removed')) {
-    Docker (Admin-Arguments $manifest 'teardown' $RunId $receipt.sourceSha256 $receipt.marker) | Out-Null
+    $databaseOutput = @(Docker (Admin-Arguments $manifest 'teardown' $RunId $receipt.sourceSha256 $receipt.marker))
+    $databaseLine = [string]($databaseOutput | Select-Object -Last 1)
+    $removedPrefix = 'T10_DATABASE_REMOVED:'
+    $absentPrefix = 'T10_DATABASE_ABSENT:'
+    if ($databaseLine -ceq ($removedPrefix + $database)) {$receipt.databaseRemovalOutcome='removed'}
+    elseif ($databaseLine -ceq ($absentPrefix + $database)) {$receipt.databaseRemovalOutcome='recovered_absent'}
+    else {throw 'T10_DATABASE_OUTCOME_REJECTED'}
     $receipt.status='database_removed';$receipt.databaseRemovedAt=[DateTimeOffset]::UtcNow.ToString('o')
     Write-Receipt $receiptPath $receipt
 }
-$actors = Join-Path $privateRoot 'actors.json'
 if ($receipt.status -ne 'secrets_removed') {
     if (Test-Path -LiteralPath $actors) {
         Assert-SafeChain $privateRoot $actors

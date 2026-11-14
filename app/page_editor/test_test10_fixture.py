@@ -176,6 +176,44 @@ class Test10FixtureTests(TransactionTestCase):
         drop = MagicMock(); drop.__enter__.return_value = drop
         connect.side_effect = [owner, marker, drop]
         self.assertEqual(teardown_database(*("a" * 32, "b" * 64, "c" * 64)),
-                         "estakada_test10_" + "a" * 32)
+                         ("estakada_test10_" + "a" * 32, True))
         self.assertTrue(any("DROP DATABASE" in str(call)
                             for call in drop.execute.call_args_list))
+
+    @patch("page_editor.test10_database.connection")
+    def test_database_absent_is_nondestructive_recovery(self, connect):
+        missing = MagicMock(); missing.__enter__.return_value = missing
+        missing.execute.return_value.fetchone.return_value = None
+        connect.side_effect = [missing]
+        self.assertEqual(teardown_database("a" * 32, "b" * 64, "c" * 64),
+                         ("estakada_test10_" + "a" * 32, False))
+        self.assertFalse(any("DROP DATABASE" in str(call)
+                             for call in missing.execute.call_args_list))
+
+    @patch("page_editor.test10_database.connection")
+    def test_database_prepare_uses_postgres_control_schema(self, connect):
+        catalog = MagicMock(); catalog.__enter__.return_value = catalog
+        catalog.execute.return_value.fetchone.return_value = None
+        target = MagicMock(); target.__enter__.return_value = target
+        connect.side_effect = [catalog, target]
+        self.assertEqual(prepare_database("a" * 32, "b" * 64, "c" * 64),
+                         "estakada_test10_" + "a" * 32)
+        statements = "\n".join(str(call) for call in target.execute.call_args_list)
+        self.assertIn("CREATE SCHEMA test10_control AUTHORIZATION postgres", statements)
+        self.assertIn("REVOKE ALL ON SCHEMA test10_control", statements)
+        self.assertIn("CREATE SCHEMA app AUTHORIZATION app_migrator", statements)
+        self.assertLess(statements.index("test10_control.fixture_identity"),
+                        statements.index("CREATE SCHEMA app AUTHORIZATION app_migrator"))
+
+    @patch("page_editor.test10_database.connection")
+    def test_database_prepare_failure_drops_only_just_created_database(self, connect):
+        catalog = MagicMock(); catalog.__enter__.return_value = catalog
+        catalog.execute.return_value.fetchone.return_value = None
+        target = MagicMock(); target.__enter__.return_value = target
+        target.execute.side_effect = RuntimeError("synthetic setup failure")
+        cleanup = MagicMock(); cleanup.__enter__.return_value = cleanup
+        connect.side_effect = [catalog, target, cleanup]
+        with self.assertRaisesRegex(RuntimeError, "synthetic setup failure"):
+            prepare_database("a" * 32, "b" * 64, "c" * 64)
+        self.assertTrue(any("DROP DATABASE" in str(call)
+                            for call in cleanup.execute.call_args_list))

@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1043 (2026-11-14): TEST10-Q002-R002 приостановлен владельцу по anti-loop.** Previous teardown design finding закрыт, но новый offline phase round-trip дважды дал `T10_STATIC_TEST_FAILED:phase-roundtrip`; второй раз после исправления подтверждённого null-backup defect. Третьего запуска/диагностики нет. Partial remediation сохранена, Docker/Foundation/browser/regression0; Q003 closed. Следующий возможный этап только после `TEST10-Q002-R003=1`: read-only writer diagnosis, одна changed-condition offline попытка, independent review.
+
 > **Текущая точка D-1042 (2026-11-14): TEST10-Q002-R001 приостановлен владельцу по anti-loop; code stage не approved.** Второй эквивалентный finding — crash gap exact DB DROP→durable receipt; третьей remediation нет. Partial code сохранён, offline static6/6 PASS, Docker/Foundation/browser/regression0. Следующий возможный этап только после `TEST10-Q002-R002=1`: minimal no-bloat missing-DB recovery, terminal idempotence, pre-write ancestor guard, postgres-owned marker schema и bounded offline tests. Q003 закрыт.
 
 > **Точка D-1041 (2026-11-14): owner снял D-1040 pause; bounded fixture implementation/review выполнены частично.** Session/hash и cross-DB/source/image/path findings закрыты; D-1042 pause сохраняет незавершённый code stage.

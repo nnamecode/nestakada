@@ -55,15 +55,17 @@ def prepare(run_id, source_sha256, marker):
             conn.execute(sql.SQL("REVOKE ALL ON DATABASE {} FROM PUBLIC").format(
                 sql.Identifier(name)))
             conn.execute("REVOKE ALL ON SCHEMA public FROM PUBLIC")
-            conn.execute("CREATE SCHEMA app AUTHORIZATION app_migrator")
-            conn.execute("CREATE TABLE app.test10_fixture_identity ("
+            conn.execute("CREATE SCHEMA test10_control AUTHORIZATION postgres")
+            conn.execute("REVOKE ALL ON SCHEMA test10_control FROM PUBLIC, app_migrator, app_runtime")
+            conn.execute("CREATE TABLE test10_control.fixture_identity ("
                          "singleton boolean PRIMARY KEY DEFAULT true CHECK (singleton), "
                          "run_id text NOT NULL, database_name text NOT NULL, "
                          "source_sha256 text NOT NULL, marker text NOT NULL)")
-            conn.execute("INSERT INTO app.test10_fixture_identity "
+            conn.execute("INSERT INTO test10_control.fixture_identity "
                          "(run_id,database_name,source_sha256,marker) VALUES (%s,%s,%s,%s)",
                          expected)
-            conn.execute("REVOKE ALL ON TABLE app.test10_fixture_identity FROM PUBLIC, app_migrator, app_runtime")
+            conn.execute("REVOKE ALL ON TABLE test10_control.fixture_identity FROM PUBLIC, app_migrator, app_runtime")
+            conn.execute("CREATE SCHEMA app AUTHORIZATION app_migrator")
             conn.execute(sql.SQL("GRANT CONNECT ON DATABASE {} TO app_migrator").format(
                 sql.Identifier(name)))
             conn.execute(sql.SQL("REVOKE ALL ON DATABASE {} FROM app_runtime").format(
@@ -83,13 +85,13 @@ def teardown(run_id, source_sha256, marker):
             "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname=%s",
             (name,)).fetchone()
         if row is None:
-            raise RuntimeError("T10_DATABASE_NOT_FOUND")
+            return name, False
         if row[0] != "app_migrator":
             raise RuntimeError("T10_DATABASE_OWNER_MISMATCH")
     with connection(name) as target:
         actual = target.execute(
             "SELECT run_id,database_name,source_sha256,marker "
-            "FROM app.test10_fixture_identity WHERE singleton=true").fetchone()
+            "FROM test10_control.fixture_identity WHERE singleton=true").fetchone()
         if actual is None or tuple(actual) != expected:
             raise RuntimeError("T10_DATABASE_MARKER_MISMATCH")
     with connection() as conn:
@@ -97,16 +99,19 @@ def teardown(run_id, source_sha256, marker):
             sql.Identifier(name)))
         conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(
             sql.Identifier(name)))
-    return name
+    return name, True
 
 
 def main(argv):
     if len(argv) != 5 or argv[1] not in {"prepare", "teardown"}:
         raise ValueError("T10_DATABASE_COMMAND_REJECTED")
     run_id, source_sha256, marker = argv[2:]
-    name = (prepare(run_id, source_sha256, marker) if argv[1] == "prepare"
-            else teardown(run_id, source_sha256, marker))
-    print("T10_DATABASE_" + ("PREPARED:" if argv[1] == "prepare" else "REMOVED:") + name)
+    if argv[1] == "prepare":
+        name = prepare(run_id, source_sha256, marker)
+        print("T10_DATABASE_PREPARED:" + name)
+    else:
+        name, removed = teardown(run_id, source_sha256, marker)
+        print(("T10_DATABASE_REMOVED:" if removed else "T10_DATABASE_ABSENT:") + name)
 
 
 if __name__ == "__main__":
