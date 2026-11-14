@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1055 (2026-11-14): **TEST-10A evidence writer code приостановлен владельцу по anti-loop.** Approved plan/policy сохранены, partial PS5 writer не принят. Equivalent schema mismatch attempts2 (`SCHEMA` → diagnostic `SCHEMA_schema`), third run0. Recommended resume: contextual schema diagnostics/static PS5 projection, one exact patch + one StaticTest. Manifest/evidence/Docker/browser/HTTP0; Q003 closed.
+
 Текущая работа D-1052 (2026-11-14): **TEST-10A canonical registry stage APPROVED, P1/P2/P3=0/0/0.** Exact9/amended action order, 40 binding contracts, payload/body SHA, UI steps, fixture mapping и 6 observer contracts проходят PS5 validator679/679. Readiness=false и все bindings/observers unbound, поэтому Q003/execution закрыты. Следующий bounded этап: write-once evidence writer only + review.
 
 Текущая работа D-1051 (2026-11-14): **AC-015 action order corrected after new review P1=1.** Positive explicit save теперь до owner revoke; revoked denial остаётся отдельной последующей negative branch. Новых actions/routes/functions нет; repeat review required, readiness false/Q003 closed.
