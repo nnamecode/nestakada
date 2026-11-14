@@ -1,6 +1,12 @@
 # Процесс полной разработки
 
-> **Текущая точка D-1029 (2026-11-14): Docker permission classification fix independently APPROVED; повтор не выполнен.** Следующий gate — owner `TEST09-Q005=1` на одну read-only preflight попытку с Docker API access; Q002 закрыт.
+> **Текущая точка D-1032 (2026-11-14): FileInfo ancestor fix independently APPROVED; live preflight не повторялся.** Offline PASS 19/19, admission diagnostics PASS. Следующий gate — owner `TEST09-Q008=1` на одну read-only preflight попытку; Q002 закрыт.
+
+> **Точка D-1031 (2026-11-14): Q007 diagnosis/fix принят independent review D-1032.**
+
+> **Точка D-1030 (2026-11-14): empty running-list fix approved и подтвердил containers0; остаток перенесён в D-1031.**
+
+> **Точка D-1029 (2026-11-14): Q005 использован; scalar/null остаток перенесён в D-1030.**
 
 > **Точка D-1028 (2026-11-14): classification fix принят independent review D-1029.**
 

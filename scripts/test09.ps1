@@ -54,7 +54,7 @@ function Assert-SafeRepoFile([string]$Repo, [string]$Path) {
         if ([string]::Equals(
                 $current.FullName.TrimEnd([IO.Path]::DirectorySeparatorChar),
                 $repoFull, [StringComparison]::OrdinalIgnoreCase)) { break }
-        $current = $current.Parent
+        $current = if ($current -is [IO.DirectoryInfo]) { $current.Parent } else { $current.Directory }
         if ($null -eq $current) { throw 'T09_PATH_BOUNDARY_REJECTED' }
     }
 }
@@ -154,6 +154,15 @@ function Invoke-StaticTests {
         $missingRejected = $_.Exception.Message -ceq 'T09_EVIDENCE_UNAVAILABLE'
     }
     Expect $missingRejected 'missing-prerequisite-blocked'
+    $emptyLines = @(
+        @() | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }
+    )
+    Expect ($emptyLines.Count -eq 0) 'empty-running-list-is-array'
+    $safeScriptFile = $true
+    try {
+        Assert-SafeRepoFile ([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))) $PSCommandPath
+    } catch { $safeScriptFile = $false }
+    Expect $safeScriptFile 'file-ancestor-chain'
 
     $rejected = $false
     try { Get-DockerShape @('run','--rm','x') | Out-Null } catch {
@@ -183,7 +192,7 @@ function Invoke-StaticTests {
     [ordered]@{
         schema = 'test09-preflight-static-v1'
         status = 'PASS'
-        assertions = 17
+        assertions = 19
         dockerCalled = $false
     } | ConvertTo-Json -Compress
 }
@@ -256,8 +265,9 @@ try {
     }
 
     $running = @(
-        Invoke-DockerReadOnly @('ps','--format','{{.ID}}')
-    ) | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }
+        @(Invoke-DockerReadOnly @('ps','--format','{{.ID}}')) |
+            Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) }
+    )
     if ($running.Count -ne 0) {
         $result = New-PreflightResult 'BLOCKED' 'T09_RUNNING_CONTAINERS_PRESENT' $checks
         $result | ConvertTo-Json -Depth 6 -Compress

@@ -1,6 +1,12 @@
 # Принятые решения
 
-Решение D-1029 (2026-11-14): independent review D-1028 — `APPROVED`, P1/P2/P3=0. Native Docker stderr/nonzero теперь закрыто маппится в `BLOCKED/T09_DOCKER_READ_FAILED`, исходный ErrorActionPreference восстанавливается; output успеха сохраняется, mutation/retry/new verbs нет. Offline static PASS 17/17, live повтор не выполнялся. Следующий owner gate `TEST09-Q005=1` разрешит одну повторную read-only preflight попытку с доступом к Docker API; Q002 закрыт.
+Решение D-1032 (2026-11-14): independent review D-1031 — `APPROVED`, P1/P2/P3=0. Подтверждены корректный FileInfo→Directory/DirectoryInfo→Parent traversal, reparse/root/null guards, offline PASS 19/19 и неизменный read-only scope. Lock/editor/worker/five-image diagnostics PASS, но нового полного live preflight не было. Следующий owner gate `TEST09-Q008=1` разрешит одну read-only preflight попытку; Q002 закрыт.
+
+Статус D-1031 (2026-11-14): Q007 admission diagnosis/fix завершён и independently approved D-1032; новый live preflight отдельно требует Q008.
+
+Статус D-1030 (2026-11-14): owner Q006 снял anti-loop pause; empty running-list fix independently approved и подтвердил containers0. Следующий FileInfo defect исправляется D-1031.
+
+Решение D-1029 (2026-11-14): independent review D-1028 — `APPROVED`, P1/P2/P3=0. Native Docker stderr/nonzero закрыто маппится в BLOCKED. Q005 использован; остаток исправляется D-1030 после owner resume Q006.
 
 Статус D-1027 (2026-11-14): owner «Продолжай» после прямого gate принят как `TEST09-Q004=1`; выполнена одна read-only preflight попытка. Workspace containment и stopped Foundation подтверждены, затем Docker API вернул host/sandbox `permission denied`. Product/контейнеры не изменялись. Из-за Windows PowerShell NativeCommandError coordinator ошибочно выдал `FAIL/T09_PREFLIGHT_INTERNAL_ERROR` вместо prerequisite `BLOCKED`; это harness-classification defect, не product failure. Причина подтверждена одним read-only `docker version/info` diagnostic, повтор preflight не выполнялся. Remediation approved D-1029.
 
