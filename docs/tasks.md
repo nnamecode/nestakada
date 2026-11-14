@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1017 (2026-11-14): **exact7 TEST-09 bounded profile proposal ready; no execution/code.** T09-A–D cover atomic faults, quota debt, ENOSPC/log physical faults and capped load; receipt/Playwright/universal fault API excluded. Next gate: owner `TEST09-Q001=1` permits only bounded harness plan/review, not physical run.
+
 Текущая работа D-1016 (2026-11-14): **removed receipt/cache downstream oracles retired; no subsystem restored.** Historical receipt-count/bytes JS cases are forbidden to implement/run; current acceptance uses signed intent30m+request digest, durable delete ledger and throttle/temp only. States/IDs/full PASS unchanged. Next: bounded TEST-09 profile proposal for exact7 AC, no execution.
 
 Текущая работа D-1015 (2026-11-14): **OWNER-CONFLICT-Q001–Q005=1 accepted; five oracles reconciled to minimal D-595/596/859/896/923.** No assignments/history/repeated-password/two-success-state/24h-receipt subsystem. Routing now owner21+launch94+TEST09 7+TEST10 18=140; automation states/full PASS unchanged. Next safe work again depends on external launch inputs or separate TEST-09/10 approval.
