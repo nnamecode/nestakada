@@ -1,5 +1,13 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1022 (2026-11-14): TEST-09 harness plan independently APPROVED, P1/P2/P3=0; без кода/тестов/Docker.** Следующий gate — owner `TEST09-Q003=1` только на реализацию read-only preflight и offline/static tests. Q004 запуска и Q002 physical execution закрыты.
+
+> **Точка D-1021 (2026-11-14): physical mapping исправлен минимально и принят final review D-1022.**
+
+> **Точка D-1020 (2026-11-14): пять из шести remediation-групп приняты; остаток physical mapping перенесён в D-1021.**
+
+> **Точка D-1019 (2026-11-14): первичная remediation получила repeat verdict CHANGES_REQUIRED.** Exact11 и основные isolation guards приняты; остатки исправляются D-1020.
+
 > **Текущая точка D-1018 (2026-11-14): TEST09-Q001=1 accepted; T09H-001–018 harness plan ready, no code/run.** Mandatory first slice is read-only hard-cap feasibility; unsafe log storage returns BLOCKED, never fills host/Docker/workspace. Next gate independent plan review; physical Q002 remains closed.
 
 > **Текущая точка D-1017 (2026-11-14): exact7 TEST-09 profile proposal ready, no run/code.** Four bounded packages A–D preserve existing architecture and exclude receipt/Playwright/universal fault API; physical log test needs explicit disk budget. Next gate `TEST09-Q001=1` authorizes only bounded harness planning/review; physical run separately requires Q002.

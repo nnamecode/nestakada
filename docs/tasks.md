@@ -1,5 +1,13 @@
 # Таблица задач
 
+Текущая работа D-1022 (2026-11-14): **TEST-09 harness plan independently APPROVED, P1/P2/P3=0; code/run не начаты.** Следующий gate: owner `TEST09-Q003=1` только на реализацию read-only preflight и offline/static tests. Q004 запуска и Q002 physical execution закрыты.
+
+Текущая работа D-1021 (2026-11-14): **physical mapping TEST-09 plan минимально исправлен и принят final review D-1022.**
+
+Текущая работа D-1020 (2026-11-14): **пять из шести remediation-групп приняты re-review; physical mapping перенесён в D-1021.**
+
+Текущая работа D-1019 (2026-11-14): **первичная remediation review завершена CHANGES_REQUIRED.** Exact11 regressions и основные DB/evidence boundaries приняты; остатки перенесены в D-1020.
+
 Текущая работа D-1018 (2026-11-14): **TEST09-Q001=1 accepted; bounded harness implementation plan T09H-001–018 ready, code not started.** First slice only read-only storage feasibility; unsafe/unavailable hard-cap blocks physical scope. No Playwright/product surface/Compose change. Next: independent plan review; Q002 remains closed.
 
 Текущая работа D-1017 (2026-11-14): **exact7 TEST-09 bounded profile proposal ready; no execution/code.** T09-A–D cover atomic faults, quota debt, ENOSPC/log physical faults and capped load; receipt/Playwright/universal fault API excluded. Next gate: owner `TEST09-Q001=1` permits only bounded harness plan/review, not physical run.
