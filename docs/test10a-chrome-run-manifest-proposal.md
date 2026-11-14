@@ -1,6 +1,6 @@
 # TEST-10A — exact current-Chrome run manifest proposal
 
-Статус D-1052, 2026-11-14. Amendment и три canonical registry прошли independent review: `APPROVED`, P1=0, P2=0, P3=0. Exact action arrays уточнены explicit grant-revoke transitions без нового продуктового поведения. Документ не является run manifest, не создаёт fixture/stand/evidence и не разрешает Docker, Foundation, browser execution, direct HTTP или acceptance promotion. Все 40 bindings и 6 observers пока `unbound`, `registryReady=false`; `TEST10-Q003` закрыт до реализации/review writer и фактических bindings/observers, затем отдельного owner gate.
+Статус D-1068 amendment, 2026-11-14. Три canonical registry ранее прошли independent review: `APPROVED`, P1=0, P2=0, P3=0. Exact action arrays сохраняются без нового продуктового поведения. Документ не является run manifest, не создаёт fixture/stand/evidence и не разрешает Docker, Foundation, browser execution, direct HTTP или acceptance promotion. D-1055–1059 partial writer retired по no-bloat D-1068; approved D-1054 policy сохранена. Все 40 bindings и 6 observers пока `unbound`, `registryReady=false`; `TEST10-Q003` закрыт до отдельного simplified evidence protocol review и фактических bindings/observers, затем отдельного owner gate.
 
 ## Closed identity
 
@@ -55,7 +55,7 @@ Evidence files содержат только manifest, safe fixture summary, cas
 
 ## Write-once and physical durability gate
 
-До Q003 требуется отдельная reviewed реализация writer, которая:
+До Q003 требуется отдельный simplified evidence protocol review. Если он использует реализацию записи, она должна:
 
 1. создаёт manifest через create-new в already verified ordinary/no-reparse evidence root;
 2. записывает canonical UTF-8 JSON, выполняет file `Flush(true)` и подтверждает повторным SHA-256 read;
@@ -69,8 +69,8 @@ Cleanup receipt заранее содержит exact stand/container/network/da
 
 ## Execution gates and stop rule
 
-До будущего run обязательны: code review writer, read-only browser binary identity, active isolated foundation identity, fixture Prepare receipt, exact manifest hash и running-foreign-containers0. Любой drift → `BLOCKED/no first action`.
+До будущего run обязательны: approved simplified evidence protocol, read-only browser binary identity, active isolated foundation identity, fixture Prepare receipt, exact manifest hash и running-foreign-containers0. Любой drift → `BLOCKED/no first action`.
 
 Первая ошибка останавливает current case/package. Повтор возможен только после recorded cause и changed condition. Вторая equivalent error приостанавливает TEST-10A владельцу; третьей попытки нет.
 
-`TEST10-Q003=1` не может быть предложен до approval трёх registry и writer. Если позже он будет отдельно принят, он разрешит только один exact-run lifecycle: один fixture Prepare, один manifest-bound current-Chrome stand/run и exact Teardown с retained evidence. Он не разрешает второй Prepare/run, Edge, previous versions, другие cases, arbitrary HTTP, Playwright, установку браузеров, live/VPS, acceptance promotion или автоматическую публикацию.
+`TEST10-Q003=1` не может быть предложен до approval simplified evidence protocol и binding всех registry rows/observers. Если позже он будет отдельно принят, он разрешит только один exact-run lifecycle: один fixture Prepare, один manifest-bound current-Chrome stand/run и exact Teardown с retained evidence. Он не разрешает второй Prepare/run, Edge, previous versions, другие cases, arbitrary HTTP, Playwright, установку браузеров, live/VPS, acceptance promotion или автоматическую публикацию.

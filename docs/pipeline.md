@@ -1,5 +1,9 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1068 (2026-11-14): exact2 unapproved TEST-10A scripts удалены по approved no-bloat plan.** Retained: D-1054 policy, fixture, registries, manual9, product. Added framework0; executions0. Current gate — independent deletion/reconciliation review; Q003 и browser/Docker/Foundation/HTTP/live закрыты.
+
+> **Текущая точка D-1067 (2026-11-14): TEST-10A partial writer retirement предложен, не выполнен.** No-bloat candidate удаляет exact2 unapproved scripts (40120B) вместо исправления повторных AST/launcher/matrix P2; approved D-1054 evidence policy, fixture/registries/manual9 сохраняются, product behavior unchanged. Gate: independent scope review → только затем bounded deletion/reconciliation. Q003, browser, Docker, HTTP, Foundation, live закрыты.
+
 > **Текущая точка D-1066 (2026-11-14): `LAUNCH-IN-007` retired/not applicable.** По уточнению владельца рекламные проекты/кабинеты/выгрузки вне scope разработки и системного администрирования. Инженерный URL-gate использует утверждённые inventory114 и route map115: missing0, duplicates0, exact query paths, один approved extra wash URL без замены старого. `AC-051`/`AC-MIG-006` проверяются при migration/publication по этим локальным данным; внешний рекламный export не блокирует работу. Следующий этап — ближайшая незавершённая product/acceptance работа без scope expansion.
 
 > **Точка D-1065 (2026-11-14): local exact-URL baseline PASS.** Inventory114 unique→map known missing0, duplicates0; map115 has only approved extra wash URL; gallery query paths exact. Прежний external-export остаток superseded D-1066. No product/runtime/test/live change.

@@ -1,5 +1,9 @@
 # Таблица задач
 
+Текущая работа D-1068 (2026-11-14): **TEST-10A unapproved writer debt retired без replacement framework.** Exact2 scripts/40120B removed; approved policy/fixture/registries/manual9/product retained. No test/browser/Docker/HTTP/live execution. Следующий gate — independent deletion/reconciliation review; Q003 остаётся closed.
+
+Текущая работа D-1067 (2026-11-14): **no-bloat retirement proposal для unapproved TEST-10A writer debt; files untouched.** Candidate removal exact2: writer35828B и launcher4292B. Approved D-1054 policy1118B, fixture, canonical registries, manual nine-case scope и product code сохраняются. No replacement framework, no browser/Docker/HTTP/run/Q003. Следующий gate — independent scope review; только после APPROVED возможна отдельная bounded deletion/document reconciliation.
+
 Текущая работа D-1066 (2026-11-14): **advertising export gate удалён как ошибочно внесённый scope.** Разработчик/системный администратор отвечает за exact preservation утверждённых 114 исходных URL, а не за рекламный кабинет. Локальная сверка 114→115 PASS: missing0/duplicates0, gallery query exact, единственный extra — новая автомойка при сохранённом старом пути. `LAUNCH-IN-007` retired/not applicable. `AC-051`/`AC-MIG-006` остаются только migration/publication checks по локальным реестрам и фактическому сайту. Следующая работа выбирается из незавершённого продуктового/приёмочного плана без новых функций.
 
 Работа D-1065 (2026-11-14): **known exact-URL reconciliation PASS.** Inventory114→map missing0/duplicates0; map extra only new wash URL; gallery query1/2 exact. Прежний external-advertising остаток отменён D-1066. No code/tests/network.

@@ -1,5 +1,7 @@
 # TEST-10A — write-once evidence writer plan
 
+Статус D-1068 retired, 2026-11-14: independent D-1067 scope review APPROVED; exact2 unapproved writer/launcher scripts удалены без replacement framework. Independently approved D-1054 `acceptance/test10a-evidence-policy.json`, fixture, approved registries и manual nine-case scope сохранены для будущего упрощённого evidence protocol. Q003 и любое выполнение остаются закрытыми. Текст ниже исторически описывает D-1055–D-1059 и не является рекомендацией реализации.
+
 Статус D-1059, 2026-11-14: D-1058 redesign plan independently approved и реализован частично; PS5 StaticTest PASS110 (`negative19`, injected reparse34, fault3, `physicalReparse=SKIPPED_UNSUPPORTED`, Docker/browser/HTTP=false). Repeat CODE review `CHANGES REQUESTED`, P1/P2/P3=0/4/0: три прежних класса повторились — launcher branch output acceptance, exact AST assignment provenance/mutation fixtures, complete T10W-003/004 и launcher reparse rows. По anti-loop третьей remediation/третьего запуска нет; partial writer/launcher сохранены, но не приняты. Real WriteManifest/evidence, Prepare, Foundation, Docker, browser, HTTP, fixture/stand execution и Q003 не разрешены.
 
 ## Minimal scope
