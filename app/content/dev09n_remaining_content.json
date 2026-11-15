@@ -1,0 +1,557 @@
+{
+  "schema": "dev09n-remaining-content-v1",
+  "policy": "owner-approved-exact13-no-external-embeds",
+  "inputs": {
+    "map_sha256": "c1d542d0761ffbdb9fc58c9227fc94144515ab18c3155952a93dc6fb4d1bbad8",
+    "route_evidence_sha256": "c3a8a395fb4ed55fef6027a58014ce5decaadda7c559870bf06247c2fbeb79bc",
+    "media_evidence_sha256": "59fd85967e36d39a9d9f9a4a9ab8eda6b63457e1649107a434d184846e759601",
+    "identity_manifest": "docs/dev09n-remaining-exact13-manifest.md"
+  },
+  "media_folder": {
+    "id": "53e5e79f-3aca-40c7-a130-c025bdde8a8b",
+    "path": "dev09n/remaining-content",
+    "provenance": "DEV09N owner-approved remaining content"
+  },
+  "media": [
+    {
+      "evidence_id": "MED-0001",
+      "asset_id": "89f6efb6-b243-4fc8-80ec-a61dc5393ef8",
+      "file_id": "cdad24a4-91f9-451f-9c59-fa9f305f3a77",
+      "image_id": "edd55fd1-91cf-4e20-8cfc-2f5e9861dcc1",
+      "relative_path": "media/design-concepts/actions-v4/first-visit-discount-v1.webp",
+      "storage_key": "img/89f6efb6-b243-4fc8-80ec-a61dc5393ef8/original.webp",
+      "bytes": 151726,
+      "sha256": "be710512d347e6b4d529240817edb9050df9d5daf61bd4efcf4c02b5b2c262bc",
+      "alt": "Скидка 10% за первое посещение"
+    },
+    {
+      "evidence_id": "MED-0002",
+      "asset_id": "70dab673-6a5f-4274-947a-7bf8efc5e029",
+      "file_id": "6488fe3d-cef6-484a-aa48-a2fa0291ae0b",
+      "image_id": "0721a988-5dc4-42a4-b73e-8bb2f27705ca",
+      "relative_path": "media/design-concepts/actions-v4/sunday-repair-discount-v1.webp",
+      "storage_key": "img/70dab673-6a5f-4274-947a-7bf8efc5e029/original.webp",
+      "bytes": 222598,
+      "sha256": "df13ba501d57cbade361225c90f34d1276f7fbff5911217624569a2d319cd02a",
+      "alt": "Каждое воскресенье скидка на ремонт 7%"
+    },
+    {
+      "evidence_id": "MED-0004",
+      "asset_id": "6bd3397f-d79e-4542-bf2a-168bf8eefd14",
+      "file_id": "efb52c4a-3926-4eee-b7a5-c8d7c3d6d923",
+      "image_id": "4f680d0d-66e0-41a4-8361-6a85b84d9bba",
+      "relative_path": "media/design-concepts/contacts-v4/body-shop-exterior-clean-light-v1.webp",
+      "storage_key": "img/6bd3397f-d79e-4542-bf2a-168bf8eefd14/original.webp",
+      "bytes": 191734,
+      "sha256": "8fc2142538ad2f7c3a0016df89f3d3f90df2da37d03bd1b39135e95f810c3df5",
+      "alt": "Кузовной цех автотехцентра Эстакада"
+    },
+    {
+      "evidence_id": "MED-0005",
+      "asset_id": "cdaba860-0d92-4c28-a340-d392cf5412ab",
+      "file_id": "012aeb12-0028-4da8-a74f-64c2ccc07538",
+      "image_id": "94c7fa00-3395-465f-abbe-d991bedbcd0e",
+      "relative_path": "media/design-concepts/contacts-v4/reception-v1.jpg",
+      "storage_key": "img/cdaba860-0d92-4c28-a340-d392cf5412ab/original.jpg",
+      "bytes": 190431,
+      "sha256": "68fb97e86a37c2361686bb057590d602b951fca6eb269725813265915a2472ad",
+      "alt": "Зона приёмки автотехцентра"
+    },
+    {
+      "evidence_id": "MED-0006",
+      "asset_id": "e1f19d53-5811-4166-858d-35308ae853c1",
+      "file_id": "6e1eeea7-b8ae-4f08-a71f-fbc9d0983dd6",
+      "image_id": "5857c071-6e81-460d-9fac-519bae6a0ebc",
+      "relative_path": "media/design-concepts/contacts-v4/service-reception-v1.jpg",
+      "storage_key": "img/e1f19d53-5811-4166-858d-35308ae853c1/original.jpg",
+      "bytes": 189101,
+      "sha256": "e7e0b315e4fd6f192713476680f2cee5ba830983def383b0c1f43f72a9cfcec0",
+      "alt": "Работа сервисной службы"
+    },
+    {
+      "evidence_id": "MED-0007",
+      "asset_id": "ac6af51d-a08b-47bb-b818-0c84e13e7050",
+      "file_id": "5ef31b85-ec14-49a7-a944-e5c62fcb977e",
+      "image_id": "7efdc034-f931-4397-be93-fe503a19eeca",
+      "relative_path": "media/design-concepts/contacts-v4/waiting-area-v1.jpg",
+      "storage_key": "img/ac6af51d-a08b-47bb-b818-0c84e13e7050/original.jpg",
+      "bytes": 247402,
+      "sha256": "5f8dd608684af7baf484397c77d9a9cc3805cc7bd9255df1079646f1b79df8e9",
+      "alt": "Зона ожидания автотехцентра"
+    },
+    {
+      "evidence_id": "MED-0008",
+      "asset_id": "27fe380b-0728-489a-b7cf-64a47aea9c14",
+      "file_id": "29f355a7-3a9f-4692-8295-0591afbe4f5c",
+      "image_id": "191e8b95-af10-423e-9507-59a7c62be591",
+      "relative_path": "media/design-concepts/photo-strip-v4/exterior-bays-bright-v1.webp",
+      "storage_key": "img/27fe380b-0728-489a-b7cf-64a47aea9c14/original.webp",
+      "bytes": 201684,
+      "sha256": "640bc75001fede5e3c29c85ca2629af2263770da5014339edc0e5def9d83d43f",
+      "alt": "Слесарные посты автотехцентра"
+    }
+  ],
+  "pages": [
+    {
+      "page_id": "ffdbdc65-39d8-4e22-88e3-7e44e752fbde",
+      "map_id": "MAP-003",
+      "url": "/partners",
+      "kind": "legacy_partner_links",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 3,
+      "name": "Партнёры",
+      "h1": "Партнёры",
+      "title": "Партнёры | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/47603c27b74b562c849f.html",
+        "sha256": "63afb07928c3074fb795bf46b275f8b5d539db35a7f031f6df99ee19e5a08b71"
+      },
+      "profile": {
+        "type": "partners",
+        "items": [
+          {
+            "text": "\"BlackStone\" - установка пневмо подвески",
+            "url": "http://www.blackstone-russia.ru/",
+            "label": "www.blackstone-russia.ru"
+          },
+          {
+            "text": "Противоугонная маркировка автомобиля",
+            "url": "http://automarkirovka.ru/",
+            "label": "www.automarkirovka.ru"
+          },
+          {
+            "text": "Установочный центр «АргоАвто»",
+            "url": "http://www.argoauto-center.ru/",
+            "label": "www.argoauto-center.ru"
+          },
+          {
+            "text": "Центр тонирования автомобиля",
+            "url": "http://www.ton-service.ru/",
+            "label": "www.ton-service.ru"
+          },
+          {
+            "text": "Страховая компания \"РОСГОССТРАХ\"",
+            "url": "http://www.rgs.ru/",
+            "label": "www.rgs.ru"
+          },
+          {
+            "text": "Группа компаний «МОТОРТЕХНОЛОГИЯ» - ремонт различных марок отечественных и импортных двигателей, их узлов и деталей",
+            "url": "http://www.motortehn.ru/",
+            "label": "www.motortehn.ru"
+          }
+        ]
+      }
+    },
+    {
+      "page_id": "b427b1b8-2fb9-44cd-a301-5b14f2f991b2",
+      "map_id": "MAP-004",
+      "url": "/actions",
+      "kind": "actions",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 5,
+      "name": "Акции",
+      "h1": "Акции",
+      "title": "Акции | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/3133b886374780db941f.html",
+        "sha256": "89959fb0ecfb5a83d70d9a22ca38708907fef008fab697968e3f95314e70449d"
+      },
+      "artifact": {
+        "relative_path": "work/actions.html",
+        "sha256": "241e51df9338276f9a2f6ad6e41403bcdb6dedde265eaed427ec569f4b18b0ce"
+      },
+      "profile": {
+        "type": "actions",
+        "cards": [
+          {
+            "heading": "Скидка 10% за первое посещение!",
+            "text": "Качество обслуживания как у официального дилера, но цены значительно ниже!",
+            "image_id": "edd55fd1-91cf-4e20-8cfc-2f5e9861dcc1"
+          },
+          {
+            "heading": "Каждое воскресенье скидка на ремонт 7%",
+            "text": "Не проспи свою выгоду!",
+            "image_id": "0721a988-5dc4-42a4-b73e-8bb2f27705ca"
+          }
+        ]
+      }
+    },
+    {
+      "page_id": "df6b50bb-d749-4106-b053-2999e0335223",
+      "map_id": "MAP-005",
+      "url": "/reviews",
+      "kind": "reviews",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 6,
+      "name": "Отзывы",
+      "h1": "Отзывы",
+      "title": "Отзывы | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/eb8219cbca1aa49e96d8.html",
+        "sha256": "322102551a51d472305c22d408396302f1a23106eaf2c2fd90eabd67221d9b64"
+      },
+      "artifact": {
+        "relative_path": "work/reviews.html",
+        "sha256": "5c8e8d193106da4cd1ba3ac76be6111acc5a9085d6310df15a9fed41143974f1"
+      },
+      "profile": {
+        "type": "reviews",
+        "intro": "Мы счастливы, что большинство наших клиентов — это не только партнеры, но и друзья, с которыми сложились крепкие и доверительные отношения.",
+        "videos": [
+          {
+            "title": "ВИДЕО-ОТЗЫВ 01",
+            "url": "https://www.youtube.com/watch?v=4TrRalaNkT8"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 02",
+            "url": "https://www.youtube.com/watch?v=aFwP0Ahry3A"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 03",
+            "url": "https://www.youtube.com/watch?v=Yrd3pRcFDwI"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 04",
+            "url": "https://www.youtube.com/watch?v=LRaZ46Jilic"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 05",
+            "url": "https://www.youtube.com/watch?v=jOmJEtGa1Pc"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 06",
+            "url": "https://www.youtube.com/watch?v=0QN2bPlOvgU"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 07",
+            "url": "https://www.youtube.com/watch?v=pmucl0ww68U"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 08",
+            "url": "https://www.youtube.com/watch?v=nAyo9rIIXfA"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 09",
+            "url": "https://www.youtube.com/watch?v=yrDWcfF5fyY"
+          },
+          {
+            "title": "ВИДЕО-ОТЗЫВ 10",
+            "url": "https://www.youtube.com/watch?v=jB_lPvIgk2Y"
+          }
+        ]
+      }
+    },
+    {
+      "page_id": "91631e35-5e81-407f-806b-e973223d7340",
+      "map_id": "MAP-007",
+      "url": "/contacts",
+      "kind": "contacts",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 7,
+      "name": "Контакты",
+      "h1": "Контакты",
+      "title": "Контакты | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/6f2460775068eaa289d1.html",
+        "sha256": "fa3518936b0a2f9fd277378e66ba9fed67641c949422335cb5cc1b2014e47ac0"
+      },
+      "artifact": {
+        "relative_path": "work/contacts.html",
+        "sha256": "9d0e6f7b3a9c7eb0ff0c3afb8d235c70d13fd6fc23703a5b4e2dbb8ee5fcce6e"
+      },
+      "profile": {
+        "type": "contacts",
+        "phone_display": "+7 (499) 110-25-52",
+        "phone_href": "tel:+74991102552",
+        "address": "117105, Москва, Проспект 60-летия Октября, 15Б",
+        "hours": "Ежедневно с 9:00 до 21:00",
+        "email_display": "estakada10@yandex.ru",
+        "email_href": "mailto:estakada10@yandex.ru",
+        "route_href": "https://yandex.ru/maps/org/57771430682",
+        "gallery_heading": "Фотогалерея",
+        "image_ids": [
+          "191e8b95-af10-423e-9507-59a7c62be591",
+          "4f680d0d-66e0-41a4-8361-6a85b84d9bba",
+          "94c7fa00-3395-465f-abbe-d991bedbcd0e",
+          "7efdc034-f931-4397-be93-fe503a19eeca",
+          "5857c071-6e81-460d-9fac-519bae6a0ebc"
+        ]
+      }
+    },
+    {
+      "page_id": "87cf5862-20fd-4ad3-b90c-bb4d6e888355",
+      "map_id": "MAP-009",
+      "url": "/direct-contact",
+      "kind": "legacy_director_message",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 8,
+      "name": "Прямая связь с директором",
+      "h1": "Прямая связь с директором",
+      "title": "Прямая связь с директором | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/f52091cb91f84127f6fc.html",
+        "sha256": "8c3465e86ecf84dcc629485eb5958df83f861af039c9481d3f19e3fc5af31a2f"
+      },
+      "profile": {
+        "type": "paragraphs",
+        "paragraphs": [
+          "Уважаемым клиентам АТЦ \"ЭСТАКАДА\"",
+          "Как руководитель сервиса, я хочу, чтобы каждый наш клиент, получил качественную услугу и уехал от нас довольный, и вернулся к нам снова и снова. И рекомендовал наш сервис своим друзьям и знакомым. Для этого, я добиваюсь от своих сотрудников высокого качества обслуживания и качественного исполнения работы. Мне очень важно знать Ваше мнение и если Вы не довольны – смело обращайтесь ко мне, я урегулирую все вопросы и добьюсь того, чтобы это не повторялось вновь.",
+          "Мой прямой номер телефона: +7 (499) 110-25-52"
+        ]
+      }
+    },
+    {
+      "page_id": "e3c55ade-799b-4118-88b8-3fb03deea235",
+      "map_id": "MAP-044",
+      "url": "/nash-servisnyij-czentr",
+      "kind": "legacy_empty_main",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 9,
+      "name": "Наш сервисный центр",
+      "h1": "",
+      "title": "Наш сервисный центр | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/ca8ca7fba5644aa2c1bd.html",
+        "sha256": "b045ddf3e628459fe0094239eae8841b68ae2251f789422aced4043606573daf"
+      },
+      "profile": {
+        "type": "empty"
+      }
+    },
+    {
+      "page_id": "9b5b3c53-d8c7-4395-89e5-6d07645f0d61",
+      "map_id": "MAP-049",
+      "url": "/about",
+      "kind": "legacy_empty_main",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 10,
+      "name": "О компании",
+      "h1": "",
+      "title": "О компании | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/8e314bdb2ebde8cb9356.html",
+        "sha256": "9d37c9663551c31748224e33265f5e181b013671b162c96cb02127af8b3cc1e4"
+      },
+      "profile": {
+        "type": "empty"
+      }
+    },
+    {
+      "page_id": "da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb",
+      "map_id": "MAP-078",
+      "url": "/news/",
+      "kind": "legacy_news_catalog",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 11,
+      "name": "Новости",
+      "h1": "Новости",
+      "title": "Новости | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/c73906bf9371c4f9b024.html",
+        "sha256": "7341b2a1cbcbf9dc0655ba45e0def685af3bc1007deafbebce09ad840f0cbc1c"
+      },
+      "profile": {
+        "type": "news_catalog",
+        "items": [
+          {
+            "title": "Приобретение подъемника до 10 тонн для ремонта малотоннажных автомобилей",
+            "date": "27 апреля 2019, 22:54",
+            "url": "/news/priobretenie-podemnika-do-10-tonn-dlya-remonta-malotonnazhnyix-avtomobilej",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "АвтоТехЦентр «Эстакада» приобрел четырехстоечный подъемник грузоподъемностью до 10 тонн для удобного и безопасного ремонта малотоннажных автомобилей."
+              }
+            ]
+          },
+          {
+            "title": "АТЦ \"ЭСТАКАДА\" подключила многоканальный телефон",
+            "date": "27 апреля 2019, 22:23",
+            "url": "/news/atcz-estakada-podklyuchila-mnogokanalnyij-telefon",
+            "blocks": [
+              {
+                "type": "paragraph",
+                "text": "Установка многоканальной телефонного позволяет нам обеспечить качественную связь и оперативность решения важных вопросов."
+              }
+            ]
+          },
+          {
+            "title": "Оказание дополнительных услуг",
+            "date": "27 апреля 2019, 22:57",
+            "url": "/news/okazanie-dopolnitelnyix-uslug",
+            "blocks": [
+              {
+                "type": "links",
+                "items": [
+                  {
+                    "text": "Установка автозвука",
+                    "url": "https://www.estakada-auto.ru/service/ustanovka-avtozvuka"
+                  },
+                  {
+                    "text": "Установка противоугонных систем",
+                    "url": "https://www.estakada-auto.ru/service/ustanovka-protivougonnyh-sistem"
+                  },
+                  {
+                    "text": "Установка доп. освещения",
+                    "url": "https://www.estakada-auto.ru/service/ustanovka-dop-osveshcheniya"
+                  },
+                  {
+                    "text": "Установка доп. шумоизаляции",
+                    "url": "https://www.estakada-auto.ru/service/shumoizolyaciya"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "page_id": "62228d71-44ce-44da-82b5-85ba9c7d93dd",
+      "map_id": "MAP-090",
+      "url": "/garantii",
+      "kind": "legacy_under_construction",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 12,
+      "name": "Гарантии",
+      "h1": "Гарантии",
+      "title": "Гарантии | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/5dad9bce323c991924d7.html",
+        "sha256": "29e5a2aae9ce8c4f30a9078a148afe23840dfcc8a3430f25a79caf146f561ccd"
+      },
+      "profile": {
+        "type": "paragraphs",
+        "paragraphs": [
+          "Приносим свои извинения, данный раздел сайта находится в разработке!"
+        ]
+      }
+    },
+    {
+      "page_id": "f30b0e81-5ac6-4779-bb0e-65dc3ae5c301",
+      "map_id": "MAP-097",
+      "url": "/cctv",
+      "kind": "legacy_camera_schedule_text",
+      "parent_id": "e80c3de1-feea-4847-b550-325a825ffc0e",
+      "position": 13,
+      "name": "Web-камеры техцентра",
+      "h1": "Web-камеры техцентра",
+      "title": "Web-камеры техцентра | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/5c43976d69bd9ce64ed8.html",
+        "sha256": "89c78095b10cb0888d129da85947ec30cf63e6b5c0f9e0c98520d31d079f7013"
+      },
+      "profile": {
+        "type": "paragraphs",
+        "paragraphs": [
+          "Трансляция ведется в рабочее время с 09-00 до 21-00 мск"
+        ]
+      }
+    },
+    {
+      "page_id": "13fe0f8c-001c-446a-8cb7-b588fcdb1916",
+      "map_id": "MAP-045",
+      "url": "/news/priobretenie-podemnika-do-10-tonn-dlya-remonta-malotonnazhnyix-avtomobilej",
+      "kind": "legacy_news_article",
+      "parent_id": "da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb",
+      "position": 0,
+      "name": "Приобретение подъемника до 10 тонн для ремонта малотоннажных автомобилей",
+      "h1": "Приобретение подъемника до 10 тонн для ремонта малотоннажных автомобилей",
+      "title": "Приобретение подъемника до 10 тонн для ремонта малотоннажных автомобилей | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/04614bb6eacfa8f3a4e4.html",
+        "sha256": "61f814922b0bfc17759ece7fb9141c90c49376d2d6633cbf536e8e0788c980ab"
+      },
+      "profile": {
+        "type": "paragraphs",
+        "paragraphs": [
+          "АвтоТехЦентр «Эстакада» приобрел четырехстоечный подъемник грузоподъемностью до 10 тонн для удобного и безопасного ремонта малотоннажных автомобилей."
+        ]
+      }
+    },
+    {
+      "page_id": "f1c97615-2220-4732-a9cb-d5979d6500b2",
+      "map_id": "MAP-039",
+      "url": "/news/atcz-estakada-podklyuchila-mnogokanalnyij-telefon",
+      "kind": "legacy_news_article",
+      "parent_id": "da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb",
+      "position": 1,
+      "name": "АТЦ «ЭСТАКАДА» подключила многоканальный телефон",
+      "h1": "АТЦ \"ЭСТАКАДА\" подключила многоканальный телефон, теперь ни один клиент не останется без внимания!",
+      "title": "АТЦ \"ЭСТАКАДА\" подключила многоканальный телефон | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/c4e52e3c290d204f9560.html",
+        "sha256": "6fa269bb6569b0a38174beb8e91186a0e8f5fe48865ed1df4193b0548559beb3"
+      },
+      "profile": {
+        "type": "paragraphs",
+        "paragraphs": [
+          "Установка многоканальной телефонного позволяет нам обеспечить качественную связь и оперативность решения важных вопросов."
+        ]
+      }
+    },
+    {
+      "page_id": "06f43591-ff13-4409-89ef-823534b5b33e",
+      "map_id": "MAP-033",
+      "url": "/news/okazanie-dopolnitelnyix-uslug",
+      "kind": "legacy_news_article",
+      "parent_id": "da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb",
+      "position": 2,
+      "name": "Оказание дополнительных услуг",
+      "h1": "Оказание дополнительных услуг",
+      "title": "Оказание дополнительных услуг | Автосервис «Эстакада»",
+      "description": "",
+      "is_published": false,
+      "source": {
+        "relative_path": "work/site-audit/crawl/d0afd77f4753d8dd50ef.html",
+        "sha256": "2456222b91910ab23d444ea49520232a8b69fb3f580659a765aa6ab37944a3f3"
+      },
+      "profile": {
+        "type": "links",
+        "items": [
+          {
+            "text": "Установка автозвука",
+            "url": "https://www.estakada-auto.ru/service/ustanovka-avtozvuka"
+          },
+          {
+            "text": "Установка противоугонных систем",
+            "url": "https://www.estakada-auto.ru/service/ustanovka-protivougonnyh-sistem"
+          },
+          {
+            "text": "Установка доп. освещения",
+            "url": "https://www.estakada-auto.ru/service/ustanovka-dop-osveshcheniya"
+          },
+          {
+            "text": "Установка доп. шумоизаляции",
+            "url": "https://www.estakada-auto.ru/service/shumoizolyaciya"
+          }
+        ]
+      }
+    }
+  ]
+}

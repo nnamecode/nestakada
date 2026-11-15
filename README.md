@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1102 (2026-11-15): DEV09N-IMP-001 canonical data independently APPROVED 0/0/0.** Exact13/exact7 package and read-only host validator PASS syntax/selfcheck/actual; exact source text, current contact override, fixed identities/order/SHA and pre-read/structural caps are closed. Product/DB/regression/live0; Docker permission denial was not retried. Next IMP-002 focused RED schema/package contracts through named `dev09-services`, then minimal IMP-003 contacts schema.
+
 > **Текущая точка D-1101 (2026-11-15): owner removed old direct phone; DEV09N identity manifest fixed.** `/direct-contact` uses only +7(499)110-25-52; old 8(903)…33-43 excluded. Exact13 UUID/parents/free positions and exact7 folder/asset/file/image identities are externalized before JSON, preventing self-authority. Package/validator/code/tests/Docker0. Next finish canonical JSON + host validator and independent data gate.
 
 > **Текущая точка D-1100 (2026-11-15): DEV09N-IMP-001 data gate found one owner conflict; package not created.** `/direct-contact` source contains old direct phone 8(903)…33-43, while D-927 confirms public +7(499)110-25-52. Exact transfer vs current public contact cannot be guessed. Other exact12 authorities/identities inspected; code/package/tests/Docker0. Await simple owner choice: use current official phone (recommended) or preserve old direct number.

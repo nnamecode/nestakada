@@ -1,6 +1,6 @@
 # DEV-09N exact13 — identity manifest
 
-Дата: 2026-11-15. Статус: **owner contact choice resolved; canonical package pending**. Authority: D-1101, D-1095/D-1098.
+Дата: 2026-11-15. Статус: **canonical package independently APPROVED**. Authority: D-1102, D-1101, D-1095/D-1098.
 
 ## Page identities
 
