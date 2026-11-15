@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1092 (2026-11-15): DEV-09N exact13 no-bloat scope proposal READY, code0.** One package/existing writer, exact10 legacy/news + exact3 actions/reviews/contacts, existing kinds/layers only. Reviews are10 explicit links without iframe; contacts confirmed facts +5 static local images, no form/map script/JS; actions exact2. Await owner approval → independent scope review → minimal implementation plan/review → separate code gate. TEST-08 fixture remains blocked.
+
 > **Текущая точка D-1091 (2026-11-15): TEST-08 fixture precondition BLOCKED by exact13 product gap.** Existing packages cover98 legacy MAP + MAP-115; runtime aliases MAP-017/018/088 bring legacy coverage to101/114. Missing13 match deferred DEV-09L and cannot be fabricated in test data without false green/new importer. Audit recorded; tests/Docker/product0. Next bounded stage exact13 remaining-content scope/review/owner code gate, then fixture planning resumes.
 
 > **Текущая точка D-1090 (2026-11-15): TEST-08 base-MVP plan independently APPROVED 0/0/0.** Variant1 scope, matrix17/20/103, future isolated fixture, exact10 HTTP/manual groups, no Playwright/new framework and closed evidence/stop rules accepted. Review read-only; files/tests/Docker/network/live0. Fixture implementation/execution remains closed. Next bounded stage minimal fixture plan only, then independent review and owner gate.
