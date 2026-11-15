@@ -1,6 +1,6 @@
 # TEST-08 — аудит готовности к общему e2e
 
-Дата: 2026-11-15. Статус: **BLOCKED by admission contract; execution not started**.
+Дата: 2026-11-15. Статус: **admission resolved by owner variant 1; execution not started**. План: `docs/test08-base-mvp-plan.md`.
 
 ## Что уже доказано
 
@@ -44,4 +44,4 @@
 
 ## Итог аудита
 
-TEST-08 не запускался; Docker, Foundation, Playwright, browser, network, VPS и live не затронуты. Следующий gate — простое решение владельца по варианту 1 или 2. До ответа продукт и тестовый framework не меняются.
+TEST-08 не запускался; Docker, Foundation, Playwright, browser, network, VPS и live не затронуты. Владелец выбрал вариант 1 командой «Продолжай» после этого аудита. Следующий gate — независимое ревью `docs/test08-base-mvp-plan.md`; до `APPROVED` fixture, продукт и test execution не меняются.
