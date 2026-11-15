@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1101 (2026-11-15): **DEV09N contact conflict resolved; exact13/exact7 identity manifest fixed, IMP-001 continues.** Owner removed old direct phone and selected only +7(499)110-25-52. `docs/dev09n-remaining-exact13-manifest.md` fixes literal Page UUID/parents/free positions and media folder/asset/file/image IDs before package creation. Existing root pages are not reordered. Package/validator/product/tests/Docker0. Next canonical JSON + read-only host validator + independent data review.
+
 Текущая работа D-1100 (2026-11-15): **DEV09N-IMP-001 paused at one content authority conflict before package creation.** Owner code gate D-1099 accepted by command «Продолжай». Read-only exact13 inspection found `/direct-contact` source old direct phone `8 (903) 772-33-43`, conflicting with owner-confirmed public `+7 (499) 110-25-52` D-927. No automatic substitution or unconfirmed personal publication. Other exact12 source facts and literal identities inspected; package/code/config/tests/Docker0. Await owner choice, recommended current official phone.
 
 Текущая работа D-1098 (2026-11-15): **DEV-09N minimal implementation plan repeat review APPROVED P1/P2/P3=0/0/0.** Measured caps and tests-first IMP-004–006 accepted; no new contradiction/bloat. Product/package/config/tests/Docker/network0. Await separate owner approval `DEV09N-IMP-001–008`; TEST-08 fixture remains blocked until implementation completes.

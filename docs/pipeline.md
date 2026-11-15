@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1101 (2026-11-15): old direct phone removed by owner; DEV09N identity manifest fixed.** Exact13 Page identities/tree/free positions and exact7 media identities precede package. Code/tests/Docker0. IMP-001 continues with JSON/validator/data review.
+
 > **Текущая точка D-1100 (2026-11-15): owner code gate D-1099 opened; IMP-001 paused before writes on contact conflict.** Old `/direct-contact` direct phone differs from D-927 confirmed public phone. Exact transfer/substitution requires owner choice; recommended current official phone. Package/code/tests/Docker0.
 
 > **Текущая точка D-1098 (2026-11-15): DEV-09N implementation plan repeat review APPROVED 0/0/0.** Measured caps/tests-first slices/no-bloat accepted. Code/tests/Docker0. Await separate owner `DEV09N-IMP-001–008` permission before implementation.
