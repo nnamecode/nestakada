@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1091 (2026-11-15): TEST-08 fixture precondition BLOCKED by exact13 product content gap.** Canonical packages cover98 legacy MAP + extra MAP-115; runtime aliases cover MAP-017/018/088, итого101/114 старых URL. Missing exact13 have no package/writer/runtime binding and match deferred DEV-09L remaining content. Test-only fabrication rejected as false green/bloat. Audit `docs/test08-fixture-readiness-audit.md`; tests/Docker/product0. Next bounded stage — exact13 remaining-content scope, review and owner code gate; fixture plan resumes only after it.
+
 > **Текущая точка D-1090 (2026-11-15): TEST-08 base-MVP plan independently APPROVED, P1/P2/P3=0/0/0.** Admission variant1, matrix17/20/103, one future isolated fixture, exact10 HTTP/manual groups and no Playwright/new framework accepted. Files/tests/Docker0. Plan does not authorize fixture implementation/run. Next bounded stage — minimal fixture plan only, then independent review and explicit owner implementation gate.
 
 > **Текущая точка D-1089 (2026-11-15): owner выбрал no-bloat TEST-08 admission variant1; execution not started.** TEST-08 ограничен current base MVP; DEV-26/27, external/physical/real-device/launch gates не возвращаются. Existing acceptance suite has17 text-only/20 partial_http/103 unbound driver rows, поэтому её зелёный harness не выдаётся за сайт. Plan `docs/test08-base-mvp-plan.md`: one future reviewed isolated fixture + exact10 HTTP/manual groups, no new framework/Playwright/product. Next gate independent plan review; Docker/tests0.
