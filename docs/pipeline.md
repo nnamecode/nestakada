@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1100 (2026-11-15): owner code gate D-1099 opened; IMP-001 paused before writes on contact conflict.** Old `/direct-contact` direct phone differs from D-927 confirmed public phone. Exact transfer/substitution requires owner choice; recommended current official phone. Package/code/tests/Docker0.
+
 > **Текущая точка D-1098 (2026-11-15): DEV-09N implementation plan repeat review APPROVED 0/0/0.** Measured caps/tests-first slices/no-bloat accepted. Code/tests/Docker0. Await separate owner `DEV09N-IMP-001–008` permission before implementation.
 
 > **Текущая точка D-1097 (2026-11-15): DEV-09N plan review CHANGES_REQUESTED 0/2/0; remediation ready.** Actual-bounded per-class caps and tests-first RED/GREEN for media/writer/public close findings. Product/tests/Docker0. Next repeat plan review; code gate closed.

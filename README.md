@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1100 (2026-11-15): DEV09N-IMP-001 data gate found one owner conflict; package not created.** `/direct-contact` source contains old direct phone 8(903)…33-43, while D-927 confirms public +7(499)110-25-52. Exact transfer vs current public contact cannot be guessed. Other exact12 authorities/identities inspected; code/package/tests/Docker0. Await simple owner choice: use current official phone (recommended) or preserve old direct number.
+
 > **Текущая точка D-1098 (2026-11-15): DEV-09N implementation plan independently APPROVED 0/0/0.** Measured bounded caps and RED→minimal code→GREEN slices accepted; exact3 new+7 existing files, no bloat. Product/package/config/tests/Docker0. Await separate owner approval `DEV09N-IMP-001–008` before implementation.
 
 > **Текущая точка D-1097 (2026-11-15): DEV-09N plan first review CHANGES_REQUESTED 0/2/0; remediation ready.** Fixed input-class caps to actual bounded sizes and made IMP-004–006 explicit RED→minimal code→GREEN named-wrapper slices. Product/package/tests/Docker0. Next repeat independent plan review; owner code gate remains closed.
