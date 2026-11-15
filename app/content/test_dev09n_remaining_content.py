@@ -2,12 +2,18 @@ import copy
 import hashlib
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TransactionTestCase, override_settings
 
 from content.models import Page
+from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder
+from media_library.storage import MediaStorage
 from page_versions import schema
+
+from . import dev09_migration_apply as migration
 
 
 PACKAGE = Path(__file__).with_name('dev09n_remaining_content.json')
@@ -133,4 +139,123 @@ class Dev09NPackageAndContactsSchemaTests(SimpleTestCase):
             self.assertNotIn(forbidden, text)
         self.assertIn('+7 (499) 110-25-52', text)
         self.assertIn('estakada10@yandex.ru', text)
+
+
+@override_settings(DEV09_MIGRATION_APPLY_ENABLED=True)
+class Dev09NRemainingMediaTests(TransactionTestCase):
+    reset_sequences = True
+
+    def fixture(self):
+        package = copy.deepcopy(json.loads(PACKAGE.read_text(encoding='utf-8')))
+        sources = TemporaryDirectory()
+        media = TemporaryDirectory()
+        self.addCleanup(sources.cleanup)
+        self.addCleanup(media.cleanup)
+        for index, row in enumerate(package['media']):
+            content = f'dev09n-exact-media-{index}'.encode()
+            suffix = Path(row['relative_path']).suffix
+            row['relative_path'] = f'media/dev09n-test/{index}{suffix}'
+            row['bytes'] = len(content)
+            row['sha256'] = hashlib.sha256(content).hexdigest()
+            source = Path(sources.name, row['relative_path'])
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_bytes(content)
+        return package, sources.name, media.name
+
+    def test_dev09n_101_exact7_prepare_and_zero_write_replay(self):
+        package, sources, media = self.fixture()
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media):
+            first = migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+            before = {
+                'folders': list(MediaFolder.objects.values()),
+                'assets': list(Asset.objects.order_by('pk').values()),
+                'files': list(AssetFile.objects.order_by('pk').values()),
+            }
+            second = migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+        self.assertEqual(first, {'status': 'pass', 'created': 7,
+                                 'recovered': 0, 'replayed': 0})
+        self.assertEqual(second, {'status': 'pass', 'created': 0,
+                                  'recovered': 0, 'replayed': 7})
+        self.assertEqual({
+            'folders': list(MediaFolder.objects.values()),
+            'assets': list(Asset.objects.order_by('pk').values()),
+            'files': list(AssetFile.objects.order_by('pk').values()),
+        }, before)
+        self.assertEqual(Asset.objects.filter(status=Asset.Status.READY).count(), 7)
+        self.assertFalse(Page.objects.exists())
+        self.assertFalse(AssetUsage.objects.exists())
+
+    def test_dev09n_102_all_sources_are_verified_before_db_work(self):
+        package, sources, media = self.fixture()
+        Path(sources, package['media'][-1]['relative_path']).unlink()
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                self.assertRaisesMessage(
+                    ValidationError, 'MIGRATION_MEDIA_SOURCE_UNAVAILABLE'):
+            migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+        self.assertFalse(MediaFolder.objects.exists())
+        self.assertFalse(Asset.objects.exists())
+        self.assertFalse(AssetFile.objects.exists())
+
+    def test_dev09n_103_interrupted_prepare_is_exactly_recoverable(self):
+        package, sources, media = self.fixture()
+        original = migration.media_services.mark_ready
+        calls = 0
+
+        def interrupt_fourth(**kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 4:
+                raise ValidationError('TEST_INTERRUPTION')
+            return original(**kwargs)
+
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                patch.object(migration.media_services, 'mark_ready',
+                             side_effect=interrupt_fourth), \
+                self.assertRaisesMessage(ValidationError, 'TEST_INTERRUPTION'):
+            migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+        self.assertEqual(Asset.objects.filter(status=Asset.Status.READY).count(), 3)
+        self.assertEqual(Asset.objects.filter(status=Asset.Status.STAGED).count(), 1)
+        self.assertEqual(AssetFile.objects.count(), 4)
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media):
+            result = migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+        self.assertEqual(result, {'status': 'pass', 'created': 3,
+                                  'recovered': 1, 'replayed': 3})
+        self.assertEqual(Asset.objects.filter(status=Asset.Status.READY).count(), 7)
+
+    def test_dev09n_104_existing_descriptor_or_manifest_conflict_refuses(self):
+        package, sources, media = self.fixture()
+        row = package['media'][0]
+        MediaFolder.objects.create(
+            id=package['media_folder']['id'], path='foreign/path')
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                self.assertRaisesMessage(
+                    ValidationError, 'MIGRATION_MEDIA_EXISTING_CONFLICT'):
+            migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+        self.assertFalse(Asset.objects.exists())
+        self.assertFalse(AssetFile.objects.exists())
+        self.assertFalse(Asset.objects.filter(pk=row['asset_id']).exists())
+
+    @override_settings(DEV09_MIGRATION_APPLY_ENABLED=False)
+    def test_dev09n_105_disabled_before_package_read(self):
+        with patch.object(migration, '_read_remaining_content_package') as reader:
+            with self.assertRaisesMessage(ValidationError,
+                                          'MIGRATION_APPLY_DISABLED'):
+                migration.import_remaining_media(source_root='missing')
+        reader.assert_not_called()
 

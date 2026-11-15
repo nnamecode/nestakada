@@ -67,6 +67,9 @@ COMBINED_MANIFEST_SHA256 = '8e89d9db34b3b3e1e34574c933ce12a3ac37d7ebd8a3b68a1d6c
 COMBINED_INFOGRAPHIC_PACKAGE_NAME = 'dev09m_infographic_map019.json'
 COMBINED_INFOGRAPHIC_PACKAGE_SHA256 = 'fe083d206a72a3850bb30a554e57d375eba3338aacd87842c6c17f99a0f34954'
 COMBINED_INFOGRAPHIC_PROVENANCE = 'DEV09M owner-approved MAP-019 infographic'
+REMAINING_PACKAGE_NAME = 'dev09n_remaining_content.json'
+REMAINING_PACKAGE_SHA256 = '4b679b676b5e1ba1d2a5971799695d8ef944da9015c1f2270aee9d8878f09c30'
+REMAINING_MEDIA_PROVENANCE = 'DEV09N owner-approved remaining content'
 SERVICE_ROOTS_EXPECTED = (
     ('729b10a3-709e-41c0-a71f-0d376a2b8586', 'MAP-012',
      '/services/remont/', 2, 'Ремонт', 'Ремонт',
@@ -610,6 +613,164 @@ def import_combined_infographic_media(*, source_root, storage=None):
                 chunks=content, storage=storage)
     media_services.mark_ready(asset_id=row['asset_id'], storage=storage)
     return {'status': 'pass', 'asset': row['asset_id'], 'result': status}
+
+
+def _read_remaining_content_package():
+    path = Path(__file__).resolve().with_name(REMAINING_PACKAGE_NAME)
+    if (path.name != REMAINING_PACKAGE_NAME
+            or path.parent != Path(__file__).resolve().parent):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    nofollow = getattr(os, 'O_NOFOLLOW', None)
+    if nofollow is None:
+        _fault('MIGRATION_PACKAGE_UNSUPPORTED')
+    descriptor = None
+    try:
+        descriptor = os.open(path, os.O_RDONLY | nofollow)
+        info = os.fstat(descriptor)
+        if info.st_size > 128 * 1024:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        if not stat.S_ISREG(info.st_mode) or Path(os.path.realpath(path)) != path:
+            _fault('MIGRATION_PACKAGE_INVALID')
+        with os.fdopen(descriptor, 'rb') as stream:
+            descriptor = None
+            content = stream.read(128 * 1024 + 1)
+    except ValidationError:
+        raise
+    except (OSError, ValueError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+    if (len(content) != info.st_size or b'\r' in content
+            or hashlib.sha256(content).hexdigest() != REMAINING_PACKAGE_SHA256):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    try:
+        value = json.loads(content.decode('utf-8', errors='strict'),
+                           object_pairs_hook=_pairs)
+    except (UnicodeError, json.JSONDecodeError, RecursionError):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    if (type(value) is not dict
+            or value.get('schema') != 'dev09n-remaining-content-v1'
+            or type(value.get('media')) is not list
+            or len(value['media']) != 7
+            or type(value.get('pages')) is not list
+            or len(value['pages']) != 13):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return value
+
+
+def _remaining_media_sources(package, source_root):
+    try:
+        root = Path(source_root).resolve(strict=True)
+    except OSError:
+        _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+    prepared = []
+    total = 0
+    for row in package['media']:
+        try:
+            relative = Path(row['relative_path'])
+            if (relative.is_absolute() or '..' in relative.parts
+                    or type(row['bytes']) is not int
+                    or not 0 < row['bytes'] <= 256 * 1024):
+                _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+            candidate = root.joinpath(*relative.parts)
+            info = candidate.lstat()
+            resolved = candidate.resolve(strict=True)
+            if (not stat.S_ISREG(info.st_mode) or candidate.is_symlink()
+                    or resolved != candidate.absolute()
+                    or root not in resolved.parents
+                    or info.st_size != row['bytes']):
+                _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+            content = candidate.read_bytes()
+        except ValidationError:
+            raise
+        except (OSError, KeyError, TypeError, ValueError):
+            _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+        if (len(content) != info.st_size
+                or hashlib.sha256(content).hexdigest() != row['sha256']):
+            _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+        total += len(content)
+        if total > 2 * 1024 * 1024:
+            _fault('MIGRATION_MEDIA_SOURCE_UNAVAILABLE')
+        prepared.append((row, content))
+    if len(prepared) != 7:
+        _fault('MIGRATION_PACKAGE_INVALID')
+    return prepared
+
+
+def _remaining_exact_asset(package, row, asset, files):
+    return (str(asset.folder_id) == package['media_folder']['id']
+            and asset.status in (Asset.Status.STAGED, Asset.Status.READY)
+            and asset.provenance == REMAINING_MEDIA_PROVENANCE
+            and asset.is_legacy is False and asset.source_url == ''
+            and asset.source_sha256 == row['sha256'] and len(files) == 1
+            and str(files[0].pk) == row['file_id']
+            and files[0].kind == AssetFile.Kind.MAIN
+            and files[0].key == row['storage_key']
+            and files[0].sha256 == row['sha256']
+            and files[0].byte_size == row['bytes'])
+
+
+def _remaining_manifest(storage, row):
+    try:
+        actual = storage.manifest(row['storage_key'])
+    except (OSError, ValidationError):
+        _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+    if actual != {'sha256': row['sha256'], 'byte_size': row['bytes']}:
+        _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+
+
+def import_remaining_media(*, source_root, storage=None):
+    """Prepare exact7 DEV-09N assets; Page attachment is a later transaction."""
+    _enabled()
+    package = _read_remaining_content_package()
+    prepared = _remaining_media_sources(package, source_root)
+    folder_row = package['media_folder']
+    storage = storage or MediaStorage()
+    with transaction.atomic():
+        folder = MediaFolder.objects.select_for_update().filter(
+            pk=folder_row['id']).first()
+        if folder is None:
+            MediaFolder.objects.create(id=UUID(folder_row['id']),
+                                       path=folder_row['path'])
+        elif folder.path != folder_row['path']:
+            _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+    counts = {'created': 0, 'recovered': 0, 'replayed': 0}
+    for row, content in prepared:
+        with transaction.atomic():
+            asset = Asset.objects.select_for_update().filter(
+                pk=row['asset_id']).first()
+            if asset is None:
+                asset = Asset.objects.create(
+                    id=UUID(row['asset_id']), folder_id=folder_row['id'],
+                    provenance=REMAINING_MEDIA_PROVENANCE,
+                    source_sha256=row['sha256'])
+                result = 'created'
+            else:
+                result = ('replayed' if asset.status == Asset.Status.READY
+                          else 'recovered')
+            files = list(AssetFile.objects.select_for_update().filter(
+                asset=asset).order_by('pk'))
+            if asset.status == Asset.Status.READY:
+                if not _remaining_exact_asset(package, row, asset, files):
+                    _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+                _remaining_manifest(storage, row)
+                counts[result] += 1
+                continue
+            if asset.status != Asset.Status.STAGED:
+                _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+            if files:
+                if not _remaining_exact_asset(package, row, asset, files):
+                    _fault('MIGRATION_MEDIA_EXISTING_CONFLICT')
+                _remaining_manifest(storage, row)
+            else:
+                media_services.write_file(
+                    asset_id=asset.pk, file_id=row['file_id'],
+                    kind=AssetFile.Kind.MAIN, key=row['storage_key'],
+                    chunks=content, storage=storage)
+        media_services.mark_ready(asset_id=row['asset_id'], storage=storage)
+        counts[result] += 1
+    return {'status': 'pass', **counts}
 
 
 def _exact_keys(value, expected):
