@@ -446,8 +446,15 @@ class Dev09NRemainingPublicTests(TransactionTestCase):
             actions = self.client.get('/actions')
             reviews = self.client.get('/reviews')
             contacts = self.client.get('/contacts')
+        with override_settings(
+                MEDIA_LIBRARY_ROOT=media,
+                SERVICE_REQUEST_INTAKE_ENABLED=True,
+                SERVICE_REQUEST_TRANSPORT_PROFILE='synthetic',
+                SERVICE_REQUEST_CONSENT_VERSION='synthetic-v1'):
+            contacts_with_intake = self.client.get('/contacts')
         self.assertEqual((actions.status_code, reviews.status_code,
                           contacts.status_code), (200, 200, 200))
+        self.assertEqual(contacts_with_intake.status_code, 200)
         self.assertContains(actions, 'class="public-actions"')
         self.assertContains(actions, 'Скидка 10% за первое посещение!')
         self.assertEqual(actions.content.count(b'/public-media/'), 2)
@@ -456,14 +463,21 @@ class Dev09NRemainingPublicTests(TransactionTestCase):
             b'https://www.youtube.com/watch?v='), 10)
         self.assertNotIn(b'<iframe', reviews.content.lower())
         self.assertContains(contacts, 'class="public-contacts"')
+        self.assertContains(contacts_with_intake, 'class="public-contacts"')
         self.assertContains(contacts, 'href="tel:+74991102552"')
         self.assertContains(contacts, 'href="mailto:estakada10@yandex.ru"')
         self.assertContains(contacts,
                             '117105, Москва, Проспект 60-летия Октября, 15Б')
         self.assertEqual(contacts.content.count(b'/public-media/'), 5)
-        self.assertNotIn(b'<form', contacts.content.lower())
         self.assertNotIn(b'<iframe', contacts.content.lower())
         self.assertNotIn(b'8 (903) 772-33-43', contacts.content)
+        for response in (contacts, contacts_with_intake):
+            source = response.content.lower()
+            self.assertNotIn(b'<form', source)
+            self.assertNotIn(b'public-request', source)
+            self.assertNotIn(b'/request/submit/', source)
+            self.assertNotIn(b'name="intent"', source)
+            self.assertNotIn('csrftoken', response.cookies)
         for response in (actions, reviews, contacts):
             self.assertIn("default-src 'none'", response['Content-Security-Policy'])
             self.assertNotIn(b'public-home.js', response.content)

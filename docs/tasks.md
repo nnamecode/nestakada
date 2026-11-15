@@ -1,5 +1,9 @@
 # Таблица задач
 
+Текущая работа D-1109 (2026-11-15): **DEV-09N / IMP-008 COMPLETE; final independent review APPROVED P1/P2/P3=0/0/0.** Contacts no longer inherits generic request UI or intent in either intake state; final fresh named wrapper run PASS65/65. Product and test remediations are minimal, no-bloat boundaries retained, foundation stopped. Next bounded task: TEST-08 minimal isolated-fixture plan and independent review; fixture implementation/execution remains closed pending separate owner approval.
+
+Текущая работа D-1108 (2026-11-15): **DEV09N-IMP-008 remediation ПРИОСТАНОВЛЕНА ВЛАДЕЛЬЦУ.** Review0/1/0 found contacts request-block leak. Minimal two-file patch is present, but exact test signal repeated twice because the second run reused a source snapshot frozen before the product edit; third run forbidden. Foundation stopped/active=false; changes uncommitted. Resume only after owner direction, then fresh foundation + one exact `dev09-services`; if GREEN, repeat independent review of this finding only.
+
 Текущая работа D-1107 (2026-11-15): **DEV09N-IMP-007 named verification COMPLETE.** One fresh foundation run; wrapper-only PASS counts: dev09-services65, dev12-schema88, public-read9, public-http21, public-nav7, dev11-50; check0 issues; migrations no changes. Failures0, forbidden broad/direct/Playwright runs0. Next IMP-008 independent read-only review of the bounded DEV-09N implementation; remediation only for concrete findings.
 
 Текущая работа D-1106 (2026-11-15): **DEV09N-IMP-006 public projection COMPLETE.** Focused65/65 plus public-read9, public-http21, public-nav7 PASS. Actions2 local images, reviews10 links/no iframe, contacts typed facts+5 local images/no form/embed/page-specific JS; malformed profile503. Next IMP-007 remaining named verification: dev12-schema, dev11, check, migrations; then independent code review.

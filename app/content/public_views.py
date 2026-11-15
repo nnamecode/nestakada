@@ -262,14 +262,16 @@ def _page(request, reserve_context=None):
                 seo_configuration)
             auto_repair_json = (None if auto_node is None else mark_safe(
                 serialize_auto_repair(auto_node)))
-            request_form = (disabled_form_for(current.target)
-                            if reserve_context is _RESERVE_RENDER
-                            else form_for(request, current.target))
+            remaining = _remaining_page(current)
+            request_form = (None if remaining is not None
+                            and remaining['kind'] == 'contacts'
+                            else (disabled_form_for(current.target)
+                                  if reserve_context is _RESERVE_RENDER
+                                  else form_for(request, current.target)))
             body_blocks = tuple(
                 replace(block, html=mark_safe(block.html))
                 if isinstance(block, (PublicTextBlock, PublicHeroBlock)) else block
                 for block in project_body(current, media))
-            remaining = _remaining_page(current)
             body = render_to_string('content/public_page.html', {
                 'page': current,
                 'breadcrumbs': breadcrumbs,
