@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1095 (2026-11-15): **DEV-09N exact13 scope repeat review APPROVED P1/P2/P3=0/0/0.** N13-R01–R03 closed: typed contacts profile, recoverable exact7 media preparation before atomic all13 DB attach, owner gate consistency. No new contradiction/bloat; files/tests/Docker/network0. Next minimal implementation plan and independent review; product code still closed pending separate owner permission.
+
 Текущая работа D-1094 (2026-11-15): **DEV-09N scope first independent review CHANGES_REQUESTED P1/P2/P3=0/2/1; bounded remediation READY.** N13-R01 adds one contacts-only typed revision profile instead of forbidden tel sanitizer widening/hardcode. N13-R02 splits recoverable exact7 media prepare from atomic all13 Page/usages DB attach. N13-R03 records owner approval D-1093. Review `docs/dev09n-remaining-exact13-scope-review.md`; product/config/tests/Docker0. Next gate repeat review only, implementation plan/code closed.
 
 Текущая работа D-1093 (2026-11-15): **owner approved DEV-09N no-bloat exact13 scope and independent scope review.** Command «Продолжай» accepts one package/existing writer, reviews links10 no embeds, contacts facts+static5 without form/map script/JS, actions2. This authorizes review only, not implementation plan or product code.

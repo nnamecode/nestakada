@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1095 (2026-11-15): DEV-09N exact13 scope repeat review APPROVED 0/0/0.** Typed contacts profile, recoverable media prepare/atomic page attach and owner status accepted; no bloat findings. Product/tests/Docker0. Next minimal implementation plan/review, then separate owner code gate.
+
 > **Текущая точка D-1094 (2026-11-15): owner-approved DEV-09N scope first review CHANGES_REQUESTED 0/2/1; remediation ready.** Exact contacts typed profile closes tel source without sanitizer widening/model migration; exact7 media prepare/recovery is separate from atomic all13 Page attach; owner D-1093 recorded. Code/tests/Docker0. Next repeat review N13-R01–R03; plan/code remain closed.
 
 > **Текущая точка D-1092 (2026-11-15): DEV-09N exact13 no-bloat scope proposal READY, code0.** One package/existing writer, exact10 legacy/news + exact3 actions/reviews/contacts, existing kinds/layers only. Reviews are10 explicit links without iframe; contacts confirmed facts +5 static local images, no form/map script/JS; actions exact2. Await owner approval → independent scope review → minimal implementation plan/review → separate code gate. TEST-08 fixture remains blocked.

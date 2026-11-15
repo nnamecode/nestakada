@@ -1,6 +1,6 @@
 # DEV-09N — bounded remaining-content exact13
 
-Дата: 2026-11-15. Статус: **owner-approved scope; first review CHANGES_REQUESTED 0/2/1; remediation ready, repeat review pending; product code not started**. Основание: D-023, D-027, D-032, D-209–D-217, D-802, D-927, D-1089–D-1094. Review: `docs/dev09n-remaining-exact13-scope-review.md`.
+Дата: 2026-11-15. Статус: **owner-approved and independently APPROVED, P1/P2/P3=0/0/0; product code not started**. Основание: D-023, D-027, D-032, D-209–D-217, D-802, D-927, D-1089–D-1095. Review: `docs/dev09n-remaining-exact13-scope-review.md`.
 
 ## Цель
 
@@ -97,4 +97,4 @@ Universal importer/parser/ETL/page builder or generic content/contact framework;
 
 ## Gate владельца
 
-`DEV09N-Q001` закрыт D-1093: владелец ответом «Продолжай» утвердил no-bloat scope exact13 и разрешил independent scope review. First review D-1094 потребовал `N13-R01–R03`; remediation внесена только в scope. Следующий gate — repeat independent review; только после `APPROVED` готовится minimal implementation plan и отдельное разрешение на код.
+`DEV09N-Q001` закрыт D-1093: владелец ответом «Продолжай» утвердил no-bloat scope exact13 и разрешил independent scope review. First review D-1094 потребовал `N13-R01–R03`; remediation commit `4760df0` repeat-review APPROVED D-1095, P1/P2/P3=0/0/0. Следующий gate — minimal implementation plan и его independent review; затем отдельное разрешение владельца на код.

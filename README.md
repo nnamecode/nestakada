@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1095 (2026-11-15): DEV-09N exact13 scope independently APPROVED 0/0/0.** Typed contacts profile, two-phase exact7 media boundary and owner gate remediation accepted without new bloat. Product/tests/Docker0. Next minimal implementation plan + independent review; code requires separate owner permission.
+
 > **Текущая точка D-1094 (2026-11-15): DEV-09N scope first review CHANGES_REQUESTED 0/2/1; remediation ready.** Owner approved scope D-1093. Fixed plan boundary: typed contacts_profile without sanitizer widening/model migration; exact7 media prepare/recovery separated from atomic all13 Page DB attach; owner gate recorded. Product/tests/Docker0. Next gate repeat independent review of N13-R01–R03 only.
 
 > **Текущая точка D-1092 (2026-11-15): подготовлен no-bloat DEV-09N exact13 scope; product code0.** One closed package/existing writer, exact10 legacy/news + exact3 actions/reviews/contacts, existing models only. Recommended base profile: action cards2; review links10 without iframe; confirmed contacts + static local photos5 without form/map script/JS. No importer/new model/migration/dependency/external requests. Await owner approval, then independent scope review; fixture remains blocked.
