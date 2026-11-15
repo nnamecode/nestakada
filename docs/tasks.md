@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1105 (2026-11-15): **DEV09N-IMP-005 all13 writer COMPLETE; RED→GREEN63/63.** Exact7 physical recapture precedes one atomic DB attach; all13 hidden aggregates and21 usages are exact. Replay writes0; missing/mixed/late13/concurrent cases PASS. One sanitizer finding was fixed once and did not repeat. Next IMP-006: focused public route/content/media/security/SEO/navigation RED, then minimal actions/reviews/contacts projection/template/CSS.
+
 Текущая работа D-1104 (2026-11-15): **DEV09N-IMP-004 exact7 media COMPLETE; RED→GREEN58/58.** All sources verify before DB; exact READY replay writes0; interrupted STAGED preparation recovers; descriptor/manifest conflicts refuse; Page/usage/publication0. Fresh foundation `5910edbb-d5b5-4859-95b2-0a94a7010d8e`, named `dev09-services` PASS58 in88.350s. Next IMP-005: focused parent/atomic aggregate/usages/replay/mixed/late/concurrency RED, then minimal all13 writer.
 
 Текущая работа D-1103 (2026-11-15): **DEV09N-IMP-002/003 COMPLETE; focused RED→GREEN 53/53.** Expected RED was only missing contacts profile admission after 48 existing PASS. Minimal contacts-only exact8 owner schema now rejects other kinds, unknown/changed/oversize/unsafe values; no sanitizer widening/model/migration. Fresh foundation `7409c52e-eeca-45b3-a487-6be44555a41b`, `dev09-services` GREEN53 in91.358s; direct broad/wildcard/Playwright0. Next IMP-004 adds exact7 media prepare/replay/recovery tests first, records RED, then minimal existing-lifecycle code.

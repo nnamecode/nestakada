@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1105 (2026-11-15): DEV09N-IMP-005 atomic all13 writer RED→GREEN complete.** Named `dev09-services` PASS63/63; exact7 recapture, all13 hidden aggregates,21 usages, replay/rollback/mixed/concurrency closed. Next IMP-006 public projection tests-first; persistent apply/publication/live remain closed.
+
 > **Текущая точка D-1104 (2026-11-15): DEV09N-IMP-004 exact7 media RED→GREEN complete.** Existing lifecycle only; all7 preflight before DB, replay/recovery/conflict tests PASS, `dev09-services`58/58. No Page/usage/publication. Next IMP-005 tests-first atomic all13 writer.
 
 > **Текущая точка D-1103 (2026-11-15): DEV09N-IMP-002/003 RED→GREEN complete.** Minimal contacts-only exact8 owner schema added without sanitizer/model/migration; fresh foundation `dev09-services` PASS53/53. Package LF/allowlist reproducibility is pinned. Next IMP-004 exact7 media tests-first slice; publication/live remain closed.

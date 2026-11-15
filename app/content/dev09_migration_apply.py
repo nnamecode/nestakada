@@ -773,6 +773,166 @@ def import_remaining_media(*, source_root, storage=None):
     return {'status': 'pass', **counts}
 
 
+def _remaining_media_evidence(package, storage):
+    evidence = []
+    for row in package['media']:
+        try:
+            actual = storage.manifest(row['storage_key'])
+        except (OSError, ValidationError):
+            _fault('MIGRATION_MEDIA_UNAVAILABLE')
+        if actual != {'sha256': row['sha256'], 'byte_size': row['bytes']}:
+            _fault('MIGRATION_MEDIA_UNAVAILABLE')
+        evidence.append(schema.digest({'key': row['storage_key'], **actual}))
+    return evidence
+
+
+def _remaining_media_recapture(package, storage, evidence):
+    folder = MediaFolder.objects.select_for_update().filter(
+        pk=package['media_folder']['id']).first()
+    if folder is None or folder.path != package['media_folder']['path']:
+        _fault('MIGRATION_MEDIA_UNAVAILABLE')
+    for row, expected in zip(package['media'], evidence, strict=True):
+        asset = Asset.objects.select_for_update().filter(pk=row['asset_id']).first()
+        files = list(AssetFile.objects.select_for_update().filter(
+            asset_id=row['asset_id']).order_by('pk'))
+        if (asset is None or asset.status != Asset.Status.READY
+                or not _remaining_exact_asset(package, row, asset, files)):
+            _fault('MIGRATION_MEDIA_UNAVAILABLE')
+        try:
+            actual = storage.manifest(row['storage_key'])
+        except (OSError, ValidationError):
+            _fault('MIGRATION_MEDIA_UNAVAILABLE')
+        if (actual != {'sha256': row['sha256'], 'byte_size': row['bytes']}
+                or schema.digest({'key': row['storage_key'], **actual}) != expected):
+            _fault('MIGRATION_MEDIA_UNAVAILABLE')
+
+
+def _remaining_payload(page, package):
+    profile = page['profile']
+    media = {row['image_id']: row for row in package['media']}
+    payload = initial_snapshot(
+        page['kind'], h1=page['h1'], title=page['title']).data(page['kind'])
+    payload['description'] = page['description']
+    intro = ''
+    rendered = []
+
+    def link(text_value, href, label=None):
+        return (escape(text_value, quote=False) + ' <a href="'
+                + escape(href, quote=True) + '">'
+                + escape(label or href, quote=False) + '</a>')
+
+    kind = profile['type']
+    image_ids = []
+    if kind == 'partners':
+        rendered.append('<ul>' + ''.join(
+            '<li>' + link(item['text'], item['url'], item['label']) + '</li>'
+            for item in profile['items']) + '</ul>')
+    elif kind == 'actions':
+        for card in profile['cards']:
+            rendered.append('<h2>' + escape(card['heading'], quote=False)
+                            + '</h2><p>' + escape(card['text'], quote=False) + '</p>')
+            image_ids.append(card['image_id'])
+    elif kind == 'reviews':
+        intro = '<p>' + escape(profile['intro'], quote=False) + '</p>'
+        rendered.append('<ul>' + ''.join(
+            '<li><a href="' + escape(item['url'], quote=True) + '">'
+            + escape(item['title'], quote=False) + '</a></li>'
+            for item in profile['videos']) + '</ul>')
+    elif kind == 'contacts':
+        contacts = {key: profile[key] for key in schema.CONTACTS_PROFILE}
+        payload['contacts_profile'] = contacts
+        image_ids = list(profile['image_ids'])
+    elif kind == 'paragraphs':
+        rendered.extend('<p>' + escape(value, quote=False) + '</p>'
+                        for value in profile['paragraphs'])
+    elif kind == 'links':
+        rendered.append('<ul>' + ''.join(
+            '<li><a href="' + escape(item['url'], quote=True) + '">'
+            + escape(item['text'], quote=False) + '</a></li>'
+            for item in profile['items']) + '</ul>')
+    elif kind == 'news_catalog':
+        for item in profile['items']:
+            rendered.append('<h2><a href="' + escape(item['url'], quote=True)
+                            + '">' + escape(item['title'], quote=False)
+                            + '</a></h2><p>' + escape(item['date'], quote=False) + '</p>')
+            for block in item['blocks']:
+                if block['type'] == 'paragraph':
+                    rendered.append('<p>' + escape(block['text'], quote=False) + '</p>')
+                elif block['type'] == 'links':
+                    rendered.append('<ul>' + ''.join(
+                        '<li><a href="' + escape(row['url'], quote=True) + '">'
+                        + escape(row['text'], quote=False) + '</a></li>'
+                        for row in block['items']) + '</ul>')
+                else:
+                    _fault('MIGRATION_PACKAGE_INVALID')
+    elif kind != 'empty':
+        _fault('MIGRATION_PACKAGE_INVALID')
+    payload['intro_text'] = intro
+    payload['main_text'] = ''.join(rendered)
+    if (restricted_clean(payload['intro_text']) != payload['intro_text']
+            or restricted_clean(payload['main_text']) != payload['main_text']):
+        _fault('MIGRATION_PACKAGE_INVALID')
+    if image_ids:
+        for index, image_id in enumerate(image_ids):
+            row = media.get(image_id)
+            if row is None:
+                _fault('MIGRATION_PACKAGE_INVALID')
+            payload['embedded_images'].append({
+                'id': image_id, 'asset_id': row['asset_id'], 'alt': row['alt'],
+                'alignment': 'center', 'width_px': None, 'height_px': None,
+            })
+            payload['layout'].insert(1 + index, {
+                'id': str(uuid5(UUID(page['page_id']),
+                                'remaining-image:' + str(index))),
+                'kind': 'image', 'image_id': image_id,
+            })
+    return schema.Snapshot.trusted(payload, page['kind']).data(page['kind'])
+
+
+def apply_remaining_content(*, storage=None):
+    """Atomically attach exact13 hidden pages to already READY exact7 media."""
+    _enabled()
+    package = _read_remaining_content_package()
+    storage = storage or MediaStorage()
+    evidence = _remaining_media_evidence(package, storage)
+    pages = package['pages']
+    payloads = [_remaining_payload(page, package) for page in pages]
+    with transaction.atomic():
+        _identity()
+        lock_content('default')
+        lock_auth()
+        actor = _owner()
+        _remaining_media_recapture(package, storage, evidence)
+        root = Page.objects.select_for_update().filter(pk=pages[0]['parent_id']).first()
+        if root is None or not _exact_aggregate(
+                {'page_id': str(root.pk), 'url': '/', 'kind': Page.Kind.HOME,
+                 'parent_id': None, 'position': 0, 'name': 'Главная'},
+                actor, _parent_payload()):
+            _fault('MIGRATION_PARENT_REQUIRED')
+        page_ids = [UUID(page['page_id']) for page in pages]
+        existing = list(Page.objects.select_for_update().filter(pk__in=page_ids))
+        if len(existing) == len(pages):
+            if not all(_exact_aggregate(page, actor, payload)
+                       for page, payload in zip(pages, payloads, strict=True)):
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            news_children = set(Page.objects.select_for_update().filter(
+                parent_id='da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb').values_list(
+                    'pk', 'position'))
+            expected = {(UUID(page['page_id']), page['position']) for page in pages
+                        if page['parent_id'] == 'da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb'}
+            if news_children != expected:
+                _fault('MIGRATION_EXISTING_CONFLICT')
+            return {'status': 'pass', 'replayed': True, 'pages': 13,
+                    'routes': 13, 'published': 0}
+        if existing:
+            _fault('MIGRATION_EXISTING_CONFLICT')
+        _preflight_absent(pages)
+        for page, payload in zip(pages, payloads, strict=True):
+            _create_aggregate(page, actor, payload)
+        return {'status': 'pass', 'replayed': False, 'pages': 13,
+                'routes': 13, 'published': 0}
+
+
 def _exact_keys(value, expected):
     if type(value) is not dict or set(value) != set(expected):
         _fault('MIGRATION_PACKAGE_INVALID')

@@ -1,4 +1,5 @@
 import copy
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 from pathlib import Path
@@ -6,8 +7,11 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import close_old_connections
 from django.test import SimpleTestCase, TransactionTestCase, override_settings
 
+from accounts import services as auth
+from accounts.tests import FAST_HASHERS, PASSWORD
 from content.models import Page
 from media_library.models import Asset, AssetFile, AssetUsage, MediaFolder
 from media_library.storage import MediaStorage
@@ -258,4 +262,147 @@ class Dev09NRemainingMediaTests(TransactionTestCase):
                                           'MIGRATION_APPLY_DISABLED'):
                 migration.import_remaining_media(source_root='missing')
         reader.assert_not_called()
+
+
+@override_settings(
+    PASSWORD_HASHERS=FAST_HASHERS, ENVIRONMENT='test',
+    DEV09_MIGRATION_APPLY_ENABLED=True,
+)
+class Dev09NRemainingWriterTests(TransactionTestCase):
+    root_id = 'e80c3de1-feea-4847-b550-325a825ffc0e'
+
+    def setUp(self):
+        self.owner = auth.bootstrap_owner(PASSWORD)
+
+    def fixture(self):
+        return Dev09NRemainingMediaTests.fixture(self)
+
+    def create_root(self):
+        migration._create_aggregate({
+            'page_id': self.root_id, 'url': '/', 'kind': Page.Kind.HOME,
+            'parent_id': None, 'position': 0, 'name': 'Главная',
+        }, self.owner, migration._parent_payload())
+
+    def prepared(self):
+        package, sources, media = self.fixture()
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media):
+            migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+        self.create_root()
+        return package, media
+
+    def exact13_state(self, package):
+        ids = [page['page_id'] for page in package['pages']]
+        return {
+            'pages': list(Page.objects.filter(pk__in=ids).order_by('pk').values()),
+            'routes': list(migration.Route.objects.filter(
+                page_id__in=ids).order_by('pk').values()),
+            'revisions': list(migration.PageRevision.objects.filter(
+                page_id__in=ids).order_by('pk').values()),
+            'usages': list(AssetUsage.objects.order_by('pk').values()),
+        }
+
+    def test_dev09n_201_all13_atomic_create_usages_and_zero_write_replay(self):
+        package, media = self.prepared()
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media):
+            first = migration.apply_remaining_content(storage=MediaStorage())
+            before = self.exact13_state(package)
+            second = migration.apply_remaining_content(storage=MediaStorage())
+        self.assertEqual(first, {'status': 'pass', 'replayed': False,
+                                 'pages': 13, 'routes': 13, 'published': 0})
+        self.assertEqual(second, {'status': 'pass', 'replayed': True,
+                                  'pages': 13, 'routes': 13, 'published': 0})
+        self.assertEqual(self.exact13_state(package), before)
+        pages = list(Page.objects.filter(
+            pk__in=[row['page_id'] for row in package['pages']]))
+        self.assertEqual(len(pages), 13)
+        self.assertTrue(all(not page.is_published for page in pages))
+        self.assertEqual(AssetUsage.objects.filter(
+            asset_id__in=[row['asset_id'] for row in package['media']]).count(), 21)
+        contacts = migration.PageRevision.objects.get(
+            page_id='91631e35-5e81-407f-806b-e973223d7340')
+        self.assertEqual(contacts.payload['contacts_profile']['phone_href'],
+                         'tel:+74991102552')
+
+    def test_dev09n_202_missing_parent_or_ready_media_refuses_without_page(self):
+        package, sources, media = self.fixture()
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                self.assertRaisesMessage(ValidationError,
+                                          'MIGRATION_MEDIA_UNAVAILABLE'):
+            migration.apply_remaining_content(storage=MediaStorage())
+        self.assertFalse(Page.objects.filter(
+            pk__in=[row['page_id'] for row in package['pages']]).exists())
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media):
+            migration.import_remaining_media(
+                source_root=sources, storage=MediaStorage())
+            with self.assertRaisesMessage(ValidationError,
+                                          'MIGRATION_PARENT_REQUIRED'):
+                migration.apply_remaining_content(storage=MediaStorage())
+        self.assertFalse(Page.objects.filter(
+            pk__in=[row['page_id'] for row in package['pages']]).exists())
+
+    def test_dev09n_203_mixed_state_refuses_without_completing_set(self):
+        package, media = self.prepared()
+        first = package['pages'][0]
+        Page.objects.create(
+            id=first['page_id'], name='foreign', kind=first['kind'],
+            parent_id=self.root_id, position=first['position'], is_published=False)
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                self.assertRaisesMessage(ValidationError,
+                                          'MIGRATION_EXISTING_CONFLICT'):
+            migration.apply_remaining_content(storage=MediaStorage())
+        self.assertEqual(Page.objects.filter(
+            pk__in=[row['page_id'] for row in package['pages']]).count(), 1)
+
+    def test_dev09n_204_thirteenth_failure_rolls_back_every_aggregate(self):
+        package, media = self.prepared()
+        original = migration._create_aggregate
+        calls = 0
+
+        def fail_thirteenth(*args, **kwargs):
+            nonlocal calls
+            calls += 1
+            if calls == 13:
+                raise ValidationError('TEST_LATE_FAILURE')
+            return original(*args, **kwargs)
+
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                patch.object(migration, '_create_aggregate',
+                             side_effect=fail_thirteenth), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                self.assertRaisesMessage(ValidationError, 'TEST_LATE_FAILURE'):
+            migration.apply_remaining_content(storage=MediaStorage())
+        self.assertFalse(Page.objects.filter(
+            pk__in=[row['page_id'] for row in package['pages']]).exists())
+
+    def test_dev09n_205_concurrent_calls_create_once_then_replay(self):
+        package, media = self.prepared()
+
+        def worker():
+            close_old_connections()
+            try:
+                return migration.apply_remaining_content(storage=MediaStorage())
+            finally:
+                close_old_connections()
+
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media), \
+                ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: worker(), range(2)))
+        self.assertEqual(sorted(result['replayed'] for result in results),
+                         [False, True])
+        self.assertEqual(Page.objects.filter(
+            pk__in=[row['page_id'] for row in package['pages']]).count(), 13)
 
