@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1096 (2026-11-15): DEV-09N minimal implementation plan READY, product code0.** Exact3 new files +7 existing product/tool files, eight bounded slices, typed contacts, two-phase exact7 media, atomic all13 DB attach, JS0. Tests only named wrapper suites after code gate. Next independent plan review; then separate owner permission DEV09N-IMP-001–008.
+
 > **Текущая точка D-1095 (2026-11-15): DEV-09N exact13 scope independently APPROVED 0/0/0.** Typed contacts profile, two-phase exact7 media boundary and owner gate remediation accepted without new bloat. Product/tests/Docker0. Next minimal implementation plan + independent review; code requires separate owner permission.
 
 > **Текущая точка D-1094 (2026-11-15): DEV-09N scope first review CHANGES_REQUESTED 0/2/1; remediation ready.** Owner approved scope D-1093. Fixed plan boundary: typed contacts_profile without sanitizer widening/model migration; exact7 media prepare/recovery separated from atomic all13 Page DB attach; owner gate recorded. Product/tests/Docker0. Next gate repeat independent review of N13-R01–R03 only.
