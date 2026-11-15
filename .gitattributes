@@ -5,3 +5,4 @@ tools/dev29/checkpoints/**/source-only.zip binary
 
 # Keep the reviewed DEV-09 migration package byte-stable across checkouts.
 app/content/dev09b_articles_slice.json text eol=lf
+app/content/dev09n_remaining_content.json text eol=lf

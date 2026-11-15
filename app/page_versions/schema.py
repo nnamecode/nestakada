@@ -13,8 +13,23 @@ from . import home_profile
 SCHEMA='page-content-v1'
 KEYS={'schema_version','page_kind','intro_text','main_text','price','h1','title','description','indexing_allowed',
       'main_image','preview_image','embedded_images','layout'}
-OWNER_FIELDS=(KEYS-{'schema_version','page_kind'})|{'home_profile'}
+OWNER_FIELDS=(KEYS-{'schema_version','page_kind'})|{'home_profile','contacts_profile'}
 EMPLOYEE_FIELDS={'intro_text','main_text','price'}
+
+CONTACTS_PROFILE={
+    'phone_display':'+7 (499) 110-25-52',
+    'phone_href':'tel:+74991102552',
+    'address':'117105, Москва, Проспект 60-летия Октября, 15Б',
+    'hours':'Ежедневно с 9:00 до 21:00',
+    'email_display':'estakada10@yandex.ru',
+    'email_href':'mailto:estakada10@yandex.ru',
+    'route_href':'https://yandex.ru/maps/org/57771430682',
+    'gallery_heading':'Фотогалерея',
+}
+CONTACTS_PROFILE_LIMITS={
+    'phone_display':64,'phone_href':64,'address':255,'hours':128,
+    'email_display':254,'email_href':261,'route_href':2048,'gallery_heading':128,
+}
 
 
 def invalid():raise ValidationError('VERSIONS_INVALID_SNAPSHOT')
@@ -96,9 +111,19 @@ def _price(value):
     if count>10000:invalid()
 
 
+def _contacts_profile(value):
+    keys(value,CONTACTS_PROFILE)
+    for name,expected in CONTACTS_PROFILE.items():
+        text(value[name],CONTACTS_PROFILE_LIMITS[name])
+        if value[name]!=expected:invalid()
+
+
 def validate(payload,page_kind=None):
     if type(payload) is not dict:invalid()
-    actual=set(payload);expected=KEYS|({'home_profile'} if payload.get('page_kind')==Page.Kind.HOME and 'home_profile' in payload else set())
+    actual=set(payload);optional=set()
+    if payload.get('page_kind')==Page.Kind.HOME and 'home_profile' in payload:optional.add('home_profile')
+    if payload.get('page_kind')==Page.Kind.CONTACTS and 'contacts_profile' in payload:optional.add('contacts_profile')
+    expected=KEYS|optional
     if actual!=expected:invalid()
     if payload['schema_version']!=SCHEMA or payload['page_kind'] not in Page.Kind.values or (page_kind is not None and payload['page_kind']!=page_kind):invalid()
     for field in ['intro_text','main_text']:
@@ -144,6 +169,7 @@ def validate(payload,page_kind=None):
     if 'home_profile' in payload:
         try:home_profile.validate(payload['home_profile'],payload['embedded_images'])
         except ValueError:invalid()
+    if 'contacts_profile' in payload:_contacts_profile(payload['contacts_profile'])
     return copy.deepcopy(payload)
 
 
@@ -170,11 +196,12 @@ class TextPricePatch:
 
 
 def snapshot_v1(page_kind,*,intro_text='',main_text='',price=None,h1='',title='',description='',indexing_allowed=True,
-                main_image=None,preview_image=None,embedded_images=None,layout=None,home_profile=_MISSING):
+                main_image=None,preview_image=None,embedded_images=None,layout=None,home_profile=_MISSING,contacts_profile=_MISSING):
     payload={'schema_version':SCHEMA,'page_kind':page_kind,'intro_text':intro_text,'main_text':main_text,'price':price,
         'h1':h1,'title':title,'description':description,'indexing_allowed':indexing_allowed,'main_image':main_image,'preview_image':preview_image,
         'embedded_images':[] if embedded_images is None else embedded_images,'layout':[] if layout is None else layout}
     if home_profile is not _MISSING:payload['home_profile']=home_profile
+    if contacts_profile is not _MISSING:payload['contacts_profile']=contacts_profile
     return Snapshot.trusted(payload,page_kind)
 
 
