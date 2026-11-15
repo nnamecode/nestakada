@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1098 (2026-11-15): **DEV-09N minimal implementation plan repeat review APPROVED P1/P2/P3=0/0/0.** Measured caps and tests-first IMP-004–006 accepted; no new contradiction/bloat. Product/package/config/tests/Docker/network0. Await separate owner approval `DEV09N-IMP-001–008`; TEST-08 fixture remains blocked until implementation completes.
+
 Текущая работа D-1097 (2026-11-15): **DEV-09N plan first independent review CHANGES_REQUESTED P1/P2/P3=0/2/0; remediation READY.** N13-PLAN-R01 now has class-specific bounded caps fitting actual authorities/media with exact-cap/cap+1. N13-PLAN-R02 makes IMP-004–006 explicit focused RED→minimal code→GREEN through named wrappers after owner gate. Review `docs/dev09n-remaining-exact13-plan-review.md`; product/package/config/tests/Docker0. Next repeat plan review only.
 
 Текущая работа D-1096 (2026-11-15): **DEV-09N minimal implementation plan READY; product code NOT_STARTED.** Eight slices: canonical data, failing contracts, contacts schema, exact7 media, atomic all13 writer, three public branches, named verification, independent code review. Exact3 new files and7 existing product/tool files; no model/migration/dependency/JS/generic importer. `docs/dev09n-remaining-exact13-implementation-plan.md`. Next independent plan review; then separate owner code gate.

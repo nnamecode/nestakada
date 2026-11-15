@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1098 (2026-11-15): DEV-09N implementation plan independently APPROVED 0/0/0.** Measured bounded caps and RED→minimal code→GREEN slices accepted; exact3 new+7 existing files, no bloat. Product/package/config/tests/Docker0. Await separate owner approval `DEV09N-IMP-001–008` before implementation.
+
 > **Текущая точка D-1097 (2026-11-15): DEV-09N plan first review CHANGES_REQUESTED 0/2/0; remediation ready.** Fixed input-class caps to actual bounded sizes and made IMP-004–006 explicit RED→minimal code→GREEN named-wrapper slices. Product/package/tests/Docker0. Next repeat independent plan review; owner code gate remains closed.
 
 > **Текущая точка D-1096 (2026-11-15): DEV-09N minimal implementation plan READY, product code0.** Exact3 new files +7 existing product/tool files, eight bounded slices, typed contacts, two-phase exact7 media, atomic all13 DB attach, JS0. Tests only named wrapper suites after code gate. Next independent plan review; then separate owner permission DEV09N-IMP-001–008.

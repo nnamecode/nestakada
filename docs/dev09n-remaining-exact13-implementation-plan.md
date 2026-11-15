@@ -1,6 +1,6 @@
 # DEV-09N exact13 — минимальный implementation plan
 
-Дата: 2026-11-15. Статус: **first review CHANGES_REQUESTED 0/2/0; remediation ready, repeat review pending; product code not started**. Scope authority: D-1095 и `docs/dev09n-remaining-exact13-scope-proposal.md`. Review: `docs/dev09n-remaining-exact13-plan-review.md`.
+Дата: 2026-11-15. Статус: **independently APPROVED, P1/P2/P3=0/0/0; product code not started**. Scope authority: D-1095; plan approval D-1098. Review: `docs/dev09n-remaining-exact13-plan-review.md`.
 
 ## Результат
 
