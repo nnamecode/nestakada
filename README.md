@@ -1,5 +1,11 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1112 (2026-11-15): TEST-08 fixture plan independently APPROVED 0/0/0.** Exact237/45,221,681B,113 pages/115 routes, same-process future HTTP, bounded gallery seed/cleanup/receipt and no-bloat boundary accepted. Product/code/tests/Docker0. Await simple owner permission for exact three-file fixture implementation; TEST-08 execution remains a later gate.
+
+> **Текущая точка D-1111 (2026-11-15): TEST-08 fixture plan first review CHANGES_REQUESTED 1/4/0; remediation ready.** Plan now uses one named Django process for builder+future HTTP before teardown, exact214 test-only gallery seeding, post-page grant, scoped writer fault/replay, host-finally staging cleanup and bounded stdout receipt. Product/code/tests/Docker0. Next repeat plan review; implementation gate closed.
+
+> **Текущая точка D-1110 (2026-11-15): TEST-08 minimal fixture plan READY, implementation0.** Proposed exact2 new test/tool files +1 wrapper edit; existing writers assemble exact113 pages/115 routes and exact237 local media/45,221,681B inside TransactionTestCase with cleanup. No new runtime/model/migration/dependency/runner/Playwright. Next independent plan review; implementation and TEST-08 run require separate owner gates.
+
 > **Текущая точка D-1109 (2026-11-15): DEV-09N COMPLETE; IMP-008 independently APPROVED 0/0/0.** Contacts never inherits request section/form/intent in disabled or enabled intake; fresh exact `dev09-services`65/65 PASS after the final test strengthening. No migration/dependency/new JS/framework/bloat. Foundation stopped/active=false. Next bounded stage: TEST-08 minimal isolated-fixture plan and independent review only; implementation/run needs a separate owner gate.
 
 > **Текущая точка D-1108 (2026-11-15): DEV09N-IMP-008 remediation ПРИОСТАНОВЛЕНА ВЛАДЕЛЬЦУ.** Independent review found P1/P2/P3=0/1/0: contacts inherited the generic request block. Minimal code+test patch is present but unverified. Two `dev09-services` runs reported the same assertion; the second foundation snapshot contained the new test but, by design, not the product patch made after Start. No third run. Foundation stopped/active=false. Recommended resume: owner says «почини и продолжай», then one fresh foundation including both files and one exact wrapper run.

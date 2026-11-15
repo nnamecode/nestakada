@@ -51,7 +51,7 @@ Fixture implementation/run требует отдельного плана, не�
 
 - stage9 regression evidence переиспользуется и не пересчитывается;
 - TEST-08 execution не использует wildcard, прямой широкий `manage.py test` или Playwright;
-- HTTP выполняется только против fixed local test origin; ручные браузерные действия не считаются TEST-10;
+- HTTP выполняется через Django server-level Client с fixed test host/origin внутри того же named test process, который собрал fixture; отдельный app над unit DB и ручные браузерные действия не создаются и не считаются TEST-10;
 - для каждой группы сохраняются exact fixture/run ID, paths, actor, expected/actual, before/after counts/hashes и честный `PASS/PARTIAL/BLOCKED`;
 - отсутствие external/physical/real-device evidence явно остаётся за TEST-09/10/launch.
 

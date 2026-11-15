@@ -4,6 +4,12 @@
 
 > **Текущая точка D-1100 (2026-11-15): owner code gate D-1099 opened; IMP-001 paused before writes on contact conflict.** Old `/direct-contact` direct phone differs from D-927 confirmed public phone. Exact transfer/substitution requires owner choice; recommended current official phone. Package/code/tests/Docker0.
 
+> **Текущая точка D-1112 (2026-11-15): TEST-08 isolated-fixture plan independently APPROVED 0/0/0.** Exact237/45,221,681B,113 Page/115 Route, same-process boundary, bounded gallery seed/cleanup/receipt and no-bloat accepted. Product/tests/Docker0. Await owner permission for exact three-file implementation; TEST-08 execution stays closed.
+
+> **Текущая точка D-1111 (2026-11-15): TEST-08 fixture plan first review CHANGES_REQUESTED 1/4/0; docs remediation ready.** Fixed to same-process builder/future Client, bounded test-only gallery214 seed, post-page grant, scoped fault/replay, host-finally cleanup and closed stdout receipt; fixture no longer runs group8 HTTP. Product/tests/Docker0. Next repeat plan review; code gate closed.
+
+> **Текущая точка D-1110 (2026-11-15): TEST-08 minimal isolated-fixture plan READY; implementation/run0.** Exact2 new test/tool files +1 wrapper edit proposed for exact237 local media and expected113 pages/115 routes in isolated TransactionTestCase with cleanup. No runtime/model/migration/dependency/runner/Playwright. Next independent plan review, then separate owner implementation gate.
+
 > **Текущая точка D-1109 (2026-11-15): DEV-09N COMPLETE; final IMP-008 review APPROVED 0/0/0.** Contacts request-block leak and one test false-positive gap were fixed minimally; final fresh named `dev09-services`65/65 PASS, foundation stopped/active=false. No model/migration/dependency/new JS/framework/bloat; persistent apply/publication/live closed. Next bounded gate resumes D-1090: TEST-08 minimal isolated-fixture plan + independent review only, then separate owner implementation permission; no fixture/run authorization yet.
 
 > **Текущая точка D-1098 (2026-11-15): DEV-09N implementation plan repeat review APPROVED 0/0/0.** Measured caps/tests-first slices/no-bloat accepted. Code/tests/Docker0. Await separate owner `DEV09N-IMP-001–008` permission before implementation.

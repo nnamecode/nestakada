@@ -1,5 +1,11 @@
 # Таблица задач
 
+Текущая работа D-1112 (2026-11-15): **TEST-08 isolated fixture plan independently APPROVED P1/P2/P3=0/0/0.** Exact three-file implementation boundary and all first-review remediations accepted; product/code/tests/Docker0. Await simple owner implementation permission. TEST-08 exact10 execution still requires its own later plan/review/gate.
+
+Текущая работа D-1111 (2026-11-15): **TEST-08 fixture plan first review CHANGES_REQUESTED P1/P2/P3=1/4/0; remediation READY.** One-process builder+future Client boundary, exact214 test-only gallery seed, correct grant order, scoped rollback/replay, host-finally cleanup/result marker and group8 separation now specified. Product/code/tests/Docker0. Next repeat plan review only; implementation closed.
+
+Текущая работа D-1110 (2026-11-15): **TEST-08 minimal isolated-fixture plan READY; implementation NOT_STARTED.** Exact measured media237/45,221,681B and expected113 pages/115 routes. Proposed exact2 new test/tool files +1 existing wrapper; TransactionTestCase cleanup, no runtime/framework/bloat. `docs/test08-fixture-plan.md`. Next independent plan review; then separate owner permission before code or Docker.
+
 Текущая работа D-1109 (2026-11-15): **DEV-09N / IMP-008 COMPLETE; final independent review APPROVED P1/P2/P3=0/0/0.** Contacts no longer inherits generic request UI or intent in either intake state; final fresh named wrapper run PASS65/65. Product and test remediations are minimal, no-bloat boundaries retained, foundation stopped. Next bounded task: TEST-08 minimal isolated-fixture plan and independent review; fixture implementation/execution remains closed pending separate owner approval.
 
 Текущая работа D-1108 (2026-11-15): **DEV09N-IMP-008 remediation ПРИОСТАНОВЛЕНА ВЛАДЕЛЬЦУ.** Review0/1/0 found contacts request-block leak. Minimal two-file patch is present, but exact test signal repeated twice because the second run reused a source snapshot frozen before the product edit; third run forbidden. Foundation stopped/active=false; changes uncommitted. Resume only after owner direction, then fresh foundation + one exact `dev09-services`; if GREEN, repeat independent review of this finding only.
