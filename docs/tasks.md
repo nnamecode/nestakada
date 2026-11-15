@@ -1,5 +1,11 @@
 # Таблица задач
 
+Текущая работа D-1117 (2026-11-15): **TEST-08 reusable fixture builder COMPLETE; final independent review APPROVED 0/0/0.** Named wrapper PASS2/2; exact237 media,112 Page,114 DB Route + page1 runtime redirect =115 public URL; before/after0, automatic cleanup removed, foundation stopped. Product/runtime bloat0. Следующая работа: отдельный TEST-08 exact10 execution plan с acceptance/evidence, independent review и owner gate; execution пока NOT_STARTED.
+
+Текущая работа D-1116 (2026-11-15): **TEST-08 numeric review0/1/0 remediation READY.** Exact overlap category/bytes/SHA and logical total now pinned; product/DB/Docker test0. Next repeat review only.
+
+Текущая работа D-1115 (2026-11-15): **TEST-08 staging numeric contract corrected; review pending.** Logical/output237/45,221,681B maps to unique source236/45,019,997B via one exact shared path/SHA. Product/DB/Docker test0. Next independent count review, then RED.
+
 Текущая работа D-1114 (2026-11-15): **TEST-08 fixture pre-code ordering APPROVED 0/0/0; implementation gate OPEN.** Exact three-file tests-first implementation may start; TEST-08 exact10 execution remains closed.
 
 Текущая работа D-1113 (2026-11-15): **TEST-08 fixture pre-code order correction READY for review.** Exact237 media now precede shared Header/Footer required READY binding; no extra asset/scope. Code/tests/Docker0. Next independent ordering review, then already owner-authorized three-file implementation if APPROVED.
@@ -1126,7 +1132,7 @@ DEV-20, 2026-11-02: завершён в согласованной локаль�
 | DEV-26 | Реализовать выдачу аварийного HTML | Отложено владельцем D-923 (`DEV26-Q004=1`) | DEV-25, DEV-29, D-592 | No helper/runtime bloat; branch A stopped, IMP001/002 disconnected evidence retained; resume only by new owner decision |
 | DEV-27 | Реализовать автоматический fallback и возврат | Включено в scope DEV-26 D-896 | DEV-26, D-592 | Per-request non-sticky Nginx fallback без state machine; normal upstream сразу имеет приоритет. Реализация не начата |
 | DEV-30 | Подключить согласованные внешние ресурсы и аналитику | Запланировано | DEV-11, DEV-12, DEV-13, LEGAL-01, CONTACT-01 | READY-05/01: существующая Метрика/цели/телефон/заявка/визиты/источники без дублей, Вебвизор off; cookies/Яндекс/YouTube по согласованному процессу |
-| TEST-08 | Прогнать общий e2e текущего базового MVP | План APPROVED D-1090; fixture BLOCKED D-1091 exact13 missing product URLs | Exact114 legacy URL coverage; current101/114 plus approved extra MAP-115 | Exact10 HTTP/manual groups на одном separately reviewed isolated fixture; DEV-26/27, external backup/monitoring/VPS, TEST-09 physical и TEST-10 real devices остаются отдельными gates; no Playwright/new framework |
+| TEST-08 | Прогнать общий e2e текущего базового MVP | Fixture builder COMPLETE D-1117; exact10 execution NOT_STARTED | Exact114 legacy URL coverage plus approved MAP-115; reusable isolated fixture ready | Exact10 HTTP/manual groups require separate plan/review/owner gate; DEV-26/27, external backup/monitoring/VPS, TEST-09 physical и TEST-10 real devices remain separate; no Playwright/new framework |
 | TEST-09 | Проверить отказы, восстановление, нагрузку и защиту | Запланировано | TEST-08, MONITOR-01 | Реальные сценарии PR/HTML/OPS/MAN: параллелизм/отказ SQL/head/TG/диска, учебное восстановление и сканы на целевой среде; измерения вместо обещаний |
 | TEST-10 | Проверить согласованные реальные браузеры | Запланировано | TEST-08 | 8 семейств/три актуальные версии по принятой матрице, Safari/iPhone и мобильные; WebKit-эмуляция не заменяет реальные устройства, пробелы отмечать |
 | RELEASE-02 | Выполнить перенос и запуск после отдельного разрешения | Запланировано | RELEASE-01 | Только явное разрешение владельца на production, свежая проверенная копия/откат/миграция; не менять рекламные кампании автоматически |

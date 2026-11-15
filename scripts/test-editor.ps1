@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','dev11','dev12-candidates','dev12-media','dev12-projector','dev12-public','dev12-remediation','dev12-schema','dev13','dev13-notifications','dev25','dev25-affected','dev26-projection','test10-fixture','check','migrations','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
+param([ValidateSet('save','draft','races','source','media','embedded','failure','maximum','combined','price-gui','table-gui','restore-terminal','terminal-ui','final-media','guard','dev09','dev09-services','dev11','dev12-candidates','dev12-media','dev12-projector','dev12-public','dev12-remediation','dev12-schema','dev13','dev13-notifications','dev25','dev25-affected','dev26-projection','test08-fixture','test10-fixture','check','migrations','public-read','public-http','public-nav','public-visibility','public-layout','public-image','public-shared-page','shared-quota','shared','shared-check','shared-reads','shared-blob','shared-metadata','shared-provenance','shared-journal','shared-reservation','shared-public','shared-calibration','ref7d','unicode','parser','entity','editor','all')][string]$Suite='save')
 $ErrorActionPreference='Stop'
 $repo=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=Join-Path $repo 'work/foundation/test'
@@ -39,6 +39,66 @@ if($Suite -in @('guard','all')){
         $guardArgs+=@('--mount',"type=bind,source=$registry,target=/legacy-docs/$($entry[0]).csv,readonly",'--env',"$($entry[2])=$registryHash")
     }
 }
+$test08Args=@()
+$test08Receipt=$null
+if($Suite -eq 'test08-fixture'){
+    $runId=[guid]::Parse([string]$manifest.runId).ToString()
+    if($runId -cne $manifest.runId){throw 'Canonical test run UUID required'}
+    $staging=[IO.Path]::GetFullPath((Join-Path $root "test08-fixture/$runId"))
+    $stagingParent=[IO.Path]::GetFullPath((Join-Path $root 'test08-fixture'))
+    if(!$staging.StartsWith($stagingParent+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'Foreign TEST-08 staging'}
+    $assetManifestPath=Join-Path $staging 'manifest.json'
+    $assetRoot=Join-Path $staging 'source'
+    foreach($path in @($staging,$assetManifestPath,$assetRoot)){
+        $item=Get-Item -Force -LiteralPath $path
+        if($item.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'TEST-08 staging link rejected'}
+    }
+    $assetManifest=Get-Content -Raw -LiteralPath $assetManifestPath|ConvertFrom-Json
+    if($assetManifest.schema -cne 'test08-fixture-assets-v1' -or $assetManifest.runId -cne $runId -or
+       $assetManifest.count -ne 236 -or $assetManifest.bytes -ne 45019997 -or @($assetManifest.files).Count -ne 236){throw 'TEST-08 asset manifest mismatch'}
+    $seen=@{};$total=[int64]0
+    foreach($row in @($assetManifest.files)){
+        if($row.path -isnot [string] -or $row.path -notmatch '^[a-z0-9][a-z0-9._/-]+$' -or $seen.ContainsKey($row.path) -or
+           ($row.bytes -isnot [int] -and $row.bytes -isnot [long]) -or
+           $row.bytes -le 0 -or $row.bytes -gt 1MB -or
+           $row.sha256 -isnot [string] -or $row.sha256 -cnotmatch '^[a-f0-9]{64}$'){throw 'TEST-08 asset row rejected'}
+        $seen[$row.path]=$true;$total+=$row.bytes
+        $path=[IO.Path]::GetFullPath((Join-Path $assetRoot $row.path.Replace('/',[IO.Path]::DirectorySeparatorChar)))
+        if(!$path.StartsWith($assetRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'TEST-08 asset path escaped'}
+        $item=Get-Item -Force -LiteralPath $path
+        if($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $item.Length -ne $row.bytes -or
+           (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $row.sha256){throw 'TEST-08 staged asset mismatch'}
+    }
+    if($seen.Count -ne 236 -or $total -ne 45019997){throw 'TEST-08 staged asset totals mismatch'}
+    $routeMap=[IO.Path]::GetFullPath((Join-Path $repo 'docs/analytics-route-map.csv'))
+    $routeItem=Get-Item -Force -LiteralPath $routeMap
+    if($routeItem.Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'TEST-08 route map link rejected'}
+    $routeHash=(Get-FileHash -LiteralPath $routeMap -Algorithm SHA256).Hash.ToLowerInvariant()
+    $routeTargets=@((Import-Csv -LiteralPath $routeMap).requested_path|Sort-Object)
+    if($routeTargets.Count -ne 115 -or @($routeTargets|Sort-Object -Unique).Count -ne 115){throw 'TEST-08 route set rejected'}
+    $routeSetJson=ConvertTo-Json -Compress -InputObject @($routeTargets)
+    $routeSetHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(
+        [Text.Encoding]::UTF8.GetBytes($routeSetJson))).ToLowerInvariant()
+    $inputManifestHash=(Get-FileHash -LiteralPath $assetManifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $test08Args=@('--mount',"type=bind,source=$assetRoot,target=/test08-source,readonly",
+        '--mount',"type=bind,source=$routeMap,target=/test08-route-map.csv,readonly",
+        '--env','ESTAKADA_TEST08_SOURCE_ROOT=/test08-source','--env','ESTAKADA_TEST08_ROUTE_MAP=/test08-route-map.csv',
+        '--env',"ESTAKADA_TEST08_RUN_ID=$runId",'--env',"ESTAKADA_TEST08_ROUTE_SHA256=$routeHash",
+        '--env',"ESTAKADA_TEST08_INPUT_MANIFEST_SHA256=$inputManifestHash",
+        '--env',"ESTAKADA_TEST08_SOURCE_MANIFEST_SHA256=$($manifest.sourceSha256)")
+    $resultRoot=[IO.Path]::GetFullPath((Join-Path $root 'test08-results'))
+    $expectedResultRoot=[IO.Path]::GetFullPath((Join-Path $root 'test08-results'))
+    if($resultRoot -cne $expectedResultRoot){throw 'TEST-08 result root mismatch'}
+    if(Test-Path -LiteralPath $resultRoot){
+        if((Get-Item -Force -LiteralPath $resultRoot).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'TEST-08 result root link rejected'}
+    }else{
+        New-Item -ItemType Directory -Path $resultRoot|Out-Null
+        if((Get-Item -Force -LiteralPath $resultRoot).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'TEST-08 result root link rejected'}
+    }
+    $test08Receipt=[IO.Path]::GetFullPath((Join-Path $resultRoot "$runId.json"))
+    if(!$test08Receipt.StartsWith($resultRoot+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)){throw 'TEST-08 receipt path escaped'}
+    if(Test-Path -LiteralPath $test08Receipt){throw 'TEST-08 receipt already exists'}
+}
 $private=Join-Path $root 'private'
 $dockerArgs=@('run','--rm','--name',"nestakada-editor-tests-$Suite",'--network','nestakada-foundation-test-db',
     '--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','10001:10001',
@@ -50,7 +110,7 @@ $dockerArgs=@('run','--rm','--name',"nestakada-editor-tests-$Suite",'--network',
     '--mount','type=volume,source=nestakada-foundation-test-media-exchange,target=/exchange',
     '--workdir','/app','--env','DJANGO_SETTINGS_MODULE=estakada.settings.local_http',
     '--env','ESTAKADA_LOCAL_ENV=test','--env','ESTAKADA_DB_NAME=estakada_foundation_unit',
-    '--env','ESTAKADA_DB_USER=app_migrator','--env','PYTHONDONTWRITEBYTECODE=1') + $quotaArgs + $guardArgs + @(
+    '--env','ESTAKADA_DB_USER=app_migrator','--env','PYTHONDONTWRITEBYTECODE=1') + $quotaArgs + $guardArgs + $test08Args + @(
     $image,'python','-B','manage.py')
 if($Suite -notin @('check','migrations')){$dockerArgs+=@('test')}
 if($Suite -eq 'check'){$dockerArgs+=@('check')}
@@ -115,6 +175,7 @@ elseif($Suite -eq 'dev13-notifications'){$dockerArgs+=@('service_requests.test_n
 elseif($Suite -eq 'dev25'){$dockerArgs+=@('html_reserve','--failfast')}
 elseif($Suite -eq 'dev26-projection'){$dockerArgs+=@('html_reserve.test_projection','html_reserve.test_delivery','html_reserve.test_delivery_tool','--failfast')}
 elseif($Suite -eq 'test10-fixture'){$dockerArgs+=@('page_editor.test_test10_fixture','--failfast')}
+elseif($Suite -eq 'test08-fixture'){$dockerArgs+=@('content.test_test08_fixture','--failfast')}
 elseif($Suite -eq 'dev25-affected'){$dockerArgs+=@(
     'content.test_public_http',
     'content.test_public_shared',
@@ -146,5 +207,55 @@ elseif($Suite -eq 'entity'){$dockerArgs+=@('page_editor.test_entity_http','--fai
 elseif($Suite -eq 'editor'){$dockerArgs+=@('page_editor','--failfast')}
 else{$dockerArgs+=@('request_guard.tests','audit','content','accounts','media_library','page_versions','foundation_tests','editor_runtime','page_editor','shared_content','--failfast')}
 if($Suite -notin @('check','migrations')){$dockerArgs+=@('--keepdb','--noinput','--verbosity','2')}
-& docker.exe @dockerArgs
-if($LASTEXITCODE -ne 0){throw 'Editor check failed; inspect evidence before any retry'}
+if($Suite -eq 'test08-fixture'){
+    $receipt=$null;$cleanup=$null;$primary=$null
+    try{
+        $previousErrorAction=$ErrorActionPreference
+        try{
+            $ErrorActionPreference='Continue'
+            $rawOutput=@(& docker.exe @dockerArgs 2>&1);$exitCode=$LASTEXITCODE
+        }finally{$ErrorActionPreference=$previousErrorAction}
+        $output=@($rawOutput|ForEach-Object{"$_"})
+        $output|ForEach-Object{Write-Output $_}
+        if($exitCode -ne 0){throw 'Editor check failed; inspect evidence before any retry'}
+        $markers=@($output|Where-Object{$_ -is [string] -and $_.StartsWith('TEST08_FIXTURE_RESULT=')})
+        if($markers.Count -ne 1 -or $markers[0].Length -gt 16384){throw 'TEST-08 result marker missing or invalid'}
+        $encoded=$markers[0].Substring('TEST08_FIXTURE_RESULT='.Length).Replace('-','+').Replace('_','/')
+        while($encoded.Length%4){$encoded+='='}
+        try{$json=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded));$receipt=$json|ConvertFrom-Json}catch{throw 'TEST-08 result marker decode failed'}
+        $keys=@($receipt.PSObject.Properties.Name|Sort-Object)
+        $countKeys='assets,auditEvents,fileKeyReservations,files,grants,identityReservations,mediaFolders,mediaIdentityReservations,ownerDrafts,pages,pageStates,profiles,requests,revisionMetadata,revisionProtections,revisions,routes,sessions,sharedBlocks,sharedBudgets,sharedIdentityReservations,sharedRevisions,usages,users,versionBasePins'
+        $afterKeys=@($receipt.after.PSObject.Properties.Name|Sort-Object)-join ','
+        $assembledKeys=@($receipt.assembled.PSObject.Properties.Name|Sort-Object)-join ','
+        $beforeKeys=@($receipt.before.PSObject.Properties.Name|Sort-Object)-join ','
+        $defaultKeys=@($receipt.defaultOff.PSObject.Properties.Name|Sort-Object)-join ','
+        $mediaKeys=@($receipt.media.PSObject.Properties.Name|Sort-Object)-join ','
+        if(($keys -join ',') -cne 'after,assembled,before,defaultOff,fixtureReady,inputManifestSha256,media,routeMapSha256,routeSetSha256,runId,schema,sourceManifestSha256' -or
+           $afterKeys -cne $countKeys -or $assembledKeys -cne $countKeys -or $beforeKeys -cne $countKeys -or
+           $defaultKeys -cne 'serviceRequestIntake,serviceRequestRows,transportProfile' -or $mediaKeys -cne 'bytes,count' -or
+           $receipt.schema -cne 'test08-fixture-result-v1' -or $receipt.runId -cne $manifest.runId -or $receipt.fixtureReady -ne $true -or
+           $receipt.inputManifestSha256 -cne $inputManifestHash -or $receipt.routeMapSha256 -cne $routeHash -or
+           $receipt.routeSetSha256 -cne $routeSetHash -or $receipt.sourceManifestSha256 -cne $manifest.sourceSha256 -or
+           $receipt.media.count -ne 237 -or $receipt.media.bytes -ne 45221681 -or
+           $receipt.assembled.assets -ne 237 -or $receipt.assembled.files -ne 237 -or
+           $receipt.assembled.pages -ne 112 -or $receipt.assembled.routes -ne 114 -or
+           $receipt.assembled.requests -ne 0 -or $receipt.defaultOff.serviceRequestIntake -ne $false -or
+           $receipt.defaultOff.serviceRequestRows -ne 0 -or $receipt.defaultOff.transportProfile -cne 'disabled' -or
+           @($receipt.before.PSObject.Properties|Where-Object{$_.Value -ne 0}).Count -ne 0 -or
+           @($receipt.after.PSObject.Properties|Where-Object{$_.Value -ne 0}).Count -ne 0){throw 'TEST-08 result marker schema mismatch'}
+    }catch{$primary=$_;throw}
+    finally{
+        $cleanupOutput=@(& (Join-Path $PSHOME 'pwsh.exe') -NoProfile -File (Join-Path $PSScriptRoot 'prepare-test08-fixture-assets.ps1') -Action Cleanup 2>&1)
+        $cleanupExit=$LASTEXITCODE
+        if($cleanupExit -eq 0 -and @($cleanupOutput|Where-Object{"$_" -eq "TEST08 fixture staging cleaned: $runId"}).Count -eq 1){
+            $cleanup=[ordered]@{runId=$runId;status='removed'}
+        }elseif($primary){$primary.Exception.Data['TEST08_CLEANUP']='failed'}
+        else{throw 'TEST-08 staging cleanup failed'}
+    }
+    $receipt|Add-Member -NotePropertyName cleanup -NotePropertyValue $cleanup
+    $finalJson=$receipt|ConvertTo-Json -Depth 8 -Compress
+    $utf8=New-Object Text.UTF8Encoding($false);[IO.File]::WriteAllText($test08Receipt,$finalJson,$utf8)
+}else{
+    & docker.exe @dockerArgs
+    if($LASTEXITCODE -ne 0){throw 'Editor check failed; inspect evidence before any retry'}
+}

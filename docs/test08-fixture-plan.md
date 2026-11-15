@@ -1,6 +1,6 @@
 # TEST-08 — минимальный план изолированного fixture
 
-Дата: 2026-11-15. Статус: **APPROVED**, repeat independent review P1/P2/P3=`0/0/0`; implementation/execution NOT AUTHORIZED. First review P1/P2/P3=`1/4/0`; remediation below chooses one-process fixture/HTTP boundary and closes F08-PLAN-R01–R05. Review: `docs/test08-fixture-plan-review.md`.
+Дата: 2026-11-15. Статус: **IMPLEMENTED / FINAL REVIEW APPROVED**, P1/P2/P3=`0/0/0`; reusable fixture contract PASS2/2, TEST-08 exact10 execution remains separately unauthorized. First plan review P1/P2/P3=`1/4/0`; implementation reviews `1/3/1` → `0/0/1` → `0/0/0`. Review: `docs/test08-fixture-plan-review.md`.
 
 Основание: утверждённый base-MVP plan `docs/test08-base-mvp-plan.md`, снятый DEV-09N content gap D-1109 и readiness audit `docs/test08-fixture-readiness-audit.md`.
 
@@ -14,21 +14,22 @@
 
 ## Измеренный вход
 
-Fixture использует только 12 уже allowlisted package-файлов frozen foundation source и точный локальный media set:
+Fixture использует только 12 уже allowlisted package-файлов frozen foundation source и точный локальный media set. Packages содержат 237 logical media descriptors; home и DEV-09N делят один exact source path/SHA, поэтому host staging содержит236 unique source files:
 
 - gallery originals: 214 файлов / 41,176,391 bytes;
 - home design media: 15 / 2,545,932 bytes;
 - DEV-09N remaining media: 7 / 1,394,676 bytes;
 - MAP-019 infographic: 1 / 104,682 bytes;
-- всего exact237 / 45,221,681 bytes, hard cap 64 MiB.
+- logical/output exact237 / 45,221,681 bytes;
+- unique host source exact236 / 45,019,997 bytes, hard cap 64 MiB; единственный overlap — `media/design-concepts/photo-strip-v4/exterior-bays-bright-v1.webp` с одинаковыми size/SHA.
 
-Маршруты сверяются только с `docs/analytics-route-map.csv`: exact114 legacy path+query и один approved extra `MAP-115`. Expected assembled state: 113 Page aggregates and 115 Route rows; three legacy/runtime aliases account for the route/page difference. Значения пересчитываются из packages и registry, а не из результата сборки.
+Маршруты сверяются только с `docs/analytics-route-map.csv`: exact114 legacy path+query и один approved extra `MAP-115`. Expected assembled state: 112 Page aggregates and 114 Route rows; полный public set остаётся exact115 URL, потому что `/gallery-of-works/?page=1` обслуживается существующим runtime 302 на primary `/gallery-of-works/`, а не отдельной Route row. Gallery page2 и old wash URL являются двумя сохранёнными DB alias rows. Значения пересчитываются из packages и registry, а не из результата сборки.
 
 ## Минимальный будущий diff
 
 Ровно два новых test/tool файла и один существующий wrapper:
 
-1. `scripts/prepare-test08-fixture-assets.ps1` — host-only exact237 staging в `work/foundation/test/test08-fixture/<run-id>/source`; no network/child download/image conversion. Он принимает только current active test run, читает четыре утверждённых package manifests, отклоняет absolute/traversal/link/non-regular/duplicate paths, проверяет каждый size/SHA, общий count/bytes/cap и пишет canonical manifest без секретов. Ошибка удаляет только созданный run-scoped staging directory.
+1. `scripts/prepare-test08-fixture-assets.ps1` — host-only exact236 unique-source staging в `work/foundation/test/test08-fixture/<run-id>/source`; no network/child download/image conversion. Он принимает только current active test run, читает четыре утверждённых package manifests, требует exact237 logical descriptors и ровно один approved identical path/SHA overlap, отклоняет любой другой duplicate/absolute/traversal/link/non-regular path, проверяет каждый size/SHA, общий count/bytes/cap и пишет canonical manifest без секретов. Ошибка удаляет только созданный run-scoped staging directory.
 2. `app/content/test_test08_fixture.py` — один test-only `TransactionTestCase`, reusable builder и exact fixture-contract acceptance; future execution test module may import only this builder after its own plan/gate. Production import/URL/command не добавляются.
 3. `scripts/test-editor.ps1` — только named suite `test08-fixture`, read-only mounts exact staging root + exact route-map after manifest/hash validation, and a bounded result-marker parser. Test stdout may contain exactly one canonical `TEST08_FIXTURE_RESULT=` base64url JSON marker no larger than16KiB; wrapper validates closed keys/types/caps/no secret fields and writes the receipt on host. Остальные suites/mounts не меняются.
 
@@ -55,9 +56,9 @@ Suite работает только на frozen source одного fresh founda
 
 | ID | Проверка |
 |---|---|
-| F08-FX-001 | Host staging принимает ровно exact237/45,221,681 и отклоняет missing/extra/duplicate/link/path escape/hash/size/cap+1 до Docker test call. |
+| F08-FX-001 | Host staging принимает exact237 logical descriptors → exact236 unique sources/45,019,997 with one fixed identical overlap; отклоняет любой другой missing/extra/duplicate/link/path escape/hash/size/cap+1 до Docker test call. |
 | F08-FX-002 | Frozen source SHA, staging manifest SHA и route-map SHA закреплены в evidence; repo originals read-only, writes/network/download/conversion0. |
-| F08-FX-003 | Admitted empty test baseline собирает exact113 Page/exact115 Route и все package-authorized revisions/state/drafts/pins/audit/media usages без unknown aggregate. |
+| F08-FX-003 | Admitted empty test baseline собирает exact112 Page/exact114 Route и все package-authorized revisions/state/drafts/pins/audit/media usages без unknown aggregate; existing page1 runtime redirect дополняет DB set до exact115 public URL. |
 | F08-FX-004 | Route set равен exact114 legacy path+query + approved MAP-115, missing/extra/duplicate0; redirect не подменяет exact URL. |
 | F08-FX-005 | Gallery exact17/214 сохраняет original bytes/SHA; total exact237 media files physically match storage manifests. |
 | F08-FX-006 | Owner/employee/post-page grant and current Header/Footer coherent; settings remain default-off and ServiceRequest rows0; PII/notifications/analytics/external embeds/DEV-26/27 absent. |

@@ -1,8 +1,14 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1117 (2026-11-15): TEST-08 reusable fixture builder завершён, final review APPROVED 0/0/0.** Fresh exact wrapper PASS2/2:237 media/45,221,681B,112 Page,114 DB Route + existing page1 runtime redirect =115 public URL; before/after0, cleanup removed, staging absent, foundation stopped. Scope остаётся no-bloat/test-only. Текущий этап9 «Unit-тесты» продолжается; следующий bounded gate — отдельный план exact10 TEST-08 execution, independent review и owner permission. Execution/publication/production/VPS не начаты.
+
 > **Текущая точка D-1101 (2026-11-15): old direct phone removed by owner; DEV09N identity manifest fixed.** Exact13 Page identities/tree/free positions and exact7 media identities precede package. Code/tests/Docker0. IMP-001 continues with JSON/validator/data review.
 
 > **Текущая точка D-1100 (2026-11-15): owner code gate D-1099 opened; IMP-001 paused before writes on contact conflict.** Old `/direct-contact` direct phone differs from D-927 confirmed public phone. Exact transfer/substitution requires owner choice; recommended current official phone. Package/code/tests/Docker0.
+
+> **Текущая точка D-1116 (2026-11-15): TEST-08 numeric review CHANGES_REQUESTED 0/1/0; exact overlap remediation ready.** Categories/201684B/SHA/logical sum now pinned with unique source sum. Tests/Docker0. Repeat review only.
+
+> **Текущая точка D-1115 (2026-11-15): TEST-08 staging corrected to236 unique sources/45,019,997B for237 logical/output media.** One fixed home/DEV-09N path/SHA overlap only; tool rejects others. Docker test/product0. Independent numeric-contract review before RED.
 
 > **Текущая точка D-1114 (2026-11-15): TEST-08 fixture ordering independently APPROVED 0/0/0.** Exact237-first shared binding is feasible/no-bloat; prior findings closed. Owner code gate open. Next three-file RED→minimal GREEN, independent diff review; TEST-08 run closed.
 

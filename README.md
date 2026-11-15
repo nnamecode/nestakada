@@ -1,5 +1,11 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1117 (2026-11-15): TEST-08 reusable fixture builder COMPLETE; final review APPROVED 0/0/0.** Exact wrapper run2/2 PASS on run `482da5a1-518e-4c3d-b8da-837497be5651`:237 media/45,221,681B,112 Page,114 DB Route and existing page1 runtime redirect complete115 public URLs. Closed before/after vectors are zero, host cleanup `removed`, staging absent, foundation stopped/active=false. No product/runtime/model/migration/dependency/API/JS/Playwright bloat. Next gate is a separately planned/reviewed/authorized TEST-08 exact10 execution module; it was not run here.
+
+> **Текущая точка D-1116 (2026-11-15): D-1115 numeric review CHANGES_REQUESTED 0/1/0; remediation ready.** Staging now pins duplicate categories home+remaining, exact201684B/SHA and logical sum45,221,681 in addition to unique236/45,019,997. Product/DB/Docker test0. Repeat review only.
+
+> **Текущая точка D-1115 (2026-11-15): TEST-08 staging count corrected before RED.** Packages have237 logical/output media but236 unique host sources/45,019,997B because home+DEV-09N share one exact path/SHA. Tool now admits only this overlap; no test/Docker product run yet. Independent count-contract review next.
+
 > **Текущая точка D-1114 (2026-11-15): TEST-08 fixture pre-code ordering independently APPROVED 0/0/0.** Exact237 media precede closed shared binding with no extra asset; prior plan findings stay closed. Owner implementation gate is open; next RED contract then minimal exact three-file code.
 
 > **Текущая точка D-1113 (2026-11-15): TEST-08 fixture pre-code dependency correction pending review.** Closed Header/Footer require READY media; order changed to exact237 prepare/seed before shared binding, without extra synthetic asset or scope growth. Code/tests/Docker0. Repeat review of ordering only before implementation.
