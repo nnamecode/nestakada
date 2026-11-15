@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1086 (2026-11-15): первое итоговое ревью CHANGES REQUESTED P1/P2/P3=0/1/1; remediation готова.** R10-001 boundary исправлен frozen candidate `63085e1`:34 commits/58 files/+3739/-157; более поздние commits разрешены только для exact review metadata и не входят в artifact verdict. R10-002 исправлен удалением трёх EOF blank lines, `git diff --check origin/main..63085e1` clean. Product/code/runtime/tests unchanged; stage9 не повторяется. Следующий gate — repeat independent review только boundary и исправленных строк.
+
 > **Текущая точка D-1085 (2026-11-15): подготовлена точная граница этапа 10, ревью ещё не начато.** Base `585750f` → candidate `676403a`: 32 коммита,57 файлов, production runtime delta0; executable/test scope — two TEST-10 PowerShell scripts + two Python fixture/test files, plus four fail-closed registries and documentation. Повторять stage9/Docker/Playwright нельзя. Plan: `docs/stage10-final-review-plan.md`. Следующий gate — независимый read-only verdict P1/P2/P3; coordinator self-review не считается независимым.
 
 > **Текущая точка D-1084 (2026-11-15): итоговая локальная регрессия этапа 9 PASS.** Один fresh foundation lifecycle; exact suites через `scripts/test-editor.ps1`: all900/OK/skipped1, dev13 42/42, dev25 73/73, check0, migrations no changes. Failures0; direct manage.py/wildcard/Playwright0. Foundation stopped/active=false, product/live/VPS unchanged. Следующий gate — итоговое независимое ревью текущей ветки; TEST-08/09/10 и запуск остаются отдельными этапами.
