@@ -1,6 +1,6 @@
 # DEV-09N exact13 — минимальный implementation plan
 
-Дата: 2026-11-15. Статус: **plan ready for independent review; product code not started**. Scope authority: D-1095 и `docs/dev09n-remaining-exact13-scope-proposal.md`.
+Дата: 2026-11-15. Статус: **first review CHANGES_REQUESTED 0/2/0; remediation ready, repeat review pending; product code not started**. Scope authority: D-1095 и `docs/dev09n-remaining-exact13-scope-proposal.md`. Review: `docs/dev09n-remaining-exact13-plan-review.md`.
 
 ## Результат
 
@@ -36,7 +36,7 @@ Schema `dev09n-remaining-content-v1` содержит exact13 ordered pages и e
 - reviews: exact10 title+HTTPS video links, no remote image/embed;
 - contacts: exact visible phone/address/hours/email, exact tel/mailto/HTTPS route link and MED-0004–0008 image IDs.
 
-Package не хранит raw HTML, template fragments, Python или JavaScript. Caps: package 128 KiB; each authority/artifact 64 KiB; pages13/media7 exact; blocks64/page; links16/page; text leaf8 KiB; rendered body64 KiB/page; total rendered512 KiB. Exact cap passes, cap+1 fails before write.
+Package не хранит raw HTML, template fragments, Python или JavaScript. Pre-read caps по классам: package128 KiB; route-map128 KiB; route-evidence256 KiB; media-evidence256 KiB; каждый source/artifact128 KiB; каждый exact media256 KiB; все exact7 media вместе2 MiB. Structural caps: pages13/media7 exact; blocks64/page; links16/page; text leaf8 KiB; rendered body64 KiB/page; total rendered512 KiB. Для каждого числового класса synthetic exact-cap passes, cap+1 fails before parse/hash/write; actual pinned inputs дополнительно обязаны совпасть с exact bytes/SHA.
 
 Host validator pins route map/evidence/media evidence SHA plus exact source/artifact/local media SHA, rejects symlink/traversal/non-regular/CR/invalid UTF-8/duplicate keys and performs writes/network/child-process0.
 
@@ -72,9 +72,9 @@ Employee fields remain unchanged; this profile is owner/protected payload data a
 1. `DEV09N-IMP-001 — canonical data`: generate exact JSON only from pinned authorities; host validator syntax/selfcheck/actual PASS; independent data review before writer use.
 2. `DEV09N-IMP-002 — failing schema/package tests`: add focused negatives for closed keys/caps/contacts schemes and exact13/exact7 identity; no product behavior yet.
 3. `DEV09N-IMP-003 — contacts schema`: minimal `schema.py` addition, schema tests PASS; no sanitizer change.
-4. `DEV09N-IMP-004 — exact7 media`: default-off prepare/replay/recovery and physical/descriptor fault tests.
-5. `DEV09N-IMP-005 — all13 writer`: closed renderer, parent preflight, atomic aggregate/usages, replay/mixed/late/concurrency tests.
-6. `DEV09N-IMP-006 — public projection`: three kind branches/template/CSS and exact route/content/media/security/SEO/navigation tests; JavaScript0.
+4. `DEV09N-IMP-004 — exact7 media`: after owner code gate and fresh foundation, first add focused prepare/replay/recovery/physical/descriptor tests to `dev09-services` and record expected RED; only then minimal media code and GREEN of the same named suite.
+5. `DEV09N-IMP-005 — all13 writer`: first add focused parent/atomic aggregate/usages/replay/mixed/late/concurrency tests and record expected RED through `dev09-services`; only then closed renderer/writer minimal code and GREEN.
+6. `DEV09N-IMP-006 — public projection`: first add exact route/content/media/security/SEO/navigation tests and record expected RED through named `dev09-services` plus the individually affected public suite; only then three kind branches/template/CSS minimal code and GREEN; JavaScript0.
 7. `DEV09N-IMP-007 — bounded verification`: only named wrapper suites `dev09-services`, `dev12-schema`, `public-read`, `public-http`, `public-nav`, `dev11`, `check`, `migrations`; no wildcard/direct broad manage.py/Playwright. Run only after fresh foundation calibration; host/Docker failure is environment evidence, not product failure.
 8. `DEV09N-IMP-008 — independent code review`: P1/P2/P3, bounded remediation, repeat affected named suites; final approval still does not authorize persistent apply/publication.
 

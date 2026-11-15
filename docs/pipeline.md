@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1097 (2026-11-15): DEV-09N plan review CHANGES_REQUESTED 0/2/0; remediation ready.** Actual-bounded per-class caps and tests-first RED/GREEN for media/writer/public close findings. Product/tests/Docker0. Next repeat plan review; code gate closed.
+
 > **Текущая точка D-1096 (2026-11-15): DEV-09N minimal implementation plan READY, code0.** Eight bounded slices, exact3 new +7 existing files, no model/migration/dependency/JS/framework. Named wrapper tests only after owner code gate. Next independent plan review, then separate implementation permission.
 
 > **Текущая точка D-1095 (2026-11-15): DEV-09N exact13 scope repeat review APPROVED 0/0/0.** Typed contacts profile, recoverable media prepare/atomic page attach and owner status accepted; no bloat findings. Product/tests/Docker0. Next minimal implementation plan/review, then separate owner code gate.
