@@ -1,5 +1,7 @@
 # Таблица задач
 
+Текущая работа D-1106 (2026-11-15): **DEV09N-IMP-006 public projection COMPLETE.** Focused65/65 plus public-read9, public-http21, public-nav7 PASS. Actions2 local images, reviews10 links/no iframe, contacts typed facts+5 local images/no form/embed/page-specific JS; malformed profile503. Next IMP-007 remaining named verification: dev12-schema, dev11, check, migrations; then independent code review.
+
 Текущая работа D-1105 (2026-11-15): **DEV09N-IMP-005 all13 writer COMPLETE; RED→GREEN63/63.** Exact7 physical recapture precedes one atomic DB attach; all13 hidden aggregates and21 usages are exact. Replay writes0; missing/mixed/late13/concurrent cases PASS. One sanitizer finding was fixed once and did not repeat. Next IMP-006: focused public route/content/media/security/SEO/navigation RED, then minimal actions/reviews/contacts projection/template/CSS.
 
 Текущая работа D-1104 (2026-11-15): **DEV09N-IMP-004 exact7 media COMPLETE; RED→GREEN58/58.** All sources verify before DB; exact READY replay writes0; interrupted STAGED preparation recovers; descriptor/manifest conflicts refuse; Page/usage/publication0. Fresh foundation `5910edbb-d5b5-4859-95b2-0a94a7010d8e`, named `dev09-services` PASS58 in88.350s. Next IMP-005: focused parent/atomic aggregate/usages/replay/mixed/late/concurrency RED, then minimal all13 writer.

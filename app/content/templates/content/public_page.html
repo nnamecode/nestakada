@@ -72,6 +72,18 @@
         {% endfor %}
       </section>
     {% else %}
+    {% if remaining %}<section class="{{ remaining.css_class }}">
+      {% if remaining.kind == 'contacts' %}
+        <div class="public-contact-facts">
+          <p><strong>Телефон</strong> <a href="{{ remaining.contacts.phone_href }}">{{ remaining.contacts.phone_display }}</a></p>
+          <p><strong>Адрес</strong> {{ remaining.contacts.address }}</p>
+          <p><strong>Время работы</strong> {{ remaining.contacts.hours }}</p>
+          <p><strong>Email</strong> <a href="{{ remaining.contacts.email_href }}">{{ remaining.contacts.email_display }}</a></p>
+          <p><a href="{{ remaining.contacts.route_href }}" target="_blank" rel="noopener noreferrer">Построить маршрут</a></p>
+        </div>
+        <h2>{{ remaining.contacts.gallery_heading }}</h2>
+      {% endif %}
+    {% endif %}
     {% for block in body_blocks %}
       {% if block.kind == 'text' %}
         <section class="{% if page.page_kind == 'services_master_catalog' and block.field == 'main_text' %}public-services-catalog{% elif page.page_kind == 'service_catalog' and block.field == 'main_text' %}public-service-root-catalog{% else %}public-content public-text-{{ block.field }}{% endif %}">{{ block.html }}</section>
@@ -93,6 +105,7 @@
         </figure>
       {% endif %}
     {% endfor %}
+    {% if remaining %}</section>{% endif %}
     {% endif %}{% endif %}
     {% if service_request_form %}{% include "service_requests/public_form.html" %}{% endif %}
   </main>

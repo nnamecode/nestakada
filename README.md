@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1106 (2026-11-15): DEV09N-IMP-006 public projection complete.** Focused65 + affected public9/21/7 PASS; actions/reviews/contacts use closed server-rendered branches, no form/embed/new JS. Next IMP-007 named dev12-schema/dev11/check/migrations, then independent review.
+
 > **Текущая точка D-1105 (2026-11-15): DEV09N-IMP-005 atomic all13 writer RED→GREEN complete.** Named `dev09-services` PASS63/63; exact7 recapture, all13 hidden aggregates,21 usages, replay/rollback/mixed/concurrency closed. Next IMP-006 public projection tests-first; persistent apply/publication/live remain closed.
 
 > **Текущая точка D-1104 (2026-11-15): DEV09N-IMP-004 exact7 media RED→GREEN complete.** Existing lifecycle only; all7 preflight before DB, replay/recovery/conflict tests PASS, `dev09-services`58/58. No Page/usage/publication. Next IMP-005 tests-first atomic all13 writer.

@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
-from django.db import close_old_connections
+from django.db import close_old_connections, models
 from django.test import SimpleTestCase, TransactionTestCase, override_settings
 
 from accounts import services as auth
@@ -18,6 +18,7 @@ from media_library.storage import MediaStorage
 from page_versions import schema
 
 from . import dev09_migration_apply as migration
+from .test_public_http import fake_shared
 
 
 PACKAGE = Path(__file__).with_name('dev09n_remaining_content.json')
@@ -405,4 +406,81 @@ class Dev09NRemainingWriterTests(TransactionTestCase):
                          [False, True])
         self.assertEqual(Page.objects.filter(
             pk__in=[row['page_id'] for row in package['pages']]).count(), 13)
+
+
+@override_settings(
+    PASSWORD_HASHERS=FAST_HASHERS, ENVIRONMENT='test',
+    DEV09_MIGRATION_APPLY_ENABLED=True,
+    PUBLIC_ORIGIN='http://localhost:8767', SEO_ROBOTS_PROFILE='deny-all',
+)
+class Dev09NRemainingPublicTests(TransactionTestCase):
+    reset_sequences = True
+    root_id = Dev09NRemainingWriterTests.root_id
+
+    def setUp(self):
+        self.owner = auth.bootstrap_owner(PASSWORD)
+        shared = patch('content.public_views.render_shared', side_effect=fake_shared)
+        shared.start()
+        self.addCleanup(shared.stop)
+
+    def fixture(self):
+        return Dev09NRemainingMediaTests.fixture(self)
+
+    def create_root(self):
+        return Dev09NRemainingWriterTests.create_root(self)
+
+    def published(self):
+        package, media = Dev09NRemainingWriterTests.prepared(self)
+        with patch.object(migration, '_read_remaining_content_package',
+                          return_value=package), \
+                override_settings(MEDIA_LIBRARY_ROOT=media):
+            migration.apply_remaining_content(storage=MediaStorage())
+        ids = [row['page_id'] for row in package['pages']]
+        models.QuerySet(model=Page, using='default').filter(
+            pk__in=ids).update(is_published=True)
+        return package, media
+
+    def test_dev09n_301_actions_reviews_contacts_exact_safe_projection(self):
+        package, media = self.published()
+        with override_settings(MEDIA_LIBRARY_ROOT=media):
+            actions = self.client.get('/actions')
+            reviews = self.client.get('/reviews')
+            contacts = self.client.get('/contacts')
+        self.assertEqual((actions.status_code, reviews.status_code,
+                          contacts.status_code), (200, 200, 200))
+        self.assertContains(actions, 'class="public-actions"')
+        self.assertContains(actions, 'Скидка 10% за первое посещение!')
+        self.assertEqual(actions.content.count(b'/public-media/'), 2)
+        self.assertContains(reviews, 'class="public-reviews"')
+        self.assertEqual(reviews.content.count(
+            b'https://www.youtube.com/watch?v='), 10)
+        self.assertNotIn(b'<iframe', reviews.content.lower())
+        self.assertContains(contacts, 'class="public-contacts"')
+        self.assertContains(contacts, 'href="tel:+74991102552"')
+        self.assertContains(contacts, 'href="mailto:estakada10@yandex.ru"')
+        self.assertContains(contacts,
+                            '117105, Москва, Проспект 60-летия Октября, 15Б')
+        self.assertEqual(contacts.content.count(b'/public-media/'), 5)
+        self.assertNotIn(b'<form', contacts.content.lower())
+        self.assertNotIn(b'<iframe', contacts.content.lower())
+        self.assertNotIn(b'8 (903) 772-33-43', contacts.content)
+        for response in (actions, reviews, contacts):
+            self.assertIn("default-src 'none'", response['Content-Security-Policy'])
+            self.assertNotIn(b'public-home.js', response.content)
+            self.assertNotIn(b'public-gallery.js', response.content)
+
+    def test_dev09n_302_malformed_contacts_profile_fails_coherently(self):
+        package, media = self.published()
+        revision = migration.PageRevision.objects.get(
+            page_id='91631e35-5e81-407f-806b-e973223d7340')
+        payload = copy.deepcopy(revision.payload)
+        payload['contacts_profile']['phone_href'] = 'javascript:alert(1)'
+        models.QuerySet(model=migration.PageRevision, using='default').filter(
+            pk=revision.pk).update(payload=payload,
+                                   payload_hash=schema.digest(payload))
+        with override_settings(MEDIA_LIBRARY_ROOT=media):
+            response = self.client.get('/contacts')
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        self.assertNotIn(b'javascript:', response.content)
 

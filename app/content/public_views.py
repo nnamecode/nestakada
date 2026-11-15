@@ -112,6 +112,26 @@ def _home_media(projection, media):
     return value
 
 
+def _remaining_page(current):
+    classes = {
+        'actions': 'public-actions',
+        'reviews': 'public-reviews',
+        'contacts': 'public-contacts',
+    }
+    css_class = classes.get(current.page_kind)
+    if css_class is None:
+        return None
+    result = {'kind': current.page_kind, 'css_class': css_class}
+    if current.page_kind == 'contacts':
+        # resolve_target already validated the stored dict before exposing a
+        # read-only MappingProxyType; copy only this closed DTO for templates.
+        profile = current.payload.get('contacts_profile')
+        if profile is None:
+            raise PublicUnavailable()
+        result['contacts'] = dict(profile)
+    return result
+
+
 def _sitemap_boundary():
     pass
 
@@ -249,12 +269,14 @@ def _page(request, reserve_context=None):
                 replace(block, html=mark_safe(block.html))
                 if isinstance(block, (PublicTextBlock, PublicHeroBlock)) else block
                 for block in project_body(current, media))
+            remaining = _remaining_page(current)
             body = render_to_string('content/public_page.html', {
                 'page': current,
                 'breadcrumbs': breadcrumbs,
                 'body_blocks': body_blocks,
                 'gallery': gallery,
                 'home': home,
+                'remaining': remaining,
                 'gallery_selected_text': (
                     mark_safe(gallery.selected.main_text)
                     if gallery is not None and gallery.selected is not None
