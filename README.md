@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1107 (2026-11-15): DEV09N-IMP-007 named verification complete.** One fresh foundation `b35298df-c6b2-4294-91d2-357c7919f430`; exact wrapper suites PASS: dev09-services65, dev12-schema88, public-read9, public-http21, public-nav7, dev11-50; check0 issues, migrations no changes. Failures0; wildcard/direct manage.py/Playwright0. Next IMP-008 independent code review.
+
 > **Текущая точка D-1106 (2026-11-15): DEV09N-IMP-006 public projection complete.** Focused65 + affected public9/21/7 PASS; actions/reviews/contacts use closed server-rendered branches, no form/embed/new JS. Next IMP-007 named dev12-schema/dev11/check/migrations, then independent review.
 
 > **Текущая точка D-1105 (2026-11-15): DEV09N-IMP-005 atomic all13 writer RED→GREEN complete.** Named `dev09-services` PASS63/63; exact7 recapture, all13 hidden aggregates,21 usages, replay/rollback/mixed/concurrency closed. Next IMP-006 public projection tests-first; persistent apply/publication/live remain closed.
