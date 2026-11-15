@@ -1,5 +1,7 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1087 (2026-11-15): локальная часть этапа 10 COMPLETE, independent review APPROVED.** Frozen candidate `63085e1`, exact34 commits/58 files/+3739/-157. Первое review0/1/1; R10-001 boundary и R10-002 exact3 EOF lines исправлены один раз; repeat review P1/P2/P3=0/0/0, equivalents did not repeat. Result: `docs/stage10-final-review-results.md`. Product/runtime/tests/live unchanged. TEST-08/09/10, production apply, VPS и публикация остаются отдельными воротами.
+
 > **Текущая точка D-1086 (2026-11-15): первое итоговое ревью CHANGES REQUESTED P1/P2/P3=0/1/1; remediation готова.** R10-001 boundary исправлен frozen candidate `63085e1`:34 commits/58 files/+3739/-157; более поздние commits разрешены только для exact review metadata и не входят в artifact verdict. R10-002 исправлен удалением трёх EOF blank lines, `git diff --check origin/main..63085e1` clean. Product/code/runtime/tests unchanged; stage9 не повторяется. Следующий gate — repeat independent review только boundary и исправленных строк.
 
 > **Текущая точка D-1085 (2026-11-15): подготовлена точная граница этапа 10, ревью ещё не начато.** Base `585750f` → candidate `676403a`: 32 коммита,57 файлов, production runtime delta0; executable/test scope — two TEST-10 PowerShell scripts + two Python fixture/test files, plus four fail-closed registries and documentation. Повторять stage9/Docker/Playwright нельзя. Plan: `docs/stage10-final-review-plan.md`. Следующий gate — независимый read-only verdict P1/P2/P3; coordinator self-review не считается независимым.
