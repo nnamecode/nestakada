@@ -1,6 +1,6 @@
 # TEST-08 — план общего e2e базового MVP
 
-Дата: 2026-11-15. Статус: план готов; fixture, bindings и execution не начаты.
+Дата: 2026-11-15. Статус: **APPROVED**, independent review P1/P2/P3=`0/0/0`; fixture, bindings и execution не начаты. Review: `docs/test08-base-mvp-plan-review.md`.
 
 ## Принятое admission
 

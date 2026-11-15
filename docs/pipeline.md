@@ -1,5 +1,7 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1090 (2026-11-15): TEST-08 base-MVP plan independently APPROVED 0/0/0.** Variant1 scope, matrix17/20/103, future isolated fixture, exact10 HTTP/manual groups, no Playwright/new framework and closed evidence/stop rules accepted. Review read-only; files/tests/Docker/network/live0. Fixture implementation/execution remains closed. Next bounded stage minimal fixture plan only, then independent review and owner gate.
+
 > **Текущая точка D-1089 (2026-11-15): owner accepted TEST-08 no-bloat variant1; bounded plan ready, run0.** Current base MVP only; deferred DEV-26/27 and external/TEST-09/10/launch scopes remain outside. Existing acceptance matrix17/20/103 is not full executable site e2e. Plan defines separately reviewed isolated assembled fixture then exact10 HTTP/manual groups, no new framework/Playwright/product changes. Next gate independent plan review; fixture/config/Docker/tests0.
 
 > **Текущая точка D-1088 (2026-11-15): TEST-08 readiness audit complete; run BLOCKED by admission mismatch.** Stage8 remains21/27 ready+3 partial+3 deferred/pending; exact140 residual routing21 owner/defer+94 launch/external+7 TEST-09+18 TEST-10. Literal all-DEV TEST-08 prerequisite conflicts with approved DEV-26/27 defer and base default-off profile. Recommended variant1: test current MVP only and keep external/physical/real-device gates separate; variant2 reopens deferred scope and is not recommended. Product/tests/Docker/browser/live0. Next gate is owner choice, then bounded TEST-08 plan only.
