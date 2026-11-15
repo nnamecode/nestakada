@@ -13,3 +13,7 @@
 Reviewer подтвердил exact237 media / 45,221,681 bytes, 113 Page и115 Route; gallery writer18 pages/19 routes, combined writer24/25. Новый runtime/model/migration/dependency/settings/API/command/endpoint/Playwright/framework не предлагается. Implementation и TEST-08 execution остаются за раздельными owner gates.
 
 Рецензент файлы не менял; тесты, Docker, Playwright и сеть не запускались.
+
+## Pre-code ordering review D-1113
+
+Дополнительный read-only verdict: **APPROVED**, P1/P2/P3=`0/0/0`. Exact237 media (`1+7+15+214`) готовятся до shared content; Header/Footer binds one already READY package-authorized gallery asset without extra Asset/File. Затем page writers, gallery/home aggregates, post-page grant and fixture-only publication. Previous findings remain closed; files/tests/Docker/network0.

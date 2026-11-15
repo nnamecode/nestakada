@@ -4,6 +4,10 @@
 
 > **Текущая точка D-1100 (2026-11-15): owner code gate D-1099 opened; IMP-001 paused before writes on contact conflict.** Old `/direct-contact` direct phone differs from D-927 confirmed public phone. Exact transfer/substitution requires owner choice; recommended current official phone. Package/code/tests/Docker0.
 
+> **Текущая точка D-1114 (2026-11-15): TEST-08 fixture ordering independently APPROVED 0/0/0.** Exact237-first shared binding is feasible/no-bloat; prior findings closed. Owner code gate open. Next three-file RED→minimal GREEN, independent diff review; TEST-08 run closed.
+
+> **Текущая точка D-1113 (2026-11-15): TEST-08 fixture ordering corrected before code.** Closed shared content needs READY media, so exact237 prepare/seed now precedes Header/Footer and uses one existing package asset; extra media/scope0. Code/tests/Docker0. Independent ordering review required, then owner-authorized implementation may start.
+
 > **Текущая точка D-1112 (2026-11-15): TEST-08 isolated-fixture plan independently APPROVED 0/0/0.** Exact237/45,221,681B,113 Page/115 Route, same-process boundary, bounded gallery seed/cleanup/receipt and no-bloat accepted. Product/tests/Docker0. Await owner permission for exact three-file implementation; TEST-08 execution stays closed.
 
 > **Текущая точка D-1111 (2026-11-15): TEST-08 fixture plan first review CHANGES_REQUESTED 1/4/0; docs remediation ready.** Fixed to same-process builder/future Client, bounded test-only gallery214 seed, post-page grant, scoped fault/replay, host-finally cleanup and closed stdout receipt; fixture no longer runs group8 HTTP. Product/tests/Docker0. Next repeat plan review; code gate closed.

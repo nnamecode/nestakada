@@ -39,14 +39,13 @@ Fixture использует только 12 уже allowlisted package-файл
 Suite работает только на frozen source одного fresh foundation run, в existing `estakada_foundation_unit` под `app_migrator`, с временным `MEDIA_LIBRARY_ROOT` и default-off integrations. Порядок фиксирован зависимостями и не настраивается пользователем:
 
 1. exact synthetic owner `nesadmin` и один synthetic employee; generated passwords остаются только в памяти и не попадают в manifest/log;
-2. current Header/Footer через существующий closed normalizer/simple shared command, без прямого произвольного template/JS;
-3. existing DEV-09 writers: articles → services catalog → roots → details → price details → diagnostics → planned maintenance;
-4. exact MAP-019 media import → combined services;
-5. exact7 DEV-09N media import → exact13 remaining content;
-6. bounded test-only gallery seeding: package exact214 identities create only the required legacy folder/READY Asset/LEGACY_PUBLIC AssetFile and exact physical bytes through existing MediaStorage invariants; then existing `apply_gallery()` validates manifests and creates exact17 albums/root. Это fixture setup, не новый product importer и не migration evidence;
-7. DEV-12 home exact15 media and home aggregate;
-8. одна ограниченная employee grant создаётся только после появления exact target Page;
-9. fixture-only publication of the exact package page identities after aggregate validation. Это только test setup для будущих public HTTP групп и не считается product publication evidence.
+2. prepare exact237 READY media before shared content: existing imports for MAP-019, DEV-09N exact7 and DEV-12 exact15 plus bounded test-only gallery exact214 seed through existing MediaStorage invariants;
+3. current Header/Footer через existing closed normalizer/simple shared command, binding only one already READY package-authorized gallery asset; arbitrary template/JS and extra synthetic media0;
+4. existing DEV-09 page writers: articles → services catalog → roots → details → price details → diagnostics → planned maintenance → combined services → exact13 remaining content;
+5. existing `apply_gallery()` validates exact214 physical manifests/descriptors and creates exact17 albums/root. Gallery seed remains fixture setup, not product importer or migration evidence;
+6. DEV-12 home aggregate consumes the already prepared exact15 media;
+7. одна ограниченная employee grant создаётся только после появления exact target Page;
+8. fixture-only publication of the exact package page identities after aggregate validation. Это только test setup для будущих public HTTP групп и не считается product publication evidence.
 
 Каждый existing writer остаётся default-off вне `override_settings` этого test case. Package readers, media storage validators, transactions, replay/conflict checks и typed contacts validation не обходятся.
 

@@ -1,5 +1,9 @@
 # Таблица задач
 
+Текущая работа D-1114 (2026-11-15): **TEST-08 fixture pre-code ordering APPROVED 0/0/0; implementation gate OPEN.** Exact three-file tests-first implementation may start; TEST-08 exact10 execution remains closed.
+
+Текущая работа D-1113 (2026-11-15): **TEST-08 fixture pre-code order correction READY for review.** Exact237 media now precede shared Header/Footer required READY binding; no extra asset/scope. Code/tests/Docker0. Next independent ordering review, then already owner-authorized three-file implementation if APPROVED.
+
 Текущая работа D-1112 (2026-11-15): **TEST-08 isolated fixture plan independently APPROVED P1/P2/P3=0/0/0.** Exact three-file implementation boundary and all first-review remediations accepted; product/code/tests/Docker0. Await simple owner implementation permission. TEST-08 exact10 execution still requires its own later plan/review/gate.
 
 Текущая работа D-1111 (2026-11-15): **TEST-08 fixture plan first review CHANGES_REQUESTED P1/P2/P3=1/4/0; remediation READY.** One-process builder+future Client boundary, exact214 test-only gallery seed, correct grant order, scoped rollback/replay, host-finally cleanup/result marker and group8 separation now specified. Product/code/tests/Docker0. Next repeat plan review only; implementation closed.

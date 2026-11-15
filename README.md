@@ -1,5 +1,9 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1114 (2026-11-15): TEST-08 fixture pre-code ordering independently APPROVED 0/0/0.** Exact237 media precede closed shared binding with no extra asset; prior plan findings stay closed. Owner implementation gate is open; next RED contract then minimal exact three-file code.
+
+> **Текущая точка D-1113 (2026-11-15): TEST-08 fixture pre-code dependency correction pending review.** Closed Header/Footer require READY media; order changed to exact237 prepare/seed before shared binding, without extra synthetic asset or scope growth. Code/tests/Docker0. Repeat review of ordering only before implementation.
+
 > **Текущая точка D-1112 (2026-11-15): TEST-08 fixture plan independently APPROVED 0/0/0.** Exact237/45,221,681B,113 pages/115 routes, same-process future HTTP, bounded gallery seed/cleanup/receipt and no-bloat boundary accepted. Product/code/tests/Docker0. Await simple owner permission for exact three-file fixture implementation; TEST-08 execution remains a later gate.
 
 > **Текущая точка D-1111 (2026-11-15): TEST-08 fixture plan first review CHANGES_REQUESTED 1/4/0; remediation ready.** Plan now uses one named Django process for builder+future HTTP before teardown, exact214 test-only gallery seeding, post-page grant, scoped writer fault/replay, host-finally staging cleanup and bounded stdout receipt. Product/code/tests/Docker0. Next repeat plan review; implementation gate closed.
