@@ -14,6 +14,7 @@ urlpatterns=[
     path('logout/',views.logout_view,name='logout'),
     path('session/',views.session_state,name='session'),
     path('assets/manage.css',views.stylesheet,name='stylesheet'),
+    path('assets/brand-logo.png',views.brand_logo,name='brand-logo'),
     path('pages/',views.page_tree,name='page-tree'),
     path('pages/new/',create_page,name='page-create'),
     path('pages/<uuid:page_id>/publication/<str:action>/',page_publication,name='page-publication'),

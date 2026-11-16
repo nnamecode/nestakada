@@ -4,7 +4,7 @@
   "inputs": {
     "map_sha256": "c1d542d0761ffbdb9fc58c9227fc94144515ab18c3155952a93dc6fb4d1bbad8",
     "route_evidence_sha256": "c3a8a395fb4ed55fef6027a58014ce5decaadda7c559870bf06247c2fbeb79bc",
-    "media_evidence_sha256": "59fd85967e36d39a9d9f9a4a9ab8eda6b63457e1649107a434d184846e759601",
+    "media_evidence_sha256": "52823a26c535f6bcbb45601fccad630278d59d421ab5f87b25bb1390d28867ca",
     "identity_manifest": "docs/dev09n-remaining-exact13-manifest.md"
   },
   "media_folder": {
@@ -47,36 +47,36 @@
       "alt": "Кузовной цех автотехцентра Эстакада"
     },
     {
-      "evidence_id": "MED-0005",
+      "evidence_id": "MED-0315",
       "asset_id": "cdaba860-0d92-4c28-a340-d392cf5412ab",
       "file_id": "012aeb12-0028-4da8-a74f-64c2ccc07538",
       "image_id": "94c7fa00-3395-465f-abbe-d991bedbcd0e",
-      "relative_path": "media/design-concepts/contacts-v4/reception-v1.jpg",
-      "storage_key": "img/cdaba860-0d92-4c28-a340-d392cf5412ab/original.jpg",
-      "bytes": 190431,
-      "sha256": "68fb97e86a37c2361686bb057590d602b951fca6eb269725813265915a2472ad",
+      "relative_path": "media/design-concepts/contacts-v4/reception-v1.webp",
+      "storage_key": "img/cdaba860-0d92-4c28-a340-d392cf5412ab/original.webp",
+      "bytes": 128092,
+      "sha256": "a03eadb7d3d963c660a9ead0e7212c0253e3f2a4309ffd911c9d7ede9a49da99",
       "alt": "Зона приёмки автотехцентра"
     },
     {
-      "evidence_id": "MED-0006",
+      "evidence_id": "MED-0316",
       "asset_id": "e1f19d53-5811-4166-858d-35308ae853c1",
       "file_id": "6e1eeea7-b8ae-4f08-a71f-fbc9d0983dd6",
       "image_id": "5857c071-6e81-460d-9fac-519bae6a0ebc",
-      "relative_path": "media/design-concepts/contacts-v4/service-reception-v1.jpg",
-      "storage_key": "img/e1f19d53-5811-4166-858d-35308ae853c1/original.jpg",
-      "bytes": 189101,
-      "sha256": "e7e0b315e4fd6f192713476680f2cee5ba830983def383b0c1f43f72a9cfcec0",
+      "relative_path": "media/design-concepts/contacts-v4/service-reception-v1.webp",
+      "storage_key": "img/e1f19d53-5811-4166-858d-35308ae853c1/original.webp",
+      "bytes": 138648,
+      "sha256": "395d38003f1a261c64accaee5d2f313a2d3be6be440fa3f3f31a601bc13b8c4b",
       "alt": "Работа сервисной службы"
     },
     {
-      "evidence_id": "MED-0007",
+      "evidence_id": "MED-0317",
       "asset_id": "ac6af51d-a08b-47bb-b818-0c84e13e7050",
       "file_id": "5ef31b85-ec14-49a7-a944-e5c62fcb977e",
       "image_id": "7efdc034-f931-4397-be93-fe503a19eeca",
-      "relative_path": "media/design-concepts/contacts-v4/waiting-area-v1.jpg",
-      "storage_key": "img/ac6af51d-a08b-47bb-b818-0c84e13e7050/original.jpg",
-      "bytes": 247402,
-      "sha256": "5f8dd608684af7baf484397c77d9a9cc3805cc7bd9255df1079646f1b79df8e9",
+      "relative_path": "media/design-concepts/contacts-v4/waiting-area-v1.webp",
+      "storage_key": "img/ac6af51d-a08b-47bb-b818-0c84e13e7050/original.webp",
+      "bytes": 203256,
+      "sha256": "a056ee4293f4525297b17a22707973fa301bc7f2bf6657d04a462aa5e84f7ed2",
       "alt": "Зона ожидания автотехцентра"
     },
     {

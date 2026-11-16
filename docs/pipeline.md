@@ -1,5 +1,175 @@
 # Процесс полной разработки
 
+> **Текущая точка D-1211 (2026-11-16): end-of-shift WIP checkpoint authorized.** All permitted source progress is being committed/pushed on owner request. Stage8 remains incomplete: HOMEV4 layout GREEN10/10, media URL patch unverified under D-1210 anti-loop. Next shift begins with exact21 rendered URL/slot oracle → one dev12-public → public-nav/dev/browser if green. No release/live/deploy.
+
+> **Текущая точка D-1210 (2026-11-16): HOMEV4 contextual-media verification paused owner by anti-loop.** Minimal contextual URL patch exists; mixed-media test lookup repeated calibration failure twice, so GREEN is not claimed. Next continuation uses rendered exact21 URL/slot-ID set oracle, one fresh dev12-public, then public-nav/dev HTTP/browser if GREEN. Stage8; live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1209 (2026-11-16): HOMEV4 contextual media correction in progress.** Layout GREEN10/10 and real DOM are correct, but visual QA proved all21 home images use unauthorized bare URLs and return404. Exact page+embedded-slot URL oracle precedes minimal projection fix; endpoint policy stays closed. Stage8; no live/VPS/deploy/push.
+
+> **Текущая точка D-1208 (2026-11-16): HOMEV4 paused owner on sandbox ACL blocker.** `pwsh` resolved D-1207 type issue, but dev Stop/test Start both received `SetAccessControl unauthorized` before Docker/tests. Product unchanged. Next continuation requires one approved escalated foundation switch, then exact RED and bounded transfer. Stage8; live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1207 (2026-11-16): HOMEV4 paused owner by anti-loop before product code.** Windows PowerShell repeated missing `FileSystemAclExtensions` twice before Docker/tests. Acceptance/test recorded, runtime unchanged. Next owner continuation uses `pwsh` for one fresh exact RED, then bounded implementation. Stage8; live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1206 (2026-11-16): approved main-page v4 transfer in progress.** Runtime generic home is the proven mismatch. HOMEV4 exact nine-block order and responsive composition are fixed before code; existing typed data stay, external widgets/forms stay gated by later privacy/legal decisions. Next named RED/GREEN and local HTTP verification. Project remains stage8; live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1205 (2026-11-16): global approved width and reviews verified locally.** Named9/9 PASS; fresh dev `6aa6f994-04cc-4dae-80b1-b3d5431d987e`. Generic pages full-width40px, home full-bleed, Header nonshrinking, reviews10 privacy-safe3/2/1 cards. Next stage8 slice is exact approved-v3 reconciliation of remaining special page cohorts; live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1204 (2026-11-16): global approved-width and reviews layout correction in progress.** Current920px generic shell is the proven body mismatch. Next RED/GREEN restores full-width40px pages, home full-bleed, nonshrinking Header and privacy-safe approved3/2/1 review cards. Further special page cohorts remain stage8 work. Live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1203 (2026-11-16): approved global Header reconciliation in progress.** Wrong800px switch/desktop geometry and external logo target proven against approved static v3. `PUBSHELL-001–004` precede code; logo becomes internal `/`, desktop/tablet/mobile shell restored. Wider body-template-vs-v3 reconciliation remains an explicit next stage8 slice. Live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1202 (2026-11-16): global public Header exact6 fixed and verified locally.** Fresh named `public-nav`8/8 PASS; both owner-reported pages HTTP200 with exact approved six header links, nested pages absent, correct H1/body retained. Fresh dev `98e041d3-c147-4f86-8c5b-86929e242c91` active. Project remains stage8; next owner visual confirmation, then next bounded stage8 content/admin task. Live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1201 (2026-11-16): exact6 patch applied; verification paused by anti-loop.** Expected RED succeeded; post-patch run mistakenly reused the same immutable pre-patch snapshot and repeated identical `AttributeError`. No third run. Next after owner resume: fresh test foundation, one named `public-nav`, then fresh dev/two URL verification. Stage8; GREEN/live/deploy/push not claimed.
+
+> **Текущая точка D-1200 (2026-11-16): global public-header overflow diagnosed; correction in progress.** Every page receives all112 published routes in `#es-nav`; approved D-235/public-light-v4 requires exact6 header links. Full navigation remains for breadcrumbs/catalogs. `PUBNAV-009–011` recorded before code; next exact RED/GREEN and two-URL verification. Project remains stage8; live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1199 (2026-11-16): stored text visibility fixed for106 ordinary pages.** Of112 pages,47 had populated main hidden below empty intro; expected RED proved it, minimal main→intro order GREEN6/6 PASS25.843s. Fresh dev `bfddb704-c47d-4277-8514-41ba6c3d6161`. Next stage8 bounded mapping covers six structured/empty pages; two legacy-empty pages need content approval. Public/live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1198 (2026-11-16): Pages registry rows compacted and verified locally.** Desktop vertical spacing and Edit button reduced; mobile44px touch target retained. Exact named `admin-workshop`6/6 PASS23.744s; fresh dev `37946d7a-637b-4384-9d23-5e44408fa8a2`. Next owner inspection. Project remains stage8; public/live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1197 (2026-11-16): Pages registry duplicate details removed and verified locally.** Owner requested title+Edit only in general list; category/URL remain in editor, filter/search/backend unchanged. Exact named `admin-workshop`6/6 PASS22.484s; fresh dev run `94649afa-807e-41fb-80ff-6dae447b1278`. Next refreshed owner inspection. Project remains stage8; public/live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1196 (2026-11-16): editor toolbar visual regression fixed locally.** Compact two-row toolbar plus collapsed «Дополнительно», no new functions. Exact named wrapper evidence6/6+5/5/check0. Next bounded step is refreshed local owner inspection; after confirmation continue stage8 plan. Public/live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1195 (2026-11-16): Pages+Editor correction locally complete and APPROVED0/0/0.** Real dev registry/editor confirmed; numeric screenshot width matrix remains OPEN after two Windows-capture timeouts. Next bounded project step returns to stage8 plan after owner continuation; public/live/VPS/deploy/push unchanged.
+
+> **Текущая точка D-1185 (2026-11-16): direct article-editor UX fixed and APPROVED0/0/0.** Fresh named6/6/check0, dev active. Owner can refresh `/manage/`, open «Страницы» and click an article to enter the existing visual editor directly. Project remains stage 8; ADMW-008 numeric responsive evidence remains the only workshop verification gap. No live/VPS/deploy/push.
+
+> **Текущая точка D-1184 (2026-11-16): editor-link UX fix applied; verification paused to owner by second-error stop rule.** Next bounded step after ordinary «почини и продолжай»: correct only negative substring assertion to exact href, fresh `admin-workshop`, then restart dev and inspect real editor. Project remains stage 8; no public/live/VPS/deploy/push.
+
+> **Текущая точка D-1183 (2026-11-16): workshop Django transfer implemented; final review APPROVED0/0/0.** Named6/6+auth3/3/check/migrations/diff PASS, fresh dev active and anonymous login visible. ADMW-008 numeric width matrix remains OPEN due CUA API limitation and two-attempt stop rule. Project remains stage 8; next bounded step is owner visual inspection/login, then numeric responsive acceptance when a supported geometry surface exists. No live/VPS/deploy/push.
+
+> **Текущая точка D-1182 (2026-11-16): repeat plan APPROVED; implementation/final-remediation completed.** First final review0/3/1 closed without scope growth; repeat approval recorded D-1183.
+
+> **Текущая точка D-1181 (2026-11-16): workshop plan remediation ready.** First review0/4/0 closed with exact logo admission, asset security, literal tests/inventory and numeric CUA matrix. Next repeat plan review; code not started.
+
+> **Текущая точка D-1180 (2026-11-16): «Мастерская» server visual transfer plan ready.** ADMW-001–010, no functional expansion. Next independent plan review → bounded implementation → named tests → final review → local visual QA. Live/VPS/deploy/push closed.
+
+> **Текущая точка D-1179 (2026-11-16): local admin login operational and HTTP-verified.** Real CSRF POST returned303 `/manage/` with memory-only clipboard credential. Next owner browser inspection; rotate credential before VPS. Live/deploy/push closed.
+
+> **Текущая точка D-1178 (2026-11-16): local temporary owner credential ready in Windows clipboard.** Existing recovery service applied it, no secret persistence/output, throttle0. Next browser login verification; mandatory rotation before VPS. Live/deploy/push closed.
+
+> **Текущая точка D-1177 (2026-11-16): hidden recovery transport fix applied and APPROVED0/0/0.** Unicode Cc rejected before save; ordinary symbols allowed; named3/3 PASS. Next owner resets via Shift+Insert/right-click, not Ctrl+V, then verifies login. Live/VPS/deploy/push closed.
+
+> **Текущая точка D-1176 (2026-11-16): owner handoff awaits exact password or hidden reset.** Server proved owner/identity/state valid and password mismatch twice; temporary diagnostics removed, throttle cleared, normal dev active. Auth bypass forbidden; live/VPS/deploy/push closed.
+
+> **Текущая точка D-1175 (2026-11-16): local login fix applied and APPROVED0/0/0.** Safe diagnostic found unresolved submitted username; temporary instrumentation removed. Dev form exact owner prefill/outer trim/username-only preservation; named2/2 PASS, fresh dev verified. Next owner login verification; live/VPS/deploy/push closed.
+
+> **Текущая точка D-1174 (2026-11-15): local demo operational; Status fix APPROVED 0/0/0.** Next owner-only step is hidden interactive password recovery and real login/dashboard verification. No further loader run; live/VPS/deploy/push closed.
+
+> **Текущая точка D-1173 (2026-11-15): local demo Load PASS; password handoff pending.** Fresh dev one-shot loaded112 pages/115 routes/238 media, HTTP200, durable receipt, replay refusal. Focused wrapper `$HOME` fix review next; then owner-only hidden `recover_owner` and login/dashboard check. Live/VPS/deploy/push closed.
+
+> **Текущая точка D-1172 (2026-11-15): exact6 final review APPROVED 0/0/0.** Named8/8 accepted, test foundation stopped. Next bounded gate: fresh dev → Check → one Load; then local status/HTTP and interactive owner password recovery. Live/VPS/deploy/push closed.
+
+> **Текущая точка D-1171 (2026-11-15): exact6 named PASS 8/8; final review pending.** Fresh foundation, one named suite only, 89.626s; no broad/direct/Playwright. Next final independent review; Load closed until APPROVED.
+
+> **Текущая точка D-1170 (2026-11-15): exact6 implementation PAUSED OWNER по anti-loop.** Same `NameError` 2 раза из stale immutable test source; host fix present, container read-back confirmed old snapshot. Third run forbidden. Resume path: fresh test foundation → fixture → one named suite → final review; Load closed.
+
+> **Текущая точка D-1169 (2026-11-15): exact6 plan0/1/0 remediated with SQL identity recapture; repeat review pending.** Load closed.
+
+> **Текущая точка D-1168 (2026-11-15): owner resumed; exact6 producer-guard delta review pending.** Next plan review→named tests→final review; Load closed.
+
+> **Текущая точка D-1167 (2026-11-15): local admin demo PAUSED OWNER.** Reviewed Load reached `_identity` guard; rollback exact. Resume requires exact6 seam plan/review/tests; no automatic retry.
+
+> **Текущая точка D-1166 (2026-11-15): guard seam FINAL APPROVED0/0/0; execution pending.** Fresh dev restart→Check→one reviewed Load next.
+
+> **Текущая точка D-1165 (2026-11-15): exact3 seam GREEN7/7; repeat final review pending.** Inner-error restoration and rollback pass. Next review; Load closed.
+
+> **Текущая точка D-1164 (2026-11-15): guard-seam review0/1/0 remediated test-only; rerun pending.** Inner-context exception restoration now directly asserted. Load closed.
+
+> **Текущая точка D-1163 (2026-11-15): exact3 guard seam GREEN6/6; final review pending.** Loader-only context, restoration proven. Load closed until final approval.
+
+> **Текущая точка D-1162 (2026-11-15): owner resumed paused local demo; guard-seam delta review pending.** Exact3 loader-context patches only after admission; product guards unchanged. Next plan review→named tests→final review; Load closed.
+
+> **Текущая точка D-1161 (2026-11-15): local admin demo PAUSED OWNER.** Sole Load retry reached producer guard and failed closed; exact rollback verified. Third Load prohibited. Resume requires owner direction, scoped loader-only DEV09/10/12 guard seam plan/review/test before any new execution.
+
+> **Текущая точка D-1160 (2026-11-15): baseline code closed; named6/6 PASS70.041s+cleanup; docs repeat review pending.** Historical empty-parent correction retained, second Load0. Next docs review then fresh dev restart→Check→one Load retry.
+
+> **Текущая точка D-1159 (2026-11-15): baseline review0/1/0 remediated; rerun pending.** DB admission now precedes staging. First refusal left only an empty staging parent; no DB/media content. Next fresh named run, repeat review, then one Load retry.
+
+> **Текущая точка D-1158 (2026-11-15): migrated-baseline delta GREEN6/6; repeat review pending.** First refusal mutation0; exact seed reuse and audit preservation tested. Next repeat review then one Load retry only; same refusal stops.
+
+> **Текущая точка D-1157 (2026-11-15): first Load safely refused before mutation; baseline correction review pending.** Fresh migrations seed empty shared rows; local audit preserved, business rows0. Proposed exact loader-only reuse, no cleanup/helper/schema change. Next delta review, fresh named test, one Load retry only.
+
+> **Текущая точка D-1156 (2026-11-15): local admin demo FINAL APPROVED0/0/0; local execution pending.** Exact order fresh dev restart→Check→one Load→HTTP/replay→hidden owner recovery. No VPS/live permission.
+
+> **Текущая точка D-1155 (2026-11-15): final review0/6/0 remediated; named5/5 GREEN; repeat review pending.** Literal route authority, exact source/image, exact staging tree, post-rename rollback, real negative matrix and durable projection receipt close findings. Load0. Next repeat final review, then fresh dev restart→Check→Load only if APPROVED.
+
+> **Текущая точка D-1154 (2026-11-15): local admin demo GREEN4/4; final review pending.** Owner resumed anti-loop pause. Test-only proxy override + wrapper existing RC mount led to fresh named4/4 PASS50.304s with cleanup. Persistent dev data not loaded. Next independent final diff review, then execution order fresh dev restart→Check→Load→HTTP/replay→hidden owner recovery/login.
+
+> **Текущая точка D-1153 (2026-11-15): local admin demo PAUSED OWNER by anti-loop.** Same handoff login `200` vs303 repeated twice; third attempt forbidden. Assembly/public/zero-social passed. Likely exact test-only cause is inherited `AUTH_TRUSTED_PROXY_HOST=ingress` on DB-only one-shot network; resume with owner direction, override None and one fresh named run. Product auth/load/live unchanged.
+
+> **Текущая точка D-1152 (2026-11-15): local admin demo PARTIAL; exact8 delta review pending.** Three distinct named findings: fixture transaction seam fixed, logo workspace fixed, then real HTTP503 proved public renderer still requires4 Header bindings despite socials0. Minimal delta is renderer exact1|4 + regression only; fake socials forbidden. No identical-error loop, load/live0. Next independent delta review then one fresh named run.
+
+> **Текущая точка D-1151 (2026-11-15): local admin demo plan review0/5/0 remediated; repeat review pending.** Exact6 future scope removes active synthetic contacts via Header socials0|3, real logo/phone/address, persists temp fixture media through verified fsynced staging, requires fresh dev manifest, locked exact `/manage/` tuple restore and host/replay/real-owner-login evidence. Code/load0; no general importer/bloat/live.
+
+> **Текущая точка D-1150 (2026-11-15): owner-approved local site+admin demo plan READY; implementation0.** Dev foundation active8766 with fresh empty migrated DB/login; exact4 future boundary reuses verified TEST-08 data into existing dev volumes with empty-state/transaction/staged-media gates, no general importer or new feature. Login `nesadmin`, password only owner-hidden interactive recovery after GREEN. Next independent plan review; load/VPS/live closed.
+
+> **Текущая точка D-1149 (2026-11-15): loopback visual gate COMPLETE; no-bloat stop.** CUA/non-Playwright visible check of home/services/contacts/gallery/service-detail/menu at643×834 found no clipping/overlap/broken media; contacts body exact, shared synthetic values fixture-only. Long menu is functional full D-023/D-032 tree; no new accordion/JS. Preview stays foreground127.0.0.1:8768, foundation stopped. Stage11 remains gated TEST-09 backend, deferred TEST-10 and LAUNCH-IN-002/005/006/008; no honest local product slice or live/deploy permission.
+
+> **Текущая точка D-1148 (2026-11-15): local-preview exact3 final review APPROVED0/0/0.** All four prior P2 plus atomic overwrite and no-bloat boundary independently closed; stale plan-status-only P3 fixed and final repeat approved. Current69d039b7… valid, foundation stopped. Current gate owner foreground loopback visual preview; next post-visual step recorded separately. Persistent/product/DEV26/Playwright/VPS/live closed.
+
+> **Текущая точка D-1147 (2026-11-15): local-preview final-review4×P2 remediated and exact rerun GREEN; repeat review pending.** Exact3 adds cleanup-before-promotion, lexical reparse+manifest/index proof, full page/resource HTTP oracles and reserved/measured256/768MiB caps. Existing-current host incompatibility was found after Django2/2 with residue0, fixed to atomic overwrite, then sole repeat2/2 PASS79.304s. Current69d039b7… hashes valid; foundation stopped. Next repeat independent diff review, then owner foreground visual preview; product/persistent/live closed.
+
+> **Текущая точка D-1146 (2026-11-15): local-preview exact3 implementation GREEN; final review pending.** Named2/2,139/248/387/48,759,881B, teardown0, automated HTTP/tamper smoke PASS; current ignored export hashes valid, foundation stopped. Next independent final diff review then owner foreground visual preview; production/persistent/live closed.
+
+> **Текущая точка D-1145 (2026-11-15): preview export GREEN2/2; smoke exact `/contacts` fix ready.** Counts139/248/387/48,759,881B, teardown0; wrong slash caused host smoke failure, residue0. Next one fresh named run only.
+
+> **Текущая точка D-1144 (2026-11-15): D-1143 resumed; oracle139 corrected.** Exact formula114+1+17+7 applied without wildcard; next exactly one fresh named preview export run. Product/persistent/live0.
+
+> **Текущая точка D-1143 (2026-11-15): local-preview implementation PARTIAL and PAUSED OWNER by anti-loop.** Syntax PASS; named run1 found plan-oracle115 vs actual reserve139, cleanup0 residue. Exact source formula139 known. Coordinator diagnostic then repeated Windows literal-wildcard error123 inside one call; no third attempt. Resume: owner direction → exact paths only → oracle139 → one fresh named run. Product/live/VPS0.
+
+> **Текущая точка D-1142 (2026-11-15): local-preview export plan APPROVED0/0/0; code not started.** Exact3 no-bloat implementation boundary accepted; persistent apply/DEV-26/product/runtime closed. Next separate owner continuation opens RED→minimal implementation→named wrapper run→visual preview→final review.
+
+> **Текущая точка D-1141 (2026-11-15): local-preview repeat review0/1/0 ordering fixed.** Tamper smoke is pre-promotion candidate-only; stop/restore/full revalidation precede atomic current update, failure never promotes. Prior findings closed; code/tests/Docker0. Next final repeat plan review.
+
+> **Текущая точка D-1140 (2026-11-15): local-preview plan review1/2/0 remediated.** Post-unmount proven cleanup, per-request no-follow SHA, closed in-memory headers + wrapper HTTP negatives/tamper and exact3/768MiB inventory cap added. Product/code/tests/Docker0; next repeat independent plan review.
+
+> **Текущая точка D-1139 (2026-11-15): isolated local-preview export plan READY; implementation0.** Reuse test-only exact fixture and DEV-25 self-contained HTML, immutable ignored export, foreground127.0.0.1 reader; exact2 new+1 existing files, no persistent apply/product/DEV-26/daemon/Playwright. Next independent plan review, then separate owner code gate.
+
+> **Текущая точка D-1138 (2026-11-15): release-dependency status audit COMPLETE; review APPROVED0/0/0.** TEST-07 open/fullPASS0; MIG-01 local complete; LEGAL-01 partial; MEDIA-04 waits actual import; MONITOR-01 deferred D-1080/LAUNCH-IN-006 open. No local feature work is justified without changed external/owner input or separately authorized controlled import/preview. Production/live/deploy closed.
+
+> **Текущая точка D-1137 (2026-11-15): release-dependency status audit complete; MONITOR-01 D-1080 sync pending review.** TEST-07 remains open/fullPASS0; MIG-01 local complete, LEGAL-01 partial, MEDIA-04 waits import. MONITOR-01 now owner-DEFERRED until project completion with LAUNCH-IN-006 open; no provider/channel/tool selected. Product/tests/Docker0; next independent docs review.
+
+> **Текущая точка D-1136 (2026-11-15): canonical post-TEST-08 status sync COMPLETE; review APPROVED0/0/0.** Local REV-01/base-MVP TEST-08 complete; TEST-09 BLOCKED, TEST-10 DEFERRED, stage11/RELEASE-01 blocked by TEST-09/10 and LAUNCH-IN-002/005/006/008. No honest local feature slice remains without changed external/owner input; no-bloat stop. Production/live/deploy require separate permission.
+
+> **Текущая точка D-1135 (2026-11-15): D-1134 APPROVED0/0/0; TEST-09/10/RELEASE task gate sync ready.** Canonical rows now state TEST-09 BLOCKED D-1034, TEST-10 DEFERRED D-1076 and RELEASE-01 blocked by those plus LAUNCH-IN-002/005/006/008. No restart/backend/install/release permission. Product/tests/Docker0; next independent docs review.
+
+> **Текущая точка D-1134 (2026-11-15): canonical task status synchronization ready; review pending.** Stale TEST-08 NOT_STARTED and REV-01 planned statuses now reflect D-1087/D-1128/D-1133 only; TEST-09/10 and RELEASE remain open. Product/tests/Docker0. Next gate independent read-only docs review; stage11 still gated.
+
+> **Текущая точка D-1133 (2026-11-15): TEST-08 acceptance reconciliation COMPLETE; final review APPROVED0/0/0.** Exact10/130, IDs35/removed0, preserved remaining, vector17/20/103/fullPASS0 and final SHA are independently confirmed. Stage10 evidence reconciliation complete; product/tests/Docker0. Следующий общий этап11 «Приёмка и запуск» gated by deferred/blocked TEST-09/10 and mandatory LAUNCH-IN-002/005/006/008; no deployment/live without separate owner permission.
+
+> **Текущая точка D-1132 (2026-11-15): final review0/1/0 exact punctuation remediation ready.** Три потерянных двоеточия в сохранённых remaining возвращены; exact10/other130/IDs35/vector17/20/103 неизменны, suffix mismatch0, removed IDs0. Product/tests/Docker0. Current stage10; next gate repeat final review exact P2 only.
+
+> **Текущая точка D-1131 (2026-11-15): TEST-08 acceptance reconciliation implemented; final review pending.** Plan APPROVED0/0/0; exact35 literal T08 IDs touch only whitelist10, other130 unchanged, state vector17/20/103/fullPASS0 preserved. Product/tests/Docker0. Current stage10 evidence reconciliation; next gate independent read-only final diff review, completion not yet claimed.
+
+> **Текущая точка D-1130 (2026-11-15): acceptance reconciliation plan review0/3/0 remediated; repeat review pending.** Exact whitelist10, unchanged130, pinned three-registry/receipt baseline, state vector17/20/103, exact37 IDs and scoped atomic rollback now close all findings. Product/tests/Docker0; acceptance CSV not changed. Current stage10 evidence reconciliation; next gate repeat independent plan review, then only one bounded docs-only pass if APPROVED.
+
+> **Текущая точка D-1129 (2026-11-15): TEST-09 remains backend-BLOCKED; TEST-08 acceptance reconciliation plan READY.** Q009 already deferred hard-cap backend choice and TEST-10 remains capability-DEFERRED. No-bloat next step maps final T08 scenario IDs only into exact140 existing rows, preserving automation states/fullPASS0/all external/manual/physical gates. Product/tests/Docker/browser/live0. Next gate independent plan review; reconciliation not started.
+
+> **Текущая точка D-1128 (2026-11-15): TEST-08 exact10 COMPLETE, final repeat review APPROVED 0/0/0.** Exact3 WebP derivative provenance coherent, historical analytics manifests unchanged; DEV-09 65/65, DEV-25 73/73, final TEST-08 methods2/2 G01–G10 PASS with teardown0. Cleanup/stopped, no feature bloat. Current stage10 increment complete. Next bounded gate: select/plan TEST-09; implementation/run/live/VPS require their own approvals.
+
+> **Текущая точка D-1127 (2026-11-15): final review provenance findings1/1 remediated and GREEN; repeat review pending.** Historical ANA-PKG manifests restored unchanged; original MED-0005–0007 JPG evidence preserved; derived WebP now MED-0315–0317 with parent SHA/converter pin/v3 false. Fresh named DEV-09 65/65 and TEST-08 methods2/2 G01–G10 PASS; cleanup/stopped. Current stage10. Next gate repeat independent review exact P1/P2; TEST-09/10/live/VPS closed.
+
+> **Текущая точка D-1126 (2026-11-15): TEST-08 exact10 execution PASS, final review pending.** Exact3 contacts MAIN JPG converted offline to WebP and exact authorities/totals updated; reserve extractor gained strict bounded ASCII mailto only. Named wrappers: DEV-09 services65/65, DEV-25 73/73, TEST-08 methods2/2 with G01–G10 PASS; teardown0, media237/45,064,743B unchanged, reserve2 generations, delivery0. Staging cleaned, foundation stopped. No renderer/model/migration/dependency/endpoint/feature bloat. Current stage10 “Code review”; next gate independent read-only diff review. TEST-09/10/live/VPS closed.
+
+> **Текущая точка D-1125 (2026-11-15): TEST-08 G01 found real DEV-09N contacts integration defect; product remediation gated.** Exact3 JPEG contacts assets are invalid non-legacy MAIN for real shared/media WebP contract, causing `/contacts`503; prior isolated test faked shared renderer. Harness bindings/helper fixed, cleanup verified, foundation stopped. Current stage9 continues but TEST-08 paused. Recommended minimal owner-approved scope: offline exact3 JPG→WebP + package/hash/exact real-shared tests, no renderer widening/bloat; then resume named TEST-08. TEST-09/10/live/VPS closed.
+
+> **Текущая точка D-1124 (2026-11-15): TEST-08 execution implementation PAUSED OWNER after equivalent oracle-path failures2.** Exact three-file code prepared/parser+diff PASS, but both named runs stopped before fixture/G01 because frozen `/app` mount excludes repo docs. Product failure0; staging/reserve cleaned, foundation stopped. Current stage9 continues. Resume condition: `/app/content` packages + existing route-map mount + readonly SHA-validated media-evidence mount, then one fresh named run. Implementation review/TEST-09/10/live/VPS closed.
+
+> **Текущая точка D-1123 (2026-11-15): TEST-08 exact10 execution plan final APPROVED 0/0/0.** Unified G08 and disk-backed reserve resource contract accepted; exact three-file no-bloat boundary preserved. Product/code/tests/Docker0. Current stage9 continues. Next gate separate owner permission for exact implementation + one named run; TEST-09/10/live/VPS closed.
+
+> **Текущая точка D-1122 (2026-11-15): reserve P2 CLOSED; one stale G08 evidence P2 remediated.** Unified client/application-PII0+externalDelivery0 wording now also covers evidence, permits approved public company details, excludes private recipient serialization and claims no attempt counter. Product/code/tests/Docker0. Current stage9 continues; next one final confirmation, equivalent repeat stops; implementation/run closed.
+
+> **Текущая точка D-1121 (2026-11-15): owner resumed TEST-08 plan with changed condition; remediation ready.** Disk-backed validated per-run reserve bind/free1GiB/cap544MiB/finally cleanup, suite-only memory1536MiB with >690MiB admitted headroom and one G08 client/application-PII0+externalDelivery0 oracle replace repeated gaps. Product/code/tests/Docker0. Current stage9 continues; next gate one final independent review of exact2 P2, implementation/run closed.
+
+> **Текущая точка D-1120 (2026-11-15): TEST-08 execution-plan remediation PAUSED OWNER after repeat review0/2/0.** Five findings closed; reserve peak-memory proof and G08 terminology repeated twice, third attempt forbidden. Product/code/tests/Docker0. Recommended changed condition is disk-backed validated per-run reserve bind+cleanup, bounded suite-only memory cap and one client/application-PII0+externalDelivery0 oracle. Current stage9 remains; resume only by owner direction, then one doc remediation/final review. Implementation/run/TEST-09/10/live/VPS closed.
+
+> **Текущая точка D-1119 (2026-11-15): TEST-08 execution plan first review CHANGES_REQUESTED 2/4/1; remediation ready.** Honest two-method teardown marker, existing audit list, closed per-group evidence, pinned independent oracles, real hide/republish, dedicated reserve tmpfs544MiB and precise client-PII/delivery wording close findings with product bloat0. Tests/Docker0. Current stage9 continues; next gate repeat independent review only, implementation/run closed.
+
+> **Текущая точка D-1118 (2026-11-15): TEST-08 exact10 execution plan READY; run0.** One-process exact10 scenarios, closed evidence/receipt, real worker upload, original-media hashes, default-off requests, REF-06D/stage9 reuse, two temporary reserve generations and suite-only tmp256MiB are proposed within exact three-file no-bloat boundary. Current stage9 continues. Next gate independent read-only plan review; implementation/run require later explicit owner permission. TEST-09/10/live/VPS remain closed.
+
 > **Текущая точка D-1117 (2026-11-15): TEST-08 reusable fixture builder завершён, final review APPROVED 0/0/0.** Fresh exact wrapper PASS2/2:237 media/45,221,681B,112 Page,114 DB Route + existing page1 runtime redirect =115 public URL; before/after0, cleanup removed, staging absent, foundation stopped. Scope остаётся no-bloat/test-only. Текущий этап9 «Unit-тесты» продолжается; следующий bounded gate — отдельный план exact10 TEST-08 execution, independent review и owner permission. Execution/publication/production/VPS не начаты.
 
 > **Текущая точка D-1101 (2026-11-15): old direct phone removed by owner; DEV09N identity manifest fixed.** Exact13 Page identities/tree/free positions and exact7 media identities precede package. Code/tests/Docker0. IMP-001 continues with JSON/validator/data review.

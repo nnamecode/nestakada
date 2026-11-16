@@ -97,12 +97,12 @@ if ($ordered.Count -ne 237 -or $groups.Count -ne 236 -or $duplicate.Count -ne 1 
     @($duplicate[0].Group | Select-Object bytes,sha256 -Unique).Count -ne 1 -or
     $duplicate[0].Group[0].bytes -ne 201684 -or
     $duplicate[0].Group[0].sha256 -cne '640bc75001fede5e3c29c85ca2629af2263770da5014339edc0e5def9d83d43f' -or
-    $logicalTotal -ne 45221681) {
+    $logicalTotal -ne 45064743) {
     throw 'Fixture logical237/source236 overlap mismatch.'
 }
 $uniqueRows = @($groups | ForEach-Object { $_.Group[0] } | Sort-Object path)
 $total = [int64](($uniqueRows | Measure-Object bytes -Sum).Sum)
-if ($total -ne 45019997 -or $total -gt 64MB) { throw 'Fixture source byte budget mismatch.' }
+if ($total -ne 44863059 -or $total -gt 64MB) { throw 'Fixture source byte budget mismatch.' }
 
 try {
     New-Item -ItemType Directory -Force -Path $source | Out-Null
@@ -138,12 +138,12 @@ try {
         $manifestRows.Add([ordered]@{category=$row.category;path=$row.path;bytes=$row.bytes;sha256=$row.sha256})
     }
     $manifest = [ordered]@{
-        schema='test08-fixture-assets-v1';runId=$runId;count=236;bytes=45019997
+        schema='test08-fixture-assets-v1';runId=$runId;count=236;bytes=44863059
         files=@($manifestRows | ForEach-Object { $_ })
     }
     $utf8 = New-Object Text.UTF8Encoding($false)
     [IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json -Depth 5), $utf8)
-    Write-Output "TEST08 fixture staging prepared: source236/45019997 logical237 run=$runId"
+    Write-Output "TEST08 fixture staging prepared: source236/44863059 logical237 run=$runId"
 } catch {
     Remove-Staging
     throw

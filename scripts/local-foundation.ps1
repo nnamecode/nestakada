@@ -323,7 +323,14 @@ if ($migrationPackageNames.Count -ne 12 -or
     @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev09m_combined_services.json','dev09m_infographic_map019.json','dev09n_remaining_content.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $migrationPackageNames }).Count -ne 0) {
     throw 'Migration package snapshot allowlist must contain exactly the twelve reviewed package names.'
 }
-$files = @($items | Where-Object { !$_.PSIsContainer -and ($_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages) } | Sort-Object FullName)
+$adminBrandLogo = [IO.Path]::GetFullPath((Join-Path $source 'accounts/assets/brand-logo.png'))
+$adminBrandLogoItem = Get-Item -Force -LiteralPath $adminBrandLogo
+if ($adminBrandLogoItem.PSIsContainer -or ($adminBrandLogoItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+    $adminBrandLogoItem.Length -ne 30190 -or
+    (Get-FileHash -LiteralPath $adminBrandLogo -Algorithm SHA256).Hash.ToLowerInvariant() -cne '39feb78ac1cc832b5819e886311e8424472412cc00bd2dcfd880f308f8f319f5') {
+    throw 'Approved admin brand logo mismatch.'
+}
+$files = @($items | Where-Object { !$_.PSIsContainer -and ($_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages -or $_.FullName -ceq $adminBrandLogo) } | Sort-Object FullName)
 if (!(Test-Path -LiteralPath (Join-Path $source 'manage.py'))) { throw 'Application source is incomplete.' }
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 Reject-Link $work
@@ -357,7 +364,8 @@ if ($manifestPackageNames.Count -ne 12 -or
     @('dev09b_articles_slice.json','dev09e_services_catalog.json','dev09g_service_roots.json','dev09h_service_details.json','dev09i_planned_maintenance.json','dev09j_leading_price_details.json','dev09k_diagnostics_branch.json','dev09m_combined_services.json','dev09m_infographic_map019.json','dev09n_remaining_content.json','dev10_gallery.json','dev12_home_profile.json').Where({ $_ -notin $manifestPackageNames }).Count -ne 0) {
     throw 'Migration package manifest allowlist must contain exactly the twelve reviewed package names.'
 }
-$sourceFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages } | Sort-Object FullName | ForEach-Object {
+$adminBrandLogo = [IO.Path]::GetFullPath((Join-Path $source 'accounts/assets/brand-logo.png'))
+$sourceFiles = @(Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object { $_.Extension -in @('.py','.lock','.html','.css','.js','.mjs','.svg') -or $_.FullName -in $migrationPackages -or $_.FullName -ceq $adminBrandLogo } | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($source.Length+1).Replace('\','/'); sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 $sourceManifest = Join-Path $work "source-$runId.json"

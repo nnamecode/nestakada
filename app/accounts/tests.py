@@ -80,6 +80,17 @@ class AccountTests(TestCase):
             self.assertEqual(browser.post('/manage/logout/',{},content_type='application/x-www-form-urlencoded').status_code,303)
             self.assertEqual(browser.get('/manage/').status_code,401)
 
+    @override_settings(ENVIRONMENT='dev')
+    def test_local_login_prefills_owner_and_normalizes_outer_username_whitespace(self):
+        browser=client()
+        response=browser.get('/manage/login/')
+        self.assertContains(response,'value="nesadmin"')
+        self.assertEqual(login(browser,'  nesadmin  ').status_code,303)
+        browser=client()
+        response=login(browser,'  absent  ','bad')
+        self.assertContains(response,'value="absent"')
+        self.assertNotContains(response,PASSWORD)
+
     def test_unknown_wrong_disabled_and_blocked_have_one_safe_failure(self):
         browser=client()
         unknown=login(browser,'absent','bad')
@@ -387,6 +398,9 @@ class AccountTests(TestCase):
             call_command('recover_owner',stdout=output)
         self.assertNotIn(OTHER,output.getvalue())
         self.assertEqual(browser.get('/manage/').status_code,401)
+        self.owner.refresh_from_db();self.assertTrue(self.owner.check_password(OTHER))
+        with patch('sys.stdin.isatty',return_value=True),patch('getpass.getpass',side_effect=['bad\x16password','bad\x16password']):
+            with self.assertRaises(CommandError):call_command('recover_owner',stdout=output)
         self.owner.refresh_from_db();self.assertTrue(self.owner.check_password(OTHER))
         with self.assertRaises(CommandError):call_command('recover_owner','nesadmin',OTHER,stdout=output)
 

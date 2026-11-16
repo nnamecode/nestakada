@@ -90,7 +90,8 @@ def _component(row, block):
         raise unavailable()
     usages = list(AssetUsage.objects.filter(kind='shared_block', consumer_id=row.pk)
                   .select_related('asset').order_by('slot', 'asset_id')[:6])
-    if len(usages) != (4 if block.kind == 'header' else 1):
+    expected_counts = (1, 4) if block.kind == 'header' else (1,)
+    if len(usages) not in expected_counts:
         raise unavailable()
     assets = []
     for usage in usages:

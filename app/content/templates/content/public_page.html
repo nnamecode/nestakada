@@ -20,7 +20,7 @@
 </head>
 <body>
   {{ header_html }}
-  <main class="public-shell">
+  <main class="public-shell{% if home %} public-shell-home{% endif %}">
     <nav class="public-breadcrumbs" aria-label="Хлебные крошки">
       <ol>
         {% for crumb in breadcrumbs %}

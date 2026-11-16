@@ -7,7 +7,8 @@ from django.shortcuts import render
 from django.views.decorators.http import require_GET
 from django.middleware.csrf import get_token
 from accounts.views import gate
-from accounts.services import require_session, note_denial
+from accounts.services import require_session, note_denial, is_owner
+from accounts.page_projection import workshop_pages, ProjectionOverflow
 from page_versions import engine as E
 from content.models import Page
 from editor_runtime.guards import EditorSlot, EditorFault
@@ -110,17 +111,27 @@ def editor(request, page_id):
             after = context_for(request, page_id)
             if current_actor.pk != request.user.pk or before.stamp != after.stamp:
                 raise CheckFault('EDITOR_CONTEXT_CHANGED')
+            projection = workshop_pages(request.user)
+            selected_page = projection.selected(page_id)
+            if selected_page is None:
+                raise PermissionDenied('EDITOR_FIELDS_FORBIDDEN')
+            text_fields = tuple(
+                field for field in ('main_text', 'intro_text') if field in values)
             initial = {'owner': before.child['owner'], 'actorId': str(request.user.pk),
                 'pageId': str(page_id), **basis, 'values': values,
                 'fields': [{'name': field, 'rawHtml': values[field],
                             'approvedHtml': approved[field] if approved is not None else None}
-                           for field in ('intro_text', 'main_text') if field in values],
+                           for field in text_fields],
                 'checkReceipt': None, 'rebase': before.child['source']['rebase'],
                 'targetCurrentId': before.child['source']['targetCurrentId'],
                 'currentRevisionId': before.child['current_revision_id'], 'media': selected_media,
                 'embeddedMedia': embedded_media}
             return render(request, 'page_editor/editor.html', {'page': page, 'page_id': page_id,
-                'owner': before.child['owner'], 'initial_state': initial, 'fields': initial['fields'], **metadata})
+                'owner': before.child['owner'], 'initial_state': initial, 'fields': initial['fields'],
+                'projection': projection, 'selected_page': selected_page, **metadata})
+    except ProjectionOverflow:
+        return render(request, 'accounts/unavailable.html',
+                      {'owner': is_owner(request.user)}, status=503)
     except EditorFault as exc:
         return JsonResponse({'ok': False, 'code': exc.code}, status=exc.status)
     except PermissionDenied:

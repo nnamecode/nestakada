@@ -28126,6 +28126,18 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, c
     toolbar.setAttribute("aria-label", "\u0424\u043E\u0440\u043C\u0430\u0442\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435: " + LABELS[field]);
     host.prepend(toolbar);
     owned.push(toolbar);
+    const primary = document.createElement("div");
+    primary.className = "es-toolbar-primary";
+    const secondary = document.createElement("div");
+    secondary.className = "es-toolbar-secondary";
+    const more = document.createElement("details");
+    more.className = "es-toolbar-more";
+    const moreSummary = document.createElement("summary");
+    moreSummary.textContent = "Дополнительно";
+    const moreBody = document.createElement("div");
+    moreBody.className = "es-toolbar-more-body";
+    more.append(moreSummary, moreBody);
+    toolbar.append(primary, secondary, more);
     const command2 = (name, value) => {
       try {
         editor.command(name, value);
@@ -28133,57 +28145,68 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, c
         error(exception);
       }
     };
-    toolbar.append(select("\u0421\u0442\u0438\u043B\u044C", [["p", "\u041E\u0431\u044B\u0447\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442"], ...initialState.owner ? [["h1", "H1"]] : [], ["h2", "H2"], ["h3", "H3"], ["quote", "\u0426\u0438\u0442\u0430\u0442\u0430"]], (value) => value === "p" ? command2("paragraph") : value === "quote" ? command2("blockquote") : command2("heading", Number(value[1]))));
-    for (const [label, name] of [["\u0416", "bold"], ["\u041A", "italic"], ["\u041F\u043E\u0434\u0447\u0435\u0440\u043A\u043D\u0443\u0442\u044C", "underline"], ["\u0417\u0430\u0447\u0435\u0440\u043A\u043D\u0443\u0442\u044C", "strike"], ["\u041D\u0438\u0436\u043D\u0438\u0439 \u0438\u043D\u0434\u0435\u043A\u0441", "subscript"], ["\u0412\u0435\u0440\u0445\u043D\u0438\u0439 \u0438\u043D\u0434\u0435\u043A\u0441", "superscript"], ["\u0421\u043F\u0438\u0441\u043E\u043A", "bulletList"], ["\u041D\u0443\u043C\u0435\u0440\u0430\u0446\u0438\u044F", "orderedList"], ["\u0423\u0431\u0440\u0430\u0442\u044C \u043E\u0444\u043E\u0440\u043C\u043B\u0435\u043D\u0438\u0435", "clearFormatting"], ["\u041E\u0442\u043C\u0435\u043D\u0438\u0442\u044C", "undo"], ["\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C", "redo"]]) toolbar.append(button(label, () => command2(name)));
-    toolbar.append(select("\u0428\u0440\u0438\u0444\u0442", FONTS2, (value) => command2("font", value)));
+    const compact = (label, short, handler) => {
+      const control = button(short, handler);
+      control.setAttribute("aria-label", label);
+      control.title = label;
+      return control;
+    };
+    primary.append(select("Стиль", [["p", "Обычный текст"], ...initialState.owner ? [["h1", "H1"]] : [], ["h2", "H2"], ["h3", "H3"], ["quote", "Цитата"]], (value) => value === "p" ? command2("paragraph") : value === "quote" ? command2("blockquote") : command2("heading", Number(value[1]))));
+    for (const [label, short, name] of [["Полужирный", "Ж", "bold"], ["Курсив", "К", "italic"], ["Подчеркнуть", "П", "underline"], ["Зачеркнуть", "S", "strike"], ["Нижний индекс", "x₂", "subscript"], ["Верхний индекс", "x²", "superscript"], ["Маркированный список", "•", "bulletList"], ["Нумерованный список", "1.", "orderedList"], ["Убрать оформление", "Очистить", "clearFormatting"], ["Отменить", "↶", "undo"], ["Повторить", "↷", "redo"]]) primary.append(compact(label, short, () => command2(name)));
+    primary.append(compact("Редактировать HTML", "HTML", () => {
+      try {
+        editor.setMode("html");
+        show("HTML редактируется только в памяти. Для возврата в визуальный режим выполните проверку.");
+      } catch (exception) {
+        error(exception);
+      }
+    }), compact("Визуальный режим", "Вид", () => {
+      try {
+        editor.setMode("visual");
+      } catch {
+        show("Сначала нажмите «Проверить» и примите подготовленный вариант.");
+      }
+    }));
+    secondary.append(select("Шрифт", FONTS2, (value) => command2("font", value)));
     const size = document.createElement("input");
     size.type = "number";
     size.min = "8";
     size.max = "72";
     size.step = "any";
+    size.placeholder = "14";
     size.setAttribute("aria-label", "\u0420\u0430\u0437\u043C\u0435\u0440 \u0442\u0435\u043A\u0441\u0442\u0430, px");
     size.addEventListener("change", () => command2("size", size.value));
-    toolbar.append(size);
+    secondary.append(size);
     for (const [label, name] of [["\u0426\u0432\u0435\u0442 \u0442\u0435\u043A\u0441\u0442\u0430", "fg"], ["\u0426\u0432\u0435\u0442 \u043F\u043E\u0434\u043B\u043E\u0436\u043A\u0438", "bg"]]) {
       const input = document.createElement("input");
       input.type = "color";
       input.setAttribute("aria-label", label);
+      input.title = label;
       input.addEventListener("change", () => command2(name, input.value));
-      toolbar.append(input);
+      secondary.append(input);
     }
-    toolbar.append(button("\u041F\u0440\u043E\u0437\u0440\u0430\u0447\u043D\u0430\u044F \u043F\u043E\u0434\u043B\u043E\u0436\u043A\u0430", () => command2("bg", "transparent")), select("\u0412\u044B\u0440\u0430\u0432\u043D\u0438\u0432\u0430\u043D\u0438\u0435", [["left", "\u0421\u043B\u0435\u0432\u0430"], ["center", "\u041F\u043E \u0446\u0435\u043D\u0442\u0440\u0443"], ["right", "\u0421\u043F\u0440\u0430\u0432\u0430"], ["justify", "\u041F\u043E \u0448\u0438\u0440\u0438\u043D\u0435"]], (value) => command2("align", value)));
+    secondary.append(compact("Прозрачная подложка", "Без фона", () => command2("bg", "transparent")), select("Выравнивание", [["left", "Слева"], ["center", "По центру"], ["right", "Справа"], ["justify", "По ширине"]], (value) => command2("align", value)));
+    const link = document.createElement("input");
+    link.type = "text";
+    link.placeholder = "Адрес ссылки";
+    link.setAttribute("aria-label", "Адрес ссылки");
+    secondary.append(link, compact("Добавить ссылку", "Ссылка", () => command2("link", { href: link.value, target: "_self" })), compact("Убрать ссылку", "× ссылка", () => command2("removeLink")));
     for (const [name, label] of [["mt", "\u041E\u0442\u0441\u0442\u0443\u043F \u0441\u0432\u0435\u0440\u0445\u0443"], ["mr", "\u041E\u0442\u0441\u0442\u0443\u043F \u0441\u043F\u0440\u0430\u0432\u0430"], ["mb", "\u041E\u0442\u0441\u0442\u0443\u043F \u0441\u043D\u0438\u0437\u0443"], ["ml", "\u041E\u0442\u0441\u0442\u0443\u043F \u0441\u043B\u0435\u0432\u0430"]]) {
       const input = document.createElement("input");
       input.type = "number";
       input.min = "0";
       input.max = "64";
       input.step = "1";
+      input.placeholder = "0";
       input.setAttribute("aria-label", label + ", px");
+      input.title = label + ", px";
       input.addEventListener("change", () => command2(name, input.value));
-      toolbar.append(input);
+      moreBody.append(input);
     }
-    const link = document.createElement("input");
-    link.type = "text";
-    link.setAttribute("aria-label", "\u0410\u0434\u0440\u0435\u0441 \u0441\u0441\u044B\u043B\u043A\u0438");
-    toolbar.append(link, button("\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0443", () => command2("link", { href: link.value, target: "_self" })), button("\u0423\u0431\u0440\u0430\u0442\u044C \u0441\u0441\u044B\u043B\u043A\u0443", () => command2("removeLink")));
-    toolbar.append(button("HTML", () => {
-      try {
-        editor.setMode("html");
-        show("HTML \u0440\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u0443\u0435\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u043F\u0430\u043C\u044F\u0442\u0438. \u0414\u043B\u044F \u0432\u043E\u0437\u0432\u0440\u0430\u0442\u0430 \u0432 \u0432\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u044B\u0439 \u0440\u0435\u0436\u0438\u043C \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0443.");
-      } catch (exception) {
-        error(exception);
-      }
-    }), button("\u0412\u0438\u0437\u0443\u0430\u043B\u044C\u043D\u044B\u0439 \u0440\u0435\u0436\u0438\u043C", () => {
-      try {
-        editor.setMode("visual");
-      } catch {
-        show("\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB\u041F\u0440\u043E\u0432\u0435\u0440\u0438\u0442\u044C\xBB \u0438 \u043F\u0440\u0438\u043C\u0438\u0442\u0435 \u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043B\u0435\u043D\u043D\u044B\u0439 \u0432\u0430\u0440\u0438\u0430\u043D\u0442.");
-      }
-    }));
-    for (const [label, name, action] of [["\u0412\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u043F\u0440\u043E\u0441\u0442\u0443\u044E \u0442\u0430\u0431\u043B\u0438\u0446\u0443", "tableInsert", "insert"], ["\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0441\u0442\u0440\u043E\u043A\u0443 \u0442\u0430\u0431\u043B\u0438\u0446\u044B", "tableAddRow", "add-row"], ["\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0441\u0442\u0440\u043E\u043A\u0443 \u0442\u0430\u0431\u043B\u0438\u0446\u044B", "tableDeleteRow", "delete-row"], ["\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u043A\u043E\u043B\u043E\u043D\u043A\u0443 \u0442\u0430\u0431\u043B\u0438\u0446\u044B", "tableAddColumn", "add-column"], ["\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u043A\u043E\u043B\u043E\u043D\u043A\u0443 \u0442\u0430\u0431\u043B\u0438\u0446\u044B", "tableDeleteColumn", "delete-column"]]) {
-      const control = button(label, () => command2(name));
+    for (const [label, short, name, action] of [["Вставить простую таблицу", "Таблица", "tableInsert", "insert"], ["Добавить строку таблицы", "+ строка", "tableAddRow", "add-row"], ["Удалить строку таблицы", "− строка", "tableDeleteRow", "delete-row"], ["Добавить колонку таблицы", "+ столбец", "tableAddColumn", "add-column"], ["Удалить колонку таблицы", "− столбец", "tableDeleteColumn", "delete-column"]]) {
+      const control = compact(label, short, () => command2(name));
       control.dataset.editorTableAction = action;
-      toolbar.append(control);
+      moreBody.append(control);
     }
     const tablePad = document.createElement("input");
     tablePad.type = "text";
@@ -28192,10 +28215,10 @@ function mountEditorPage({ root, initialState, styleSheet, check, save, draft, c
     tablePad.dataset.editorTablePadding = "";
     tablePad.setAttribute("aria-label", "\u041E\u0442\u0441\u0442\u0443\u043F \u044F\u0447\u0435\u0435\u043A \u0442\u0430\u0431\u043B\u0438\u0446\u044B, px");
     const tablePadLabel = document.createElement("label");
-    tablePadLabel.append(document.createTextNode("\u041E\u0442\u0441\u0442\u0443\u043F \u044F\u0447\u0435\u0435\u043A \u0442\u0430\u0431\u043B\u0438\u0446\u044B, px "), tablePad);
-    const tablePadButton = button("\u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u043E\u0442\u0441\u0442\u0443\u043F \u044F\u0447\u0435\u0435\u043A", () => command2("tablePadding", tablePad.value));
+    tablePadLabel.append(document.createTextNode("Ячейки, px "), tablePad);
+    const tablePadButton = compact("Применить отступ ячеек", "Применить", () => command2("tablePadding", tablePad.value));
     tablePadButton.dataset.editorTableAction = "padding";
-    toolbar.append(tablePadLabel, tablePadButton);
+    moreBody.append(tablePadLabel, tablePadButton);
     editor.bindTablePaddingControls(tablePad, tablePadButton);
   }
   const mediaControls = mountMediaControls({

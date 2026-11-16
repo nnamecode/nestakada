@@ -16,6 +16,8 @@ from content.models import Page, Route, lock_content
 from media_library.models import Asset, AssetFile, AssetUsage
 from media_library.storage import MediaStorage
 from . import test_shared_reservation as R
+from . import public as shared_public
+from .faults import SharedFault
 from .models import SharedBlock, SharedRevision, SharedDraft, SharedBasePin
 from .storage import SharedStorage
 
@@ -57,6 +59,28 @@ class SharedPublicTests(R.ReservationFixture, TransactionTestCase):
 
     def ready_main(self):
         return self.asset.files.get(kind=AssetFile.Kind.MAIN)
+
+    def test_pub000_header_binding_count_allows_brand_only_or_brand_plus_three(self):
+        with self.candidate():
+            self.seed_public()
+            block = SharedBlock.objects.select_related('current_revision').get(kind='header')
+            revision = block.current_revision
+            usages = list(AssetUsage.objects.filter(
+                kind=AssetUsage.Kind.SHARED_BLOCK, consumer_id=revision.pk).order_by('slot'))
+            self.assertEqual(len(usages), 4)
+            raw = models.QuerySet(model=AssetUsage, using='default')
+            raw.filter(pk__in=[row.pk for row in usages[1:]]).delete()
+            self.assertEqual(len(shared_public._component(revision, block)['assets']), 1)
+            for count in (2, 3, 4):
+                AssetUsage.objects.create(
+                    asset=self.asset, kind=AssetUsage.Kind.SHARED_BLOCK,
+                    consumer_id=revision.pk, slot=f'test:header:{count}',
+                )
+                if count in (2, 3):
+                    with self.assertRaises(SharedFault):
+                        shared_public._component(revision, block)
+                else:
+                    self.assertEqual(len(shared_public._component(revision, block)['assets']), 4)
 
     def media_url(self, file):
         return '/__shared_public__/media/%s/' % file.pk

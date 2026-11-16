@@ -1,1 +1,30 @@
-{% extends 'accounts/base.html' %}{% block content %}<section class="card" data-authenticated data-user-id="{{ user.pk }}"><h1>Страницы</h1><p>Вы вошли как <strong>{{ user.username }}</strong>{% if user.first_name %} · <span>{{ user.first_name }}</span>{% endif %}</p><p><a href="{% url 'service_requests:list' %}">Заявки</a></p>{% if owner %}<p><a href="{% url 'accounts:page-tree' %}">Дерево страниц и разделов</a></p><p><a href="{% url 'accounts:html-reserve' %}">HTML-резерв</a></p>{% endif %}<ul>{% for page in pages %}<li><a href="{% url 'accounts:page-access' page.pk %}">{{ page.name }}</a></li>{% empty %}<li>Назначенных страниц пока нет.</li>{% endfor %}</ul></section>{% endblock %}
+{% extends 'accounts/base.html' %}
+{% block title %}Страницы — Эстакада{% endblock %}
+{% block content %}
+{% if query_error %}
+<section class="card"><h1>Не удалось открыть список страниц</h1><p>Проверьте поиск, категорию и номер страницы.</p><a class="button quiet" href="{% url 'accounts:dashboard' %}">Показать все страницы</a></section>
+{% else %}
+<div class="pages-workspace" data-pages-workspace data-authenticated data-user-id="{{ user.pk }}">
+  <aside class="site-structure" aria-label="Структура сайта">
+    <p class="eyebrow">Структура сайта</p>
+    <nav class="site-structure-nav">{% for row in projection.rows %}<a href="{% url 'page_editor:editor' row.page.pk %}">{{ row.page.name }}</a>{% empty %}<span>Назначенных страниц пока нет.</span>{% endfor %}</nav>
+  </aside>
+  <section class="pages-registry">
+    <div class="pages-heading"><div><p class="eyebrow">Содержимое сайта</p><h1>Страницы</h1></div></div>
+    <form class="page-filters" method="get" action="{% url 'accounts:dashboard' %}">
+      <label><span>Найти страницу</span><input name="q" value="{{ listing.search }}" maxlength="200" placeholder="Название или адрес"></label>
+      <label><span>Категория</span><select name="category"><option value="">Все разделы</option>{% for item in projection.categories %}<option value="{{ item.token }}"{% if item.token == listing.category %} selected{% endif %}>{{ item.label }}</option>{% endfor %}</select></label>
+      <button type="submit">Найти</button>{% if listing.search or listing.category %}<a class="button quiet" href="{% url 'accounts:dashboard' %}">Сбросить</a>{% endif %}
+    </form>
+    <p class="pages-count">Найдено: {{ listing.found }} · Страниц: {{ listing.total }}{% if owner %} · Общих блоков: {{ shared_count }}{% endif %}</p>
+    <div class="registry-list">
+      {% for row in listing.rows %}<article class="registry-row" data-page-id="{{ row.page.pk }}">
+        <div class="registry-info"><h2><a href="{% url 'page_editor:editor' row.page.pk %}">{{ row.page.name }}</a></h2></div>
+        <a class="button quiet registry-edit" href="{% url 'page_editor:editor' row.page.pk %}">Редактировать</a>
+      </article>{% empty %}<p class="empty-state">Страницы не найдены.</p>{% endfor %}
+    </div>
+    <nav class="registry-pager" aria-label="Страницы списка"><span>{{ listing.number }} / {{ listing.pages }}</span><div>{% if listing.previous_query %}<a class="button quiet" href="{{ listing.previous_query }}">Назад</a>{% endif %}{% if listing.next_query %}<a class="button quiet" href="{{ listing.next_query }}">Далее</a>{% endif %}</div></nav>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

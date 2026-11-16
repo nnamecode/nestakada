@@ -3,6 +3,7 @@ from datetime import timedelta
 import ipaddress
 import secrets
 import socket
+import unicodedata
 from uuid import UUID, uuid4
 from django.conf import settings
 from django.contrib.auth import (BACKEND_SESSION_KEY, HASH_SESSION_KEY,
@@ -43,7 +44,8 @@ def event(code, actor=None, target=None, source_ip=None, request_id=None, result
 
 def password_value(value):
     # Transport/DoS bound, not an invented complexity/minimum-length policy.
-    if not isinstance(value, str) or not value or len(value) > 4096:
+    if (not isinstance(value, str) or not value or len(value) > 4096
+            or any(unicodedata.category(char) == 'Cc' for char in value)):
         raise ValidationError('AUTH_INVALID_PASSWORD_INPUT')
     return value
 

@@ -88,12 +88,12 @@ class Dev12HomePublicTests(TestCase):
                 consumer_id=page.pk, slot=slot)
 
     def test_profile_home_renders_fixed_safe_sections_and_local_assets(self):
-        _page, route, _revision, package = self.create_home()
+        page, route, _revision, package = self.create_home()
         response = self.client.get(route.target)
         self.assertEqual(response.status_code, 200)
         source = response.content.decode()
-        self.assertEqual(source.count('class="public-home"'), 1)
-        self.assertEqual(source.count('class="public-home-services"'), 1)
+        self.assertEqual(source.count('class="public-home es-home"'), 1)
+        self.assertEqual(source.count('class="es-section es-services"'), 1)
         self.assertEqual(source.count('data-home-price-panel'), 6)
         self.assertEqual(source.count('href="#home-price-panel-'), 6)
         self.assertNotIn('role="tab"', source)
@@ -103,8 +103,18 @@ class Dev12HomePublicTests(TestCase):
             source,
             r'<section[^>]*(?:hidden[^>]*data-home-price-panel|'
             r'data-home-price-panel[^>]*hidden)')
-        self.assertEqual(source.count('class="public-home-works"'), 1)
+        self.assertEqual(source.count('class="es-section es-works"'), 1)
         self.assertEqual(source.count('/public-media/'), 21)
+        for item in [package['profile']['hero'],
+                     package['profile']['photo_strip'],
+                     *package['profile']['steps'],
+                     *package['profile']['services'],
+                     *package['profile']['works']]:
+            file_id = AssetFile.objects.get(
+                asset_id=item['asset_id']).pk
+            expected = ('/public-media/%s/?page=%s&amp;slot=embedded%%3A%s'
+                        % (file_id, page.pk, item['image_id']))
+            self.assertIn(expected, source)
         self.assertIn('<script defer src="/static/public-home.js"></script>', source)
         self.assertIn('href="/reviews"', source)
         self.assertIn(package['profile']['reviews']['label'], source)

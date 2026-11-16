@@ -80,6 +80,7 @@ class HtmlReserveCaptureTests(TransactionTestCase):
             'content="http://localhost:8767%s">'
             '<a href="/known/">local navigation</a>'
             '<a href="https://trusted.example/path">external navigation</a>'
+            '<a href="mailto:estakada10@yandex.ru">email navigation</a>'
             % (bare, contextual)).encode()
         resources = extract_resources(
             html, origin='http://localhost:8767',
@@ -102,6 +103,11 @@ class HtmlReserveCaptureTests(TransactionTestCase):
                 b'<link rel="preload stylesheet" href="/static/public.css">',
                 b'<a href="//evil.test/">bad</a>',
                 b'<a href="https://user@evil.test/">bad</a>',
+                b'<a href="mailto:user@example.test?subject=x">bad</a>',
+                b'<a href="mailto:user@example.test#fragment">bad</a>',
+                b'<a href="mailto:.user@example.test">bad</a>',
+                b'<a href="mailto:user@example..test">bad</a>',
+                b'<a href="mailto:user@localhost">bad</a>',
                 b'<a href="http://localhost:8767/unknown/">bad</a>',
                 b'<a href="/unknown/">bad</a>'):
             with self.subTest(bad=bad), self.assertRaises(ContractError):

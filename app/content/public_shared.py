@@ -22,6 +22,14 @@ from .home_projection import capture_once as capture_home_sources, project as pr
 HOST_POLICY = 'public-page-host-v1'
 MAX_STANDALONE_IMAGE_SLOTS = 64
 MAX_STANDALONE_MEDIA_FILES = 64
+HEADER_NAVIGATION = (
+    ('/services/', 'Услуги и цены'),
+    ('/actions', 'Акции'),
+    ('/gallery-of-works/', 'Наши работы'),
+    ('/reviews', 'Отзывы'),
+    ('/articles/', 'Статьи'),
+    ('/contacts', 'Контакты'),
+)
 
 
 @dataclass(frozen=True)
@@ -80,6 +88,15 @@ class PublicSharedHost:
         self.seo_media = None
         self.wash_peer = None
         self.home = None
+
+    @staticmethod
+    def _header_navigation(navigation, current_page_id):
+        """Project the approved global header without flattening the page tree."""
+        by_target = {item.target: item for item in navigation}
+        return tuple(NavItem(
+            label, target, item.page_id == current_page_id)
+            for target, label in HEADER_NAVIGATION
+            if (item := by_target.get(target)) is not None)
 
     @staticmethod
     def _standalone_media(page):
@@ -275,9 +292,8 @@ class PublicSharedHost:
         self.seo_media = seo_media
         self.wash_peer = wash_peer
         self.home = home
-        shared_navigation = tuple(NavItem(
-            item.name, item.target, item.page_id == page.page_id)
-            for item in navigation)
+        shared_navigation = self._header_navigation(
+            navigation, current_page_id=page.page_id)
         return HostContext(digest(projection), shared_navigation, media_files)
 
     def body(self):

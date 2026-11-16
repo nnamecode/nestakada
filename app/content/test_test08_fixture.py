@@ -144,8 +144,19 @@ def _route_contract(path):
 
 
 @contextmanager
-def build_test08_fixture(case):
+def build_test08_fixture(case, credentials=None):
     """Build the one admitted fixture and keep it alive for caller HTTP checks."""
+    if credentials is None:
+        credentials = {
+            "owner": secrets.token_urlsafe(32),
+            "employee": secrets.token_urlsafe(32),
+        }
+    if (type(credentials) is not dict
+            or set(credentials) != {"owner", "employee"}
+            or any(type(value) is not str or not 20 <= len(value) <= 200
+                   for value in credentials.values())
+            or credentials["owner"] == credentials["employee"]):
+        raise AssertionError("TEST08_CREDENTIALS_INVALID")
     source_root = os.environ["ESTAKADA_TEST08_SOURCE_ROOT"]
     route_map = os.environ["ESTAKADA_TEST08_ROUTE_MAP"]
     before = _counts()
@@ -159,10 +170,10 @@ def build_test08_fixture(case):
         with TemporaryDirectory(prefix="test08-media-", dir="/tmp") as media_root:
             with override_settings(MEDIA_LIBRARY_ROOT=media_root):
                 storage = MediaStorage()
-                owner = auth.bootstrap_owner(secrets.token_urlsafe(32))
+                owner = auth.bootstrap_owner(credentials["owner"])
                 employee = auth.create_employee(
                     actor=owner, username="test08-employee",
-                    password=secrets.token_urlsafe(32))
+                    password=credentials["employee"])
 
                 migration.import_combined_infographic_media(
                     source_root=source_root, storage=storage)
@@ -171,7 +182,7 @@ def build_test08_fixture(case):
                 gallery_package = _seed_gallery(source_root, storage)
                 case.assertEqual(Asset.objects.filter(status=Asset.Status.READY).count(), 237)
                 case.assertEqual(AssetFile.objects.aggregate(
-                    total=models.Sum("byte_size"))["total"], 45221681)
+                    total=models.Sum("byte_size"))["total"], 45064743)
 
                 for kind in ("header", "footer"):
                     SharedBlock.objects.create(kind=kind)
@@ -230,7 +241,7 @@ def build_test08_fixture(case):
                                    "transportProfile": "disabled"},
                     "fixtureReady": True,
                     "inputManifestSha256": os.environ["ESTAKADA_TEST08_INPUT_MANIFEST_SHA256"],
-                    "media": {"bytes": 45221681, "count": 237},
+                    "media": {"bytes": 45064743, "count": 237},
                     "routeMapSha256": os.environ["ESTAKADA_TEST08_ROUTE_SHA256"],
                     "routeSetSha256": _sha_json(expected_routes),
                     "runId": os.environ["ESTAKADA_TEST08_RUN_ID"],

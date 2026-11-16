@@ -1,17 +1,26 @@
 from functools import wraps
+import hashlib
+import os
+import stat
 from pathlib import Path
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError, ObjectDoesNotExist
 from django.db import DatabaseError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.views.decorators.http import require_http_methods, require_GET, require_POST
+from django.views.decorators.http import require_http_methods, require_GET, require_POST, require_safe
 from content.models import Page
 from . import services
+from .page_projection import (workshop_pages, dashboard_page,
+                              ProjectionInput, ProjectionOverflow)
 from .models import PageGrant, UserProfile
 
 LOGIN_ERROR = 'Не удалось войти. Проверьте логин и пароль или повторите попытку позже.'
+BRAND_LOGO_PATH = Path(__file__).parent/'assets/brand-logo.png'
+BRAND_LOGO_SIZE = 30190
+BRAND_LOGO_SHA256 = '39feb78ac1cc832b5819e886311e8424472412cc00bd2dcfd880f308f8f319f5'
 
 def private(response):
     response['Cache-Control']='private, no-store'
@@ -61,17 +70,20 @@ def redirect_to(name):
 @require_http_methods(['GET','POST'])
 def login_view(request):
     error=None
+    username='nesadmin' if settings.ENVIRONMENT == 'dev' else ''
     if request.method=='POST':
         try:
             data=fields(request,['username','password'])
-            if services.authenticate_request(request,data.get('username',''),data.get('password','')):
+            submitted=data.get('username','')
+            username=submitted.strip() if isinstance(submitted,str) else ''
+            if services.authenticate_request(request,username,data.get('password','')):
                 response=private(redirect_to('accounts:dashboard'))
                 response['X-Request-ID']=str(request.auth_request_id)
                 return response
         except (ValidationError,services.AuthUnavailable,DatabaseError):
             pass
         error=LOGIN_ERROR
-    response=private(render(request,'accounts/login.html',{'error':error}))
+    response=private(render(request,'accounts/login.html',{'error':error,'username':username}))
     if hasattr(request,'auth_request_id'):response['X-Request-ID']=str(request.auth_request_id)
     return response
 
@@ -79,8 +91,20 @@ def login_view(request):
 @gate()
 def dashboard(request):
     owner=services.is_owner(request.user)
-    pages=Page.objects.all() if owner else Page.objects.filter(employee_grants__user=request.user)
-    return render(request,'accounts/dashboard.html',{'owner':owner,'pages':pages})
+    try:
+        projection=workshop_pages(request.user)
+        listing=dashboard_page(projection,request.GET)
+    except ProjectionInput:
+        return render(request,'accounts/dashboard.html',{'owner':owner,'query_error':True},status=400)
+    except ProjectionOverflow:
+        return render(request,'accounts/unavailable.html',{'owner':owner},status=503)
+    shared_count=None
+    if owner:
+        from shared_content.models import SharedBlock
+        shared_count=SharedBlock.objects.count()
+    return render(request,'accounts/dashboard.html',{
+        'owner':owner,'projection':projection,'listing':listing,
+        'shared_count':shared_count})
 
 @require_POST
 @gate()
@@ -165,6 +189,33 @@ def employee_grant(request,user_id):
 @require_GET
 def stylesheet(request):
     return private(HttpResponse((Path(__file__).parent/'assets/manage.css').read_text(encoding='utf-8'),content_type='text/css'))
+
+@require_safe
+def brand_logo(request):
+    descriptor=None
+    try:
+        descriptor=os.open(BRAND_LOGO_PATH,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0))
+        info=os.fstat(descriptor)
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink!=1
+                or info.st_size!=BRAND_LOGO_SIZE):
+            raise OSError('logo identity rejected')
+        chunks=[];remaining=BRAND_LOGO_SIZE
+        while remaining:
+            chunk=os.read(descriptor,min(65536,remaining))
+            if not chunk:raise OSError('logo read rejected')
+            chunks.append(chunk);remaining-=len(chunk)
+        if os.read(descriptor,1):raise OSError('logo size changed')
+        payload=b''.join(chunks)
+        if hashlib.sha256(payload).hexdigest()!=BRAND_LOGO_SHA256:
+            raise OSError('logo digest rejected')
+    except OSError:
+        return private(HttpResponse(status=404))
+    finally:
+        if descriptor is not None:os.close(descriptor)
+    response=HttpResponse(payload if request.method=='GET' else b'',content_type='image/png')
+    response['Content-Length']=str(BRAND_LOGO_SIZE)
+    response['X-Content-Type-Options']='nosniff'
+    return private(response)
 
 
 @require_GET

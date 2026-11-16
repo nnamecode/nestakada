@@ -126,7 +126,9 @@ def validate_tree(tree, kind):
             raise ValueError('SHARED_MENU_FIXED')
         element(root[2], 'nav', fixed={'id': 'es-nav', 'aria-label': 'Основное меню'}, children=0)
         contacts = element(root[3], 'div', 'es-header-contacts', children=3)
-        socials = element(contacts[0], 'div', 'es-header-socials', children=3)
+        socials = element(contacts[0], 'div', 'es-header-socials')
+        if len(socials) not in (0, 3):
+            raise ValueError('SHARED_SOCIAL_COUNT_INVALID')
         for index, node in enumerate(socials):
             link(node, schemes=('https',), label=True, relative=False)
             if len(node) != 1:

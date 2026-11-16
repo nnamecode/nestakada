@@ -87,6 +87,12 @@ _FETCH_ATTRS = frozenset((
     'ping', 'xlink:href',
 ))
 _TEL = re.compile(r'^tel:\+[0-9]{7,15}$')
+_MAILTO = re.compile(
+    r'^mailto:(?=.{3,254}\Z)'
+    r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+"
+    r"(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@"
+    r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?'
+    r'(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$')
 
 
 class _Resources(HTMLParser):
@@ -115,7 +121,8 @@ class _Resources(HTMLParser):
             if value not in self.local_targets:
                 raise ContractError('HTML_RESERVE_NAVIGATION_TARGET_UNKNOWN')
             return
-        if _TEL.fullmatch(value) is not None:
+        if (_TEL.fullmatch(value) is not None
+                or _MAILTO.fullmatch(value) is not None):
             return
         parts = urlsplit(value)
         if (parts.scheme not in ('http', 'https') or not parts.netloc

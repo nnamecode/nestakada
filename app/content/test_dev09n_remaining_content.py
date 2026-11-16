@@ -22,7 +22,7 @@ from .test_public_http import fake_shared
 
 
 PACKAGE = Path(__file__).with_name('dev09n_remaining_content.json')
-PACKAGE_SHA256 = '4b679b676b5e1ba1d2a5971799695d8ef944da9015c1f2270aee9d8878f09c30'
+PACKAGE_SHA256 = 'a47eb0118dd04ede21eebd995e870ddbf3d0895f7ad9e17f806b27babdccf3ed'
 PAGE_IDS = [
     'ffdbdc65-39d8-4e22-88e3-7e44e752fbde',
     'b427b1b8-2fb9-44cd-a301-5b14f2f991b2',
@@ -84,6 +84,10 @@ class Dev09NPackageAndContactsSchemaTests(SimpleTestCase):
         self.assertEqual([item['image_id'] for item in self.package['media']], IMAGE_IDS)
         self.assertEqual(len({item['asset_id'] for item in self.package['media']}), 7)
         self.assertEqual(len({item['file_id'] for item in self.package['media']}), 7)
+        self.assertTrue(all(
+            item['relative_path'].endswith('.webp') and
+            item['storage_key'].endswith('/original.webp')
+            for item in self.package['media']))
         self.assertLessEqual(sum(item['bytes'] for item in self.package['media']), 2 * 1024 * 1024)
 
     def test_dev09n_002_exact_contacts_profile_is_accepted_and_copied(self):

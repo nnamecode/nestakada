@@ -1,6 +1,7 @@
 """Minimal anonymous public HTTP boundary."""
 from pathlib import Path
 from dataclasses import replace
+from urllib.parse import urlencode
 
 from django.core.exceptions import ValidationError
 from django.db import DatabaseError, transaction
@@ -99,7 +100,7 @@ def home_script(request):
     return response
 
 
-def _home_media(projection, media):
+def _home_media(projection, media, page_id):
     if projection is None:
         return None
     value = projection['profile']
@@ -108,7 +109,10 @@ def _home_media(projection, media):
         file_id = media.get('embedded:' + item['image_id'])
         if file_id is None:
             raise PublicUnavailable()
-        item['src'] = _media_url(file_id)
+        item['src'] = (_media_url(file_id) + '?' + urlencode({
+            'page': str(page_id),
+            'slot': 'embedded:' + item['image_id'],
+        }))
     return value
 
 
@@ -237,7 +241,7 @@ def _page(request, reserve_context=None):
                 static_url=selected_static)
             current, _navigation, breadcrumbs, media = host.body()
             gallery = host.gallery_body()
-            home = _home_media(host.home_body(), media)
+            home = _home_media(host.home_body(), media, current.page_id)
             seo_media, wash_peer_eligible = host.seo_body()
             seo_configuration = load_configuration()
             seo_image = (None if seo_media is None else project_seo_image(

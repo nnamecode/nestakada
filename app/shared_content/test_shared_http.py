@@ -53,7 +53,7 @@ class SharedHttpTests(TransactionTestCase):
         self.files_before = {str(file.pk): MediaStorage().manifest(file.key)
                              for file in self.asset.files.all()}
 
-    def fixture(self, kind, canary='SHARED-CANARY'):
+    def fixture(self, kind, canary='SHARED-CANARY', social_count=3):
         marker = str(self.asset.pk)
         image = '<img data-es-shared-asset="%s" alt="Synthetic brand">' % marker
         brand = '<a class="es-brand" href="https://estakada-service.ru/">' + image + '</a>'
@@ -65,7 +65,7 @@ class SharedHttpTests(TransactionTestCase):
         socials = ''.join('<a href="%s" aria-label="%s"><img data-es-shared-asset="%s" alt=""></a>' %
             (href, label, marker) for href, label in (
                 ('https://t.me/synthetic', 'Telegram'), ('https://max.ru/synthetic', 'MAX'),
-                ('https://www.instagram.com/synthetic', 'Instagram')))
+                ('https://www.instagram.com/synthetic', 'Instagram'))[:social_count])
         return '<header class="es-header">' + brand + \
             '<button class="es-menu-button" type="button" aria-expanded="false" aria-controls="es-nav">' + \
             '<span></span><span></span><span></span><b>Меню</b></button>' + \
@@ -75,6 +75,16 @@ class SharedHttpTests(TransactionTestCase):
             '<b>Москва</b><span>' + canary + '</span></a>' + \
             '<a class="es-header-phone" href="tel:+70000000001"><strong>+70000000001</strong>' + \
             '<span>Ежедневно с 9:00 до 21:00</span></a></div></header>'
+
+    def test_header_social_cardinality_allows_only_zero_or_three(self):
+        from shared_content.policy import normalize_html
+
+        for count in (0, 3):
+            result = normalize_html(self.fixture('header', social_count=count), 'header')
+            self.assertEqual(len(result['bindings']), 1 + count)
+        for count in (1, 2):
+            with self.assertRaisesRegex(ValueError, 'SHARED_SOCIAL_COUNT_INVALID'):
+                normalize_html(self.fixture('header', social_count=count), 'header')
 
     def state(self):
         result = {}

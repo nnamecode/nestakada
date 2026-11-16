@@ -38,7 +38,7 @@ class PrivateAccessMiddleware:
     def __init__(self,get_response): self.get_response=get_response
     def __call__(self,request):
         path=request.path
-        if path.startswith('/manage/') and path not in ('/manage/login/','/manage/assets/manage.css'):
+        if path.startswith('/manage/') and path not in ('/manage/login/','/manage/assets/manage.css','/manage/assets/brand-logo.png'):
             if not (path=='/manage/session/' and request.method=='GET'):
                 from .services import require_session
                 try:require_session(request,touch=False)

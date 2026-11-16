@@ -6,14 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGE = 'app/content/dev09n_remaining_content.json';
-const PACKAGE_SHA = '4b679b676b5e1ba1d2a5971799695d8ef944da9015c1f2270aee9d8878f09c30';
+const PACKAGE_SHA = 'a47eb0118dd04ede21eebd995e870ddbf3d0895f7ad9e17f806b27babdccf3ed';
 const AUTHORITIES = [
   ['docs/analytics-route-map.csv', 128 * 1024,
     'c1d542d0761ffbdb9fc58c9227fc94144515ab18c3155952a93dc6fb4d1bbad8'],
   ['docs/analytics-route-evidence.csv', 256 * 1024,
     'c3a8a395fb4ed55fef6027a58014ce5decaadda7c559870bf06247c2fbeb79bc'],
   ['docs/analytics-media-evidence.csv', 256 * 1024,
-    '59fd85967e36d39a9d9f9a4a9ab8eda6b63457e1649107a434d184846e759601'],
+    '52823a26c535f6bcbb45601fccad630278d59d421ab5f87b25bb1390d28867ca'],
 ];
 const ROOT = 'e80c3de1-feea-4847-b550-325a825ffc0e';
 const NEWS = 'da5e675f-fedf-4c4e-a3b4-c82d6a6dafcb';
@@ -74,18 +74,18 @@ const MEDIA = [
     'efb52c4a-3926-4eee-b7a5-c8d7c3d6d923', '4f680d0d-66e0-41a4-8361-6a85b84d9bba',
     'media/design-concepts/contacts-v4/body-shop-exterior-clean-light-v1.webp', 191734,
     '8fc2142538ad2f7c3a0016df89f3d3f90df2da37d03bd1b39135e95f810c3df5'],
-  ['MED-0005', 'cdaba860-0d92-4c28-a340-d392cf5412ab',
+  ['MED-0315', 'cdaba860-0d92-4c28-a340-d392cf5412ab',
     '012aeb12-0028-4da8-a74f-64c2ccc07538', '94c7fa00-3395-465f-abbe-d991bedbcd0e',
-    'media/design-concepts/contacts-v4/reception-v1.jpg', 190431,
-    '68fb97e86a37c2361686bb057590d602b951fca6eb269725813265915a2472ad'],
-  ['MED-0006', 'e1f19d53-5811-4166-858d-35308ae853c1',
+    'media/design-concepts/contacts-v4/reception-v1.webp', 128092,
+    'a03eadb7d3d963c660a9ead0e7212c0253e3f2a4309ffd911c9d7ede9a49da99'],
+  ['MED-0316', 'e1f19d53-5811-4166-858d-35308ae853c1',
     '6e1eeea7-b8ae-4f08-a71f-fbc9d0983dd6', '5857c071-6e81-460d-9fac-519bae6a0ebc',
-    'media/design-concepts/contacts-v4/service-reception-v1.jpg', 189101,
-    'e7e0b315e4fd6f192713476680f2cee5ba830983def383b0c1f43f72a9cfcec0'],
-  ['MED-0007', 'ac6af51d-a08b-47bb-b818-0c84e13e7050',
+    'media/design-concepts/contacts-v4/service-reception-v1.webp', 138648,
+    '395d38003f1a261c64accaee5d2f313a2d3be6be440fa3f3f31a601bc13b8c4b'],
+  ['MED-0317', 'ac6af51d-a08b-47bb-b818-0c84e13e7050',
     '5ef31b85-ec14-49a7-a944-e5c62fcb977e', '7efdc034-f931-4397-be93-fe503a19eeca',
-    'media/design-concepts/contacts-v4/waiting-area-v1.jpg', 247402,
-    '5f8dd608684af7baf484397c77d9a9cc3805cc7bd9255df1079646f1b79df8e9'],
+    'media/design-concepts/contacts-v4/waiting-area-v1.webp', 203256,
+    'a056ee4293f4525297b17a22707973fa301bc7f2bf6657d04a462aa5e84f7ed2'],
   ['MED-0008', '27fe380b-0728-489a-b7cf-64a47aea9c14',
     '29f355a7-3a9f-4692-8295-0591afbe4f5c', '191e8b95-af10-423e-9507-59a7c62be591',
     'media/design-concepts/photo-strip-v4/exterior-bays-bright-v1.webp', 201684,

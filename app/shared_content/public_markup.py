@@ -116,6 +116,8 @@ def hydrate(source, kind, navigation, media_urls):
         new_attribute = ' src="' + escape(url, quote=True) + '"'
         hydration_allowance += max(0, len(new_attribute.encode('utf-8')) - len(old_attribute.encode('utf-8')))
         node.set('src', url)
+    brand = root[0] if kind == 'header' else root[0][0]
+    brand.set('href', '/')
     if kind == 'header':
         # The shared grammar already proved this exact fixed node, zero
         # children, and whitespace-only text. Preserve its attributes and
