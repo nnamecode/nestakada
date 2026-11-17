@@ -1,5 +1,275 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1358 (2026-11-17): EPHEMERAL VERIFIER REVIEW CHANGES REQUESTED P1=3.** Fix only DB/verifier sequence, explicit Python entrypoint, log-driver none + exact-ID cleanup. Core isolation/O_NOFOLLOW/no-bloat PASS. Next docs remediation/repeat review; runtime0.
+
+> **Текущая точка D-1357 (2026-11-17): EPHEMERAL RO VERIFIER AMENDMENT CANDIDATE.** Owner chose option1: existing pinned image, network none, state volume/root RO, stdin-only descriptor, Linux dir-fd O_NOFOLLOW, constant output, new service/image/script/dependency0. Next independent review; runtime0.
+
+> **Текущая точка D-1356 (2026-11-17): MEDIA ROOT BOUNDARY ПРИОСТАНОВЛЕНО ВЛАДЕЛЬЦУ.** Canonical `/var/lib/estakada/media` is inside named Docker state volume, not host path; FileOpenHandle implementation would be false. Recommend one ephemeral existing-image/network-none/read-only-volume verifier; alternative defer to freeze. Code/runtime0.
+
+> **Текущая точка D-1355 (2026-11-17): TRUSTED-QUIESCENT AMENDMENT APPROVED 0/0/0.** Boundary/privacy/no-bloat PASS; FileShare.Read claim bounded, migration freeze unchanged. Next existing-runner implementation candidate with closed writer predicate + one controlled RRRO session; runtime0.
+
+> **Текущая точка D-1354 (2026-11-17): TRUSTED-QUIESCENT HOST AMENDMENT CANDIDATE.** Owner chose light option1: project writers0 + approved root + strict components + one read-only `OpenHandle` + pre/post checks. Native layer0; result explicitly local point-in-time, not adversarial guarantee. Next independent amendment review; runtime0.
+
+> **Текущая точка D-1352 (2026-11-17): SOURCE-RESOLUTION CONTRACT APPROVED 0/0/0.** Both P1 closed; RRRO/key/same-handle/point-in-time/privacy/no-bloat PASS, native framework0. Next existing-runner implementation candidate + static host semantics proof; runtime/media read needs fresh gate.
+
+> **Текущая точка D-1351 (2026-11-17): SOURCE-RESOLUTION CONTRACT REMEDIATED.** P1×2 закрыты документально: one existing-reader TLS/RRRO snapshot; strict slash-only key/components; one no-follow handle and point-in-time identity. Unsupported standard primitive fails before read; native framework0. Next repeat contract review; runtime0.
+
+> **Текущая точка D-1350 (2026-11-17): SOURCE-RESOLUTION REVIEW CHANGES REQUESTED P1=2.** Нужны одна RRRO snapshot для aggregate+descriptor+file verification и строгая portable key/same-open-file boundary. Runtime0. Следующая лёгкая remediation только документационная; native identity framework запрещён как bloat.
+
+> **Текущая точка D-1349 (2026-11-17): UNMATCHED SOURCE-RESOLUTION CONTRACT CANDIDATE.** Exact DB `img/` key → contained regular file → exact size/SHA; no full-tree search/fallback/auto exact301 growth. Bounded aggregates only, retry0/no-bloat. Next independent contract review; runtime/transfer/Q002/product/live closed.
+
+> **Текущая точка D-1348 (2026-11-17): RECONCILIATION RESULT APPROVED 0/0/0.** Новый full review подтвердил exact envelope/arithmetic/privacy/cleanup/no-bloat; прежний P2 опровергнут. Unmatched eligible asset нельзя исключить, duplicate identities нельзя молча collapse. Следующий отдельный этап — только source-resolution contract; transfer/Q002/product/live закрыты.
+
+> **Текущая точка D-1347 (2026-11-17): RESULT REVIEW ПРИОСТАНОВЛЕНО ВЛАДЕЛЬЦУ.** Reviewer дважды повторил опровергнутый P2 об отсутствующем exact envelope; строка8 содержит все спорные поля. Третья попытка запрещена anti-loop. Verdict не принят; probe/code/DB0. Нужен выбор лёгкого варианта нового независимого review.
+
+> **Текущая точка D-1346 (2026-11-17): MEDIA DB RECONCILIATION V4 OBSERVED; FINAL CLEAN.** Duplicate=2 distinct READY main assets/usages4+2; unmatched=1 READY main asset/usages2+1, so cannot exclude. Gallery214 complete, other anomalies/structure0. Next independent result review; no mutation/transfer.
+
+> **Текущая точка D-1345 (2026-11-17): MEDIA DB RECONCILIATION V4 IMPLEMENTATION APPROVED 0/0/0.** Recon22/usage EXISTS/bounded envelope PASS; initial P1 retracted after exact predicates proved separate ready/legacy checks. No code change/bloat. Next fresh owner gate for one v4 probe.
+
+> **Текущая точка D-1344 (2026-11-17): MEDIA DB RECONCILIATION SCOPE APPROVED 0/0/0.** Two safe aggregate sections are sufficient; private values0, ordinary65 retained, no-bloat PASS. Next implementation/static/pre-exec review; runtime requires fresh gate.
+
+> **Текущая точка D-1343 (2026-11-17): MEDIA DB RECONCILIATION SCOPE CANDIDATE.** One future aggregate envelope classifies duplicate/unmatched DB pairs by kind/state/eligible usage only; paths/hashes/IDs0. Ordinary65 retained as filesystem authority. Next independent scope review; DB/code/Q002/live closed.
+
+> **Текущая точка D-1342 (2026-11-17): MEDIA DB BINDING OBSERVED RESULT APPROVED 0/0/0.** DB duplicate pair×2, one unmatched unique DB pair; gallery214 complete; ordinary matched22/candidate-only65; other anomalies/structure0. Next safe reconciliation + owner decision; transfer/Q002/product/live closed.
+
+> **Текущая точка D-1341 (2026-11-17): MEDIA DB BINDING V3 OBSERVED; FINAL CLEAN.** DB237/1, candidate236/65, gallery214/0; only dbPairDuplicate1, all other anomalies/structure0. Exit0/retry0, containers0/secret0. Next independent result review; not accepted transfer baseline yet.
+
+> **Текущая точка D-1340 (2026-11-17): V3 DERIVED-GUARD REMEDIATION APPROVED 0/0/0.** Three exhaustive sums remain; two duplicate-dependent guards removed, OBSERVED unblocked, PASS still duplicate0. No-bloat PASS. Next fresh owner gate for one v3 probe.
+
+> **Текущая точка D-1339 (2026-11-17): OBSERVED V3 BINDING-INVARIANT FAIL; FINAL CLEAN.** Counts/usage pass; derived matched-equality guard conflicts with observable duplicate drift. Retry0, containers0/secret0. Next remove only two derived guards, retain three exhaustive sums, review; no rerun/Q002/product/live.
+
+> **Текущая точка D-1338 (2026-11-17): MEDIA BINDING OBSERVED V3 APPROVED 0/0/0.** Hard counts/usage/arithmetic guards; exact binding6+anomaly8+structure4, PASS vs OBSERVED separated, no-bloat PASS. Next fresh owner gate for one v3 probe; result review mandatory.
+
+> **Текущая точка D-1337 (2026-11-17): MEDIA BINDING V2 ANOMALY FAIL; FINAL CLEAN.** Counts238/238/736 and usage guards pass; anomaly group nonzero, later structure/binding not evaluated. Retry0, containers0/secret0. Reject eight-code bloat; next proposed one reviewed OBSERVED aggregate drift-envelope.
+
+> **Текущая точка D-1335 (2026-11-17): SIX-AGGREGATE MEDIA BINDING V2 APPROVED 0/0/0.** Mandatory guards remain hidden/enforced; success exposes only six integers. Temporary diagnostic ladder removed, no-bloat PASS. Next fresh owner gate for one v2 probe; transfer/import/Q002/product/live closed.
+
+> **Текущая точка D-1334 (2026-11-17): DB PAIR MISMATCH PROVED; FINAL CLEAN.** DB files238, but matched<238/unmatched>0 against exact301. Facts values0/retry0, containers0/secret0. Stop code-by-code bloat; next proposed one reviewed six-aggregate evidence envelope, no hashes/paths/IDs.
+
+> **Текущая точка D-1333 (2026-11-17): MEDIA DB BINDING PAIR LOCALIZATION APPROVED 0/0/0.** DB/CANDIDATE/GALLERY pairs2/2/2 preserve all23 assertions; no-bloat PASS. Next fresh owner gate for one changed probe; no automatic retry/exporter/Q002/product/live.
+
+> **Текущая точка D-1332 (2026-11-17): MEDIA DB BINDING CATEGORY FAIL; FINAL CLEAN.** Counts238/238/736 and SQL/envelope34 passed; first mismatch is binding DB/candidate/gallery. Facts0/retry0, containers0/secret0. Next static three-pair binding localization; no rerun/exporter/Q002/product/live.
+
+> **Текущая точка D-1331 (2026-11-17): MEDIA DB BINDING CONTRACT LOCALIZATION APPROVED 0/0/0.** Five constant categories cover unchanged23 assertions as3+6+2+8+4; no-bloat PASS. Next fresh owner gate for one changed probe; no automatic retry/exporter/Q002/product/live.
+
+> **Текущая точка D-1330 (2026-11-17): MEDIA DB BINDING CHANGED PROBE CONTRACT FAIL; FINAL CLEAN.** SQL/TLS/RRRO/envelope34 passed; expected contract mismatch. Facts/PASS0, retry0, containers0/secret0. Next static category-only contract localization; no rerun/exporter/Q002/product/live.
+
+> **Текущая точка D-1329 (2026-11-17): MEDIA DB BINDING FAILURE LOCALIZATION APPROVED 0/0/0.** Four constant SQL/ENVELOPE/CONTRACT/OUTPUT codes, old profile unchanged, no-bloat PASS. Next fresh owner gate for one changed probe; no automatic retry/exporter/Q002/product/live.
+
+> **Текущая точка D-1328 (2026-11-17): MEDIA DB BINDING PROBE FAIL-CLOSED; FINAL CLEAN.** Pre-exec APPROVED0/0/0, one run returned DBPRE_FAILED_READ; facts/PASS0, retry0. Postcondition containers0/host-secret0. Next bounded static failure diagnosis only; no rerun/exporter/Q002/product/live.
+
+> **Текущая точка D-1326 (2026-11-17): RESUMED MEDIA DB BINDING REVIEW AGAIN PAUSED OWNER.** Reviewer repeated the same PowerShell quoting class twice across assertion families; no third attempt/verdict. Four same-buffer checks passed; DB/Docker0. Next recommended: coordinator supplies mechanical evidence, reviewer evaluates without shell.
+
+> **Текущая точка D-1325 (2026-11-17): MEDIA DB BINDING REPEAT REVIEW ПРИОСТАНОВЛЕНО ВЛАДЕЛЬЦУ.** Reviewer mechanical checks twice returned empty stdout with exit0; no third attempt. Manual semantics look correct but no verdict. DB/Docker0. Recommended resume: new review cycle with separate simple rg checks.
+
+> **Текущая точка D-1324 (2026-11-17): MEDIA DB BINDING PRE-EXEC REMEDIATION CANDIDATE.** Same-buffer authority, exact key/legacy predicates and four snapshot guards implemented; parser/static PASS, runtime0. Next repeat independent review; execution only after 0/0/0.
+
+> **Текущая точка D-1323 (2026-11-17): MEDIA DB BINDING PRE-EXEC REVIEW CHANGES_REQUESTED 2/1/0.** Probe0. Fix same-buffer CSV authority, exact safe-key+two-way legacy predicate, and four snapshot structural guards. No-bloat PASS; next bounded remediation/review, DB run still closed.
+
+> **Текущая точка D-1322 (2026-11-17): MEDIA DB BINDING PROBE CANDIDATE; PRE-EXEC REVIEW PENDING.** Existing JIT runner gained one closed 8-table profile; exact301 SHA/bytes/cohort and 30 bounded facts, parser/static PASS. DB/Docker0. Next independent review, then the owner-gated single probe if approved.
+
+> **Текущая точка D-1321 (2026-11-17): MEDIA DB BINDING SCOPE FINAL REVIEW APPROVED 0/0/0.** All three findings closed; partition/evidence/private-grant boundaries and no-bloat PASS. Next separate owner gate for one catalog/aggregate binding probe; exporter/importer/Q002/product/live closed.
+
+> **Текущая точка D-1320 (2026-11-17): MEDIA DB BINDING SCOPE ONE-LINE REMEDIATION CANDIDATE.** Consumer existence narrowed to page/revision/shared; draft/retained remain count-only, private grants0. Next independent repeat review; DB/exporter/Q002/product/live closed.
+
+> **Текущая точка D-1319 (2026-11-17): MEDIA DB BINDING SCOPE REPEAT REVIEW CHANGES_REQUESTED 0/1/0.** Исходные P1/P2 закрыты. Новый P2: orphan check нельзя заявлять для count-only draft/retained без запрещённых private grants. Next one-line semantic fix + repeat review; DB/new grants/exporter/Q002/product/live closed.
+
+> **Текущая точка D-1318 (2026-11-17): MEDIA DB BINDING SCOPE REMEDIATION CANDIDATE.** Закрыты два finding-кандидата: selected ordinary|stable и полная eligible/excluded partition; filesystem evidence отделено от ожидаемых DB238/238/736 и binding238/63/214. Existing grants/tables/RRRO unchanged; next independent repeat review, DB probe/Q002/product/live closed.
+
+> **Текущая точка D-1317 (2026-11-17): MEDIA DB BINDING SCOPE REVIEW CHANGES_REQUESTED 1/1/0.** P1: selected current/previous may use stable_version; usage partition incomplete. P2: 238/63/214 is hypothesis, not binding evidence. Next scope-only remediation; no DB/new grants/exporter/Q002/product/live.
+
+> **Текущая точка D-1316 (2026-11-17): MEDIA DB238 BINDING SCOPE CANDIDATE.** Same reader/tables/RRRO; exact301 SHA+bytes only; expected DB matched238/candidate-only63/gallery214. Transfer usages limited to current/selected current+previous/current shared; drafts/Stable/retained aggregate-only. Next independent review; no exporter/manifest/Q002/product/live.
+
+> **Текущая точка D-1315 (2026-11-17): EXACT301 MEDIA SHA EVIDENCE REVIEW APPROVED 0/0/0.** Reproducibility P2 closed; appendix digest/stdout/selector/read-only semantics and mismatch0 accepted. No new hash/scanner. Next light slice only DB238 path/usage binding scope; importer/Q002/product/live closed.
+
+> **Текущая точка D-1314 (2026-11-17): MEDIA HASH EXECUTION-EVIDENCE REMEDIATION CANDIDATE.** Exact historical script35/2410/SHA `2b66f9dd…e446a` and observed stdout appended; extracted digest/stdout match1, media rehash0. Next repeat independent review; no scanner/DB binding/Q002/product/live.
+
+> **Текущая точка D-1313 (2026-11-17): MEDIA HASH RESULT REVIEW CHANGES_REQUESTED 0/1/0.** Counts/scope/arithmetic accepted; exact executed one-shot script is absent from workspace, so runtime evidence is not yet reproducible. Next light fix only appendix+digest, no rehash/scanner; DB binding/Q002/product/live closed.
+
+> **Текущая точка D-1312 (2026-11-17): EXACT301 MEDIA SHA PASS.** `rb1-media-hash-v1`: files301/bytes56134441, gallery214/41176391, ordinary87/14958050, mismatches0, 3504ms. One read-only pass; no scanner/manifest/write. Next independent result review; DB binding/import/Q002/product/live closed.
+
+> **Текущая точка D-1311 (2026-11-17): MEDIA BASELINE SCOPE REVIEW APPROVED 0/0/0.** Exact301/cohorts, safe paths, exact214 tuple authority, exclusions, DB238 separation and no-bloat PASS. Media hashing/runtime0. Next only owner-gated bounded SHA pass exact301; reconciliation/import/Q002/product/live closed.
+
+> **Текущая точка D-1310 (2026-11-17): MEDIA BASELINE SCOPE CANDIDATE.** Reuse-only authority selects exact301 files/56134441 bytes: gallery214 + ordinary87; unused16 and error rows2 excluded. Gallery package↔CSV tuples214 diff0, positions base0/gaps0; media bytes not rehashed. Next independent read-only scope review; no scanner/exporter/Q002/product/live.
+
+> **Текущая точка D-1309 (2026-11-17): DBPRE RESULT REPEAT REVIEW APPROVED 0/0/0.** P2 wording finding closed; runtime PASS evidence accepted, AC008 remains static-only, media baseline/REBUILD-1 completion open. No new DBPRE/runtime/mechanism. Next light slice only read-only media-baseline scope; Q002/product/live closed.
+
+> **Текущая точка D-1308 (2026-11-17): DBPRE RESULT P2 WORDING REMEDIATION CANDIDATE.** Runtime PASS remains accepted; three stale baseline statements synchronized to actual stdin/tmpfs transport and explicit historical D-1253/D-1259 context. No DBPRE/runtime/product change. Next repeat independent read-only review only.
+
+> **Текущая точка D-1306 (2026-11-17): CHANGED DBPRE PASS; FINAL CLEAN.** `rb1-dbpre-v1`, source foundation-dev, facts29, elapsed522ms; MAP5/STRUCT3 zero by PASS contract. One run/retry0; containers0/actual-secret0 and successful role cleanup before output. Next only independent read-only result review; Q002/product/media/live closed.
+
+> **Текущая точка D-1305 (2026-11-17): ONE-CHAR CLEANUP-DO FIX REVIEW APPROVED 0/0/0.** Parentheses/blocks/settings predicates, markers/mappings/codes8, one transaction, fallback, facts29, reader1/RRRO1 and no-bloat PASS. Review runtime/Docker/DB0. Next changed DBPRE requires fresh owner continuation; product/live closed.
+
+> **Текущая точка D-1304 (2026-11-17): ONE-CHAR CLEANUP-DO FIX CANDIDATE READY.** Removed only the extra `)` proven by D-1303. Parser0, exact settings fragment1, cleanup block1, markers8, diff-check PASS; runtime0. Next only independent read-only review; DBPRE/product/live closed.
+
+> **Текущая точка D-1303 (2026-11-17): CLEANUP-DO ROOT CAUSE FOUND; FINAL CLEAN.** Original DO reaches IDENTITY/ROLE_FLAGS then fails compile with `mismatched parentheses`: line 516 closes `NOT EXISTS`, line 517 is one extra `)`. Probe role0/compose down0; subject rows/DBPRE/product0. Next only one-character candidate, static check and independent review; no new diagnostics/framework.
+
+> **Текущая точка D-1302 (2026-11-17): SAME-TRANSACTION ROLE_FLAGS PROBE PASS; ROLE_FLAGS PREDICATE EXONERATED.** LOGIN→ALTER NOLOGIN→same flags+limit→DROP PASS, role0/teardown PASS, subject rows/DBPRE0. Failure marker may represent compile/entry failure of the following large DO. Next only one catalog-only exact-structure cleanup-DO probe; no further flag split/Q002/product/live.
+
+> **Текущая точка D-1301 (2026-11-17): DBPRE EXACT FAILURE GROUP = ROLE_FLAGS; FINAL CLEAN.** One approved run returned `DBPRE_FAILED_CLEANUP_ROLE_ROLE_FLAGS`; validity not reached, facts/PASS0/retry0. Exact manual cleanup later proved safe flags/limit/settings/relations and DROP; containers0/secret0. Next light option one isolated catalog-only same-transaction ALTER/flags probe; no further code split, DBPRE/Q002/product/live closed.
+
+> **Текущая точка D-1300 (2026-11-17): ROLE-STATE SUB-CHECKPOINT REVIEW APPROVED 0/0/0.** Exact order/sets8/safe flags7/validity equality1/generic/transaction/fallback/guards/facts29/reader1/RRRO1/no-bloat PASS. Review runtime/Docker/DB0. Next only fresh owner gate for one changed DBPRE; Q002/product/live closed.
+
+> **Текущая точка D-1299 (2026-11-17): ROLE-STATE SUB-CHECKPOINT CANDIDATE PREPARED.** ROLE_STATE split into ROLE_FLAGS→VALID_UNTIL→SETTINGS; existing groups unchanged. Parser0, markers8/unique8, mappings8, AC8, old refs0, exact validity equality1, no-bloat/runtime0. Next only independent review; DBPRE/Q002/product/live closed.
+
+> **Текущая точка D-1298 (2026-11-17): DBPRE EXACT FAILURE GROUP = ROLE_STATE; FINAL CLEAN.** One approved run returned `DBPRE_FAILED_CLEANUP_ROLE_ROLE_STATE`; identity/OID and ALTER passed, facts/PASS0/retry0. Exact manual cleanup proved flags/limit/settings/relations and DROP; containers0/secret0. Next only split ROLE_STATE into ROLE_FLAGS/VALID_UNTIL checkpoints; DBPRE/Q002/product/live closed.
+
+> **Текущая точка D-1297 (2026-11-17): IDENTITY SUB-CHECKPOINT REVIEW APPROVED 0/0/0.** Exact order, sets7, generic fallback, unchanged receipt/proofs/transaction/fallback/guards/facts29/reader1/RRRO1 and no-bloat PASS. Review runtime/Docker/DB0. Next only fresh owner gate for one changed DBPRE; Q002/product/live closed.
+
+> **Текущая точка D-1296 (2026-11-17): IDENTITY SUB-CHECKPOINT CANDIDATE PREPARED.** Former IDENTITY_STATE is split into IDENTITY→ALTER→ROLE_STATE→SETTINGS; existing four groups unchanged. Parser0, markers7/unique7, mappings7, AC8, old refs0, no-bloat/runtime0. Next only independent read-only review; DBPRE/Q002/product/live closed.
+
+> **Текущая точка D-1295 (2026-11-17): CREATE-RECEIPT STATIC TRANSFER PASS; ROOT CAUSE STILL OPEN.** Parser0 and ru-RU UInt32/Int64 regex/cast/interpolation round-trip PASS; create/cleanup epoch-microseconds expressions identical and assignments single. No evidence supports changing receipt format. Next light proposal only split IDENTITY_STATE into IDENTITY/ROLE_STATE/SETTINGS checkpoints; runtime/DBPRE/Q002/product/live closed.
+
+> **Текущая точка D-1294 (2026-11-17): DBPRE EXACT FAILURE GROUP = IDENTITY_STATE; FINAL CLEAN.** One approved diagnostic run returned `DBPRE_FAILED_CLEANUP_ROLE_IDENTITY_STATE`; facts/PASS0, retry0. Exact manual cleanup proved safe flags/settings/relations and dropped role; containers0/secret0. Next only static create-receipt OID/valid-until transfer analysis; no repeated OID/time probe, DBPRE/Q002/product/live closed.
+
+> **Текущая точка D-1293 (2026-11-17): CLEANUP PROOF DIAGNOSTICS REVIEW APPROVED 0/0/0.** AC01–08, markers/mappings/external allowlist5, generic fallback, one bounded JSON, unchanged transaction/fallback/guards/facts29/reader1/RRRO1 and no-bloat PASS. Review runtime/Docker/DB0. Next only fresh owner gate for one changed DBPRE; Q002/product/live closed.
+
+> **Текущая точка D-1292 (2026-11-17): CLEANUP PROOF DIAGNOSTICS CANDIDATE COMPLETE; PAUSED BEFORE REVIEW.** Existing cleanup has literal allowlist5 checkpoints/mappings for IDENTITY_STATE/SESSIONS/RELATIONS/PRIVILEGES/REVOKE_DROP and constant external codes; no logger/process/retry/framework. Exact reread proved candidate complete, but coordinator made two remediation-path errors (false omission assumption, then rejected duplicate patch), so no third check. Runtime closed. Next only independent read-only review after owner resume.
+
+> **Текущая точка D-1291 (2026-11-17): APPROVED SESSION-DRAIN DID NOT CLOSE CLEANUP FAILURE; FINAL STATE CLEAN.** One owner-gated changed DBPRE again returned `DBPRE_FAILED_CLEANUP_ROLE`; facts/PASS0, no retry. Exact manual role cleanup PASS, containers0/secret0. Execution paused owner. Next light option only bounded constant cleanup-proof diagnostics after a new decision; no logger/retry framework or DBPRE/Q002/product/live.
+
+> **Текущая точка D-1290 (2026-11-17): CLEANUP SESSION-DRAIN REVIEW APPROVED 0/0/0.** Root-cause inference and bounded 20×50ms drain accepted; exact proof/order/fail-closed assertion/cleanup codes/facts29/reader1/RRRO1/no-bloat PASS. Review edits/runtime/Docker/DB/network0. Next only fresh owner gate for one changed DBPRE; Q002/product/live closed.
+
+> **Текущая точка D-1289 (2026-11-17): SESSION-DRAIN CANDIDATE PREPARED; PAUSED BEFORE REVIEW.** Evidence-based inference isolates transient reader-session visibility; existing cleanup now has a bounded 20×50ms in-SQL drain with final fail-closed assertion, no new function/process/framework. Parser0. Two coordinator mechanical checks used stale literal assumptions and returned false zeros; no third check. Candidate is unapproved, runtime/DBPRE closed. Next only independent read-only review after owner resume.
+
+> **Текущая точка D-1288 (2026-11-17): DBPRE CLEANUP-ROLE ROOT CAUSE DIAGNOSIS PAUSED; FINAL STATE CLEAN.** Two owner-authorized runtime attempts ended `DBPRE_FAILED_CLEANUP_ROLE`; facts/PASS0. Exact manual cleanup passed after each. Catalog predicate probe passed all nine groups, but OID/time probe hit two diagnostic errors and stopped by anti-loop; final probe-role cleanup/container0/secret0. `docs/currentprocent.html` now reflects the clean-rebuild plan without carrying old 78% forward. Next only a newly approved static diagnosis/remediation path; no third DBPRE.
+
+> **Текущая точка D-1285 (2026-11-17): CLEANUP SUBSTAGE CODES APPROVED 0/0/0.** Four fixed first-failure codes cover ROLE/CONTAINER_FILES/HOST_SECRET/COMPOSE; cleanup order and semantics unchanged, no-bloat PASS. Runtime remains closed; next one changed full DBPRE requires fresh owner gate.
+
+> **Текущая точка D-1284 (2026-11-17): FULL DBPRE FAIL-CLOSED AT CLEANUP; FINAL STATE CLEAN.** Run returned `DBPRE_FAILED_CLEANUP`; facts/PASS suppressed. Exact leftover NOLOGIN role was conditionally verified, literal-revoked and dropped; teardown pass, container/secret/role0. Next only cleanup substage-code proposal/review, no immediate rerun.
+
+> **Текущая точка D-1283 (2026-11-17): DBPRE BOOTSTRAP ROOT CAUSE FIXED AND APPROVED.** Multiline native call lost `-U postgres` and used root; one exact argument array now preserves postgres identity and captured stderr. Independent review 0/0/0, cleanup proved. Next fresh gate for one changed full DBPRE.
+
+> **Текущая точка D-1282 (2026-11-17): SECRET TRANSPORT PROBE RESULT REVIEW APPROVED 0/0/0.** Exact96/uid999/mode600/read/cleanup evidence is accepted strictly for transport scope. SQL/role/reader/facts0. Next requires a fresh owner gate for one full staged DBPRE run.
+
+> **Текущая точка D-1281 (2026-11-17): EXACT-BYTE SECRET RUNTIME PROBE PASS.** Approved AST function wrote exact 96 bytes to db tmpfs with uid/gid999, mode600; PostgreSQL UID read passed and teardown passed. SQL/role/subject read0. Next: independent result review only; full DBPRE remains gated.
+
+> **Текущая точка D-1280 (2026-11-17): EXACT-BYTE SECRET TRANSPORT APPROVED 0/0/0.** Bounded lifecycle and fail-fast chain CLOSED; exact96/no-newline/no-leak/no-bloat contracts pass. Runtime remains closed. Next requires separate gate for one secret-transport-only probe without SQL/role.
+
+> **Текущая точка D-1279 (2026-11-17): SECRET TRANSPORT LIFECYCLE REMEDIATION CANDIDATE PREPARED.** Process.Start false is rejected, timeout has no unlimited wait, kill is best-effort and Dispose unconditional. Parser/static checks PASS, runtime0. Next only P2-002 fail-fast `&&` shell chain, then repeat review.
+
+> **Текущая точка D-1278 (2026-11-17): EXACT-BYTE SECRET REVIEW CHANGES_REQUESTED P1=0/P2=2.** Payload transport is safe, but timeout lifecycle has an unbounded wait/start-false edge and shell `;` can mask chown failure. Runtime remains closed. Next only lifecycle P2-001, then shell-chain P2-002; no new subsystem.
+
+> **Текущая точка D-1277 (2026-11-17): ROLE SECRET TRANSPORT ПРИОСТАНОВЛЕН ВЛАДЕЛЬЦУ.** Changed run still failed ROLE; role absent/teardown pass. docker cp fails against container path; two stdin-remediation probes ended newline mismatch then EXACT_WRITE, both cleaned. No third probe. Next only static design/review of a tiny exact-byte .NET stdin writer; runtime closed.
+
+> **Текущая точка D-1276 (2026-11-17): DBPRE ROLE-STAGE ROOT CAUSE FIXED AND APPROVED.** Unconditional CREATE/TEMP proof falsely rejected unreachable PUBLIC TEMP on postgres; predicates now test exercisable privileges only and pass independent review 0/0/0. Cleanup proved, role absent. Next requires fresh gate for one staged changed run.
+
+> **Текущая точка D-1275 (2026-11-17): DBPRE PRECHECK ROOT CAUSE FIXED AND APPROVED.** Access-only ACL loading made GetOwner null; exact `Access, Owner` fix passes isolated AST test and independent review 0/0/0 without weakening DACL. Cleanup remains proved. Next: fresh owner gate for one materially changed staged DBPRE run; no blind retry.
+
+> **Текущая точка D-1274 (2026-11-17): D-1271 CLEANUP POSTCONDITION FULLY PROVED.** Cleanup-only run started only dev PostgreSQL, queried only exact role presence in `pg_roles`, returned `ABSENT`, and teardown passed. Container stopped, host secret absent, temporary role absent; no subject-table read/new role/deletion. Original DBPRE remains FAIL-CLOSED with no third retry.
+
+> **Текущая точка D-1273 (2026-11-17): D-1271 HOST/RUNTIME POSTCONDITION PROVED; ROLE STATE OPEN.** Exact dev container absent, project events0 and host secret absent; PostgreSQL was not started. Preserved-volume role state cannot be proven offline. Next optional bounded gate: cleanup-only dev-DB start and catalog-only exact-role inspection, no subject read/new role.
+
+> **Текущая точка D-1272 (2026-11-17): BOUNDED FAILURE-STAGE REVIEW APPROVED; D-1271 POSTCONDITION OPEN.** Fixed PRECHECK/START/ROLE/READ/CLEANUP codes pass independent review P1/P2/P3=0/0/0 with no bloat. This does not permit a third run. Next only read-only proof of container and temporary-role state after the failed attempt.
+
+> **Текущая точка D-1271 (2026-11-17): RB1-READ-Q001 FAIL-CLOSED; ПРИОСТАНОВЛЕНО ВЛАДЕЛЬЦУ.** Attempt1 hit sandbox Docker denial; one escalated retry also returned bounded failure. No facts/PASS. Host secret absent; Docker/role cleanup not independently proven because the final inventory output was incomplete. No third run. Next only read-only postcondition proof and static stage localization after owner decision.
+
+> **Текущая точка D-1270 (2026-11-17): DBPRE RUNNER FINAL REVIEW APPROVED P1/P2/P3=0/0/0.** All four execution findings are CLOSED; mechanics14/29/5/1/1 and no-bloat PASS. Review edits/runtime/Docker/DB/network0. This approves the runner only; next required step is a fresh separate `RB1-READ-Q001` owner gate before one actual bounded run.
+
+> **Текущая точка D-1269 (2026-11-17): DBPRE P2 PRE-BINDING REMEDIATION CANDIDATE VERIFIED.** Direct unknown-parameter run returned exit1 and exact constant JSON only, without ErrorRecord/path/stack; correct gate and Docker/DB were unreachable. Same-file manual gate keeps architecture light. Next: independent repeat pre-execution review only.
+
+> **Текущая точка D-1268 (2026-11-17): DBPRE P2-002 VERIFY ПРИОСТАНОВЛЕН ВЛАДЕЛЬЦУ.** Same-file manual args candidate is applied, but two verification commands were invalid: empty wrapper output, then wrongly escaped expected JSON. Four negative cases did prove exit1 and one output line each, but exact content is not accepted. No correct gate/Docker/DB execution. Resume only with a different literal-output check.
+
+> **Текущая точка D-1267 (2026-11-16): DBPRE P2 DATABASE-PREDICATE REMEDIATION CANDIDATE PREPARED.** datallowconn now guards CONNECT only; CREATE/TEMP are denied across every DB in both symmetric proof blocks. Parser/diff checks PASS, runner unexecuted. Next: P2-002 pre-binding failure containment only.
+
+> **Текущая точка D-1266 (2026-11-16): DBPRE REPEAT REVIEW CHANGES_REQUESTED P1=0/P2=2.** Both P1 findings CLOSED. Open: CREATE/TEMP must ignore datallowconn in two proof blocks; Mandatory binding still precedes trap. Review edits/runtime/Docker/DB/network0. Next: only predicate P2-001; actual read remains closed.
+
+> **Текущая точка D-1265 (2026-11-16): DBPRE P2 DACL/FAILURE REMEDIATION CANDIDATE PREPARED.** Mandatory remains; exact gate moved from pre-flow ValidateSet to the first protected `try` check. Exact current-user+LocalSystem DACL and constant path-free JSON failure are verified on the negative path. Runner never reached Docker/DB. Next: independent repeat pre-execution review only.
+
+> **Текущая точка D-1264 (2026-11-16): DBPRE P2-002 ПРИОСТАНОВЛЕН ВЛАДЕЛЬЦУ.** Две безопасные patch-попытки отклонены политикой: удаление раннего `ValidateSet` считается ослаблением gate даже при сохранении `Mandatory` и exact manual gate внутри `try`. Код не изменён, runner/Docker/DB/role0. Нужное отдельное решение владельца описано ниже.
+
+> **Текущая точка D-1263 (2026-11-16): DBPRE P2 GLOBAL PRIVILEGE REMEDIATION CANDIDATE PREPARED.** Literal search, parser and diff checks confirm symmetric create/pre-DROP proofs; only source CONNECT, app USAGE and exact14 SELECT are allowed. Runner unexecuted. Next: P2-002 exact DACL/constant failure channel only.
+
+> **Текущая точка D-1262 (2026-11-16): DBPRE P2-001 ПРИОСТАНОВЛЕН ВЛАДЕЛЬЦУ.** Две последовательные команды механической проверки завершились ошибками самой PowerShell-команды; третья попытка запрещена правилом цикла. Candidate SQL частично подготовлен, но не принят и не исполнялся. Docker/DB/role untouched. Возобновление — только решением владельца и другим способом проверки.
+
+> **Текущая точка D-1261 (2026-11-16): DBPRE P1 PRE-DROP STATE REMEDIATION CANDIDATE PREPARED.** Exact OID, role flags/limit/validity/settings, sessions, membership/ownership and current expected effective privileges are re-proved before revoke/drop. Any mismatch forbids DROP and falls back to exact-OID NOLOGIN + literal revoke + secret cleanup + failure. Runner unexecuted. Next: P2-001 global effective-privilege proof only.
+
+> **Текущая точка D-1260 (2026-11-16): DBPRE P1 SINGLE-SNAPSHOT REMEDIATION CANDIDATE PREPARED.** Identity/TLS assertion and aggregate facts now share one reader `psql` connection and one `REPEATABLE READ READ ONLY` transaction; stdout remains exactly facts-only. Static checks pass, runner unexecuted. Next: P1-002 full unchanged-role proof before DROP; DB/role/media/product/live closed.
+
+> **Текущая точка D-1259 (2026-11-16): DBPRE RUNNER REVIEW CHANGES_REQUESTED P1=2/P2=2.** One-connection snapshot, full pre-DROP state proof, global effective privileges and exact DACL/constant failure output remain open. Runner unexecuted; Docker/role/DB untouched. Next: P1 single-connection remediation only; fresh read approval required after repeat review.
+
+> **Текущая точка D-1258 (2026-11-16): TEMPORARY READER OWNER GATE APPROVED; JIT EXECUTION ONLY.** Owner approved exact role boundary, not subject-table read. Preserved dev/test volumes found; D-1173 dev load is source authority, stale stopped test is excluded. Role will be created only inside a future approved dev DBPRE run; no Docker/role/DB mutation occurred. Next: separate `RB1-READ-Q001`.
+
+> **Текущая точка D-1257 (2026-11-16): DBPRE REPEAT REVIEW APPROVED P1/P2/P3=0/0/0.** Reader lifecycle and five mappability counts are CLOSED; mechanics8/5/14/14 and no-bloat PASS. This approves contracts only. Next: separate owner gate for exact temporary reader boundary; role mutation/actual DB read/media/product remain closed.
+
+> **Текущая точка D-1256 (2026-11-16): DBPRE P2 MAPPABILITY REMEDIATION PREPARED.** Five aggregate-only zero counts now cover selected current/previous authors, valid staff profile/role and grant user/page within the same14 tables; no IDs/rows/subsystem. Both P1/P2 candidates await narrow repeat review. Role/DB/media/product untouched.
+
+> **Текущая точка D-1255 (2026-11-16): DBPRE P1 READER LIFECYCLE REMEDIATION PREPARED.** Fresh-only/OID-bound role, zero membership+ownership, exact effective privileges, DB-time+15m validity and fail-closed cleanup now close the P1 candidate without a role platform. P2 author mappability remains next; role/DB/media/product untouched.
+
+> **Текущая точка D-1254 (2026-11-16): DBPRE REVIEW CHANGES_REQUESTED P1=1/P2=1.** Reader needs fresh-only/zero-membership+ownership/exact-privilege/bounded cleanup; aggregate set needs zero unmapped selected authors/staff/grants. Same14 tables, no new subsystem. Next: P1 remediation only. Role/DB/media/product remain untouched and closed.
+
+> **Текущая точка D-1253 (2026-11-16): REBUILD-1 SOURCE-DB PREFLIGHT CONTRACT PREPARED; ACTUAL DB UNOPENED.** Existing runtime/migrator identities are write-capable; exact temporary reader, literal14-table aggregate allowlist and ≤64KiB privacy-safe output are specified. Source numeric staff ID→fresh target UUID is a bounded in-memory candidate, no service/table/file. Next: narrow independent review; role creation/DB read remains closed pending separate owner permission.
+
+> **Текущая точка D-1252 (2026-11-16): REBUILD-1 STATIC AUTHORITY PREFLIGHT PASS.** Route map115/unique paths115/types20 and exact 12 migration JSON/827343 bytes match existing SHA oracle; approved design/content-contract digests recorded. This is not full baseline or migration snapshot. Next: bounded read-only source-DB preflight defining identity, aggregate allowlist and privacy-safe output only; media/private values/export/target/code/runtime remain closed.
+
+> **Текущая точка D-1251 (2026-11-16): REBUILD-Q001 OWNER APPROVED; REBUILD-0 COMPLETE, REBUILD-1 READ-ONLY OPEN.** “Продолжай” approves the reviewed approach/MVP only for bounded read-only baseline/inventory. Q002/code/dependencies/migrations/target DB/media/importer/runtime/cutover/live/destructive actions remain closed. Next: first capped REBUILD-1 baseline slice with no private-data output.
+
+> **Текущая точка D-1250 (2026-11-16): CRAR-REPEAT-003 APPROVED P1/P2/P3=0/0/0.** Content_version, literal SiteSettings and exact20/19 terminology independently closed; cross-contract/no-bloat PASS. This is not owner approval or code permission. Next: owner REBUILD-Q001 decision, allowing at most read-only REBUILD-0/1 baseline. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1249 (2026-11-16): ALL CRAR-REPEAT-002 REMEDIATION CANDIDATES PREPARED; INDEPENDENT REVIEW NEXT.** Two plan phrases now exactly say 20 transport outcome types / 19 independent payload kinds; stale hits0. Content_version and SiteSettings candidates are also ready but not approved. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1248 (2026-11-16): LITERAL SITESETTINGS P2 REMEDIATION PREPARED; REVIEW PENDING.** One singleton now has 11 exact fields, fixed owner CAS, employee read-only and one READY logo usage; legal/social nulls remain gated. No generic settings/JSON/schema/link engine. Next: two outcome/payload terminology phrases. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1247 (2026-11-16): CONTENT_VERSION P2 REMEDIATION PREPARED; REVIEW PENDING.** Content envelope now has no second version axis; only PageContent.generation grows, while Undo swaps exact payload/hash/provenance without reserialization. No version/history subsystem. Next: literal SiteSettings v1 schema. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1246 (2026-11-16): CRAR-REPEAT-002 CHANGES_REQUESTED P1/P2/P3=0/2/1.** All prior findings closed. New local issues: content_version vs generation/Undo, literal SiteSettings schema, and two 20-outcome/19-payload phrases. No new subsystem is needed. Next: content_version P2 only. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1245 (2026-11-16): ALL REPEAT-REVIEW REMEDIATION CANDIDATES PREPARED; INDEPENDENT REVIEW NEXT.** Plan now reflects accepted D-1229/default-off LEGAL gates and the exact module DAG; stale scan hits0. Candidates remain unapproved until independent review. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1244 (2026-11-16): REPEAT-REVIEW TRUSTED CLIENT-IP P2 REMEDIATION PREPARED; REVIEW PENDING.** Direct client→Nginx→protected Unix socket is the only trusted chain; Nginx replaces forwarding headers and owns the per-IP bucket, Django rejects missing/malformed/direct identity, and IP is not stored/logged. No Redis/DB throttle/proxy framework. All new P2 candidates are ready; next P3: two stale plan phrases. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1243 (2026-11-16): REPEAT-REVIEW MINIMAL AUDIT P2 REMEDIATION PREPARED; REVIEW PENDING.** One AuditEvent table now has 28 closed actions, exact safe fields/per-action details, owner-only bounded reads, retention180d and ordinary DB backup. Media audits only READY success; no event bus/SIEM/analytics/alerting/hash-chain/receipt platform. Next P2: trusted client-IP throttle boundary. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1242 (2026-11-16): REPEAT-REVIEW BACKUP-REOPEN P2 REMEDIATION PREPARED; REVIEW PENDING.** One existing wrapper records the previous catalog digest and write bitmap, publishes catalog only after two verified copies, and always restores exactly the prior bitmap in `finally`; ambiguity stays fail-closed. No coordinator/daemon/state machine. Next P2: minimal AuditEvent lifecycle. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1241 (2026-11-16): REPEAT-REVIEW DISPOSABLE TRANSFER P1 REMEDIATION PREPARED; REVIEW PENDING.** One source snapshot now covers public+private reads; each attempt uses a new empty isolated DB/media pair, and only post-commit read-back may seal it. Failed/unsealed pairs are never resumed or selected. No migration platform/state machine/distributed transaction. All three repeat-review P1 candidates are ready; next P2: backup failure reopen. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1240 (2026-11-16): REPEAT-REVIEW PAGEGRANT/SESSION P1 REMEDIATION PREPARED; REVIEW PENDING.** Pages-owned grant/deactivate transactions use narrow accounts generation participants and one User→Page→Grant→Content lock order. Every grant change revokes old sessions; deactivate removes all grants atomically; save/revoke races are exact. No registry/history/policy engine/receipt. Next P1: coherent disposable transfer run. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1239 (2026-11-16): REPEAT-REVIEW CONTENT P1 REMEDIATION PREPARED; REVIEW PENDING.** Mapping now proves115 memberships/unique IDs/paths,20 outcome types, duplicate/missing/type mismatch0; MAP-031/053 are article-only and alias has no payload copy. Employee grants are only text/prices; numeric caps and one literal semantic rich-text policy replace vague bounds without schema/role/carrier framework. Next P1: PageGrant→User.generation lifecycle. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1238 (2026-11-16): REPEAT ARCHITECTURE REVIEW CHANGES_REQUESTED P1/P2/P3=3/3/1.** Remaining P1: duplicated MAP-031/053 plus incomplete editor bounds/permissions, missing PageGrant→session-generation lifecycle, and non-disposable private transfer boundary. New bounded P2: backup failure reopen, minimal AuditEvent lifecycle, trusted proxy/IP throttle; P3 two stale phrases. No platform/service is required. Next ordered remediation: content matrix P1 only. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1237 (2026-11-16): ALL P1/P2/P3 REMEDIATION CANDIDATES PREPARED; REPEAT REVIEW NEXT.** Exact DAG terminology and clean-plan D-1222 professional-review/D-1223 Estakada-only status are synced. This is not approval: original D-1224 verdict remains CHANGES_REQUESTED and REBUILD-Q001/Q002/code stay closed until independent repeat review. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged.
+
+> **Текущая точка D-1236 (2026-11-16): CRAR-P2-008 OPTIONAL KERNEL RULE PREPARED; ALL P2 CANDIDATES READY.** Clean skeleton no longer creates kernel/common/base/utils placeholders. Consumer modules own ActorRef/NotificationPort/DTO/errors; a future pure common type needs two real current consumers and separate DAG/test proof. Exact dependency fitness replaced stale base/feature wording. Next: P3 plan-status sync, then repeat independent review. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1235 (2026-11-16): CRAR-P2-007 PRELIMINARY ESTIMATE/WBS RULE PREPARED; REVIEW PENDING.** Current 33–50/35–41h numbers are explicitly not commitment, date, remaining work or progress. After REBUILD-1 one reviewed five-row schema/family/data/AC/ops WBS must provide numeric optimistic/likely/risk from exact facts; owner acknowledgement then replaces the early hypothesis. No Gantt/tracker/estimation service. Next: make kernel optional until shared pure value is proven. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1234 (2026-11-16): CRAR-P2-006 FULL PAGE LIFECYCLE PREPARED; REVIEW PENDING.** Seven owner-only commands now cover create/rename/move/reorder/publication/new URL/confirmed leaf delete; employee structural writes remain closed. Navigation is an immediate read projection, fixed Header exact-six stays fixed, and deletion atomically removes current+previous/routes/grants/own usages without subtree or shared-file deletion. No workflow/receipt/navigation model. Next: make estimate explicitly preliminary and recalculate from REBUILD-1 WBS. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1233 (2026-11-16): CRAR-P2-005 NEW-SCHEMA BACKUP/RESTORE PROOF PREPARED; REVIEW PENDING.** Exact release manifest now binds code/dependencies/migrations/schema/config-secret names and contracts to one coherent DB+READY-media generation. Restore uses exact release + latest deletion ledger, then readiness and all115 HTTP outcomes in an isolated network. Old scripts are candidates, not proof; no backup platform/service/UI/daemon. Next: full page lifecycle ownership/AC. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1232 (2026-11-16): CRAR-P2-004 MEASURABLE QUALITY ATTRIBUTES PREPARED; REVIEW PENDING.** Architecture now has exact local RC latency/load, editor concurrency, upload/request caps, backup RPO≤24h, restore RTO≤4h and rollback≥7-day scenarios. Performance numbers are test budgets, not invented production SLA/capacity; no APM/load platform/cache/CDN/queue/replica. Next: prove backup/restore for the new schema, then full page lifecycle. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1231 (2026-11-16): CRAR-P2-003 TELEGRAM/LEDGER GUARANTEES PREPARED; REVIEW PENDING.** Telegram is at-most-once best-effort through one DB CAS claim, without retry/outbox. Deletion ledger is UUID-only, append-only, independently backed up before delete and mandatory before restored HTTP. Next: measurable quality attributes. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1230 (2026-11-16): CRAR-P2-001/002 USER+MEDIA BOUNDARIES PREPARED; REVIEW PENDING.** Minimal custom staff User is chosen before first migration. D-324 media profile uses one isolated fixed decoder worker with hard resource limits and bounded STAGED→READY cleanup, without queue/broker/retry platform. Next: Telegram/deletion-ledger guarantees. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1229 (2026-11-16): CRAR-P1-005 REQUEST/LEGAL SCOPE FIXED; ALL FIVE P1 REMEDIATIONS PREPARED.** Owner chose minimal MVP request default-off until LEGAL-01+separate enable, Telegram-only after commit and 30-day retention. No email/CRM/outbox/retry and no real intake now. Next: remaining P2/P3 remediation + sync, then repeat independent review. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1228 (2026-11-16): CRAR-P1-004 COHERENT TRANSFER CONTRACT PREPARED; REVIEW PENDING.** Frozen writers + one read-only DB snapshot + identical media SHA before/after now govern migration. Public manifest excludes all private data; staff/grants and separately approved requests stream DB→DB without files or password hashes. Exact current/previous ambiguity blocks import. Next ordered remediation needs owner choice on requests/legal scope. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1227 (2026-11-16): CRAR-P1-003 CURRENT+PREVIOUS CAS CONTRACT PREPARED; REVIEW PENDING.** Exact generation/hash CAS, employee allowed-group patch, owner-only Undo, atomic usages/audit and bounded lost-response retry are fixed without a revision/receipt ledger. AGENTS/pipeline target now says current+previous, not Stable/history10. Next ordered remediation: coherent frozen DB+media public/private transfer. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1226 (2026-11-16): CRAR-P1-002 EXACT MODULE BOUNDARIES PREPARED; REVIEW PENDING.** Exact acyclic module DAG, FK/delete lifecycle and one outer transaction owner per cross-module use case are fixed in the architecture. No orchestration layer/repository/UoW/event bus/registry was added; AssetUsage stays a closed scope+UUID contract. Next ordered remediation: current+previous CAS/concurrency/permissions/lost-response. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1225 (2026-11-16): CRAR-P1-001 CONTENT/OUTCOME CONTRACT PREPARED; REVIEW PENDING.** Exact115 route rows are joined to a closed20-type schema/editor/renderer/media matrix in `docs/clean-rebuild-content-contract.md`; generic fallback and HTML-shape inference are forbidden. Read-only cardinality check115/115/115/20/missing0. Next ordered remediation: exact module DAG/FK/delete/transaction ownership. Product/dependencies/migrations/DB/media/runtime/cutover/live unchanged; REBUILD-Q001/Q002 closed.
+
+> **Текущая точка D-1224 (2026-11-16): CLEAN REBUILD ARCHITECTURE REVIEW CHANGES_REQUESTED P1=5/P2=8/P3=2.** Direction is sound, execution contracts are not ready. `docs/clean-rebuild-architecture-review.md` requires typed20/115 matrix, exact module/transaction DAG, safe current+previous CAS/permissions, coherent private/public migration, requests/legal scope and eight further remediations. REBUILD-Q001/Q002/code/dependencies/DB/runtime/cutover remain closed; next ordered remediation and repeat review.
+
+> **Текущая точка D-1223 (2026-11-16): ESTAKADA-ONLY PRODUCT BOUNDARY FIXED.** Current clean rebuild contains only Estakada modules. Dozvo is a future separate copy/fork that may add news/events/theme/portal/API; no multi-site/tenant/shared platform or Dozvo code/settings/tables/flags now. Architecture/plan updated; review pending, product/DB/runtime unchanged.
+
+> **Текущая точка D-1222 (2026-11-16): PROFESSIONAL ARCHITECTURE REVIEW STANDARD FIXED; REVIEW PENDING.** Candidate must pass explicit context, quality/change scenarios, dependency/data/security/failure/operations/complexity and fitness analysis grounded in official Django6, OWASP ASVS5 and PostgreSQL18 guidance. Sources do not auto-select versions. No new tools/dependencies or product/DB/runtime changes; code remains closed until independent verdict, remediation and owner gate.
+
+> **Текущая точка D-1221 (2026-11-16): PRAGMATIC CLEAN ARCHITECTURE CANDIDATE READY; CODE NOT STARTED.** `docs/clean-rebuild-architecture.md` adds strict `config→modules→kernel`, module ownership/public commands+queries/DTO, external adapters and lightweight fitness checks while rejecting repository/UoW/event-bus/DI/plugin/CQRS bloat. Dozvo and future portal/API remain optional modules. Updated rebuild estimate33–50h, expected35–41. Next joint independent review with clean rebuild plan; no DB/runtime/live/deploy change.
+
+> **Текущая точка D-1220 (2026-11-16): CLEAN REBUILD PLAN PREPARED; CODE NOT STARTED.** `docs/clean-rebuild-plan.md` replaces in-place repair with isolated new `src/` runtime/schema and selective reuse of data/design/small reviewed helpers. Old apps cannot be imported; read-only old DB/media export to a neutral manifest, clean importer and all115/SHA/security acceptance precede local cutover. Modular platform/features/theme supports later Dozvo apps without building them now. Estimate32–48h, expected34–40; old cleanup4–7h later. Next architecture review→remediation→owner REBUILD-Q001; no DB/runtime/live/deploy change.
+
+> **Текущая точка D-1219 (2026-11-16): PAGE HISTORY TARGET IS CURRENT+ONE PREVIOUS.** Owner removed Stable/manual/drafts/history10 from the minimal architecture. Save atomically shifts current→previous; undo swaps the two. Old history remains read-only until backup, exact projection and separate destructive confirmation. Updated launch-ready estimate26–37h, expected27–34h; later schema/test cleanup5–8h. Product/DB/runtime unchanged; next SIMP-0 read-only inventory and architecture review.
+
+> **Текущая точка D-1218 (2026-11-16): MAXIMUM SIMPLIFICATION PLAN PREPARED; PRODUCT CODE NOT STARTED.** `docs/architecture-max-simplification-plan.md` replaces the superseded template-first route with a five-area Django monolith, fixed page families/editor fields, simple SiteSettings, DB+Telegram requests and retirement of whole legacy subsystems. Exact URLs/content/gallery originals, roles, versions10+Stable, security and backup/restore remain. Estimate launch-ready32–49h (expected32–40h after clean inventory), physical legacy cleanup6–10h later. Next gate: read-only SIMP-0, architecture review and owner approval SIMP-1; no live/deploy.
+
 > **Текущая точка D-1211 (2026-11-16): END-OF-SHIFT WIP CHECKPOINT AUTHORIZED.** Owner requested save+push of all permitted source progress. HOMEV4 layout is GREEN10/10; contextual media patch remains honestly unverified under D-1210 anti-loop. This checkpoint is not a release/deploy/live change. Next shift: exact21 rendered URL/slot oracle, one dev12-public, then public-nav/dev/browser if green.
 
 > **Текущая точка D-1210 (2026-11-16): HOMEV4 media verification PAUSED OWNER by anti-loop.** Minimal contextual URL patch is present, but the mixed-media test lookup repeated its calibration-error class twice; no third attempt and no false GREEN. Next continuation switches only the oracle to exact21 rendered URL/slot-ID comparison, then runs one fresh dev12-public and completes dev/browser verification if green. No live/deploy/push.
