@@ -1,6 +1,6 @@
 # REBUILD-1: baseline preflight evidence
 
-Дата: 2026-11-17. Статус: **D-1358 ephemeral verifier review P1=3; docs remediation pending; REBUILD-1 incomplete**.
+Дата: 2026-11-17. Статус: **D-1411 REBUILD-1 conditionally completed; reviewed WBS accepted; exact deferred source blocker retained; Q002 closed**.
 
 Основание: D-1251 открыл только ограниченный read-only REBUILD-1. Этот документ фиксирует статические authority-файлы, уже находящиеся в репозитории. Он не является migration snapshot, public manifest или `transfer-limits` и не разрешает product code, dependencies, migrations, target DB/media, importer, runtime, Docker, cutover, live/deploy или destructive actions.
 
@@ -161,3 +161,30 @@ Read-only inventory до mutation установил: running containers0; prese
 `RB1-MEDIA-SCOPE-001` D-1310 переиспользует DEV-10 package и `analytics-media-evidence.csv`: candidate exact301/56134441/max656254 = exact214 gallery originals +87 ordinary approved assets. Gallery package↔CSV tuples diff0, albums17/photos214, position base0/gaps0. Unused variants16/3318200 и historical HTTP404 rows2 исключены. Physical media tree не является allowlist; DB AssetFile238 не приравнивается к files301 без binding evidence. Проверены только registry/filesystem metadata; media bytes/SHA не пересчитывались. Scope требует independent review до отдельного bounded exact301 hash gate.
 
 `RB1-MEDIA-HASH-001` D-1312 одним read-only pass пересчитал bytes/SHA exact301: total301/56134441, gallery214/41176391, ordinary87/14958050, mismatch0. Новый scanner/manifest не создан, per-file values не выводились. Result требует independent review; DB AssetFile238 path/usage binding и остальные REBUILD-1 gates не закрыты.
+
+## 11. Deferred source-resolution boundary
+
+D-1405 фиксирует owner choice `RB1-MEDIA-OFFLINE-Q001=1`: offline harness и новые media-source runtime attempts прекращены. Exact unmatched eligible DB asset нельзя молча исключить, collapse или объявить resolved; его source resolution переносится в coherent REBUILD-3 migration freeze, где действуют единая source transaction, остановленные writers и повторные DB/media digests из `docs/clean-rebuild-transfer-contract.md`.
+
+Это решение не превращает point-in-time exact301 evidence в migration snapshot. D-1409 разрешает после final review принять REBUILD-1 baseline условно с одним явным `WBS-DATA` blocker/risk: future Q002 может отдельно разрешить только product-code implementation, чтобы достичь REBUILD-3 без gate deadlock. Exporter/importer execution, target DB/media, coherent freeze, transfer/cutover/live остаются закрыты собственными gates. До принятого baseline/WBS и отдельного owner approval сам REBUILD-Q002 закрыт.
+
+## 12. REBUILD-1-WBS candidate
+
+Статус: **ACCEPTED D-1411 after independent APPROVED 0/0/0 and owner acknowledgement**. Это одна компактная WBS, не task tracker/Gantt/service. Часы — оставшаяся productive work после текущего baseline; ожидание ответов владельца, production/live deploy и новый scope не включены.
+
+| Group | Exact basis | O / L / R remaining hours | Assumptions, blocker and exclusions |
+|---|---|---:|---|
+| `WBS-SCHEMA` | approved module DAG and lifecycle in `clean-rebuild-architecture.md`; 19 payload kinds; fixed accounts/pages/page_versions/media/gallery/requests/audit/settings boundaries | `4 / 5 / 7` | Owns product schema/migrations and schema-fitness checks plus their focused tests. Один Django composition root and approved dependencies; no repository/UoW/event bus. `L→R` only for one bounded migration/constraint remediation cycle within approved models; a new schema family/dependency is scope change, not risk headroom. |
+| `WBS-FAMILY` | exact115 routes, 20 transport outcomes, 19 payload kinds, approved v4 visual authority, fixed editor groups/media slots and responsive family acceptance | `9 / 11 / 15` | Owns renderer/editor product code and focused family tests. 5–6 code-owned families, server HTML/CSS and minimal JS; no page-builder/template execution/new design. `L→R` only if accepted representative-width evidence forces one family split plus one responsive remediation cycle. Real-device/Safari procurement excluded. |
+| `WBS-DATA` | DBPRE29 aggregate facts; pages112/routes115/assets238/requests0; exact301 files/56,134,441 bytes including gallery214/41,176,391; accepted DB binding/reconciliation evidence and staff/grant mappability zero-counts | `5 / 7 / 11` | Owns exporter/importer/freeze mechanics, count/SHA/current+previous verification and focused data tests. **Blocker:** one unmatched eligible source resolves only at coherent freeze under D-1405; no silent exclusion/collapse. `L→R` only for that bounded resolution plus one detected freeze-drift remediation/new disposable run. Request rows excluded until LEGAL-01 and separate enable permission; default-off request schema remains in SCHEMA. |
+| `WBS-AC` | closed architecture/content/transfer acceptance IDs, all115 outcomes, security/failure/concurrency/rollback checks and existing exact aggregate oracles | `6 / 8 / 11` | Owns only cross-group/e2e/security/concurrency/manual acceptance, result evidence and independent review; it does not re-charge focused schema/family/data tests, verification mechanics or OPS rehearsal. `L→R` only for one bounded cross-group acceptance remediation/review cycle. No new test framework, physical hard-cap backend or unsupported browser lab. |
+| `WBS-OPS` | fixed secret/config boundaries, disposable target pair, backup/restore ledger, rollback and local cutover contracts | `3 / 4 / 6` | Owns backup/restore/cutover procedure, local rehearsal setup/execution and focused checks; AC owns only final cross-group assertions/evidence. `L→R` only for one failed local restore or cutover rehearsal followed by bounded procedure/script remediation. VPS, production deploy, external backup provider, monitoring service and old-runtime destruction excluded/separately gated. |
+| **Total** | five disjoint groups; double counting forbidden | **`27 / 35 / 50`** | Risk delta is concentrated in migration-freeze source resolution, renderer-family split and acceptance remediation; it is not automatic headroom. |
+
+Cost ownership rule: implementation, focused tests and mechanics are charged to SCHEMA/FAMILY/DATA/OPS exactly once; AC charges only cross-group acceptance/evidence/review. A product fix found by AC is charged to the owning product group, while its acceptance rerun/review stays in AC. No item may be charged to both.
+
+Accepted delta uses the endpoints of the former preliminary remaining estimate `31–41h`: optimistic `27−31 = −4h`, likely `35−41 = −6h`, risk `50−41 = +9h`. Completed REBUILD-0/1 credit `6/8/10h` plus remaining `27/35/50h` gave total basis `33/43/60h` and progress `17–19%` at D-1411.
+
+D-1427 runtime evidence completed the planned REBUILD-2 skeleton: check0, drift0, migrations PASS, 26/26 tests and exact cleanup. D-1428 independent result review APPROVED P1/P2/P3=0/0/0 accepted its 4–6h phase range as `4/5/6h` across optimistic/likely/risk. Completed credit is `10/13/16h`; remaining is `23/30/44h`; total basis remains `33/43/60h`. Progress is `10/33≈30%`, `13/43≈30%`, `16/60≈27%`, reported as `27–30%`. This does not open REBUILD-3 or any runtime/target/freeze/live gate.
+
+Acceptance for this candidate reuses `EST-AC-001..006` from `clean-rebuild-plan.md` and adds no new runtime. D-1405 itself does not open Q002. Under D-1409, only final conditional baseline acceptance plus a later separate owner Q002 may authorize code implementation; exporter/importer execution, target creation and freeze remain separately closed.

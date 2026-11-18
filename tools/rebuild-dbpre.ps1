@@ -8,6 +8,11 @@ function Stop-DbpreFailure([string]$Code = 'DBPRE_FAILED') {
         'DBPRE_FAILED_READ_CONTRACT','DBPRE_FAILED_READ_OUTPUT',
         'DBPRE_FAILED_READ_CONTRACT_COUNTS','DBPRE_FAILED_READ_CONTRACT_BINDING',
         'DBPRE_FAILED_READ_CONTRACT_USAGE','DBPRE_FAILED_READ_CONTRACT_RECON',
+        'DBPRE_FAILED_MEDIA_SOURCE_SESSION','DBPRE_FAILED_MEDIA_SOURCE_DESCRIPTOR',
+        'DBPRE_FAILED_MEDIA_SOURCE_IMAGE','DBPRE_FAILED_MEDIA_SOURCE_VOLUME',
+        'DBPRE_FAILED_MEDIA_SOURCE_CREATE','DBPRE_FAILED_MEDIA_SOURCE_IDENTITY',
+        'DBPRE_FAILED_MEDIA_SOURCE_VERIFY','DBPRE_FAILED_MEDIA_SOURCE_CLEANUP',
+        'DBPRE_FAILED_MEDIA_SOURCE_UNKNOWN_ISOLATED',
         'DBPRE_FAILED_CLEANUP_ROLE','DBPRE_FAILED_CLEANUP_CONTAINER_FILES',
         'DBPRE_FAILED_CLEANUP_HOST_SECRET','DBPRE_FAILED_CLEANUP_COMPOSE',
         'DBPRE_FAILED_CLEANUP_ROLE_IDENTITY','DBPRE_FAILED_CLEANUP_ROLE_ROLE_FLAGS',
@@ -27,12 +32,15 @@ trap {
 }
 
 if ($args.Count -ne 2 -or $args[0] -cne '-ApprovedGate' -or
-    $args[1] -cnotin @('RB1-READ-Q001','RB1-MEDIA-BIND-Q001')) {
+    $args[1] -cnotin @('RB1-READ-Q001','RB1-MEDIA-BIND-Q001','RB1-MEDIA-SOURCE-Q001')) {
     Stop-DbpreFailure
 }
 $ApprovedGate = [string]$args[1]
 $mediaBinding = $ApprovedGate -ceq 'RB1-MEDIA-BIND-Q001'
+$mediaSource = $ApprovedGate -ceq 'RB1-MEDIA-SOURCE-Q001'
+$mediaScoped = $mediaBinding -or $mediaSource
 if ($mediaBinding) { $script:Contract = 'rb1-media-db-bind-v4' }
+if ($mediaSource) { $script:Contract = 'rb1-media-source-v1' }
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -76,8 +84,8 @@ $mediaBindingTables = @(
     'shared_content_sharedblock',
     'shared_content_sharedrevision'
 )
-$expectedTables = if ($mediaBinding) { $mediaBindingTables } else { $dbpreTables }
-$grantSqlTables = if ($mediaBinding) {
+$expectedTables = if ($mediaScoped) { $mediaBindingTables } else { $dbpreTables }
+$grantSqlTables = if ($mediaScoped) {
     'app.content_page,app.media_library_asset,app.media_library_assetfile,app.media_library_assetusage,app.page_versions_pagecontentstate,app.page_versions_pagerevision,app.shared_content_sharedblock,app.shared_content_sharedrevision'
 } else {
     'app.accounts_pagegrant,app.accounts_userprofile,app.auth_user,app.content_page,app.content_route,app.media_library_asset,app.media_library_assetfile,app.media_library_assetusage,app.media_library_mediafolder,app.media_library_pagemediahome,app.page_versions_pagecontentstate,app.page_versions_pagerevision,app.shared_content_sharedblock,app.shared_content_sharedrevision'
@@ -85,6 +93,10 @@ $grantSqlTables = if ($mediaBinding) {
 $allowlistSqlNames = (($expectedTables | ForEach-Object { "'$_'" }) -join ',')
 $expectedTableCount = $expectedTables.Count
 $evidencePath = Join-Path $repo 'docs/analytics-media-evidence.csv'
+$mediaSourceSqlPath = Join-Path $repo 'tools/rebuild-media-source.sql'
+$verifierCidPath = Join-Path $private 'rebuild-media-verifier.cid'
+$verifierLabel = 'nestakada.rebuild.media-source'
+$stateVolumeName = "$project-state"
 
 $composeTouched = $false
 $roleCreated = $false
@@ -93,6 +105,12 @@ $roleValidUntilMicros = $null
 $safeResult = $null
 $failureCode = 'DBPRE_FAILED_PRECHECK'
 $cleanupFailureCode = $null
+$verifierEvidence = $null
+$verifierName = $null
+$dbContainerId = $null
+$dbImageId = $null
+$stateVolumeIdentity = $null
+$unknownIsolated = $false
 
 function Assert-RegularNoLink([string]$Path) {
     $item = Get-Item -Force -LiteralPath $Path
@@ -234,7 +252,7 @@ function New-ExactSecret {
     if ((Get-Item -LiteralPath $hostSecret).Length -ne 96) { throw 'DBPRE_SECRET_FORMAT_REJECTED' }
 }
 
-function New-MediaBindingSql {
+function New-MediaBindingSql([string]$TemplateName = 'rebuild-media-binding.sql') {
     Assert-RegularNoLink $evidencePath
     $expectedDigest = '52823a26c535f6bcbb45601fccad630278d59d421ab5f87b25bb1390d28867ca'
     $bytes = [IO.File]::ReadAllBytes($evidencePath)
@@ -263,13 +281,416 @@ function New-MediaBindingSql {
         "('$($row.sha256)',$size,'$cohort')"
     }
     if ($pairs.Count -ne 301) { throw 'DBPRE_MEDIA_PAIR_COUNT_REJECTED' }
-    $sqlPath = Join-Path $repo 'tools/rebuild-media-binding.sql'
+    if ($TemplateName -cnotin @('rebuild-media-binding.sql','rebuild-media-source.sql')) {
+        throw 'DBPRE_MEDIA_SQL_TEMPLATE_REJECTED'
+    }
+    $sqlPath = Join-Path $repo "tools/$TemplateName"
     Assert-RegularNoLink $sqlPath
     $template = [IO.File]::ReadAllText($sqlPath,[Text.Encoding]::UTF8)
     if (($template.Split('__CANDIDATE_VALUES__').Count - 1) -ne 1) {
         throw 'DBPRE_MEDIA_SQL_TEMPLATE_REJECTED'
     }
     return $template.Replace('__CANDIDATE_VALUES__',($values -join ",`n    "))
+}
+
+function Assert-ExactCidFile {
+    $privateFull = [IO.Path]::GetFullPath($private)
+    $cidFull = [IO.Path]::GetFullPath($verifierCidPath)
+    if ([IO.Path]::GetDirectoryName($cidFull) -cne $privateFull) { throw 'DBPRE_CID_SCOPE_REJECTED' }
+    Assert-ExactPrivateAcl $private
+    Assert-RegularNoLink $verifierCidPath
+    $item = Get-Item -Force -LiteralPath $verifierCidPath
+    if ($item.Length -cnotin @(64,65,66)) { throw 'DBPRE_CID_SIZE_REJECTED' }
+    $acl = [System.IO.FileSystemAclExtensions]::GetAccessControl(
+        [IO.FileInfo]::new($cidFull),
+        [Security.AccessControl.AccessControlSections]'Access, Owner')
+    $currentSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+    $systemSid = 'S-1-5-18'
+    if ($acl.GetOwner([Security.Principal.SecurityIdentifier]).Value -ne $currentSid) {
+        throw 'DBPRE_CID_ACL_REJECTED'
+    }
+    $rules = @($acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]))
+    if ($rules.Count -ne 2) { throw 'DBPRE_CID_ACL_REJECTED' }
+    $seen = @{}
+    foreach ($rule in $rules) {
+        $sid = $rule.IdentityReference.Value
+        if ($seen.ContainsKey($sid) -or !$rule.IsInherited -or
+            $rule.AccessControlType -ne [Security.AccessControl.AccessControlType]::Allow -or
+            $rule.FileSystemRights -ne [Security.AccessControl.FileSystemRights]::FullControl -or
+            ($sid -ne $currentSid -and $sid -ne $systemSid)) {
+            throw 'DBPRE_CID_ACL_REJECTED'
+        }
+        $seen[$sid] = $true
+    }
+    if (!$seen.ContainsKey($currentSid) -or !$seen.ContainsKey($systemSid)) {
+        throw 'DBPRE_CID_ACL_REJECTED'
+    }
+    $bytes = [IO.File]::ReadAllBytes($cidFull)
+    if ($bytes.Length -notin @(64,65,66)) { throw 'DBPRE_CID_SIZE_REJECTED' }
+    if (($bytes | Where-Object { $_ -gt 127 }).Count -ne 0) { throw 'DBPRE_CID_FORMAT_REJECTED' }
+    if (($bytes.Length -eq 65 -and $bytes[64] -ne 10) -or
+        ($bytes.Length -eq 66 -and ($bytes[64] -ne 13 -or $bytes[65] -ne 10))) {
+        throw 'DBPRE_CID_FORMAT_REJECTED'
+    }
+    $id = [Text.Encoding]::ASCII.GetString($bytes,0,64)
+    if ($id -cnotmatch '^[0-9a-f]{64}$') { throw 'DBPRE_CID_FORMAT_REJECTED' }
+    return $id
+}
+
+function Test-ApprovedMediaKey([string]$Key) {
+    if ($Key.Length -gt 1024 -or
+        $Key -cnotmatch '^img/[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$') {
+        return $false
+    }
+    $device = '^(?i:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)'
+    foreach ($segment in $Key.Split('/')[1..($Key.Split('/').Count - 1)]) {
+        if ($segment.EndsWith('.',[StringComparison]::Ordinal) -or $segment -match $device) { return $false }
+    }
+    return $true
+}
+
+function Test-ExactVerifierIdentity(
+    [string]$Id,[string]$Name,[string]$Evidence,[string]$ImageId,[string]$ExpectedCode) {
+    $raw = @(Invoke-Docker @('inspect',$Id)) -join "`n"
+    $info = @($raw | ConvertFrom-Json)
+    if ($info.Count -ne 1) { throw 'DBPRE_VERIFIER_INSPECT_REJECTED' }
+    $c = $info[0]
+    $security = @($c.HostConfig.SecurityOpt)
+    $capDrop = @($c.HostConfig.CapDrop)
+    $capAdd = @()
+    if ($null -ne $c.HostConfig.CapAdd) { $capAdd = @($c.HostConfig.CapAdd) }
+    $mounts = @($c.Mounts)
+    $entrypoint = @($c.Config.Entrypoint)
+    $cmd = @($c.Config.Cmd)
+    if ($c.Id -cne $Id -or $c.Name -cne "/$Name" -or $c.Image -cne $ImageId -or
+        $c.Config.Labels.$verifierLabel -cne $Evidence -or
+        $c.Config.User -cne '10001:10001' -or
+        $c.HostConfig.NetworkMode -cne 'none' -or !$c.HostConfig.ReadonlyRootfs -or
+        $c.HostConfig.LogConfig.Type -cne 'none' -or $c.HostConfig.Memory -ne 134217728 -or
+        $c.HostConfig.MemorySwap -ne 134217728 -or
+        $c.HostConfig.NanoCpus -ne 250000000 -or $c.HostConfig.PidsLimit -ne 16 -or
+        $capDrop.Count -ne 1 -or $capDrop[0] -cne 'ALL' -or
+        $capAdd.Count -ne 0 -or $c.HostConfig.Privileged -or $c.HostConfig.AutoRemove -or
+        $c.HostConfig.RestartPolicy.Name -cne 'no' -or
+        $security.Count -ne 1 -or $security[0] -cne 'no-new-privileges' -or
+        $entrypoint.Count -ne 1 -or $entrypoint[0] -cne '/usr/local/bin/python' -or
+        $cmd.Count -ne 4 -or $cmd[0] -cne '-I' -or $cmd[1] -cne '-S' -or
+        $cmd[2] -cne '-c' -or $cmd[3] -cne $ExpectedCode -or
+        $mounts.Count -ne 1 -or $mounts[0].Type -cne 'volume' -or
+        $mounts[0].Name -cne $stateVolumeName -or $mounts[0].Destination -cne '/state' -or $mounts[0].RW) {
+        throw 'DBPRE_VERIFIER_IDENTITY_REJECTED'
+    }
+    $tmpfs = $c.HostConfig.Tmpfs.'/tmp'
+    if ($tmpfs -cne 'rw,nosuid,nodev,noexec,size=16m,uid=10001,gid=10001,mode=1777') {
+        throw 'DBPRE_VERIFIER_TMPFS_REJECTED'
+    }
+}
+
+function Test-ExactVerifierCleanupIdentity(
+    [string]$Id,[string]$Name,[string]$Evidence,[string]$ImageId) {
+    if ($Id -cnotmatch '^[0-9a-f]{64}$') { throw 'DBPRE_VERIFIER_CLEANUP_ID_REJECTED' }
+    $raw = @(Invoke-Docker @('inspect',$Id)) -join "`n"
+    $info = @($raw | ConvertFrom-Json)
+    if ($info.Count -ne 1 -or $info[0].Id -cne $Id -or $info[0].Name -cne "/$Name" -or
+        $info[0].Config.Labels.$verifierLabel -cne $Evidence -or $info[0].Image -cne $ImageId) {
+        throw 'DBPRE_VERIFIER_CLEANUP_IDENTITY_REJECTED'
+    }
+}
+
+function Assert-DbOnlyScope {
+    if ($dbContainerId -cnotmatch '^[0-9a-f]{64}$' -or $dbImageId -cnotmatch '^sha256:[0-9a-f]{64}$') {
+        throw 'DBPRE_DATABASE_IDENTITY_REJECTED'
+    }
+    $ids = @(Invoke-Docker @('ps','-aq','--no-trunc','--filter',"label=com.docker.compose.project=$project"))
+    if ($ids.Count -ne 1 -or $ids[0] -cne $dbContainerId) { throw 'DBPRE_DATABASE_IDENTITY_REJECTED' }
+    $db = @((@(Invoke-Docker @('inspect',$dbContainerId)) -join "`n") | ConvertFrom-Json)
+    if ($db.Count -ne 1 -or $db[0].Id -cne $dbContainerId -or $db[0].Image -cne $dbImageId -or
+        $db[0].Name -cne "/$container" -or !$db[0].State.Running -or
+        $db[0].Config.Labels.'com.docker.compose.project' -cne $project -or
+        $db[0].Config.Labels.'com.docker.compose.service' -cne 'db' -or
+        $db[0].Config.Labels.'com.docker.compose.oneoff' -cne 'False') {
+        throw 'DBPRE_DATABASE_IDENTITY_REJECTED'
+    }
+}
+
+function Invoke-BoundedProcess([string]$File,[string[]]$Arguments,[string]$Payload,[int]$TimeoutMs) {
+    $psi = [Diagnostics.ProcessStartInfo]::new()
+    $psi.FileName = $File
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.StandardInputEncoding = [Text.UTF8Encoding]::new($false)
+    foreach ($argument in $Arguments) { [void]$psi.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $psi
+    $started = $false
+    try {
+        $started = $process.Start()
+        if (!$started) { throw 'DBPRE_PROCESS_START_FAILED' }
+        $process.StandardInput.Write($Payload)
+        $process.StandardInput.Close()
+        $stdout = [IO.MemoryStream]::new()
+        $stderr = [IO.MemoryStream]::new()
+        $outBuffer = New-Object byte[] 257
+        $errBuffer = New-Object byte[] 257
+        $outTask = $process.StandardOutput.BaseStream.ReadAsync($outBuffer,0,$outBuffer.Length)
+        $errTask = $process.StandardError.BaseStream.ReadAsync($errBuffer,0,$errBuffer.Length)
+        $outDone = $false
+        $errDone = $false
+        $watch = [Diagnostics.Stopwatch]::StartNew()
+        while (!$outDone -or !$errDone -or !$process.HasExited) {
+            if ($watch.ElapsedMilliseconds -gt $TimeoutMs) { throw 'DBPRE_PROCESS_TIMEOUT' }
+            if (!$outDone -and $outTask.IsCompleted) {
+                $count = $outTask.GetAwaiter().GetResult()
+                if ($count -eq 0) { $outDone = $true }
+                else {
+                    if ($stdout.Length + $count -gt 256) { throw 'DBPRE_PROCESS_OUTPUT_CAP' }
+                    $stdout.Write($outBuffer,0,$count)
+                    $outBuffer = New-Object byte[] 257
+                    $outTask = $process.StandardOutput.BaseStream.ReadAsync($outBuffer,0,$outBuffer.Length)
+                }
+            }
+            if (!$errDone -and $errTask.IsCompleted) {
+                $count = $errTask.GetAwaiter().GetResult()
+                if ($count -eq 0) { $errDone = $true }
+                else {
+                    if ($stderr.Length + $count -gt 256) { throw 'DBPRE_PROCESS_OUTPUT_CAP' }
+                    $stderr.Write($errBuffer,0,$count)
+                    $errBuffer = New-Object byte[] 257
+                    $errTask = $process.StandardError.BaseStream.ReadAsync($errBuffer,0,$errBuffer.Length)
+                }
+            }
+            if (!$outDone -or !$errDone -or !$process.HasExited) { Start-Sleep -Milliseconds 2 }
+        }
+        $watch.Stop()
+        $utf8 = [Text.UTF8Encoding]::new($false,$true)
+        $stdoutText = $utf8.GetString($stdout.ToArray())
+        $stderrText = $utf8.GetString($stderr.ToArray())
+        return [ordered]@{ ExitCode=$process.ExitCode; Stdout=$stdoutText; Stderr=$stderrText }
+    } finally {
+        try { if ($started -and !$process.HasExited) { $process.Kill($true) } } catch { }
+        $process.Dispose()
+    }
+}
+
+function Invoke-MediaVerifier([string]$DescriptorJson,[string]$ImageId) {
+    if (Test-Path -LiteralPath $verifierCidPath) { throw 'DBPRE_CID_PREEXISTS' }
+    Assert-ExactPrivateAcl $private
+    $evidence = $verifierEvidence
+    $name = $verifierName
+    if ($evidence -cnotmatch '^[0-9a-f]{32}$' -or $name -cne "nestakada-media-source-$evidence") {
+        throw 'DBPRE_VERIFIER_IDENTITY_REJECTED'
+    }
+    $python = @'
+import hashlib,json,os,re,stat,sys
+fds=[]
+try:
+    raw=sys.stdin.buffer.read(2049)
+    if not raw or len(raw)>2048: raise ValueError()
+    obj=json.loads(raw.decode('utf-8','strict'))
+    if type(obj) is not dict or set(obj)!={'key','sha256','byteSize'}: raise ValueError()
+    key=obj['key']; digest=obj['sha256']; size=obj['byteSize']
+    if type(key) is not str or type(digest) is not str or type(size) is not int: raise ValueError()
+    if len(key)>1024 or not re.fullmatch(r'img/[A-Za-z0-9][A-Za-z0-9._-]*(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*',key): raise ValueError()
+    for segment in key.split('/')[1:]:
+        if segment.endswith('.') or re.match(r'(?i)^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)',segment): raise ValueError()
+    if not re.fullmatch(r'[0-9a-f]{64}',digest) or size<0 or size>9223372036854775807: raise ValueError()
+    flags=os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW
+    fd=os.open('/state/media',flags); fds.append(fd)
+    parts=key.split('/')[1:]
+    for part in parts[:-1]:
+        fd=os.open(part,flags,dir_fd=fd); fds.append(fd)
+    final=os.open(parts[-1],os.O_RDONLY|os.O_NOFOLLOW,dir_fd=fd); fds.append(final)
+    before=os.fstat(final)
+    if not stat.S_ISREG(before.st_mode) or before.st_size!=size: raise ValueError()
+    h=hashlib.sha256()
+    while True:
+        block=os.read(final,1048576)
+        if not block: break
+        h.update(block)
+    after=os.fstat(final)
+    if (before.st_dev,before.st_ino,before.st_size)!=(after.st_dev,after.st_ino,after.st_size): raise ValueError()
+    if h.hexdigest()!=digest: raise ValueError()
+    os.write(1,b'RB1SRC_OK\n')
+except BaseException:
+    os.write(1,b'RB1SRC_FAIL\n')
+    sys.exit(1)
+finally:
+    for fd in reversed(fds):
+        try: os.close(fd)
+        except OSError: pass
+'@
+    $created = $false
+    $startAttempted = $false
+    $knownFailureClean = $false
+    $cleanIdentity = $false
+    $id = $null
+    try {
+        Assert-DbOnlyScope
+        $nameCollisions = @(Invoke-Docker @('ps','-aq','--filter',"name=^/$name$"))
+        $labelCollisions = @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel"))
+        if ($nameCollisions.Count -ne 0 -or $labelCollisions.Count -ne 0) { throw 'DBPRE_VERIFIER_COLLISION' }
+        Invoke-Docker @('create','--cidfile',$verifierCidPath,'--name',$name,
+            '--label',"$verifierLabel=$evidence",'--network','none','--read-only','--log-driver','none',
+            '--user','10001:10001','--cap-drop','ALL','--security-opt','no-new-privileges',
+            '--memory','128m','--memory-swap','128m','--cpus','0.25','--pids-limit','16',
+            '--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=16m,uid=10001,gid=10001,mode=1777',
+            '--mount',"type=volume,source=$stateVolumeName,target=/state,readonly",
+            '--entrypoint','/usr/local/bin/python',$ImageId,'-I','-S','-c',$python) | Out-Null
+        $created = $true
+        $id = Assert-ExactCidFile
+        Test-ExactVerifierIdentity $id $name $evidence $ImageId $python
+        $cleanIdentity = $true
+        $startAttempted = $true
+        $docker = (Get-Command docker.exe -CommandType Application -ErrorAction Stop).Source
+        $result = Invoke-BoundedProcess $docker @('start','-a','-i',$id) $DescriptorJson 15000
+        if ($result.ExitCode -ne 0 -or $result.Stdout -cne "RB1SRC_OK`n" -or $result.Stderr -cne '') {
+            Test-ExactVerifierIdentity $id $name $evidence $ImageId $python
+            Invoke-Docker @('rm',$id) | Out-Null
+            $created = $false
+            if (@(Invoke-Docker @('ps','-aq','--filter',"id=$id")).Count -ne 0 -or
+                @(Invoke-Docker @('ps','-aq','--filter',"name=^/$name$")).Count -ne 0 -or
+                @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel=$evidence")).Count -ne 0) {
+                throw 'DBPRE_VERIFIER_ABSENCE_REJECTED'
+            }
+            [void](Assert-ExactCidFile)
+            Remove-Item -LiteralPath $verifierCidPath -Force
+            $knownFailureClean = $true
+            throw 'DBPRE_VERIFIER_RESULT_REJECTED'
+        }
+        Test-ExactVerifierIdentity $id $name $evidence $ImageId $python
+        Invoke-Docker @('rm',$id) | Out-Null
+        $created = $false
+        if (@(Invoke-Docker @('ps','-aq','--filter',"id=$id")).Count -ne 0 -or
+            @(Invoke-Docker @('ps','-aq','--filter',"name=^/$name$")).Count -ne 0 -or
+            @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel=$evidence")).Count -ne 0) {
+            throw 'DBPRE_VERIFIER_ABSENCE_REJECTED'
+        }
+        [void](Assert-ExactCidFile)
+        Remove-Item -LiteralPath $verifierCidPath -Force
+        return $true
+    } catch {
+        $originalError = $_.Exception.Message
+        if ($startAttempted -and !$knownFailureClean) { throw 'DBPRE_MEDIA_SOURCE_UNKNOWN_ISOLATED' }
+        if ($created) {
+            if (!$cleanIdentity -or !$id) {
+                if (!$id) { throw 'DBPRE_VERIFIER_CLEANUP_REQUIRED' }
+                try {
+                    $validatedId = Assert-ExactCidFile
+                    if ($validatedId -cne $id) { throw 'DBPRE_VERIFIER_CLEANUP_ID_REJECTED' }
+                    Test-ExactVerifierCleanupIdentity $id $name $evidence $ImageId
+                    Invoke-Docker @('rm','-f',$id) | Out-Null
+                    if (@(Invoke-Docker @('ps','-aq','--filter',"id=$id")).Count -ne 0 -or
+                        @(Invoke-Docker @('ps','-aq','--filter',"name=^/$name$")).Count -ne 0 -or
+                        @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel=$evidence")).Count -ne 0) {
+                        throw 'DBPRE_VERIFIER_ABSENCE_REJECTED'
+                    }
+                    [void](Assert-ExactCidFile)
+                    Remove-Item -LiteralPath $verifierCidPath -Force
+                    $created = $false
+                } catch { throw 'DBPRE_VERIFIER_CLEANUP_REQUIRED' }
+                throw $originalError
+            }
+            try {
+                $validatedId = Assert-ExactCidFile
+                if ($validatedId -cne $id) { throw 'DBPRE_VERIFIER_CLEANUP_ID_REJECTED' }
+                Test-ExactVerifierCleanupIdentity $id $name $evidence $ImageId
+                Invoke-Docker @('rm','-f',$id) | Out-Null
+                if (@(Invoke-Docker @('ps','-aq','--filter',"id=$id")).Count -ne 0 -or
+                    @(Invoke-Docker @('ps','-aq','--filter',"name=^/$name$")).Count -ne 0 -or
+                    @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel=$evidence")).Count -ne 0) {
+                    throw 'DBPRE_VERIFIER_ABSENCE_REJECTED'
+                }
+                [void](Assert-ExactCidFile)
+                Remove-Item -LiteralPath $verifierCidPath -Force
+                $created = $false
+            } catch {
+                throw 'DBPRE_VERIFIER_CLEANUP_REQUIRED'
+            }
+        } elseif (Test-Path -LiteralPath $verifierCidPath) {
+            throw 'DBPRE_VERIFIER_CLEANUP_REQUIRED'
+        }
+        throw
+    }
+}
+
+function Invoke-MediaSourceSession([string]$Sql,[string]$ImageId) {
+    $arguments = @('exec','-i','-e',"PGPASSFILE=$containerPassfile",
+        '-e','PGSSLMODE=verify-full','-e','PGSSLROOTCERT=/run/secrets/database-ca',
+        '-e','PGCONNECT_TIMEOUT=5',$container,'psql','-X','-qAt','-v','ON_ERROR_STOP=1',
+        '-h','db','-U',$role,'-d',$database)
+    $psi = [Diagnostics.ProcessStartInfo]::new()
+    $psi.FileName = (Get-Command docker.exe -CommandType Application -ErrorAction Stop).Source
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.StandardInputEncoding = [Text.UTF8Encoding]::new($false)
+    foreach ($argument in $arguments) { [void]$psi.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new(); $process.StartInfo = $psi
+    $started = $false
+    $bodyFailed = $false
+    try {
+        $started = $process.Start()
+        if (!$started) { throw 'DBPRE_MEDIA_SESSION_START_REJECTED' }
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        $process.StandardInput.WriteLine($Sql)
+        $process.StandardInput.Flush()
+        $firstTask = $process.StandardOutput.ReadLineAsync()
+        if (!$firstTask.Wait(5000)) { throw 'DBPRE_MEDIA_SESSION_TIMEOUT' }
+        $first = $firstTask.Result
+        $secondTask = $process.StandardOutput.ReadLineAsync()
+        if (!$secondTask.Wait(5000)) { throw 'DBPRE_MEDIA_SESSION_TIMEOUT' }
+        $second = $secondTask.Result
+        if ($null -eq $first -or $null -eq $second -or $second -cne 'RB1SRC_READY' -or
+            $first -cnotmatch '^RB1SRC\|([A-Za-z0-9+/]+={0,2})\|([0-9a-f]{64})\|([0-9]+)\|1\|2\|1$') {
+            throw 'DBPRE_MEDIA_DESCRIPTOR_REJECTED'
+        }
+        $encodedKey = $Matches[1]
+        $descriptorSha = $Matches[2]
+        $descriptorSize = $Matches[3]
+        $keyBytes = [Convert]::FromBase64String($encodedKey)
+        $key = [Text.UTF8Encoding]::new($false,$true).GetString($keyBytes)
+        if (!(Test-ApprovedMediaKey $key)) {
+            throw 'DBPRE_MEDIA_DESCRIPTOR_REJECTED'
+        }
+        [uint64]$byteSize = 0
+        if (![uint64]::TryParse($descriptorSize,[ref]$byteSize) -or $byteSize -gt [int64]::MaxValue) {
+            throw 'DBPRE_MEDIA_DESCRIPTOR_REJECTED'
+        }
+        $descriptor = [ordered]@{ key=$key; sha256=$descriptorSha; byteSize=$byteSize }
+        $descriptorJson = $descriptor | ConvertTo-Json -Compress
+        if ([Text.Encoding]::UTF8.GetByteCount($descriptorJson) -gt 2048) { throw 'DBPRE_MEDIA_DESCRIPTOR_REJECTED' }
+        [void](Invoke-MediaVerifier $descriptorJson $ImageId)
+        return [ordered]@{ unmatchedDescriptors=1; resolvedFiles=1; eligibleUsages=2; excludedUsages=1 }
+    } catch {
+        $bodyFailed = $true
+        throw
+    } finally {
+        $sessionCleanupFailed = $false
+        if ($started) {
+            try {
+                $remainingTask = $process.StandardOutput.ReadToEndAsync()
+                $process.StandardInput.WriteLine('ROLLBACK;')
+                $process.StandardInput.WriteLine('\q')
+                $process.StandardInput.Close()
+                if (!$process.WaitForExit(5000)) {
+                    try { $process.Kill($true) } catch { }
+                    $sessionCleanupFailed = $true
+                }
+                $remaining = $remainingTask.GetAwaiter().GetResult()
+                $stderr = $stderrTask.GetAwaiter().GetResult()
+                if ($process.ExitCode -ne 0 -or $remaining -cne '' -or $stderr -cne '' -or
+                    [Text.Encoding]::UTF8.GetByteCount($remaining) -gt 256 -or
+                    [Text.Encoding]::UTF8.GetByteCount($stderr) -gt 256) {
+                    $sessionCleanupFailed = $true
+                }
+            } catch { $sessionCleanupFailed = $true }
+        }
+        $process.Dispose()
+        if ($sessionCleanupFailed -and !$bodyFailed) { throw 'DBPRE_MEDIA_SESSION_CLEANUP_REJECTED' }
+    }
 }
 
 $createSql = @'
@@ -442,10 +863,11 @@ ROLLBACK;
 '@
 
 try {
-    if ($ApprovedGate -cnotin @('RB1-READ-Q001','RB1-MEDIA-BIND-Q001')) { throw 'DBPRE_GATE_REJECTED' }
+    if ($ApprovedGate -cnotin @('RB1-READ-Q001','RB1-MEDIA-BIND-Q001','RB1-MEDIA-SOURCE-Q001')) { throw 'DBPRE_GATE_REJECTED' }
     if (!(Get-Command docker.exe -CommandType Application -ErrorAction SilentlyContinue)) { throw 'DBPRE_DOCKER_UNAVAILABLE' }
     $requiredPaths = @($work,$private,$manifestPath,$envFile,$composeFile)
     if ($mediaBinding) { $requiredPaths += @($evidencePath,(Join-Path $repo 'tools/rebuild-media-binding.sql')) }
+    if ($mediaSource) { $requiredPaths += @($evidencePath,$mediaSourceSqlPath) }
     foreach ($path in $requiredPaths) {
         if (!(Test-Path -LiteralPath $path)) { throw 'DBPRE_SCOPE_MISSING' }
         $item = Get-Item -Force -LiteralPath $path
@@ -459,15 +881,46 @@ try {
         $manifest.containers.db -ne $container) { throw 'DBPRE_MANIFEST_REJECTED' }
     if ($expectedTables.Count -ne $expectedTableCount -or
         ($expectedTables | Sort-Object -Unique).Count -ne $expectedTableCount -or
-        $expectedTableCount -ne $(if ($mediaBinding) { 8 } else { 14 })) {
+        $expectedTableCount -ne $(if ($mediaScoped) { 8 } else { 14 })) {
         throw 'DBPRE_ALLOWLIST_REJECTED'
     }
     if ($mediaBinding) { $aggregateSql = New-MediaBindingSql }
+    if ($mediaSource) { $aggregateSql = New-MediaBindingSql 'rebuild-media-source.sql' }
     $projectContainers = @(Invoke-Docker @('ps','-aq','--filter',"label=com.docker.compose.project=$project"))
     if ($projectContainers.Count -ne 0) { throw 'DBPRE_PROJECT_NOT_STOPPED' }
     $volume = (Invoke-Docker @('volume','inspect',"$project-dbdata") | ConvertFrom-Json)[0]
     if ($volume.Name -ne "$project-dbdata" -or $volume.Labels.'com.docker.compose.project' -ne $project) {
         throw 'DBPRE_VOLUME_REJECTED'
+    }
+    if ($mediaSource) {
+        $failureCode = 'DBPRE_FAILED_MEDIA_SOURCE_VOLUME'
+        $stateVolume = @((@(Invoke-Docker @('volume','inspect',$stateVolumeName)) -join "`n") | ConvertFrom-Json)
+        if ($stateVolume.Count -ne 1 -or $stateVolume[0].Name -cne $stateVolumeName -or
+            $stateVolume[0].Driver -cne 'local' -or $stateVolume[0].Scope -cne 'local' -or
+            $stateVolume[0].Labels.'com.docker.compose.project' -cne $project -or
+            $stateVolume[0].Labels.'com.docker.compose.volume' -cne 'state') {
+            throw 'DBPRE_STATE_VOLUME_REJECTED'
+        }
+        $stateVolumeIdentity = '{0}|{1}|{2}|{3}|{4}|{5}' -f
+            $stateVolume[0].Name,$stateVolume[0].Driver,$stateVolume[0].Scope,$stateVolume[0].Mountpoint,
+            $stateVolume[0].Labels.'com.docker.compose.project',$stateVolume[0].Labels.'com.docker.compose.volume'
+        $failureCode = 'DBPRE_FAILED_MEDIA_SOURCE_IMAGE'
+        $imageId = [string]$manifest.selectedAppImage
+        if ($imageId -cnotmatch '^sha256:[0-9a-f]{64}$') { throw 'DBPRE_IMAGE_ID_REJECTED' }
+        $image = @((@(Invoke-Docker @('image','inspect',$imageId)) -join "`n") | ConvertFrom-Json)
+        if ($image.Count -ne 1 -or $image[0].Id -cne $imageId -or $image[0].Os -cne 'linux' -or
+            $image[0].Architecture -cne 'amd64' -or $image[0].Config.User -cne '10001:10001') {
+            throw 'DBPRE_IMAGE_REJECTED'
+        }
+        [Guid]$manifestRunId = [Guid]::Empty
+        if (![Guid]::TryParseExact([string]$manifest.runId,'D',[ref]$manifestRunId) -or
+            $manifestRunId -eq [Guid]::Empty) { throw 'DBPRE_MANIFEST_RUN_ID_REJECTED' }
+        $verifierEvidence = $manifestRunId.ToString('N')
+        $verifierName = "nestakada-media-source-$verifierEvidence"
+        if (@(Invoke-Docker @('ps','-aq','--filter',"name=^/$verifierName$")).Count -ne 0 -or
+            @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel")).Count -ne 0) {
+            throw 'DBPRE_VERIFIER_COLLISION'
+        }
     }
     if (Test-Path -LiteralPath $hostSecret) { throw 'DBPRE_SECRET_PREEXISTS' }
 
@@ -483,6 +936,20 @@ try {
     if (!$ready) { throw 'DBPRE_DATABASE_NOT_READY' }
     $runningNames = @(Invoke-Docker @('ps','--filter',"label=com.docker.compose.project=$project",'--format','{{.Names}}'))
     if ($runningNames.Count -ne 1 -or $runningNames[0] -ne $container) { throw 'DBPRE_SERVICE_SCOPE_REJECTED' }
+    if ($mediaSource) {
+        $dbInspect = @((@(Invoke-Docker @('inspect',$container)) -join "`n") | ConvertFrom-Json)
+        if ($dbInspect.Count -ne 1 -or $dbInspect[0].Name -cne "/$container" -or
+            $dbInspect[0].State.Running -ne $true -or
+            $dbInspect[0].Config.Labels.'com.docker.compose.project' -cne $project -or
+            $dbInspect[0].Config.Labels.'com.docker.compose.service' -cne 'db' -or
+            $dbInspect[0].Config.Labels.'com.docker.compose.oneoff' -cne 'False' -or
+            @($dbInspect[0].Config.Labels.PSObject.Properties.Name | Where-Object { $_ -ceq $verifierLabel }).Count -ne 0) {
+            throw 'DBPRE_DATABASE_IDENTITY_REJECTED'
+        }
+        $dbContainerId = [string]$dbInspect[0].Id
+        $dbImageId = [string]$dbInspect[0].Image
+        Assert-DbOnlyScope
+    }
 
     $failureCode = 'DBPRE_FAILED_ROLE'
     New-ExactSecret
@@ -502,11 +969,28 @@ try {
     Invoke-Docker @('exec',$container,'sh','-c',
         "umask 077; p=`$(cat '$containerSecret'); printf 'db:5432:${database}:${role}:%s\n' `"`$p`" > '$containerPassfile'; unset p") | Out-Null
 
-    $failureCode = if ($mediaBinding) { 'DBPRE_FAILED_READ_SQL' } else { 'DBPRE_FAILED_READ' }
+    $failureCode = if ($mediaBinding) { 'DBPRE_FAILED_READ_SQL' } elseif ($mediaSource) { 'DBPRE_FAILED_MEDIA_SOURCE_SESSION' } else { 'DBPRE_FAILED_READ' }
     $watch = [Diagnostics.Stopwatch]::StartNew()
-    $lines = @(Invoke-ReaderSql $aggregateSql | Where-Object { $_ })
+    if ($mediaSource) {
+        $sourceResult = Invoke-MediaSourceSession $aggregateSql $imageId
+    } else {
+        $lines = @(Invoke-ReaderSql $aggregateSql | Where-Object { $_ })
+    }
     $watch.Stop()
     if ($watch.Elapsed.TotalSeconds -gt 30) { throw 'DBPRE_WHOLE_TIMEOUT' }
+    if ($mediaSource) {
+        $safeResult = [ordered]@{
+            contract=$script:Contract; status='RESOLVED'; source='foundation-dev';
+            elapsedMs=[int][Math]::Ceiling($watch.Elapsed.TotalMilliseconds);
+            unmatchedDescriptors=$sourceResult.unmatchedDescriptors;
+            resolvedFiles=$sourceResult.resolvedFiles;
+            eligibleUsages=$sourceResult.eligibleUsages;
+            excludedUsages=$sourceResult.excludedUsages
+        }
+        $json = $safeResult | ConvertTo-Json -Depth 3 -Compress
+        if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 1024) { throw 'DBPRE_OUTPUT_CAP_REJECTED' }
+        $failureCode = $null
+    } else {
     if ($mediaBinding) { $failureCode = 'DBPRE_FAILED_READ_ENVELOPE' }
     $facts = [ordered]@{}
     foreach ($line in $lines) {
@@ -621,10 +1105,24 @@ try {
             facts=$facts
         }
     }
-    $json = $safeResult | ConvertTo-Json -Depth 4 -Compress
-    if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 65536) { throw 'DBPRE_OUTPUT_CAP_REJECTED' }
-    $failureCode = $null
+        $json = $safeResult | ConvertTo-Json -Depth 4 -Compress
+        if ([Text.Encoding]::UTF8.GetByteCount($json) -gt 65536) { throw 'DBPRE_OUTPUT_CAP_REJECTED' }
+        $failureCode = $null
+    }
 } catch {
+    if ($mediaSource) {
+        if ($_.Exception.Message -ceq 'DBPRE_MEDIA_SOURCE_UNKNOWN_ISOLATED') { $unknownIsolated = $true }
+        $failureCode = switch -Regex ($_.Exception.Message) {
+            '^DBPRE_MEDIA_SOURCE_UNKNOWN_ISOLATED$' { 'DBPRE_FAILED_MEDIA_SOURCE_UNKNOWN_ISOLATED'; break }
+            '^DBPRE_VERIFIER_CLEANUP_REQUIRED$' { 'DBPRE_FAILED_MEDIA_SOURCE_CLEANUP'; break }
+            'CID|VERIFIER_(?:COLLISION|INSPECT|IDENTITY|TMPFS|ABSENCE)' { 'DBPRE_FAILED_MEDIA_SOURCE_IDENTITY'; break }
+            'IMAGE' { 'DBPRE_FAILED_MEDIA_SOURCE_IMAGE'; break }
+            'VOLUME' { 'DBPRE_FAILED_MEDIA_SOURCE_VOLUME'; break }
+            'DESCRIPTOR' { 'DBPRE_FAILED_MEDIA_SOURCE_DESCRIPTOR'; break }
+            'VERIFIER|PROCESS' { 'DBPRE_FAILED_MEDIA_SOURCE_VERIFY'; break }
+            default { $failureCode }
+        }
+    }
 } finally {
     if ($roleCreated -and $null -ne $roleOid -and $null -ne $roleValidUntilMicros) {
         $cleanupSql = @"
@@ -769,6 +1267,28 @@ END `$`$;
         try { Invoke-Compose @('down','--timeout','10') | Out-Null } catch {
             if ($null -eq $cleanupFailureCode) { $cleanupFailureCode = 'DBPRE_FAILED_CLEANUP_COMPOSE' }
         }
+    }
+}
+
+if ($mediaSource -and !$unknownIsolated -and $stateVolumeIdentity) {
+    try {
+        $nameResidual = @()
+        if ($verifierName) {
+            $nameResidual = @(Invoke-Docker @('ps','-aq','--filter',"name=^/$verifierName$"))
+        }
+        if (@(Invoke-Docker @('ps','-aq','--filter',"label=com.docker.compose.project=$project")).Count -ne 0 -or
+            $nameResidual.Count -ne 0 -or @(Invoke-Docker @('ps','-aq','--filter',"label=$verifierLabel")).Count -ne 0 -or
+            (Test-Path -LiteralPath $verifierCidPath)) {
+            throw 'DBPRE_MEDIA_FINAL_SCOPE_REJECTED'
+        }
+        $finalVolume = @((@(Invoke-Docker @('volume','inspect',$stateVolumeName)) -join "`n") | ConvertFrom-Json)
+        if ($finalVolume.Count -ne 1) { throw 'DBPRE_MEDIA_FINAL_VOLUME_REJECTED' }
+        $finalVolumeIdentity = '{0}|{1}|{2}|{3}|{4}|{5}' -f
+            $finalVolume[0].Name,$finalVolume[0].Driver,$finalVolume[0].Scope,$finalVolume[0].Mountpoint,
+            $finalVolume[0].Labels.'com.docker.compose.project',$finalVolume[0].Labels.'com.docker.compose.volume'
+        if ($finalVolumeIdentity -cne $stateVolumeIdentity) { throw 'DBPRE_MEDIA_FINAL_VOLUME_REJECTED' }
+    } catch {
+        $cleanupFailureCode = 'DBPRE_FAILED_MEDIA_SOURCE_CLEANUP'
     }
 }
 

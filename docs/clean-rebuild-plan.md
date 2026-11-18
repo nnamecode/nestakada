@@ -1,6 +1,6 @@
 # План чистой пересборки с выборочным переносом
 
-Дата: 2026-11-17. Статус: **REBUILD-1 D-1358 ephemeral verifier review P1=3; docs remediation pending; REBUILD-Q002/product closed**.
+Дата: 2026-11-17. Статус: **REBUILD-2 COMPLETE D-1428; result review APPROVED 0/0/0; progress `27–30%`, remaining `23/30/44h`; one source blocker remains deferred to REBUILD-3 freeze; REBUILD-3 requires a separate scope/acceptance gate**.
 
 Основание: D-1217 остановил template-first ремонт; D-1218/D-1219 сократили систему до простого Django-сайта и `current + previous`; D-1220 выбрал clean rebuild, D-1221 — прагматичные module boundaries, D-1222 — обязательный professional review, D-1223 — только Estakada без multi-site/Dozvo-кода, D-1224 — исходные findings. D-1225–D-1249 были remediation-кандидатами и закрыты независимым CRAR-REPEAT-003; этот verdict не заменяет согласование владельца и не разрешает реализацию. Новый runtime переносит только проверенные данные, дизайн, маленькие изолированные функции и полезные пользовательские проверки.
 
@@ -247,6 +247,7 @@ Acceptance:
 
 - `REBUILD-Q001`: **APPROVED D-1251** — владелец утвердил подход и список функций MVP; разрешены только REBUILD-0/1 read-only и review.
 - `REBUILD-Q002`: после APPROVED плана и baseline владелец разрешает реализацию нового `src/`.
+- D-1409 уточняет только смысл этого gate при D-1405: accepted baseline может содержать один explicit deferred unmatched-source blocker, а Q002 при отдельном owner approval разрешает только product-code implementation. Exporter/importer execution, target DB/media, coherent migration freeze, transfer и cutover требуют последующих отдельных gates; Q002 их не наследует.
 - `REBUILD-Q003`: отдельное разрешение local cutover после полной приёмки; старый runtime сохраняется.
 - `REBUILD-Q004`: отдельное destructive confirmation точных старых schema/files/tests после backup и rollback window.
 - Production/live/deploy никогда не подразумеваются предыдущими воротами.

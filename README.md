@@ -1,5 +1,271 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1498 (2026-11-18): RB3 FULL SYNTHETIC REGRESSION CLOSED; PASS168/168.** Independently ACCEPTED 0/0/0. Exact12 modules, H1 and home-media regressions, literal/media/runtime/source/zero-ledger cohorts all pass under no-network/read-only/tmpfs isolation. No repeat needed. Real DB/capture/import/rebuild remains B002-blocked and separately gated.
+
+> **Текущая точка D-1497 (2026-11-18): HOME MEDIA FIX + RUN6 EXACT168 APPROVED 0/0/0.** Production remediation and successor guard are closed. Same12 lean bootstrap must discover exactly168. Runtime0; one run6 requires explicit owner permission. Real DB/rebuild remains B002-blocked.
+
+> **Текущая точка D-1496 (2026-11-18): HOME PHOTO-STRIP FIX APPROVED 0/0/0; RUN6 EXACT168 REVIEW.** Production semantic omission is closed without new slot/schema. One new focused method changes only the successor guard 167→168 for the same12 modules. Runtime0; count review before run6 gate.
+
+> **Текущая точка D-1495 (2026-11-18): FULL RUN5 165/167; HOME PHOTO-STRIP FIX REVIEW.** H1 remediation and exact167 gate passed. Two failures share one production omission: approved home photo-strip was not projected. Existing `home.media.works` now orders photo-strip first plus six works and proves full embedded coverage. No new slot/schema; runtime repeat0, independent review active.
+
+> **Текущая точка D-1494 (2026-11-18): H1 FIX + RUN5 EXACT167 GATE APPROVED 0/0/0.** Production remediation and successor-count amendment are independently approved. Same12 bootstrap suite must discover exactly167. Runtime0; one run5 requires explicit owner permission. Real DB/rebuild remains B002-blocked.
+
+> **Текущая точка D-1493 (2026-11-18): EMPTY-LEGACY H1 CODE APPROVED 0/0/0; RUN5 COUNT AMENDMENT REVIEW.** Production fix is approved with no bloat. Because D-1491 adds one focused method, the same 12-module successor suite must guard exact167 instead of historical run4 exact166. Runtime0; count amendment review precedes any run5 gate.
+
+> **Текущая точка D-1492 (2026-11-18): EMPTY-LEGACY H1 P2 REMEDIATED; REPEAT REVIEW.** First code review P1/P2/P3=0/1/0 found fallback whitespace validation relied on a weaker global invariant. The narrow branch now rejects non-string, empty and edge-whitespace names before the unchanged strict target validator. Runtime0; repeat review active.
+
+> **Текущая точка D-1491 (2026-11-18): FULL RUN4 163/166; EMPTY-LEGACY H1 FIX REVIEW.** Bootstrap and exact166 gate succeeded. Three errors share one production transform gap for approved MAP-044/MAP-049 empty source H1. Minimal page-name authority fallback is implemented only for `legacy_empty_main`; source payload and target validator remain unchanged. Runtime repeat0; independent code review active.
+
+> **Текущая точка D-1490 (2026-11-18): RUN4 LIGHT BOOTSTRAP PLAN APPROVED 0/0/0; OWNER GATE.** Exact tmpfs credentials, Django setup, literal12/count166 and standard readonly app/import/docs mounts are independently approved. No launcher/image/dependency/refactor. Runtime0; one materially changed full synthetic run4 requires explicit permission.
+
+> **Текущая точка D-1489 (2026-11-18): RUN4 BOOTSTRAP PLAN REMEDIATED; REPEAT REVIEW.** First plan review P1/P2/P3=1/1/1 found three literal gaps only. Writable exact credential creation/proof, exact12 modules+count166 and `python -B` are now explicit. Runtime0, no new artifact; run4 remains unauthorized.
+
+> **Текущая точка D-1488 (2026-11-18): RUN4 LIGHT BOOTSTRAP PLAN; REVIEW GATE.** Owner resumed after anti-loop. Proposed recovery uses the existing image, standard readonly host `app→/app`, current importer/docs under `/review`, and one inline tmpfs-only Django bootstrap. No launcher/settings/image/dependency/refactor. Runtime remains0; independent plan review precedes any run4 permission.
+
+> **Текущая точка D-1487 (2026-11-18): FULL RUN3 162/166; PAUSED OWNER BY ANTI-LOOP.** Production findings0; the same four `ModuleNotFoundError: content` environment failures repeated in run2 and run3, so no third equivalent attempt. The image expects host `app→/app`; it does not contain the app source. Recommended light recovery after owner resume is a reviewed standard app bind plus tmpfs-only synthetic Django bootstrap, not a reader refactor.
+
+> **Текущая точка D-1486 (2026-11-18): FULL RUN2 REMEDIATION APPROVED 0/0/0; RUN3 GATE.** Two test-only fixes and the narrow `/review` mount are independently approved. Current importer/docs take priority while image `/app/content` remains available. No new image/dependency/framework; run3 requires new permission and real DB/rebuild remains B002-blocked.
+
+> **Текущая точка D-1485 (2026-11-18): FULL REGRESSION RUN2 160/166; TEST/HARNESS REMEDIATION REVIEW.** Production findings0. Four errors came from the whole-src mount hiding image content/docs; one missing test import and one stale error-code oracle account for the remainder. Two test-only edits plus a narrow `/review` mount are prepared; no new image/dependency/framework. Run3 requires review and new permission.
+
+> **Текущая точка D-1484 (2026-11-18): FULL REGRESSION REMEDIATION APPROVED 0/0/0; RUN2 GATE.** The one production closed-schema fix and two test-only repairs are independently approved with no bloat. Runtime remains0 after edits. Next step is one newly authorized 12-module synthetic run2; real DB/rebuild remains B002-blocked.
+
+> **Текущая точка D-1483 (2026-11-18): FULL SYNTHETIC RUN1 138/166; MINIMAL REMEDIATION REVIEW.** One authorized no-network/read-only run found one production payload branch defect and two test-harness/oracle defects. Three bounded edits are prepared; no new abstraction/dependency/runtime. Independent review precedes any newly authorized run2. Real DB/rebuild remains B002-blocked.
+
+> **Текущая точка D-1482 (2026-11-18): RB3 WHOLE-SLICE STATIC AUDIT APPROVED 0/0/0; FULL SYNTHETIC GATE.** No stale production caller of old run/evidence API; the sole direct EVIDENCE call is the intended non-callable negative. All 12 importer test modules are fake/tempfile-only with no network/DB/subprocess. One app-image, no-network, read-only, `python -B` invocation is the sufficient regression; owner runtime permission required.
+
+> **Текущая точка D-1481 (2026-11-18): SNAPSHOT-AFTER-OPEN BIND CLOSED; PASS40/40.** App-image focused run2 passed SourceReader, lifecycle, binder and production entrypoint tests, exit0. No network/DB/secrets/project writes. Pre-bound evidence paradox is closed without provider/storage framework. B001 is code+test ready; B002 remains production-storage deferred, so real rebuild stays blocked.
+
+> **Текущая точка D-1480 (2026-11-18): SNAPSHOT-BIND RUN1 39/40; STALE TEST FIX APPROVED 0/0/0; RUN2 GATE.** Sole failure was an old two-query expectation; production correctly did SQL0 before preflight and SQL1 for invalid-ledger preflight. Test now proves intermediate0/final1; production unchanged. No automatic repeat. Next explicit gate is focused run2.
+
+> **Текущая точка D-1479 (2026-11-18): SNAPSHOT-AFTER-OPEN BIND CODE APPROVED 0/0/0; TEST GATE.** Production run now accepts one snapshot-ID binder after RRRO session creation, validates full evidence before OpenSource and reuses the same predicates in SourceReader. Binder sees no DB/private object; malformed snapshot never reaches it. No provider/storage framework. Python/DB runtime0. Next explicit gate is one focused synthetic test run.
+
+> **Текущая точка D-1478 (2026-11-18): SNAPSHOT-AFTER-OPEN LEDGER BIND PLAN REVIEW.** B001 code/tests are ready; B002 storage remains deferred. Plan replaces impossible pre-bound evidence in production run with one exact `snapshot_id -> VerifiedLedgerEvidence` callable after RRRO session creation. Binder receives no DB/private object; existing one-shot verifier/SourceReader remain. Runtime0; independent plan review before code.
+
+> **Текущая точка D-1477 (2026-11-18): B001 CAPTURE CODE+SYNTHETIC TEST READY; PASS15/15.** Run3 in the existing app-editor image passed all lifecycle/capture tests and dependency collection, exit0. No network/DB/secrets/project writes or real package instance. B001 production capture remains deferred because B002 storage/evidence is unavailable and an in-memory capture would be unusable.
+
+> **Текущая точка D-1476 (2026-11-18): CAPTURE RUN2 ENVIRONMENT FAIL; DIAGNOSIS APPROVED 0/0/0; RUN3 GATE.** Generic python-runtime lacked pinned app dependency `nh3`; collection stopped before tests/production. No code change or install. Correct light continuation is one read-only/no-network run in existing `app-editor:candidate-d330`; separate owner permission required.
+
+> **Текущая точка D-1475 (2026-11-18): CAPTURE SYNTHETIC RUN1 HARNESS FAIL; FIX APPROVED 0/0/0; RUN2 GATE.** Run1: 10 PASS/5 ERROR, all before capture due Python3.14 string-patch submodule resolution; production finding0 and DB/network/persistence0. Test-only `patch.object` fix independently approved; production hash unchanged. No automatic repeat. Next explicit gate is one new synthetic run.
+
+> **Текущая точка D-1474 (2026-11-18): B001 CAPTURE ENTRYPOINT CODE APPROVED 0/0/0; TEST RUNTIME CLOSED.** One private shared source opener and exact public capture→close→DB-free compose are approved. BaseException cleanup now attempts every existing step and fails closed; raw executor/DTO/persistence/private query0. Python tests/DB/capture0. Next explicit gate is one synthetic runtime_source test run with fake connections only.
+
+> **Текущая точка D-1473 (2026-11-18): B001 CAPTURE PLAN APPROVED 0/0/0; CODE REVIEW ACTIVE.** Public raw executor was removed. Candidate shares one private existing lifecycle opener; exact four-query capture closes DB authority before DB-free in-memory composition. Focused tests cover success/failure/close ambiguity; runtime0. Independent code review before execution.
+
+> **Текущая точка D-1472 (2026-11-18): ZERO-ROW MATERIALIZATION PREFLIGHT BLOCKED; STORAGE NOT INDEPENDENT.** Read-only probes created no files. Two Docker volumes both report `st_dev=2112`; the distinct Windows workspace bind reports `st_dev=55` but `uid=0/mode0777`, so it fails owner-only authority. No weakening to same-volume copies or Windows-mode attestation. Light path: owner supplies an existing second POSIX-compatible durable filesystem, otherwise defer to production encrypted storage; custom VHD/WSL storage layer is rejected as bloat unless separately chosen.
+
+> **Текущая точка D-1471 (2026-11-18): ZERO-ROW GENESIS SYNTHETIC 13/13 PASS; INSTANCE NOT MATERIALIZED.** One owner-authorized no-network/read-only-container run passed all focused tests; synthetic files existed only in ephemeral `/tmp`. Code remains independently approved 0/0/0. No DB, real roots/copies/receipt/snapshot evidence or rebuild. Next separate gate is exact two-filesystem materialization and receipt pinning.
+
+> **Текущая точка D-1470 (2026-11-18): ZERO-ROW GENESIS CODE APPROVED 0/0/0; RUNTIME CLOSED.** One standalone fixed generation1/rows0 create+verify module and focused tests passed independent review after named-entry and ambiguous-close remediations. Importer/dependencies unchanged; no append/nonzero/intake-on authority. Python/tests/files/copies/keys/rebuild0. Next explicit gate is one synthetic local test run; production materialization remains later and separate.
+
+> **Текущая точка D-1469 (2026-11-18): ZERO-ROW GENESIS PLAN APPROVED 0/0/0; CODE REVIEW ACTIVE.** The named-entry/held-inode P1 was remediated and repeat review approved the fixed generation1/rows0 plan. One separate module plus focused synthetic tests is prepared; importer unchanged. Python/files/keys/rebuild runtime0. Next independent code review before any test run.
+
+> **Текущая точка D-1468 (2026-11-18): RUN PACKAGE/LIMITS/DIGEST APPROVED 0/0/0; LEDGER OWNER CHOICE.** One shared projection now binds captured/fresh timestamps, exact canonical cap, file/gallery bytes, trusted SVG set and package digest without a second serializer. Runtime0. `RB3-LEDGER-AUTHORITY-Q001`: choose a separate minimal durable zero-row genesis authority for the current default-off/requests0 rebuild, or defer rebuild until the full production deletion-ledger/external-backup authority exists. Importer must not invent this evidence.
+
+> **Текущая точка D-1467 (2026-11-18): MEDIA/SHARED PACKAGE BUILDER APPROVED 0/0/0; LIMITS/DIGEST AUTHORITY NEXT.** Exact301 pinned CSV + approved package237 compose source238/package-only65/target303, literal SiteSettings/logo, gallery17/214 and target usages30. Gallery ownership is corrected to exact214 pairs of current+revision ledgers (428 source rows); many old ledgers may prove one semantic target usage without duplicating target rows. Runtime0. Next close production ManifestLimits/package-digest handoff; ledger/runtime remain separate gates.
+
+> **Текущая точка D-1466 (2026-11-18): GALLERY USAGE OWNERSHIP APPROVED 0/0/0; MEDIA BUILDER ACTIVE.** Exact214 GalleryPhoto pairs exclusively own legacy gallery current usages; duplicate target AssetUsage is rejected, all other eligible usages remain bound. Runtime0. Next literal source238 + package-only65 → target303 builder.
+
+> **Текущая точка D-1465 (2026-11-18): PAYLOAD TRANSFORM APPROVED 0/0/0; MEDIA AUTHORITY RESUMED.** One closed old→new transformer preserves captured source hashes separately, validates target-only schema, closes home current+previous, actions/reviews/partners and wash kind. No dual schema/ETL/registry. Runtime0. Next exact media binding: source238 + package-only65 = target303.
+
+> **Текущая точка D-1464 (2026-11-18): PAYLOAD TRANSFORM REVIEW PAUSED OWNER BY ANTI-LOOP.** Reviewer twice claimed three hashes differ while quoting values exactly equal to dispatch; no content review/verdict occurred. Attempts2, reviewer interrupted, candidate files preserved, runtime0. Recommended resume: one new independent exact-path content review using observed hashes, without another equality pre-gate.
+
+> **Текущая точка D-1463 (2026-11-18): PAGE PAYLOAD SCHEMA P1 BLOCKER; OWNER CHOICE.** D-1460 binds verified old `page-content-v1` source payloads but incorrectly uses them as target payloads; RB3 accepts only `estakada.page-content@1`, so execution would fail closed before target creation. Recommended option1: one closed per-kind literal transformer with exhaustive package tests; option2 relaxes target manifest to carry both schemas and creates migration debt. Runtime0; media composition paused.
+
+> **Текущая точка D-1462 (2026-11-18): NULL IMPORTED DIMENSIONS APPROVED 0/0/0; MEDIA COMPOSITION RESUMED.** Raster dimensions are exact pair or null/null; SHA/bytes/MIME/extension/magic remain strict, SVG remains trusted-only. Decoder/Pillow/runtime pass0. Next reconcile the existing approved packages with exact65 package-only media; runtime0.
+
+> **Текущая точка D-1461 (2026-11-18): MEDIA DIMENSION AUTHORITY BLOCKER; OWNER CHOICE.** Approved sources provide path/SHA/bytes and captured DB identities but no JPEG/PNG/WebP width/height, while the RB3 manifest requires exact positive dimensions. Fabrication is forbidden. Recommended option1: nullable dimensions for byte-preserved imported files while retaining SHA/bytes/MIME/extension/magic; option2 adds a bounded image-header decoder/runtime media pass. Runtime0.
+
+> **Текущая точка D-1460 (2026-11-18): PAGE/ROUTE AUTHORITY APPROVED 0/0/0; MEDIA COMPOSITION NEXT.** Exact112 published Pages and exact114 stored Routes are bound to captured identities through the existing 12 readers/renderers; home current+previous and two aliases are closed, derived gallery `?page=1` remains outside Route. Runtime0. Next one separate literal media authority composition; ledger/runtime remain closed.
+
+> **Текущая точка D-1459 (2026-11-18): STORED ROUTES114 FIX APPROVED 0/0/0; PAGE/ROUTE COMPOSITION ACTIVE.** Public outcomes115 remain unchanged; no fabricated row. Runtime0. Next literal exact112 Page + exact114 Route authority, with media composition separate.
+
+> **Текущая точка D-1458 (2026-11-18): STORED ROUTE COUNT P1 REMEDIATION CANDIDATE; REVIEW ACTIVE.** Canonical fixture proves pages112/stored Route rows114 while public URL outcomes remain115; gallery `?page=1` is a derived redirect. Freeze count/limit/tests corrected to 114/116 without fabricating a DB row. Runtime0; independent bounded repeat review next.
+
+> **Текущая точка D-1457 (2026-11-18): FREEZE CAPTURE APPROVED 0/0/0; LITERAL PACKAGE COMPOSITION ACTIVE.** Exact public-only immutable capture accepted with pages112/routes115/assets238/files238 and privacy/no-bloat PASS. Runtime0. Next compose the existing 12 package authorities plus captured random identities; no new loader/schema.
+
+> **Текущая точка D-1456 (2026-11-18): FREEZE Q001 OPTION1; CAPTURE SUBSTEP CANDIDATE REVIEW.** Added one in-memory public-only guarded capture reusing the four approved freeze queries, exact112/115 and source asset/file238. No file format, loader, private rows or runtime. Independent review active; literal package composition remains next.
+
+> **Текущая точка D-1455 (2026-11-18): RB3-FREEZE-AUTHORITY DESIGN BLOCKER; OWNER CHOICE.** Static-only package construction is impossible because approved `FreezePackage` includes runtime-random Route/Revision/Usage/shared/media DB identities. Recommended option1: one bounded read-only capture while writers remain stopped, build the literal in-memory package, then a fresh RRRO run re-proves equality. Option2 refactors the approved freeze builder dynamically and is larger. Code/runtime0.
+
+> **Текущая точка D-1454 (2026-11-18): RB3-FREEZE-AUTHORITY-001 PAUSED OWNER BY ANTI-LOOP; CODE0.** Two equivalent informational `rg` calls passed Windows wildcard directly as a path and returned error123; third attempt is forbidden. Confirmed before pause: the existing 12 literal readers/payload functions cover the exact 112-page composition, so payload/schema duplication is unnecessary. Resume only with explicit paths or `rg -g`; runtime0.
+
+> **Текущая точка D-1453 (2026-11-18): RB3 LOCAL RUN STATIC PREFLIGHT BLOCKED; RUNTIME0.** Infrastructure can support one disposable internal-network launcher without a new service, but production `FreezePackage` and independently verified zero-row ledger evidence do not yet exist. No fabricated evidence or generic loader. Next proposed code-only slice: one literal freeze-authority builder; ledger remains a separate gate.
+
+> **Текущая точка D-1452 (2026-11-18): RB3 CODE-ONLY WHOLE SLICE CLOSED BY OWNER OPTION2.** Owner accepted closure on the complete independent D-1440–D-1450 review chain; the paused WHOLE-001 attempt is not relabelled APPROVED. Product findings0, runtime0. Next is a separate owner gate for one bounded local rebuild execution plan/preflight; no execution is implied.
+
+> **Текущая точка D-1451 (2026-11-18): RB3 WHOLE-SLICE REVIEW PAUSED OWNER; PRODUCT FINDINGS0.** Reviewer repeated Windows path/wildcard command error twice; third attempt is forbidden. All hashes and principal end-to-end ownership/phase/readback/seal/no-bloat facts were confirmed, but no final verdict was issued. Runtime0. Owner chooses exact-path continuation or closure on completed D-1440–D-1450 reviews.
+
+> **Текущая точка D-1450 (2026-11-18): RB3 STEP4 ENTRYPOINT OPTION1 APPROVED 0/0/0; WHOLE-SLICE STATIC CLOSURE ACTIVE.** One typed in-memory package authority and exact one-shot composition accepted without a second loader/config framework. Runtime0. Next final static traceability/completeness review before any separately owner-gated rebuild.
+
+> **Текущая точка D-1449 (2026-11-18): RB3 STEP4 ENTRYPOINT OPTION1 CANDIDATE; INDEPENDENT REVIEW ACTIVE.** Owner selected the light in-memory authority: `RunConfig` carries one typed `FreezePackage`, exact `ManifestLimits` and expected package digest; no second legacy-JSON loader, CLI/env parser or plugin framework. One `run(config,evidence)` composition and fail-closed boundary tests added; runtime0.
+
+> **Текущая точка D-1448 (2026-11-18): RB3-CLEANUP-Q001 OPTION1 APPROVED; STEP4 ENTRYPOINT INPUT AUTHORITY ACTIVE.** Physical failed-pair deletion is deferred to Q003; cleanup stays fail-closed and isolated pairs remain non-selectable. Runtime0. Next define the minimal canonical-package input for the single run.py entrypoint without inventing a loader platform.
+
+> **Текущая точка D-1447 (2026-11-18): RB3 ADAPTER STEP3E-B CONCRETE RUNOPS APPROVED 0/0/0; CLEANUP Q001 OWNER DECISION.** One monotonic composition now binds preflight→acquisition→migration/import→media→commit/readback→identity close→result with lost-response isolation and private-memory clearing. Runtime0. Physical failed-pair cleanup remains fail-closed until pointer authority is defined or explicitly deferred to Q003.
+
+> **Текущая точка D-1446 (2026-11-18): RB3 ADAPTER STEP3E-A COMMITTED READBACK APPROVED 0/0/0; STEP3E-B ACTIVE.** Exact bounded RRRO comparison of all 11 target tables, private provenance, fixed columns, counts, invariants and DB/media/ledger proof accepted. Runtime0; one concrete RunOps plus exact cleanup next.
+
+> **Текущая точка D-1445 (2026-11-18): RB3 ADAPTER STEP3D TARGET MEDIA APPROVED 0/0/0; STEP3E ACTIVE.** One contained same-handle source preflight, exclusive generated copy, bounded magic/SHA/size verification and exact post-copy inventory/readback accepted. Runtime0; DB+media committed readback/composition next.
+
+> **Текущая точка D-1444 (2026-11-18): RB3 ADAPTER STEP3C MIGRATIONS/PROJECTIONS APPROVED 0/0/0; STEP3D ACTIVE.** Exact Django migration leaves, generated alias cleanup, one SERIALIZABLE public+private+zero-ledger transaction and pre-commit invariant/count gate accepted. Runtime0; bounded target media copy/readback next.
+
+> **Текущая точка D-1443 (2026-11-18): RB3 ADAPTER STEP3B TARGET DB APPROVED 0/0/0; STEP3C ACTIVE.** Generated DB/roles, migration/importer NOLOGIN→proof→bounded LOGIN lifecycle, exact privilege/settings matrix and acquisition ambiguity handling accepted. Runtime0; concrete migrations and projection transaction next.
+
+> **Текущая точка D-1442 (2026-11-17): RB3 ADAPTER STEP3A RESULT AUTHORITY APPROVED 0/0/0; STEP3B ACTIVE.** Generated names and canonical write-once CREATED/SEALED/FAILED authority accepted with parent/run durability, exact inventory and closed safe error codes. Runtime0; literal target DB adapter next.
+
+> **Текущая точка D-1441 (2026-11-17): RB3 ADAPTER STEP2 APPROVED 0/0/0; STEP3 ACTIVE.** Exact source/public builder accepted with corrected pages112/routes115 authority, closed shared/media projection and fail-closed source-role lifecycle. Runtime0; next only literal target adapter/entrypoint with fault fakes.
+
+> **Текущая точка D-1440 (2026-11-17): RB3 ADAPTER STEP1 APPROVED 0/0/0; STEP2 ACTIVE.** Closed manifest/result/readback parity accepted; one literal source lifecycle/executor and fixed public builder next. Runtime remains closed.
+
+> **Текущая точка D-1439 (2026-11-17): RB3-IMP-005 CONCRETE ADAPTER REMEDIATION.** Owner approved one narrow executable adapter using preverified in-memory ledger evidence; full ledger subsystem and runtime execution remain excluded.
+
+> **Текущая точка D-1438 (2026-11-17): RB3-IMP-004 CODE APPROVED 0/0/0.** Fixed disposable coordinator, readback/seal reconciliation and exact cleanup accepted; runtime0. RB3-IMP-005 whole-slice static review active.
+
+> **Текущая точка D-1437 (2026-11-17): RB3-IMP-003 CODE APPROVED 0/0/0.** Fixed same-transaction source reader, pre-target gates and bounded private staff map accepted without ETL/framework growth. Runtime0; RB3-IMP-004 code-only active, target/freeze/import execution/live closed.
+
+> **Текущая точка D-1436 (2026-11-17): RB3-IMP-002 CODE APPROVED 0/0/0.** Closed manifest/typed content/projections accepted; runtime0. RB3-IMP-003 code-only active.
+
+> **Текущая точка D-1435 (2026-11-17): RB3-IMP-002 ПРИОСТАНОВЛЕН ВЛАДЕЛЬЦУ.** Две справочные `rg`-команды с Windows wildcard path повторили error123; третья запрещена. Код parser/content remediation сохранён, runtime0. Безопасное возобновление — только exact paths/`rg -g`, затем закрыть schema/version/dependency findings и repeat review.
+
+> **Текущая точка D-1434 (2026-11-17): RB3-IMP-001 CODE APPROVED 0/0/0; RB3-IMP-002 ACTIVE.** Runtime0; install/Docker/DB/media/target/freeze/import/cutover/live closed.
+
+> **Текущая точка D-1433 (2026-11-17): REBUILD-3 PLAN APPROVED 0/0/0.** Minimal six-model schema/fixed importer, 301→302→303 arithmetic, roles/seal/cleanup/no-bloat accepted. Stop for owner plan+dependency+code-only gate; runtime/target/freeze/live closed.
+
+> **Текущая точка D-1432 (2026-11-17): REBUILD-3 PLAN PRIVILEGE ORDER FIX.** Pre/post-migration privilege proof split; empty default public schema removed before app migrations. Final confirmation; code/runtime0.
+
+> **Текущая точка D-1431 (2026-11-17): REBUILD-3 PLAN FINAL REMEDIATION.** Public manifest IDs now stable across target retries; literal target role privilege/settings/PUBLIC matrix added. Final repeat review; code/runtime0.
+
+> **Текущая точка D-1430 (2026-11-17): REBUILD-3 PLAN REMEDIATED.** Usage positions, 301→302→303 arithmetic, pre-target gates, approved media/gallery fields, strict key/MIME boundary, manifest UUID allocation and least-privilege target roles added. Repeat plan review; code/runtime0.
+
+> **Текущая точка D-1429 (2026-11-17): REBUILD-3 PLAN CANDIDATE.** Minimal media3+gallery2+literal SiteSettings and one fixed importer; no ETL/storage/dedup/job framework. AC001–018; independent plan review, code/runtime0.
+
+> **Текущая точка D-1428 (2026-11-17): REBUILD-2 COMPLETE; RESULT APPROVED 0/0/0.** Check/drift/migrations/26 tests and cleanup independently accepted. Progress `27–30%`, remaining `23/30/44h`. Stop at separate REBUILD-3 scope/acceptance gate; target/freeze/live closed.
+
+> **Текущая точка D-1427 (2026-11-17): REBUILD-2 RUNTIME PASS; PHASE COMPLETE CANDIDATE.** Check0, drift0, migrations PASS, 26/26 tests PASS; exact test DB removed and containers0. Estimate `27–30%`, remaining `23/30/44h`. Independent result review next; REBUILD-3 closed.
+
+> **Текущая точка D-1426 (2026-11-17): RB2 CODE-ONLY SOURCE APPROVED 0/0/0.** All three initial migrations match reviewed models; no bloat. Code-only package is complete. Separate owner runtime gate required for Django checks/drift/migrate/test.
+
+> **Текущая точка D-1425 (2026-11-17): RB2 INITIAL MIGRATION SOURCE CANDIDATE.** Deterministic `0001_initial.py` authored for audit/accounts/pages only; static diff PASS. Independent model↔migration review; runtime0.
+
+> **Текущая точка D-1424 (2026-11-17): RB2 PRE-MIGRATION APPROVED 0/0/0.** All model/test/route findings closed. Review permits migration-source authoring only; Django/DB/migration execution remains separately gated.
+
+> **Текущая точка D-1423 (2026-11-17): RB2 TEST/ROUTE REMEDIATED.** Audit DB test class, decoded/malformed route rejection and focused manager/audit/self-parent regressions added. Final pre-migration review; runtime0.
+
+> **Текущая точка D-1422 (2026-11-17): RB2 REPEAT REVIEW P1=1/P2=2.** Core nine findings closed; three test/encoded-route gaps remain, no schema growth.
+
+> **Текущая точка D-1421 (2026-11-17): RB2 MODEL SOURCE REMEDIATED.** Import fitness, User manager, exact retry slot, real DB tests/test identity, audit/route/lock/self-parent findings fixed without new layer. Repeat pre-migration review; runtime0.
+
+> **Текущая точка D-1420 (2026-11-17): RB2 PRE-MIGRATION REVIEW P1=5/P2=4.** Migration files remain absent; bounded model/test corrections only.
+
+> **Текущая точка D-1419 (2026-11-17): RB2 MODEL SOURCE CANDIDATE.** Tests-first fitness/config/audit/accounts/pages source added; migration source intentionally withheld until model review. Static text/diff PASS, runtime0.
+
+> **Текущая точка D-1418 (2026-11-17): RB2 PINNED STACK ACCEPTED.** Owner selected exact existing Python3.14.10/Django5.2.18/psycopg3.3.6/django-csp4.0 reuse; download/install/new lock0. RB2-IMP-001 tests-first source work starts; runtime closed.
+
+> **Текущая точка D-1417 (2026-11-17): REBUILD-2 PLAN APPROVED 0/0/0.** Minimal scope/DAG/contracts/no-bloat accepted. Stop for exact pinned-stack acknowledgement `RB2-VERS-Q001`; code/runtime0.
+
+> **Текущая точка D-1416 (2026-11-17): REBUILD-2 PLAN FINAL LITERAL FIX.** All P1/P2 closed; exact role enum normalized to `OWNER|EMPLOYEE`. Final review confirmation; code0/runtime0.
+
+> **Текущая точка D-1415 (2026-11-17): REBUILD-2 PLAN REMEDIATED.** Lost-response slot, exact AuditEvent v1, DB/service invariant split and whole-SiteSettings deferral fixed. Repeat plan review; code0/runtime0.
+
+> **Текущая точка D-1414 (2026-11-17): REBUILD-2 PLAN REVIEW P1=1/P2=3.** Scope/no-bloat PASS; four exact contract clarifications required before code.
+
+> **Текущая точка D-1413 (2026-11-17): REBUILD-2 SKELETON PLAN CANDIDATE.** Minimal config+audit/accounts/pages, no placeholders/new dependency/runtime. Existing pinned stack reuse proposed; independent plan review before version acknowledgement/code.
+
+> **Текущая точка D-1412 (2026-11-17): REBUILD-Q002 CODE-ONLY APPROVED.** Owner opened REBUILD-2 planning/acceptance/local `src/`; install/Docker/DB/migration execution/target/freeze/live remain closed.
+
+> **Текущая точка D-1411 (2026-11-17): REBUILD-1 CONDITIONALLY COMPLETED; WBS ACCEPTED.** Owner accepted five-group WBS. Progress `17–19%`; remaining `27/35/50h`. One unmatched source is deferred to REBUILD-3 freeze. Q002 still requires separate approval.
+
+> **Текущая точка D-1410 (2026-11-17): REBUILD-1-WBS REVIEW APPROVED 0/0/0.** Five groups, facts, gate semantics, cost ownership, risks and `27/35/50h` pass. Await owner acknowledgement; Q002 closed.
+
+> **Текущая точка D-1409 (2026-11-17): DEFER GATE SEMANTICS SELECTED.** Owner chose option1: deferred source permits conditional REBUILD-1 baseline acceptance and future code-only Q002; execution/target/freeze/runtime remain separately closed. Final WBS review next.
+
+> **Текущая точка D-1408 (2026-11-17): WBS COST OWNERSHIP REMEDIATED.** Focused vs cross-group acceptance ownership and one bounded L→R trigger per row are explicit; arithmetic unchanged. One owner gate-semantics choice remains.
+
+> **Текущая точка D-1407 (2026-11-17): WBS REVIEW P1=1/P2=1.** Counts/sums/no-bloat pass; fix cost overlap automatically, owner must resolve defer/Q002 deadlock.
+
+> **Текущая точка D-1406 (2026-11-17): COMPACT REBUILD-1-WBS CANDIDATE.** Five existing groups only, remaining O/L/R `27/35/50h`; deferred source is explicit WBS-DATA blocker. Independent review; current 12–20%/31–41h not replaced yet.
+
+> **Текущая точка D-1405 (2026-11-17): SOURCE RESOLUTION DEFERRED TO MIGRATION FREEZE.** Owner chose no-bloat option1. Harness frozen, no new diagnostics/runs; REBUILD-1 remains incomplete only where exact unmatched source resolution is required. Q002 stays closed.
+
+> **Текущая точка D-1404 (2026-11-17): OFFLINE HARNESS ПРИОСТАНОВЛЕН ВЛАДЕЛЬЦУ.** Run2/run3 repeated `identity-drift-id`; third attempt forbidden. External effects0. Choose defer-to-freeze (recommended no-bloat) or explicitly resume one bounded reason diagnostic.
+
+> **Текущая точка D-1403 (2026-11-17): OFFLINE RUN3 REPEATED SAME FAIL.** D-1402 was APPROVED 0/0/0, but full run again stopped at `identity-drift-id`; retry0 and no Docker/DB/media/write.
+
+> **Текущая точка D-1402 (2026-11-17): OFFLINE DRIFT FIXTURE REMEDIATED.** All OrderedDictionary drift mutations use explicit indexers; parser PASS. Static review before a new full offline run.
+
+> **Текущая точка D-1401 (2026-11-17): OFFLINE RUN2 LOCALISED HARNESS P2=1.** Baseline passed; first ID drift exposed unreliable fixture property mutation, not a production identity defect. Retry0/external effects0.
+
+> **Текущая точка D-1400 (2026-11-17): OFFLINE CASE DIAGNOSTIC CANDIDATE.** One allowlisted non-sensitive case field only; parser PASS. Static review before any new run.
+
+> **Текущая точка D-1399 (2026-11-17): OFFLINE RESULT NEEDS DIAGNOSTIC P1=1.** External effects0; broad identity code cannot localize the first failing synthetic case. Recommended one-field diagnostic, no raw data.
+
+> **Текущая точка D-1398 (2026-11-17): OFFLINE HARNESS IDENTITY FAIL.** One reviewed run returned bounded `OFFLINE_FAILED_IDENTITY`, retry0/external effects0. Static result review; no rerun.
+
+> **Текущая точка D-1397 (2026-11-17): OFFLINE HARNESS CODE APPROVED 0/0/0.** All boundary/drift/no-bloat findings closed; exactly one offline execution permitted.
+
+> **Текущая точка D-1396 (2026-11-17): OFFLINE BOUNDARY BINDINGS REMEDIATED.** Every fake rejects extra bound/unbound PowerShell arguments; parser PASS. Final independent review; harness execution0.
+
+> **Текущая точка D-1395 (2026-11-17): OFFLINE HARNESS REVIEW P2=1.** Current behavior accepted; exact fake bindings needed one final no-growth correction.
+
+> **Текущая точка D-1394 (2026-11-17): OFFLINE HARNESS REPEAT FINDINGS REMEDIATED.** Final failure boundary, broad/exact label evidence, exact descriptor and command-scoped AST guard fixed. Parser PASS; independent final code review, harness execution0.
+
+> **Текущая точка D-1393 (2026-11-17): OFFLINE HARNESS REPEAT REVIEW P1=2/P2=1.** Three bounded oracle corrections only; no runtime or architecture growth.
+
+> **Текущая точка D-1392 (2026-11-17): OFFLINE HARNESS CODE REMEDIATED.** Exact fail-closed boundary queue and drift cases; one source-proved MemorySwap assertion. Repeat code review; harness execution0.
+
+> **Текущая точка D-1389 (2026-11-17): OFFLINE HARNESS BEHAVIORAL REMEDIATED.** Exact extracted state function executes against fail-closed in-memory spies; one file/dependency0/runtime0. Repeat architecture review next.
+
+> **Правило D-1363 (2026-11-17): MICROSTAGE AUTO-CONTINUE.** Within an approved bounded package, docs remediation/review/repeat/static microsteps continue automatically. Owner input only for real choice/blocker, material REBUILD completion or runtime/live/push/install/destructive/scope gate.
+
+> **Текущая точка D-1387 (2026-11-17): OFFLINE HARNESS ARCHITECTURE CANDIDATE.** Owner chose one source-backed AST PowerShell test file; Docker/DB/media/process/write0. Independent review before code.
+
+> **Текущая точка D-1386 (2026-11-17): RUN004 CLEANUP PASS; OWNER CHOICE.** Verifier0/cid0/media0 and runtime series stopped. Recommended bounded offline harness; alternative defer-to-freeze.
+
+> **Текущая точка D-1385 (2026-11-17): RUN004 EXACT VERIFIER RETAINED; RUNTIME SERIES STOPPED.** Never started/media0. Cleanup-only permission required, then owner architecture choice: bounded offline harness or defer-to-freeze.
+
+> **Текущая точка D-1384 (2026-11-17): RUN003 REMEDIATION APPROVED 0/0/0.** Privacy/no-bloat/regression PASS, verifier/cid0. Fresh runtime gate required; another pre-media orchestration defect stops probing for architecture choice.
+
+> **Текущая точка D-1383 (2026-11-17): VALID-CID CLEANUP COMPLETED.** Exact absence now followed by cid revalidation/deletion and original error preservation. Repeat static review next; runtime closed.
+
+> **Текущая точка D-1381 (2026-11-17): CAPADD/CLEANUP IDENTITY REMEDIATED.** Null normalization and one narrow exact cleanup helper; full start checks retained. Repeat static review next; runtime closed.
+
+> **Текущая точка D-1379 (2026-11-17): RUN003 CLEANUP-ONLY PASS.** Exact never-started verifier/cid removed. CapAdd normalization and cleanup predicate review next; runtime closed.
+
+> **Текущая точка D-1378 (2026-11-17): RUN003 EXACT CREATED VERIFIER RETAINED.** Never started/media0; exact cleanup identity proven. Explicit cleanup-only permission required; rerun closed.
+
+> **Текущая точка D-1377 (2026-11-17): EXACT DOCKER ID FIX APPROVED 0/0/0.** Two no-trunc flags only; privacy/no-bloat PASS. Fresh explicit runtime gate required.
+
+> **Текущая точка D-1376 (2026-11-17): EXACT DOCKER ID REMEDIATED.** Two ID-content calls use no-trunc; no helper/layer growth. Repeat static review next; runtime closed.
+
+> **Текущая точка D-1374 (2026-11-17): RUN002 START FAIL; FINAL CLEAN.** DB became ready; reader/verifier/media not reached. Short-vs-full Docker ID candidate goes to independent review; runtime closed.
+
+> **Текущая точка D-1373 (2026-11-17): FALSE CLEANUP FIX APPROVED 0/0/0.** Regression/privacy/no-bloat PASS. Previous runtime permission consumed; fresh explicit gate required for any rerun.
+
+> **Текущая точка D-1372 (2026-11-17): FALSE CLEANUP FAILURE REMEDIATED.** StrictMode null.Count fixed with real empty-array initialization; repeat static review next. No runtime retry; prior RESOLVED unknown.
+
+> **Текущая точка D-1370 (2026-11-17): MEDIA SOURCE RUN FAIL; FINAL OBSERVED CLEAN.** Cleanup failure with retry0; exact post-check containers/verifier/cid/secret0 and state identity unchanged. RESOLVED not claimed; independent review next, runtime closed.
+
+> **Текущая точка D-1369 (2026-11-17): MEDIA SOURCE IMPLEMENTATION APPROVED 0/0/0.** Five findings closed; privacy/no-bloat/regression PASS, runtime0. Explicit owner gate required before one bounded local `RB1-MEDIA-SOURCE-Q001`; Q002/transfer/product/live closed.
+
+> **Текущая точка D-1368 (2026-11-17): MEDIA SOURCE IMPLEMENTATION REMEDIATED.** Five review findings closed locally: strict key, recoverable exact name, known-outcome postconditions, streaming cap and full inspect. New layer0; repeat code review automatic; runtime0.
+
+> **Текущая точка D-1367 (2026-11-17): IMPLEMENTATION REVIEW CHANGES REQUESTED P1=3/P2=2.** Core/RRRO/privacy/no-bloat PASS; bounded remediation only, runtime0.
+
+> **Текущая точка D-1366 (2026-11-17): EPHEMERAL VERIFIER CONTRACT APPROVED 0/0/0.** AC006 exact cidfile/privacy/no-bloat PASS, missing0/overreach0. Implementation candidate/static review proceeds automatically; runtime requires separate gate.
+
+> **Текущая точка D-1365 (2026-11-17): CIDFILE LINE-ENDING REMEDIATED.** Exact sizes64|65|66; lowercase64 ID plus none|single LF|single CRLF only; BOM/lone CR/extra bytes0. AC006 repeat review automatic; runtime0.
+
+> **Текущая точка D-1364 (2026-11-17): EXACT CIDFILE RULE REMEDIATED.** Canonical owner-only non-reparse private parent; file absent pre-create; regular/non-reparse/exact ACL/exact64 lowercase ASCII hex, no BOM/newline/extra byte; recheck before read/delete. AC006 review next; runtime0.
+
+> **Текущая точка D-1362 (2026-11-17): VERIFIER FINAL REVIEW P2=1.** P1-004 CLOSED; only exact cidfile length/newline/type/ACL/containment rule remains. AC006-only docs remediation/review next; privacy/no-bloat PASS, runtime0.
+
+> **Текущая точка D-1361 (2026-11-17): UNKNOWN_ISOLATED FLOW REMEDIATED.** One ignored private Docker cidfile; post-start ambiguity claims neither stopped nor final0/RESOLVED. Later owner-gated exact-ID cleanup only, broad cleanup/rerun0. Next repeat review; runtime0.
+
+> **Текущая точка D-1360 (2026-11-17): VERIFIER REPEAT REVIEW CHANGES REQUESTED P1=1.** Original P1×3 closed; only false stopped guarantee remains after post-start Docker ambiguity. Use UNKNOWN_ISOLATED/no RESOLVED/private exact-ID cleanup state; watchdog0. Next docs remediation/review; runtime0.
+
+> **Текущая точка D-1359 (2026-11-17): EPHEMERAL VERIFIER AMENDMENT REMEDIATED.** P1×3 closed in docs: pre0→DB→DB+verifier→final0, explicit inspected Python entrypoint, log-driver none + cap256 + captured-ID exact cleanup. New layer/runtime0. Next repeat review.
+
 > **Текущая точка D-1358 (2026-11-17): EPHEMERAL VERIFIER REVIEW CHANGES REQUESTED P1=3.** Fix only DB/verifier sequence, explicit Python entrypoint, log-driver none + exact-ID cleanup. Core isolation/O_NOFOLLOW/no-bloat PASS. Next docs remediation/repeat review; runtime0.
 
 > **Текущая точка D-1357 (2026-11-17): EPHEMERAL RO VERIFIER AMENDMENT CANDIDATE.** Owner chose option1: existing pinned image, network none, state volume/root RO, stdin-only descriptor, Linux dir-fd O_NOFOLLOW, constant output, new service/image/script/dependency0. Next independent review; runtime0.
@@ -1530,3 +1796,4 @@ DEV-20, 2026-11-02: завершён в согласованной локаль�
 > **Текущая точка D-847 (2026-11-11): DEV12-IMP-004 partial.** Exact default-off design-media import переиспользует existing STAGED/write_file/READY, восстанавливает post-write STAGED и fail closed при drift; package/media5/5 PASS за3.538с, system check0. Далее default-off UNIT home writer с draft/pin/usages/rollback/concurrency tests; persistent apply/publication отсутствуют.
 > **Текущая точка D-848 (2026-11-11): DEV12-IMP-004 PASS.** Exact media import+default-off UNIT home writer, READY21 double capture, revision/current/draft/pin/usages63, replay/rollback/concurrency готовы; writer11/11 и full DEV-12 regression82/82 PASS за170.371с, system check0. Далее IMP-005 pure bounded projector/delete guard; persistent apply/publication отсутствуют.
 > **Текущая точка D-849 (2026-11-11): DEV12-IMP-005 PASS.** Pure amount/from+visibility projector, xmin double capture и existing page-delete dependency stamp готовы; focused10/10 и combined delete regression19/19 PASS за23.723с, system check0. Далее IMP-006 fixed public template/CSS/local JS; persistent apply/publication отсутствуют.
+> **Текущая точка D-1434 (2026-11-17): RB3-IMP-001 CODE APPROVED 0/0/0.** Exact six-model source, migrations, DB key/hash/shape constraints, deletion policies and DAG/DB-free parity tests accepted. Runtime0; RB3-IMP-002 code-only next.
