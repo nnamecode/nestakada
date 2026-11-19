@@ -1,6 +1,8 @@
 # Таблица задач
 
-Текущая работа D-1612 (2026-11-19): **SHIFT CLOSED; LINKS PG RUN2 IS RESUME POINT.** Overall39–41%, remaining15/22/36 productive workdays; approximately+5–7 pp this shift. Corrected exact55 run2 is approved but not executed and still needs explicit permission. After accepted server result: separate links browser exact8 plan/gate. S2B/media/S3/S4/M/live remain closed.
+Текущая работа D-1613 (2026-11-19): **WBS UNIT CORRECTION.** Remaining15/22/36 are productive hours, not days; current equivalent is about2/3/4.5 eight-hour workdays. Scope/progress39–41%/resume point unchanged.
+
+Текущая работа D-1612 (2026-11-19): **SHIFT CLOSED; LINKS PG RUN2 IS RESUME POINT.** Overall39–41%, remaining15/22/36 productive hours; approximately+5–7 pp this shift. Corrected exact55 run2 is approved but not executed and still needs explicit permission. After accepted server result: separate links browser exact8 plan/gate. S2B/media/S3/S4/M/live remain closed.
 
 Текущая работа D-1611 (2026-11-19): **LINKS PG HARNESS FIX APPROVED; RUN2 OWNER GATE.** Repeat review0/0/0/product0/no-bloat accepts HostConfig tmpfs3 + Mounts0. Run1 tests0/cleanup OK. Next only one fresh explicitly authorized exact55 run2 plus recorded-ID cleanup; retry0.
 
@@ -22,7 +24,7 @@
 
 Текущая работа D-1602 (2026-11-19): **S2 SPLIT; S2A PARTNER LINKS PLAN REVIEW.** Authority couples reviews order/count to positional media thumbnails, so S2B reviews remains B002/exact-position-bound. Candidate designs only owner+legacy_partner_links exact6/cap64 through fixed `label+https_url` wire and one literal adapter. Generic repeater/URL policy mirror/media/model/dependency0; code/runtime0. Next independent architecture review.
 
-Текущая работа D-1601 (2026-11-19): **001B-S1-PROCESS FULLY CLOSED.** Functional browser result independently ACCEPTED0/0/0, product0/no-bloat, repeat0. Together with accepted PostgreSQL exact51, literal OWNER+home process editor is closed across projection/wire/PageCAS/template/current JS. Overall estimate38–40%, remaining16/23/37 workdays. Next separate task is S2 requirements/plan for literal URL structures; S3/S4/M closed.
+Текущая работа D-1601 (2026-11-19): **001B-S1-PROCESS FULLY CLOSED.** Functional browser result independently ACCEPTED0/0/0, product0/no-bloat, repeat0. Together with accepted PostgreSQL exact51, literal OWNER+home process editor is closed across projection/wire/PageCAS/template/current JS. Overall estimate38–40%, remaining16/23/37 productive hours. Next separate task is S2 requirements/plan for literal URL structures; S3/S4/M closed.
 
 Текущая работа D-1600 (2026-11-19): **PROCESS FUNCTIONAL RUN2 PASS8/8; RESULT REVIEW.** Fresh functional-only trusted offline preparation reused3/downloaded0; real network-none Chromium worker1/retries0 passed all exact8 in11.3s, exit0. ListOnly was not repeated; one-shot containers completed. Next independent result acceptance before browser/S1 closure.
 

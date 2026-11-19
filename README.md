@@ -1,6 +1,8 @@
 # Новый сайт автосервиса «Эстакада»
 
-> **Текущая точка D-1612 (2026-11-19): СМЕНА ЗАКРЫТА; ПРОДОЛЖЕНИЕ С LINKS PG RUN2.** Готовность примерно39–41%, осталось15/22/36 продуктивных рабочих дней; за смену около+5–7 п.п. Corrected exact55 run2 одобрен, но не запускался и требует свежего разрешения.
+> **Исправление D-1613 (2026-11-19):** остаток `15/22/36` — это продуктивные **часы**, а не дни: примерно2/3/4.5 восьмичасовых рабочих дня. Готовность39–41% и точка продолжения D-1612 не изменились.
+
+> **Текущая точка D-1612 (2026-11-19): СМЕНА ЗАКРЫТА; ПРОДОЛЖЕНИЕ С LINKS PG RUN2.** Готовность примерно39–41%, осталось15/22/36 продуктивных часов; за смену около+5–7 п.п. Corrected exact55 run2 одобрен, но не запускался и требует свежего разрешения.
 
 > **Текущая точка D-1611 (2026-11-19): LINKS PG HARNESS FIX APPROVED; RUN2 OWNER GATE.** Repeat review0/0/0/product0/no-bloat. One corrected exact55 run2 requires fresh explicit permission; no automatic retry.
 
@@ -22,7 +24,7 @@
 
 > **Текущая точка D-1602 (2026-11-19): S2 DECOUPLED; S2A-LINKS PLAN REVIEW.** Reviews remain B002/thumbnail-position-bound; only exact six no-media partner links are designed through a literal fixed wire/adapter. Generic repeater/URL builder0; code/runtime0. Next independent architecture review.
 
-> **Текущая точка D-1601 (2026-11-19): 001B-S1-PROCESS CLOSED; PG51 + CHROMIUM8 ACCEPTED.** Browser result0/0/0/product0/no-bloat, repeat0. Overall estimate38–40%, remaining16/23/37 workdays fast/realistic/cautious. Next separate stage: S2 literal URL structures plan; S3/S4/M closed.
+> **Текущая точка D-1601 (2026-11-19): 001B-S1-PROCESS CLOSED; PG51 + CHROMIUM8 ACCEPTED.** Browser result0/0/0/product0/no-bloat, repeat0. Overall estimate38–40%, remaining16/23/37 productive hours fast/realistic/cautious. Next separate stage: S2 literal URL structures plan; S3/S4/M closed.
 
 > **Текущая точка D-1600 (2026-11-19): PROCESS FUNCTIONAL RUN2 PASS8/8; RESULT REVIEW.** Trusted offline reused3/downloaded0; real Chromium worker1/retries0 passed exact8 in11.3s, exit0. List not repeated. Next independent acceptance before S1 closure.
 

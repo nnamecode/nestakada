@@ -1,6 +1,8 @@
 # Процесс полной разработки
 
-> **Текущая точка D-1612 (2026-11-19): SHIFT CLOSED; RESUME AT LINKS PG RUN2 OWNER GATE.** Overall39–41%, remaining15/22/36 productive workdays, shift delta about+5–7 pp. Corrected exact55 run2 is approved/unexecuted; browser8 and later slices remain separate.
+> **Текущая точка D-1613 (2026-11-19): WBS UNIT CORRECTED.** Remaining15/22/36 means productive hours, about2/3/4.5 eight-hour workdays—not15/22/36 days. Progress and D-1612 resume gate unchanged.
+
+> **Текущая точка D-1612 (2026-11-19): SHIFT CLOSED; RESUME AT LINKS PG RUN2 OWNER GATE.** Overall39–41%, remaining15/22/36 productive hours, shift delta about+5–7 pp. Corrected exact55 run2 is approved/unexecuted; browser8 and later slices remain separate.
 
 > **Текущая точка D-1611 (2026-11-19): LINKS PG RUN2 EXPLICIT GATE.** Harness fix review0/0/0; product0, run1 tests0/cleanup OK. Fresh exact55 run2 needs owner permission.
 
@@ -22,7 +24,7 @@
 
 > **Текущая точка D-1602 (2026-11-19): S2 DECOUPLED; LINKS PLAN REVIEW.** Reviews stay thumbnail/B002-bound; only literal no-media partner links exact6/cap64 are planned. Generic repeater0, code/runtime0; next independent review.
 
-> **Текущая точка D-1601 (2026-11-19): S1-PROCESS CLOSED; SERVER51+BROWSER8 ACCEPTED.** Result0/0/0/product0/no-bloat/repeat0. Overall38–40%, remaining16/23/37 workdays. Next separate plan is S2 literal URL structures; later slices remain closed.
+> **Текущая точка D-1601 (2026-11-19): S1-PROCESS CLOSED; SERVER51+BROWSER8 ACCEPTED.** Result0/0/0/product0/no-bloat/repeat0. Overall38–40%, remaining16/23/37 productive hours. Next separate plan is S2 literal URL structures; later slices remain closed.
 
 > **Текущая точка D-1600 (2026-11-19): PROCESS FUNCTIONAL8 GREEN; RESULT REVIEW.** Real Chromium exact8/8 passed in11.3s under trusted offline boundary, exit0; independent acceptance precedes S1 closure.
 
