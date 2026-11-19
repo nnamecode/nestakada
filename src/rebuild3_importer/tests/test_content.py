@@ -1,6 +1,8 @@
 import copy
 import unittest
 
+from modules.pages.api import ContentValidationError
+from modules.pages.api import validate_payload as validate_page_payload
 from rebuild3_importer.content import FIELD_SETS, MEDIA_SLOTS, RICH_BY_KIND, validate_payload
 from rebuild3_importer.errors import ManifestError
 
@@ -27,10 +29,22 @@ def payload(kind):
 
 
 class ContentContractTests(unittest.TestCase):
+    def _assert_rejected(self, value, kind):
+        with self.assertRaises(ContentValidationError) as direct:
+            validate_page_payload(value, kind)
+        with self.assertRaises(ManifestError) as wrapped:
+            validate_payload(value, kind)
+        self.assertEqual(wrapped.exception.code, direct.exception.code)
+        self.assertEqual(str(wrapped.exception), str(direct.exception))
+        self.assertIsInstance(wrapped.exception.__cause__, ContentValidationError)
+
     def test_exact_nineteen_kinds_accept_minimal_canonical_payload(self):
         self.assertEqual(set(FIELD_SETS), KINDS)
         for kind in sorted(KINDS):
-            with self.subTest(kind=kind): self.assertIsInstance(validate_payload(payload(kind), kind), dict)
+            with self.subTest(kind=kind):
+                direct = validate_page_payload(payload(kind), kind)
+                self.assertIsInstance(direct, dict)
+                self.assertEqual(validate_payload(payload(kind), kind), direct)
 
     def test_unknown_field_kind_and_noncanonical_rich_are_rejected(self):
         cases = []
@@ -42,7 +56,7 @@ class ContentContractTests(unittest.TestCase):
         value = payload("home"); value["fields"]["lead"] = "<script>x</script>"; cases.append(value)
         value = payload("home"); value["fields"]["lead"] = "<b>x</b>"; cases.append(value)
         for value in cases:
-            with self.assertRaises(ManifestError): validate_payload(value, "home")
+            self._assert_rejected(value, "home")
 
     def test_price_v1_rejects_float_unknown_column_and_duplicate_ids(self):
         base = payload("service_detail")
@@ -62,7 +76,7 @@ class ContentContractTests(unittest.TestCase):
         ):
             candidate = copy.deepcopy(valid); mutate(candidate)
             invalid = payload("service_detail"); invalid["fields"]["price_rows"] = candidate
-            with self.assertRaises(ManifestError): validate_payload(invalid, "service_detail")
+            self._assert_rejected(invalid, "service_detail")
 
     def test_media_refs_are_unique_bounded_and_returned_by_slot(self):
         value = payload("home")
@@ -70,7 +84,7 @@ class ContentContractTests(unittest.TestCase):
         value["fields"]["media"]["hero"] = asset
         self.assertEqual(validate_payload(value, "home")["hero"], [asset])
         value["fields"]["media"]["works"] = [asset, asset]
-        with self.assertRaises(ManifestError): validate_payload(value, "home")
+        self._assert_rejected(value, "home")
 
     def test_typed_array_caps_are_closed(self):
         cases = (
@@ -81,16 +95,16 @@ class ContentContractTests(unittest.TestCase):
         )
         for kind, field, item, count in cases:
             value = payload(kind); value["fields"][field] = [copy.deepcopy(item) for _ in range(count)]
-            with self.subTest(kind=kind), self.assertRaises(ManifestError): validate_payload(value, kind)
+            with self.subTest(kind=kind): self._assert_rejected(value, kind)
 
     def test_visible_text_and_dom_nodes_are_payload_aggregate_caps(self):
         value = payload("home"); value["fields"]["lead"] = "<p>" + ("x" * 200_001) + "</p>"
-        with self.assertRaises(ManifestError): validate_payload(value, "home")
+        self._assert_rejected(value, "home")
         value = payload("home"); fragment = "<p>x</p>" * 3_500
         for field in ("lead", "about", "contact_text"): value["fields"][field] = fragment
-        with self.assertRaises(ManifestError): validate_payload(value, "home")
+        self._assert_rejected(value, "home")
         value = payload("home"); value["fields"]["lead"] = "<p>x</p>" * 10_001
-        with self.assertRaises(ManifestError): validate_payload(value, "home")
+        self._assert_rejected(value, "home")
 
     def test_rich_attributes_and_https_boundary_are_closed(self):
         for rich in (
@@ -100,4 +114,4 @@ class ContentContractTests(unittest.TestCase):
             '<table><tr><td rowspan="101">x</td></tr></table>',
         ):
             value = payload("home"); value["fields"]["lead"] = rich
-            with self.subTest(rich=rich), self.assertRaises(ManifestError): validate_payload(value, "home")
+            with self.subTest(rich=rich): self._assert_rejected(value, "home")

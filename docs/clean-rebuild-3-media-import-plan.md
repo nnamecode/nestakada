@@ -1,6 +1,6 @@
 # REBUILD-3 — минимальная media schema и одноразовый coherent importer
 
-Дата: 2026-11-17. Plan ID: `RB3-MEDIA-IMPORT-001`. Статус: **plan/code-only gate approved; RB3-IMP-001/002/003/004 independently APPROVED 0/0/0 D-1434/D-1436/D-1437/D-1438; RB3-IMP-005 concrete-adapter remediation steps1–2 APPROVED D-1440/D-1441, step3 active; runtime0**.
+Дата: 2026-11-17. Plan ID: `RB3-MEDIA-IMPORT-001`. Статус: **code/full synthetic complete; D-1504 target-PostgreSQL media tracking/schema gate PASS14/14 and result ACCEPTED 0/0/0; real import remains B002-blocked**.
 
 ## 1. Цель и authority
 

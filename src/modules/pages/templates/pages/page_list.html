@@ -1,0 +1,19 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Страницы — Эстакада{% endblock %}
+{% block content %}
+  <h1>Страницы</h1>
+  <table>
+    <thead><tr><th>Название</th><th>Адрес</th><th>Тип</th><th>Публикация</th><th>Поколение</th><th>Доступ</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td><a href="{% url 'manage-page-editor' row.id %}">{{ row.name }}</a></td><td>{{ row.path }}</td><td>{{ row.kind }}</td>
+          <td>{% if row.published %}Опубликована{% else %}Скрыта{% endif %}</td>
+          <td>{{ row.generation }}</td><td>{{ row.groups|join:", " }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">Нет доступных страниц.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

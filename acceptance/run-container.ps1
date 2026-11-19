@@ -1,10 +1,14 @@
 param(
-    [ValidateSet('harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list')][string]$Mode = 'harness'
+    [ValidateSet('harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list')][string]$Mode = 'harness',
+    [switch]$ListOnly
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $scratch = Join-Path $repo 'work\acceptance-container'
-$package = Join-Path $scratch 'acceptance'
+$richMode = $Mode -in @('rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native')
+if ($ListOnly -and -not $richMode) { throw 'ListOnly is allowed only for native editor modes.' }
+$richRoot = Join-Path $scratch $Mode
+$package = if ($richMode) { Join-Path $richRoot 'acceptance' } else { Join-Path $scratch 'acceptance' }
 $store = Join-Path $repo 'work\pnpm-store'
 $results = Join-Path $repo 'test-results\acceptance'
 $pnpmPackage = $env:ESTAKADA_PNPM_PACKAGE
@@ -16,10 +20,73 @@ if (-not (Test-Path -LiteralPath (Join-Path $pnpmPackage 'bin\pnpm.mjs'))) {
 }
 $pnpmVersion = (Get-Content -Raw -LiteralPath (Join-Path $pnpmPackage 'package.json') | ConvertFrom-Json).version
 if ($pnpmVersion -ne '11.25.0') { throw "Unapproved pnpm version: $pnpmVersion" }
+if ($richMode) {
+    $workRoot = Join-Path $repo 'work'
+    foreach ($component in @(
+        @{ Path = $workRoot; Parent = $repo },
+        @{ Path = $scratch; Parent = $workRoot },
+        @{ Path = $richRoot; Parent = $scratch }
+    )) {
+        if (Test-Path -LiteralPath $component.Path) {
+            $componentItem = Get-Item -LiteralPath $component.Path -Force
+            if (-not $componentItem.PSIsContainer -or
+                ($componentItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+                [IO.Path]::GetFullPath($componentItem.FullName) -ne [IO.Path]::GetFullPath($component.Path) -or
+                [IO.Path]::GetFullPath([IO.Path]::GetDirectoryName($componentItem.FullName)) -ne [IO.Path]::GetFullPath($component.Parent)) {
+                throw "Unsafe rich editor staging component: $($component.Path)"
+            }
+        }
+    }
+    $expectedRichRoot = [IO.Path]::GetFullPath((Join-Path $scratch $Mode))
+    $actualRichRoot = [IO.Path]::GetFullPath($richRoot)
+    if ($actualRichRoot -ne $expectedRichRoot -or [IO.Path]::GetDirectoryName($actualRichRoot) -ne [IO.Path]::GetFullPath($scratch)) {
+        throw 'Rich editor staging path escaped the fixed scratch root.'
+    }
+    if (Test-Path -LiteralPath $actualRichRoot) {
+        $richItem = Get-Item -LiteralPath $actualRichRoot -Force
+        if (-not $richItem.PSIsContainer -or ($richItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Rich editor staging root must be a regular directory.'
+        }
+        Remove-Item -LiteralPath $actualRichRoot -Recurse -Force
+    }
+}
 foreach ($directory in @($package, $results)) {
     New-Item -ItemType Directory -Path $directory -Force | Out-Null
 }
 if (-not (Test-Path -LiteralPath $store)) { throw 'Offline pnpm store missing; run the approved local install first.' }
+if ($richMode) {
+    $trustedInputs = @(
+        @{ Name = 'package.json'; Sha256 = '4F67B18A01DEA58504AB72A98697514475423307D21BB5E42015DA14B6E2017B' },
+        @{ Name = 'pnpm-lock.yaml'; Sha256 = '51E5ADEF0356129F1415DA50C4913064EA9435342F5DE6B7988FE40B2E7C1264' }
+    )
+    foreach ($trustedInput in $trustedInputs) {
+        $sourcePath = Join-Path $PSScriptRoot $trustedInput.Name
+        $sourceItem = Get-Item -LiteralPath $sourcePath -Force
+        if ($sourceItem.PSIsContainer -or
+            ($sourceItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -cne $trustedInput.Sha256) {
+            throw "Rich editor trusted input mismatch: $($trustedInput.Name)"
+        }
+    }
+    $nativeSpec = switch ($Mode) {
+        'price-editor-native' { 'price-editor-native.spec.js' }
+        'process-editor-native' { 'process-editor-native.spec.js' }
+        'links-editor-native' { 'links-editor-native.spec.js' }
+        default { 'rich-editor-native.spec.js' }
+    }
+    foreach ($file in @('package.json', 'pnpm-lock.yaml', 'playwright.config.js', $nativeSpec)) {
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination (Join-Path $package $file) -Force
+    }
+    foreach ($trustedInput in $trustedInputs) {
+        $stagedPath = Join-Path $package $trustedInput.Name
+        $stagedItem = Get-Item -LiteralPath $stagedPath -Force
+        if ($stagedItem.PSIsContainer -or
+            ($stagedItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            (Get-FileHash -LiteralPath $stagedPath -Algorithm SHA256).Hash -cne $trustedInput.Sha256) {
+            throw "Rich editor staged trusted input mismatch: $($trustedInput.Name)"
+        }
+    }
+} else {
 foreach ($file in @('package.json', 'pnpm-lock.yaml', 'playwright.config.js', 'test-support.js',
                     'harness.spec.js', 'browser-harness.spec.js', 'public-http.spec.js',
                     'public-contracts.spec.js', 'html-metadata.js', 'application-driver-contract.js', 'application-contracts.spec.js', 'form-contracts.spec.js',
@@ -42,6 +109,7 @@ foreach ($file in @('local-bindings.json', 'local-fixture-bridge.mjs', 'local-fi
     } elseif (Test-Path -LiteralPath $targetFile) {
         Remove-Item -LiteralPath $targetFile -Force
     }
+}
 }
 # Exact official image downloaded under D-303; no latest, production ports or Docker socket.
 $foundationMount = @()
@@ -82,6 +150,22 @@ $playwrightArgs = switch ($Mode) {
     'application-contracts' { '--project=application-contracts --max-failures=1' }
     'migration-source' { '--project=migration-source --max-failures=1' }
     'editor-safety' { '--project=editor-safety --max-failures=1' }
+    'rich-editor-native' {
+        if ($ListOnly) { '--project=rich-editor-native --list' }
+        else { '--project=rich-editor-native --max-failures=1' }
+    }
+    'price-editor-native' {
+        if ($ListOnly) { '--project=price-editor-native --list' }
+        else { '--project=price-editor-native --max-failures=1' }
+    }
+    'process-editor-native' {
+        if ($ListOnly) { '--project=process-editor-native --list' }
+        else { '--project=process-editor-native --max-failures=1' }
+    }
+    'links-editor-native' {
+        if ($ListOnly) { '--project=links-editor-native --list' }
+        else { '--project=links-editor-native --max-failures=1' }
+    }
     'auth-login' { '--project=auth-login --max-failures=1' }
     'unsaved-editor' { '--project=unsaved-editor --max-failures=1' }
     'log-quota' { '--project=log-quota --max-failures=1' }
@@ -115,17 +199,29 @@ $playwrightArgs = switch ($Mode) {
     'seo-contracts' { '--project=seo-contracts --max-failures=1' }
     'list' { '--list' }
 }
-$installCommand = 'node --version && node /pnpm/bin/pnpm.mjs install --prefer-offline --frozen-lockfile --ignore-scripts --store-dir /store --config.package-import-method=copy --config.node-linker=hoisted'
+$installCommand = if ($richMode) {
+    'node --version && node /pnpm/bin/pnpm.mjs install --offline --frozen-lockfile --frozen-store --trust-lockfile --ignore-scripts --store-dir /store --config.package-import-method=copy --config.node-linker=hoisted'
+} else {
+    'node --version && node /pnpm/bin/pnpm.mjs install --prefer-offline --frozen-lockfile --ignore-scripts --store-dir /store --config.package-import-method=copy --config.node-linker=hoisted'
+}
 $testCommand = 'node node_modules/@playwright/test/cli.js test ' + $playwrightArgs
 $dockerArgs = @('run', '--rm', '--init',
     '--memory=2g', '--cpus=2', '--pids-limit=256', '--shm-size=512m',
-    '--cap-drop=ALL', '--security-opt=no-new-privileges',
-    '--mount', "type=bind,source=$scratch,target=/workspace",
-    '--mount', "type=bind,source=$(Join-Path $repo 'docs'),target=/workspace/docs,readonly",
-    '--mount', "type=bind,source=$pnpmPackage,target=/pnpm,readonly",
-    '--mount', "type=bind,source=$store,target=/store",
-    '--mount', "type=bind,source=$results,target=/workspace/test-results/acceptance",
-    '--workdir', '/workspace/acceptance', '--env', 'CI=1',
+    '--cap-drop=ALL', '--security-opt=no-new-privileges')
+if ($richMode) {
+    $dockerArgs += @('--pull=never',
+        '--mount', "type=bind,source=$package,target=/workspace/acceptance",
+        '--mount', "type=bind,source=$pnpmPackage,target=/pnpm,readonly",
+        '--mount', "type=bind,source=$store,target=/store,readonly",
+        '--mount', "type=bind,source=$results,target=/workspace/test-results/acceptance")
+} else {
+    $dockerArgs += @('--mount', "type=bind,source=$scratch,target=/workspace",
+        '--mount', "type=bind,source=$(Join-Path $repo 'docs'),target=/workspace/docs,readonly",
+        '--mount', "type=bind,source=$pnpmPackage,target=/pnpm,readonly",
+        '--mount', "type=bind,source=$store,target=/store",
+        '--mount', "type=bind,source=$results,target=/workspace/test-results/acceptance")
+}
+$dockerArgs += @('--workdir', '/workspace/acceptance', '--env', 'CI=1',
     '--env', "ESTAKADA_TEST_REPORT=$Mode",
     '--env', 'XDG_CACHE_HOME=/tmp/cache', '--env', 'XDG_DATA_HOME=/tmp/data')
 if ($env:ESTAKADA_TEST_BASE_URL) {
@@ -152,9 +248,69 @@ if ($Mode -in @('migration-contracts', 'migration-source')) {
     }
     $migrationMount = @('--mount', "type=bind,source=$sourceStage,target=/workspace/acceptance/local-migration-source,readonly")
 }
-# Preparation may fetch registry metadata; package scripts are disabled. It never runs site tests.
-& docker @dockerArgs --network bridge $image /bin/sh -c $installCommand
+# Rich mode is exact-image, offline and source-file-only; existing modes retain their preparation path.
+$preparationNetwork = if ($richMode) { 'none' } else { 'bridge' }
+if ($richMode) {
+    & docker image inspect $image *> $null
+    if ($LASTEXITCODE -ne 0) { throw 'Pinned Playwright image is not present locally; pull is forbidden.' }
+}
+& docker @dockerArgs --network $preparationNetwork $image /bin/sh -c $installCommand
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 # Browser harness/list/red-without-target runs with network=none. Public HTTP is local-only in JS.
-& docker @dockerArgs @migrationMount @foundationMount @authFixtureMount --network $network $image /bin/sh -c $testCommand
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$richSourceMount = @()
+if ($richMode) {
+    $editorSource = Join-Path $repo 'src\modules\pages\static\pages\editor.js'
+    $editorItem = Get-Item -LiteralPath $editorSource -Force
+    if ($editorItem.PSIsContainer -or ($editorItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        throw 'Rich editor source must be one regular file.'
+    }
+    $richSourceMount = @('--mount', "type=bind,source=$editorSource,target=/source/editor.js,readonly")
+    if ($Mode -eq 'price-editor-native') {
+        $priceSource = Join-Path $repo 'src\modules\pages\static\pages\price-editor.js'
+        $priceItem = Get-Item -LiteralPath $priceSource -Force
+        if ($priceItem.PSIsContainer -or ($priceItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Price editor source must be one regular file.'
+        }
+        $richSourceMount += @('--mount', "type=bind,source=$priceSource,target=/source/price-editor.js,readonly")
+    }
+    if ($Mode -eq 'process-editor-native') {
+        $processSource = Join-Path $repo 'src\modules\pages\static\pages\process-steps-editor.js'
+        $processItem = Get-Item -LiteralPath $processSource -Force
+        if ($processItem.PSIsContainer -or ($processItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Process editor source must be one regular file.'
+        }
+        $richSourceMount += @('--mount', "type=bind,source=$processSource,target=/source/process-steps-editor.js,readonly")
+    }
+    if ($Mode -eq 'links-editor-native') {
+        $linksSource = Join-Path $repo 'src\modules\pages\static\pages\partner-links-editor.js'
+        $linksItem = Get-Item -LiteralPath $linksSource -Force
+        if ($linksItem.PSIsContainer -or ($linksItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Partner links editor source must be one regular file.'
+        }
+        $richSourceMount += @('--mount', "type=bind,source=$linksSource,target=/source/partner-links-editor.js,readonly")
+    }
+    & docker image inspect $image *> $null
+    if ($LASTEXITCODE -ne 0) { throw 'Pinned Playwright image disappeared before the test container.' }
+}
+if ($ListOnly) {
+    $listOutputPath = Join-Path $richRoot 'list-output.txt'
+    & docker @dockerArgs @migrationMount @foundationMount @authFixtureMount @richSourceMount --network $network $image /bin/sh -c $testCommand *> $listOutputPath
+    $testExit = $LASTEXITCODE
+    $listOutputItem = Get-Item -LiteralPath $listOutputPath -Force
+    if ($listOutputItem.PSIsContainer -or
+        ($listOutputItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+        [IO.Path]::GetFullPath($listOutputItem.FullName) -ne [IO.Path]::GetFullPath($listOutputPath)) {
+        throw 'Native editor list output is not the exact regular evidence file.'
+    }
+    if ($listOutputItem.Length -gt 65536) { throw 'Native editor list output exceeded the 64 KiB evidence bound.' }
+    $testOutput = @(Get-Content -LiteralPath $listOutputPath)
+    if ($testOutput.Count -gt 200) { throw 'Native editor list output exceeded the 200-line evidence bound.' }
+    $testOutput | Write-Output
+    if ($testExit -ne 0) { exit $testExit }
+    $summaryLines = @($testOutput | ForEach-Object { ([string]$_).TrimEnd("`r") } |
+        Where-Object { $_ -ceq 'Total: 8 tests in 1 file' })
+    if ($summaryLines.Count -ne 1) { throw 'Native editor exact8 discovery summary mismatch.' }
+} else {
+    & docker @dockerArgs @migrationMount @foundationMount @authFixtureMount @richSourceMount --network $network $image /bin/sh -c $testCommand
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}

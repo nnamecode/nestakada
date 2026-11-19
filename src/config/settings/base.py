@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "modules.accounts.middleware.PrivateIngressMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -90,6 +91,8 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = "/static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_600
+DATA_UPLOAD_MAX_MEMORY_SIZE = 4_194_304
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True

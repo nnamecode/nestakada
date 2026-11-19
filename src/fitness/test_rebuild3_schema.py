@@ -35,8 +35,14 @@ def _canonical(value: Any) -> Any:
         return str(value)
     deconstruct = getattr(value, "deconstruct", None)
     if callable(deconstruct):
-        path, args, kwargs = deconstruct()
-        return path, _canonical(args), _canonical(kwargs)
+        parts = deconstruct()
+        if len(parts) == 3:
+            path, args, kwargs = parts
+            return "deconstruct3", path, _canonical(args), _canonical(kwargs)
+        if len(parts) == 4:
+            _name, path, args, kwargs = parts
+            return "deconstruct4", path, _canonical(args), _canonical(kwargs)
+        raise TypeError(f"Unsupported deconstruct arity: {len(parts)}")
     return value
 
 

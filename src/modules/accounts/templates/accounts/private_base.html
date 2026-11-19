@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Эстакада — управление{% endblock %}</title>
+</head>
+<body>
+  <header>
+    <strong>Панель управления «Эстакада»</strong>
+    {% if request.user.is_authenticated %}
+      <form method="post" action="{% url 'manage-logout' %}">
+        {% csrf_token %}
+        <button type="submit">Выйти</button>
+      </form>
+    {% endif %}
+  </header>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

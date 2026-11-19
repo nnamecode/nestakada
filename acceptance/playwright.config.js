@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const reportName = ['harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list'].includes(process.env.ESTAKADA_TEST_REPORT)
+const reportName = ['harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list'].includes(process.env.ESTAKADA_TEST_REPORT)
   ? process.env.ESTAKADA_TEST_REPORT : 'local';
 
 export default defineConfig({
@@ -22,6 +22,10 @@ export default defineConfig({
     { name: 'application-contracts', testMatch: 'application-contracts.spec.js' },
     { name: 'migration-source', testMatch: 'migration-source.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
     { name: 'editor-safety', testMatch: 'editor-safety.spec.js', use: { browserName: 'chromium', javaScriptEnabled: false, serviceWorkers: 'block' } },
+    { name: 'rich-editor-native', testMatch: 'rich-editor-native.spec.js', use: { browserName: 'chromium', serviceWorkers: 'block' } },
+    { name: 'price-editor-native', testMatch: 'price-editor-native.spec.js', use: { browserName: 'chromium', serviceWorkers: 'block' } },
+    { name: 'process-editor-native', testMatch: 'process-editor-native.spec.js', use: { browserName: 'chromium', serviceWorkers: 'block' } },
+    { name: 'links-editor-native', testMatch: 'links-editor-native.spec.js', use: { browserName: 'chromium', serviceWorkers: 'block' } },
     // Real two-source fixture uses bounded Docker/DB observations between requests.
     // This is only the test-process budget, not an authentication/session policy.
     { name: 'auth-login', testMatch: 'auth-login.spec.js', timeout: 120_000 },

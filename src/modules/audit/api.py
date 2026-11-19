@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Mapping
 
-from .models import ActorKind, ActorRole, AuditEvent, TargetType
+from .models import Action, ActorKind, ActorRole, AuditEvent, TargetType
 
 
 @dataclass(frozen=True, slots=True)

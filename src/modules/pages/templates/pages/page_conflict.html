@@ -1,0 +1,8 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Конфликт изменений — Эстакада{% endblock %}
+{% block content %}
+  <h1>Страница уже изменилась</h1>
+  <p>Текущее поколение: {{ generation }}</p>
+  <p data-current-hash>{{ current_hash }}</p>
+  <p><a href="{% url 'manage-page-editor' page_id %}">Перезагрузить редактор</a></p>
+{% endblock %}

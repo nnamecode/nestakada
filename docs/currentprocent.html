@@ -12,15 +12,15 @@
 <body><main>
   <p class="note">Актуальная сводка по плану чистой пересборки</p>
   <h1>Готовность новой версии «Эстакады»</h1>
-  <p class="lead">Обновлено: <strong>17 ноября 2026 года</strong>. Текущая точка: <strong>D-1436, RB3-IMP-002 code approved</strong>.</p>
+  <p class="lead">Обновлено: <strong>19 ноября 2026 года</strong>. Текущая точка: <strong>D-1612, смена закрыта; RB4 links PG run2 owner gate</strong>.</p>
 
   <div class="card">
-    <strong>Текущая WBS-оценка:</strong> готовность <strong>27–30%</strong>; осталось <strong>23 / 30 / 44 продуктивных часа</strong> в optimistic / likely / risk сценариях.
-    Completed REBUILD-0/1/2 credit — 10/13/16h, общий basis — 33/43/60h. D-1428 independent result review принял check/drift/migrations/26 tests, cleanup и credit 4/5/6h. Risk включает named bounded remediation triggers, прежде всего deferred media source на freeze; новый scope, ожидание владельца и production/live не спрятаны.
+    <strong>Текущая WBS-оценка:</strong> готовность <strong>39–41%</strong>; осталось примерно <strong>15 / 22 / 36 продуктивных рабочих дней</strong> в fast / realistic / cautious сценариях.
+    За смену 19 ноября прибавлено ориентировочно 5–7 процентных пунктов. Ожидание владельца, новый scope, B002/реальный импорт, live/deploy и удаление старого runtime в процент не спрятаны.
   </div>
 
   <div class="card blocked">
-    <strong>Текущий статус:</strong> REBUILD-2 завершён. REBUILD-3 plan/code-only gate и IMP-001/002/003/004 независимо приняты 0/0/0. RB3-IMP-005 whole-slice static review продолжается; runtime/target/freeze/live закрыты.
+    <strong>Текущий статус:</strong> REBUILD-3 synthetic importer и media tracking закрыты. В REBUILD-4 закрыты private auth/list, rich editor001A, price001B-P и process001B-S1. Partner-links S2A code принят; исправленный PostgreSQL exact55 run2 одобрен, но не запускался.
   </div>
 
   <h2>Фазы нового плана</h2>
@@ -30,8 +30,8 @@
       <tr><td>REBUILD-0</td><td>Архитектура, границы модулей, MVP, приёмочные контракты и независимое review</td><td class="done">✅ Завершено и утверждено владельцем</td></tr>
       <tr><td>REBUILD-1</td><td>Read-only inventory старой БД/медиа, точные URL, manifest и фактический WBS</td><td class="done">✅ Условно завершён D-1411; один exact source blocker перенесён на REBUILD-3 freeze</td></tr>
       <tr><td>REBUILD-2</td><td>Чистый Django skeleton и минимальные accounts/pages/audit</td><td class="done">✅ Завершено D-1428; result review APPROVED 0/0/0</td></tr>
-      <tr><td>REBUILD-3</td><td>Media schema и одноразовый importer в пустую целевую пару DB+media</td><td class="active">🟡 IMP-001/002 source APPROVED 0/0/0; IMP-003 code-only active; runtime0</td></tr>
-      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td class="closed">⬜ Не начато</td></tr>
+      <tr><td>REBUILD-3</td><td>Media schema и одноразовый importer в пустую целевую пару DB+media</td><td class="active">🟡 Synthetic exact168 и media tracking14 приняты; реальный импорт остаётся B002-blocked</td></tr>
+      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td class="active">🟡 Auth/list, rich, price и process закрыты; partner links code approved, PG/browser gates впереди</td></tr>
       <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и все 115 URL</td><td class="closed">⬜ Не начато</td></tr>
       <tr><td>REBUILD-6</td><td>Галерея и минимальная заявка после правового/технического допуска</td><td class="closed">⬜ Не начато</td></tr>
       <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td class="closed">⬜ Не начато</td></tr>
@@ -46,7 +46,7 @@
       <tr><td>Статические authority-файлы</td><td>115 уникальных route outcomes, 20 transport types, 19 payload kinds и точные contract/design digests зафиксированы</td><td>Это ещё не полный DB/media baseline</td></tr>
       <tr><td>DBPRE contract</td><td>Least-privilege роль, allowlist14, 29 aggregate facts и exact cleanup приняты независимым result review</td><td>Source DB baseline принят; private rows не публиковались</td></tr>
       <tr><td>Media baseline</td><td>Exact301 hashes приняты; DB binding/reconciliation доказали matched237, unmatched1 и обязательные usages2+1</td><td>Duplicate matched pair остаётся отдельным target-schema вопросом</td></tr>
-      <tr><td>Source verifier</td><td>RUN004 exact cleanup-only PASS; verifier0/cid0/media0. Owner chose bounded offline harness; parser PASS</td><td>Final code review pending; Docker/DB/media runtime remains stopped</td></tr>
+      <tr><td>Source verifier</td><td>Bounded offline evidence сохранена; unmatched eligible source честно зафиксирован</td><td>Точное разрешение перенесено на coherent REBUILD-3/B002 freeze без нового subsystem</td></tr>
       <tr><td>Финальное состояние</td><td>Последние выполненные probes завершались project containers0/secret0; новый runner имеет exact known/UNKNOWN cleanup contracts</td><td>Следующий запуск только по отдельному owner gate</td></tr>
     </tbody>
   </table></div>
@@ -57,7 +57,7 @@
     <tbody>
       <tr><td>REBUILD-Q001</td><td>Принять clean-rebuild подход и открыть только REBUILD-0/1</td><td class="done">✅ APPROVED</td></tr>
       <tr><td>RB1-READ-Q001</td><td>Один bounded source-DB preflight</td><td class="done">✅ PASS и result review APPROVED</td></tr>
-      <tr><td>RB1-MEDIA-SOURCE-Q001</td><td>Один bounded local RRRO + read-only exact-file verifier</td><td class="active">⛔ Runtime stopped; clean state restored; offline harness final review pending</td></tr>
+      <tr><td>RB1-MEDIA-SOURCE-Q001</td><td>Bounded source evidence и unmatched-source decision</td><td class="done">✅ Offline work closed; exact unmatched resolution deferred to B002 freeze</td></tr>
       <tr><td>REBUILD-Q002</td><td>После принятого baseline разрешить новый <code>src/</code> и реализацию</td><td class="done">✅ Code-only scope approved D-1412; runtime/target/freeze не разрешены</td></tr>
       <tr><td>REBUILD-Q003</td><td>После полной приёмки разрешить local cutover</td><td class="closed">🔒 Закрыто</td></tr>
       <tr><td>REBUILD-Q004</td><td>Подтвердить точные destructive targets старого runtime после backup/rollback window</td><td class="closed">🔒 Закрыто</td></tr>
@@ -65,7 +65,7 @@
   </table></div>
 
   <h2>Ближайший безопасный шаг</h2>
-  <p>Следующий шаг — code-only RB3-IMP-002 closed manifest/projection validators. Install, synthetic/runtime/freeze execution, target/cutover/live остаются отдельно закрыты.</p>
+  <p>Следующий шаг — после свежего явного разрешения один corrected Docker/PostgreSQL run2 <code>RB4-EDITOR-LINKS-PG-001</code> exact55 с HostConfig.Tmpfs3/Mounts0 и cleanup только записанных ID. Автоповтор, browser, real import, cutover и live этим не разрешены.</p>
 
   <p class="note">Основные источники: <a href="clean-rebuild-plan.md">план чистой пересборки</a>, <a href="tasks.md">реестр задач</a>, <a href="pipeline.md">процесс</a> и <a href="decisions.md">решения</a>. Старый сайт, VPS и production этой работой не меняются.</p>
 </main></body>

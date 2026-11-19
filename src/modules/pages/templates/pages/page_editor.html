@@ -1,0 +1,175 @@
+{% extends "accounts/private_base.html" %}
+{% load static %}
+{% block title %}{{ page.name }} — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-pages' %}">← К списку страниц</a></p>
+  <h1>{{ page.name }}</h1>
+  <dl>
+    <dt>Адрес</dt><dd>{{ primary_path }}</dd>
+    <dt>Тип</dt><dd>{{ page.kind }}</dd>
+    <dt>Публикация</dt><dd>{% if page.is_published %}Опубликована{% else %}Скрыта{% endif %}</dd>
+    <dt>Поколение</dt><dd>{{ generation }}</dd>
+    <dt>Доступ</dt><dd>{{ grant_groups|join:", " }}</dd>
+  </dl>
+  {% if deferred_fields %}
+    <section><h2>Поля следующего этапа</h2><p>Эти данные сохраняются без изменений.</p>
+      <ul>{% for field in deferred_fields %}<li>{{ field.label }}: {{ field.count }}</li>{% endfor %}</ul>
+    </section>
+  {% endif %}
+  {% if can_save %}
+    <form method="post" enctype="multipart/form-data" action="{% url 'manage-page-save' page.id %}" data-editor-form{% if prices_only %} data-prices-only{% endif %}>
+      {% csrf_token %}
+      <input type="hidden" name="operation_id" value="{{ save_operation_id }}">
+      <input type="hidden" name="base_generation" value="{{ generation }}">
+      <input type="hidden" name="base_current_hash" value="{{ base_current_hash }}">
+      {% if is_owner %}
+        <fieldset><legend>Основные поля</legend>
+          <label>SEO title <input name="seo.title" maxlength="255" required value="{{ seo.title }}"></label>
+          <label>SEO description
+            <input name="seo.description" maxlength="1000" value="{{ seo.description }}">
+          </label>
+          <label>Индексация <select name="seo.allow_index">
+            <option value="1"{% if seo.allow_index %} selected{% endif %}>Разрешена</option>
+            <option value="0"{% if not seo.allow_index %} selected{% endif %}>Запрещена</option>
+          </select></label>
+          <label>H1 <input name="heading.h1" maxlength="255" required value="{{ heading.h1 }}"></label>
+        </fieldset>
+      {% endif %}
+      {% for control in rich_controls %}
+        <section data-rich-control><h2>{{ control.label }}</h2>
+          <div role="toolbar" aria-label="Форматирование {{ control.label }}">
+            {% for action,label in rich_actions %}
+              <button type="button" data-rich-action="{{ action }}">{{ label }}</button>
+            {% endfor %}
+          </div>
+          <div data-rich-editor role="textbox" aria-multiline="true">{{ control.html }}</div>
+          <input type="hidden" name="rich.{{ control.name }}.changed" value="0" data-rich-changed>
+          <textarea hidden disabled name="rich.{{ control.name }}.value" data-rich-value></textarea>
+        </section>
+      {% endfor %}
+      {% if partner_links_control %}
+        <section data-links-control>
+          <h2>Партнёрские ссылки</h2>
+          <input type="hidden" name="links.changed" value="0" data-links-changed>
+          <div data-links-items>
+            {% for link in partner_links_control.links %}
+              <div data-links-item>
+                <label>Название
+                  <input disabled required value="{{ link.label }}" data-links-input data-links-label>
+                </label>
+                <label>HTTPS-адрес
+                  <input disabled required value="{{ link.https_url }}" data-links-input data-links-url>
+                </label>
+                <button disabled type="button" data-links-input data-links-move="up">↑</button>
+                <button disabled type="button" data-links-input data-links-move="down">↓</button>
+                <button disabled type="button" data-links-input data-links-remove>Удалить ссылку</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button disabled type="button" data-links-input data-links-add>Добавить ссылку</button>
+          <div data-links-carriers></div>
+        </section>
+      {% endif %}
+      {% if process_control %}
+        <section data-process-control>
+          <h2>Этапы работы</h2>
+          <input type="hidden" name="process.changed" value="0" data-process-changed>
+          <div data-process-steps>
+            {% for step in process_control.steps %}
+              <div data-process-step>
+                <label>Название
+                  <input disabled required value="{{ step.title }}" data-process-input data-process-title>
+                </label>
+                <label>Описание
+                  <input disabled value="{{ step.body }}" data-process-input data-process-body>
+                </label>
+                <button disabled type="button" data-process-input data-process-move="up">↑</button>
+                <button disabled type="button" data-process-input data-process-move="down">↓</button>
+                <button disabled type="button" data-process-input data-process-remove>Удалить этап</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button disabled type="button" data-process-input data-process-add>Добавить этап</button>
+          <div data-process-carriers></div>
+        </section>
+      {% endif %}
+      {% if price_control %}
+        <section data-price-control>
+          <h2>Прайс</h2>
+          <input type="hidden" name="price.changed" value="0" data-price-changed>
+          <div data-price-columns>
+            {% for column in price_control.columns %}
+              <div data-price-column data-price-id="{{ column.id }}">
+                <label>Колонка
+                  <input disabled required maxlength="500" value="{{ column.label }}" data-price-input data-price-label>
+                </label>
+                <button disabled type="button" data-price-input data-price-move="up">←</button>
+                <button disabled type="button" data-price-input data-price-move="down">→</button>
+                <button disabled type="button" data-price-input data-price-remove>Удалить колонку</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button disabled type="button" data-price-input data-price-add-column>Добавить колонку</button>
+          <div data-price-rows>
+            {% for row in price_control.rows %}
+              <section data-price-row data-price-id="{{ row.id }}">
+                <label>Строка
+                  <input disabled required maxlength="500" value="{{ row.label }}" data-price-input data-price-label>
+                </label>
+                <button disabled type="button" data-price-input data-price-move="up">↑</button>
+                <button disabled type="button" data-price-input data-price-move="down">↓</button>
+                <button disabled type="button" data-price-input data-price-remove>Удалить строку</button>
+                <div data-price-cells>
+                  {% for cell in row.cells %}
+                    <div data-price-cell data-price-column-id="{{ cell.column_id }}">
+                      <label>Тип
+                        <select disabled data-price-input data-price-kind>
+                          <option value=""{% if not cell.kind %} selected{% endif %}>Нет значения</option>
+                          <option value="text"{% if cell.kind == "text" %} selected{% endif %}>Текст</option>
+                          <option value="amount"{% if cell.kind == "amount" %} selected{% endif %}>Сумма</option>
+                        </select>
+                      </label>
+                      <label data-price-text-fields{% if cell.kind != "text" %} hidden{% endif %}>Текст
+                        <input disabled maxlength="1000" value="{{ cell.text }}" data-price-input data-price-text>
+                      </label>
+                      <span data-price-amount-fields{% if cell.kind != "amount" %} hidden{% endif %}>
+                        <label>Сумма
+                          <input disabled inputmode="decimal" value="{{ cell.amount }}" data-price-input data-price-amount>
+                        </label>
+                        <label>От
+                          <input disabled type="checkbox"{% if cell.from_amount %} checked{% endif %} data-price-input data-price-from>
+                        </label>
+                      </span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </section>
+            {% endfor %}
+          </div>
+          <button disabled type="button" data-price-input data-price-add-row>Добавить строку</button>
+          <div data-price-carriers></div>
+        </section>
+      {% endif %}
+      <p hidden role="alert" data-editor-error-message>
+        Не удалось подготовить безопасное содержимое. Проверьте форматирование и ссылки.
+      </p>
+      <button type="submit" disabled data-editor-save>Сохранить</button>
+      <noscript>
+        <p role="alert">Для безопасного визуального редактора требуется JavaScript. Сохранение недоступно.</p>
+      </noscript>
+    </form>
+  {% endif %}
+  {% if undo_operation_id %}
+    <form method="post" enctype="multipart/form-data" action="{% url 'manage-page-undo' page.id %}">
+      {% csrf_token %}
+      <input type="hidden" name="operation_id" value="{{ undo_operation_id }}">
+      <input type="hidden" name="base_generation" value="{{ generation }}">
+      <input type="hidden" name="base_current_hash" value="{{ base_current_hash }}">
+      <button type="submit">Отменить последнее изменение</button>
+    </form>
+  {% endif %}
+  <script src="{% static 'pages/partner-links-editor.js' %}" defer></script>
+  <script src="{% static 'pages/process-steps-editor.js' %}" defer></script>
+  <script src="{% static 'pages/price-editor.js' %}" defer></script>
+  <script src="{% static 'pages/editor.js' %}" defer></script>
+{% endblock %}

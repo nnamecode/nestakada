@@ -19,7 +19,7 @@ htmlcov/
 # Local application data and artifacts
 *.sqlite3
 *.sqlite3-*
-media/
+/media/
 staticfiles/
 backups/
 *.log

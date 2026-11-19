@@ -203,21 +203,21 @@ Participant API не вызывает внешний transport, не делае�
 
 `PageContent` хранит единственную monotonic ось сохранения — `generation` вне content envelope и payload hash; также current payload/hash и provenance автора/времени создания содержимого; nullable previous payload/hash с provenance; один bounded `last_operation_id/action/result_generation/result_hash`. Отдельной revision ordinal/receipt/history table нет. Editor создаёт UUID `operation_id` до отправки; он не даёт прав и проверяется только после authentication/authorization.
 
-Save содержит `operation_id`, exact `base_generation`, `base_current_hash` и patch по именованным editor groups из content contract. Pages-команда блокирует actor User, затем Page, PageGrant и PageContent, повторно проверяет session generation, active role, grant и content CAS. Совпавший `last_operation_id` возвращает прежний result без mutation/audit. Несовпавший base даёт `409 STALE_CONTENT` с текущими generation/hash; server не делает auto-merge или last-write-wins.
+Save содержит `operation_id`, exact `base_generation`, `base_current_hash` и patch по именованным editor groups из content contract. Pages-команда блокирует actor User, затем Page, PageGrant и PageContent, повторно проверяет session generation, active role, grant и content CAS. Совпавшие `last_operation_id` и action возвращают прежний result без mutation/audit; совпавший ID с другой action fail-closed возвращает constant `409 OPERATION_CONFLICT`, mutation/audit0. Для другого ID несовпавший base даёт `409 STALE_CONTENT` с текущими generation/hash; server не делает auto-merge или last-write-wins.
 
 Owner меняет все разрешённые schema groups. Employee передаёт только patch разрешённых текущим PageGrant групп; protected groups копируются из фактического current без изменения. Лишняя/запрещённая группа отклоняет всю операцию до записи. Успешный save атомарно делает полный прежний current новым previous, строит новый current, увеличивает generation, пересчитывает current+previous media usages и пишет один safe AuditEvent.
 
 Undo разрешён только owner с exact current generation/hash и непустым previous. Под тем же lock exact payload bytes/hash/provenance current и previous меняются местами без reserialization/rehash, generation растёт, usages и audit обновляются. Employee не видит кнопку и получает 403 server-side; partial employee Undo отсутствует. URL/tree/publication/SiteSettings/grants не входят в swap.
 
-После потерянного ответа немедленный повтор того же `operation_id` возвращает сохранённый result без второй mutation. Если уже прошла другая mutation и bounded last-operation slot заменён, старый повтор получает `409 STALE_OPERATION` с текущими generation/hash и обязан reload; server не угадывает исход и не повторяет действие. Provenance содержимого сохраняется при swap, actor/time самой mutation фиксируются в last-operation и AuditEvent. Rich payload/ПД в audit не попадают.
+После потерянного ответа немедленный повтор того же `operation_id` и той же action возвращает сохранённый result без второй mutation. Если bounded last-operation slot уже заменён, сервер не может доказуемо отличить старый retry от нового запроса на той же stale base: любой несовпавший `operation_id` с устаревшими generation/hash получает единый `409 STALE_CONTENT` с текущими generation/hash и обязан reload; server не угадывает исход и не повторяет действие. Receipt/history/audit lookup и клиентский retry-флаг для различения не добавляются. Provenance содержимого сохраняется в current/previous при swap; actor/time самой mutation фиксируются только в AuditEvent, а last-operation slot содержит только ID/action/result generation/hash. Rich payload/ПД в audit не попадают.
 
 Acceptance:
 
 - `PAGECAS-001`: два save с одним base дают один success и один 409 без lost update;
 - `PAGECAS-002`: employee patch не читает/не меняет protected groups и не может Undo;
 - `PAGECAS-003`: owner Undo меняет current/previous местами, generation только растёт;
-- `PAGECAS-004`: immediate same-operation retry возвращает прежний result без mutation/audit;
-- `PAGECAS-005`: retry после intervening mutation даёт stale+reload без повторения старого действия;
+- `PAGECAS-004`: immediate same-ID+same-action retry возвращает прежний result без mutation/audit; same ID с другой action даёт `409 OPERATION_CONFLICT`, mutation/audit0;
+- `PAGECAS-005`: retry после intervening mutation, как и любой другой неизвестный operation ID на stale base, даёт единый `409 STALE_CONTENT`+reload без повторения действия;
 - `PAGECAS-006`: payloads, hashes, provenance, media usages и audit атомарны; fault оставляет прежнее состояние;
 - `PAGECAS-007`: URL/tree/publication/grants/SiteSettings не меняются save/Undo.
 
