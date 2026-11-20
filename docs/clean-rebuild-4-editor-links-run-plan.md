@@ -1,6 +1,6 @@
 # RB4 partner-links editor focused PostgreSQL gate
 
-Дата: 2026-11-19. ID: `RB4-EDITOR-LINKS-PG-001`. Статус: **run1 stopped pre-start on harness-only mount projection; D-1611 correction APPROVED0/0/0/product0/no-bloat, fresh run2 explicit owner gate, tests runtime0**.
+Дата: 2026-11-19. ID: `RB4-EDITOR-LINKS-PG-001`. Статус: **completed by D-1615; corrected run2 exact55/55 independently ACCEPTED0/0/0, product0/no-bloat; repeat unnecessary**.
 
 ## Purpose and exact suite
 
@@ -45,3 +45,7 @@ No source/code/test change, model/migration/dependency/image/volume/runner/seria
 The owner-authorized run1 passed exact image/name/source preflight and recorded only its internal network and PG container. It stopped before PG start, app creation, discovery, migrations or tests because the coordinator expected configured tmpfs entries in Docker `.Mounts`. Recorded-ID cleanup removed the PG container with `-v`, removed the endpoints0 network and proved all exact names absent.
 
 This is harness-only/product0. Docker's bounded projections have separate authorities. The run2 candidate parses JSON `.HostConfig.Tmpfs` with `ConvertFrom-Json -AsHashtable`, requires count3 and exact entries `/var/lib/postgresql=rw,nosuid,nodev,noexec,size=536870912,uid=999,gid=999,mode=0700`, `/var/run/postgresql=rw,nosuid,nodev,noexec,size=16777216,uid=999,gid=999,mode=3775`, `/tmp=rw,nosuid,nodev,noexec,size=33554432,mode=1777`. Separately, JSON `.Mounts` must be an array with count0, proving bind/volume0. Images/source/names/exact55/runtime command/identity/recorded-prefix cleanup remain unchanged. Independent repeat review and fresh owner authorization are required; no automatic retry.
+
+## Corrected run2 result
+
+The separately authorized run2 proved exact local images2 and reserved names absent3, PG HostConfig tmpfs3/Mounts0 before start, TCP readiness attempt4, app tmpfs1/readonly source1/published ports0, internal network true, current-source origins10 and discovery55. Django created/destroyed only `estakada_editor_links_test`, applied all migrations with system check0 and passed accounts16+list9+editor30=55/55 in10.544s with failures/errors/skips0 and `OK`. App state was exited/runningfalse/OOMfalse/deadfalse/exit0/error-empty. Recorded app/PG/network cleanup returned OK. Product finding0 observed; independent result review precedes server-gate closure and separate browser exact8.

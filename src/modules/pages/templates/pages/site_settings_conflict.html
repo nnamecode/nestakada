@@ -1,0 +1,7 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Настройки изменились — Эстакада{% endblock %}
+{% block content %}
+  <h1>SETTINGS_CONFLICT</h1>
+  <p>Настройки уже изменились. Текущее поколение: {{ generation }}.</p>
+  <p><a href="{% url 'manage-site-settings' %}">Перезагрузить настройки</a></p>
+{% endblock %}

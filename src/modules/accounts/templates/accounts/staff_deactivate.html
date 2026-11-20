@@ -1,0 +1,13 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Отключить сотрудника — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-staff' %}">← К сотрудникам</a></p>
+  <h1>Отключить {{ employee.username }}</h1>
+  <p>Будет отозвано доступов к страницам: {{ grant_count }}.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="base_user_generation" value="{{ employee.generation }}">
+    <input type="hidden" name="base_grants_digest" value="{{ base_grants_digest }}">
+    <button type="submit">Отключить сотрудника</button>
+  </form>
+{% endblock %}

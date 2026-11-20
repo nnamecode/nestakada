@@ -12,7 +12,18 @@ _PRIVATE_PREFIX = "/manage/"
 _PAGE_SAVE_PATH = re.compile(
     r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/save/\Z"
 )
+_PAGE_PUBLICATION_PATH = re.compile(
+    r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/publication/\Z"
+)
+_PAGE_RENAME_PATH = re.compile(
+    r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/rename/\Z"
+)
 _PAGE_SAVE_MAX_BODY = 4_194_304
+_STAFF_PASSWORD_PATH = re.compile(
+    r"\A/manage/staff/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/password/\Z"
+)
+_STAFF_CREATE_PATH = "/manage/staff/new/"
+_SITE_SETTINGS_PATH = "/manage/settings/"
 _FORBIDDEN_FORWARDING = (
     "HTTP_FORWARDED",
     "HTTP_X_FORWARDED_FOR",
@@ -42,7 +53,14 @@ class PrivateIngressMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
-        if request.method == "POST" and _PAGE_SAVE_PATH.fullmatch(request.path_info):
+        if request.method == "POST" and (
+            _PAGE_SAVE_PATH.fullmatch(request.path_info)
+            or _PAGE_PUBLICATION_PATH.fullmatch(request.path_info)
+            or _PAGE_RENAME_PATH.fullmatch(request.path_info)
+            or _STAFF_PASSWORD_PATH.fullmatch(request.path_info)
+            or request.path_info == _STAFF_CREATE_PATH
+            or request.path_info == _SITE_SETTINGS_PATH
+        ):
             length = request.META.get("CONTENT_LENGTH")
             if (
                 not isinstance(length, str)
@@ -51,7 +69,16 @@ class PrivateIngressMiddleware:
                 or str(int(length)) != length
                 or int(length) > _PAGE_SAVE_MAX_BODY
             ):
-                response = HttpResponse("INVALID_EDITOR_INPUT", status=400, content_type="text/plain")
+                body = (
+                    "INVALID_SETTINGS_INPUT"
+                    if request.path_info == _SITE_SETTINGS_PATH
+                    else (
+                        "INVALID_PAGE_RENAME_INPUT"
+                        if _PAGE_RENAME_PATH.fullmatch(request.path_info)
+                        else "INVALID_EDITOR_INPUT"
+                    )
+                )
+                response = HttpResponse(body, status=400, content_type="text/plain")
                 response["Cache-Control"] = "private, no-store"
                 return response
         if request.method == "POST" and request.path_info == _LOGIN_PATH:

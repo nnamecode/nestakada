@@ -1,0 +1,20 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Доступ {{ employee.username }} — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-grant-staff' %}">← К сотрудникам</a></p>
+  <h1>Доступ: {{ employee.username }}</h1>
+  <p>Поколение доступа: {{ employee.generation }}</p>
+  <table>
+    <thead><tr><th>Страница</th><th>Адрес</th><th>Тип</th><th>Группы</th><th></th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.name }}</td><td>{{ row.path }}</td><td>{{ row.kind }}</td><td>{{ row.groups|join:", "|default:"нет" }}</td>
+          <td><a href="{% url 'manage-grant-form' employee.id row.id %}">Изменить</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">Нет страниц, для которых можно выдать доступ.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

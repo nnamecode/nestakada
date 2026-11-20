@@ -11,6 +11,10 @@
     <dt>Поколение</dt><dd>{{ generation }}</dd>
     <dt>Доступ</dt><dd>{{ grant_groups|join:", " }}</dd>
   </dl>
+  {% if is_owner %}
+    <p><a href="{% url 'manage-page-rename' page.id %}">Переименовать страницу</a></p>
+    <p><a href="{% url 'manage-page-publication' page.id %}">Изменить публикацию</a></p>
+  {% endif %}
   {% if deferred_fields %}
     <section><h2>Поля следующего этапа</h2><p>Эти данные сохраняются без изменений.</p>
       <ul>{% for field in deferred_fields %}<li>{{ field.label }}: {{ field.count }}</li>{% endfor %}</ul>
@@ -47,6 +51,32 @@
           <textarea hidden disabled name="rich.{{ control.name }}.value" data-rich-value></textarea>
         </section>
       {% endfor %}
+      {% if action_copy_control %}
+        <section data-actions-control>
+          <h2>Акции</h2>
+          <div data-action-cards>
+            {% for action in action_copy_control.actions %}
+              <section data-action-card data-action-index="{{ action.index }}">
+                <label>Название
+                  <input disabled required name="actions.{{ action.index }}.title" value="{{ action.title }}" data-action-title>
+                </label>
+                <p>Переход: <code data-action-url>{{ action.internal_url }}</code></p>
+                <section data-rich-control data-action-body>
+                  <h3>Описание</h3>
+                  <div role="toolbar" aria-label="Форматирование описания акции {{ action.index }}">
+                    {% for rich_action,label in rich_actions %}
+                      <button type="button" data-rich-action="{{ rich_action }}">{{ label }}</button>
+                    {% endfor %}
+                  </div>
+                  <div data-rich-editor role="textbox" aria-multiline="true">{{ action.body }}</div>
+                  <input type="hidden" name="actions.{{ action.index }}.body.changed" value="0" data-rich-changed>
+                  <textarea hidden disabled name="actions.{{ action.index }}.body.value" data-rich-value></textarea>
+                </section>
+              </section>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
       {% if partner_links_control %}
         <section data-links-control>
           <h2>Партнёрские ссылки</h2>
@@ -168,6 +198,7 @@
       <button type="submit">Отменить последнее изменение</button>
     </form>
   {% endif %}
+  <script src="{% static 'pages/action-copy-editor.js' %}" defer></script>
   <script src="{% static 'pages/partner-links-editor.js' %}" defer></script>
   <script src="{% static 'pages/process-steps-editor.js' %}" defer></script>
   <script src="{% static 'pages/price-editor.js' %}" defer></script>

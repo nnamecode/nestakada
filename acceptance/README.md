@@ -84,6 +84,8 @@
 .\run-container.ps1 -Mode process-editor-native -ListOnly
 .\run-container.ps1 -Mode links-editor-native
 .\run-container.ps1 -Mode links-editor-native -ListOnly
+.\run-container.ps1 -Mode action-editor-native
+.\run-container.ps1 -Mode action-editor-native -ListOnly
 .\run-container.ps1 -Mode version-time
 .\run-container.ps1 -Mode auth-login
 .\run-container.ps1 -Mode unsaved-editor
@@ -97,7 +99,7 @@
 
 Docker Desktop должен работать. Подготовка зависимостей читает официальный npm registry для metadata/проверок supply-chain, использует frozen lock и ignore-scripts, не выключает проверки pnpm. Последующий harness/list/первоначальный public без target запускается отдельным контейнером с network=none. Это две временные команды, не фоновый сервис. Подготовка не запускает тесты сайта с доступом в сеть.
 
-Исключения `rich-editor-native`, `price-editor-native`, `process-editor-native` и `links-editor-native`: preparation и test оба работают с `network=none`, `--pull=never`, уже локальным exact-digest image и frozen offline store. Store и только необходимые production JS (`editor.js`, а для literal mode также exact price/process/partner-links asset) монтируются readonly; registry, docs, private bindings и application inputs недоступны. `--trust-lockfile` разрешен только после exact SHA-256 проверки канонических и staged `package.json`/`pnpm-lock.yaml`; он доверяет ранее policy-verified lock и не отключает frozen lock/store integrity.
+Исключения `rich-editor-native`, `price-editor-native`, `process-editor-native`, `links-editor-native` и `action-editor-native`: preparation и test оба работают с `network=none`, `--pull=never`, уже локальным exact-digest image и frozen offline store. Store и только необходимые production JS (`editor.js`, а для literal mode также exact price/process/partner-links/action-copy asset) монтируются readonly; registry, docs, private bindings и application inputs недоступны. `--trust-lockfile` разрешен только после exact SHA-256 проверки канонических и staged `package.json`/`pnpm-lock.yaml`; он доверяет ранее policy-verified lock и не отключает frozen lock/store integrity.
 
 Все крупные локальные данные — T:\nestakada\work\pnpm-store, work\acceptance-container, test-results\acceptance, существующий Docker storage на T:. Проектные документы и bundled pnpm монтируются readonly; в контейнер не передаются Docker socket, профиль пользователя, пароли/токены и файлы приложения. Образ не меняется, privileged/дополнительные capabilities/production-порты не используются. Скрипт не меняет PATH/WSL/реестр/автоматизации.
 

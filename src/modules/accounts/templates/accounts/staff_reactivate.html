@@ -1,0 +1,12 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Включить сотрудника — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-staff' %}">← К сотрудникам</a></p>
+  <h1>Включить {{ employee.username }}</h1>
+  <p>Прежние доступы к страницам восстановлены не будут.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="base_user_generation" value="{{ employee.generation }}">
+    <button type="submit">Включить сотрудника</button>
+  </form>
+{% endblock %}

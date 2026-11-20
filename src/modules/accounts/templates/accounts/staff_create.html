@@ -1,0 +1,14 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Новый сотрудник — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-staff' %}">← К сотрудникам</a></p>
+  <h1>Новый сотрудник</h1>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <input type="hidden" name="employee_id" value="{{ employee_id }}">
+    <p><label>Логин <input name="username" required maxlength="150"></label></p>
+    <p><label>Пароль <input type="password" name="password" required autocomplete="new-password"></label></p>
+    <p><label>Повтор пароля <input type="password" name="password_confirmation" required autocomplete="new-password"></label></p>
+    <button type="submit">Создать сотрудника</button>
+  </form>
+{% endblock %}

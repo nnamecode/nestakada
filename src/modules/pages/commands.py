@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import unicodedata
 import uuid
 from dataclasses import dataclass
 from typing import Any
@@ -11,10 +12,15 @@ from django.utils import timezone
 
 from modules.accounts.api import StaffAccessError, StaffRole, lock_staff_session
 from modules.audit.api import Action, ActorRef, TargetType, append_event
-from modules.media.api import MediaUsageError, replace_page_usages
+from modules.media.api import (
+    MediaUsageError,
+    replace_page_usages,
+    verify_page_current_usages,
+)
 
 from .content import ContentValidationError, canonical_payload_hash, validate_payload
-from .models import LastOperationAction, Page, PageContent, PageGrant
+from .grants import eligible_grant_groups
+from .models import LastOperationAction, Page, PageContent, PageGrant, Route, RouteMode, SiteSettings
 
 
 class PageCommandError(RuntimeError):
@@ -38,12 +44,30 @@ class ContentResult:
     replayed: bool = False
 
 
-_TEXT_KINDS = frozenset({
-    "service_section_overview",
-    "service_detail",
-    "article",
-    "legacy_news_article",
-})
+@dataclass(frozen=True, slots=True)
+class PublicationResult:
+    structure_generation: int
+    is_published: bool
+
+
+@dataclass(frozen=True, slots=True)
+class RenameResult:
+    structure_generation: int
+    name: str
+
+
+def validate_page_name(value: object) -> str:
+    if (
+        type(value) is not str
+        or not value
+        or len(value) > 500
+        or value != value.strip()
+        or not value.strip()
+        or unicodedata.normalize("NFC", value) != value
+        or any(ord(char) < 32 or ord(char) == 127 for char in value)
+    ):
+        raise PageCommandError("INVALID_PAGE_NAME")
+    return value
 
 
 def _basis(operation_id: object, generation: object, current_hash: object) -> uuid.UUID:
@@ -109,12 +133,16 @@ def _employee_payload(
         raise PageCommandError("CONTENT_CORRUPT")
     for group, value in changes.items():
         if group == "text":
-            if kind not in _TEXT_KINDS or not isinstance(value, dict) or set(value) != {"intro", "body"}:
+            if (
+                "text" not in eligible_grant_groups(kind)
+                or not isinstance(value, dict)
+                or set(value) != {"intro", "body"}
+            ):
                 raise PageCommandError("INVALID_PATCH")
             fields["intro"] = value["intro"]
             fields["body"] = value["body"]
         elif group == "prices":
-            if kind != "service_detail":
+            if "prices" not in eligible_grant_groups(kind):
                 raise PageCommandError("INVALID_PATCH")
             fields["price_rows"] = value
         else:
@@ -138,6 +166,139 @@ def _page_lock(page_id: object) -> Page:
 
 def _actor_ref(actor: Any) -> ActorRef:
     return ActorRef.user(actor.id, actor.role)
+
+
+def rename_page(
+    *,
+    actor_id: object,
+    session_generation: object,
+    page_id: object,
+    base_structure_generation: object,
+    name: object,
+) -> RenameResult:
+    if type(base_structure_generation) is not int or base_structure_generation < 1:
+        raise PageCommandError("INVALID_BASIS")
+    valid_name = validate_page_name(name)
+    try:
+        valid_page_id = page_id if isinstance(page_id, uuid.UUID) else uuid.UUID(page_id)
+    except (AttributeError, TypeError, ValueError):
+        raise PageCommandError("PAGE_NOT_FOUND") from None
+    try:
+        with transaction.atomic():
+            actor = lock_staff_session(
+                actor_id=actor_id,
+                session_generation=session_generation,
+            )
+            if actor.role != StaffRole.OWNER:
+                raise PageCommandError("FORBIDDEN")
+            try:
+                settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+            except SiteSettings.DoesNotExist:
+                raise PageCommandError("SETTINGS_MISSING") from None
+            page = _page_lock(valid_page_id)
+            if settings.structure_generation != base_structure_generation:
+                raise PageCommandError(
+                    "STALE_STRUCTURE",
+                    generation=settings.structure_generation,
+                )
+            if page.name == valid_name:
+                raise PageCommandError(
+                    "NO_CHANGE",
+                    generation=settings.structure_generation,
+                )
+            page.name = valid_name
+            page.save(update_fields=("name",))
+            settings.structure_generation += 1
+            settings.save(update_fields=("structure_generation",))
+            append_event(
+                action=Action.PAGE_RENAMED,
+                actor=_actor_ref(actor),
+                target_type=TargetType.PAGE,
+                target_uuid=page.id,
+                detail={"generation": settings.structure_generation},
+            )
+            return RenameResult(settings.structure_generation, valid_name)
+    except StaffAccessError as exc:
+        raise PageCommandError(exc.code) from exc
+
+
+def set_page_publication(
+    *,
+    actor_id: object,
+    session_generation: object,
+    page_id: object,
+    base_structure_generation: object,
+    desired_published: object,
+) -> PublicationResult:
+    if type(base_structure_generation) is not int or base_structure_generation < 1:
+        raise PageCommandError("INVALID_BASIS")
+    if type(desired_published) is not bool:
+        raise PageCommandError("INVALID_PUBLICATION")
+    try:
+        with transaction.atomic():
+            actor = lock_staff_session(
+                actor_id=actor_id,
+                session_generation=session_generation,
+            )
+            if actor.role != StaffRole.OWNER:
+                raise PageCommandError("FORBIDDEN")
+            try:
+                settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+            except SiteSettings.DoesNotExist:
+                raise PageCommandError("SETTINGS_MISSING") from None
+            page = _page_lock(page_id)
+            if settings.structure_generation != base_structure_generation:
+                raise PageCommandError(
+                    "STALE_STRUCTURE",
+                    generation=settings.structure_generation,
+                )
+            if page.is_published is desired_published:
+                raise PageCommandError(
+                    "NO_CHANGE",
+                    generation=settings.structure_generation,
+                )
+
+            if desired_published:
+                routes = list(
+                    Route.objects.select_for_update().filter(page=page).order_by("id")
+                )
+                primary = [route for route in routes if route.mode == RouteMode.PRIMARY]
+                if len(primary) != 1:
+                    raise PageCommandError("ROUTE_CORRUPT")
+                try:
+                    primary[0].clean()
+                except ValidationError:
+                    raise PageCommandError("ROUTE_CORRUPT") from None
+                content = _content_lock(page)
+                if canonical_payload_hash(content.current_payload) != content.current_hash:
+                    raise PageCommandError("CONTENT_CORRUPT")
+                current_media = validate_payload(content.current_payload, page.kind)
+                verify_page_current_usages(
+                    page_id=page.id,
+                    expected_media=current_media,
+                )
+
+            page.is_published = desired_published
+            page.save(update_fields=("is_published",))
+            settings.structure_generation += 1
+            settings.save(update_fields=("structure_generation",))
+            append_event(
+                action=Action.PAGE_PUBLICATION_CHANGED,
+                actor=_actor_ref(actor),
+                target_type=TargetType.PAGE,
+                target_uuid=page.id,
+                detail={
+                    "generation": settings.structure_generation,
+                    "state": "PUBLISHED" if desired_published else "HIDDEN",
+                },
+            )
+            return PublicationResult(settings.structure_generation, desired_published)
+    except StaffAccessError as exc:
+        raise PageCommandError(exc.code) from exc
+    except MediaUsageError as exc:
+        raise PageCommandError(exc.code) from exc
+    except ContentValidationError as exc:
+        raise PageCommandError("INVALID_CONTENT") from exc
 
 
 def save_page_content(

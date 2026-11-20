@@ -5,16 +5,26 @@ from typing import Any
 
 from django.contrib.auth import logout
 from django.core.exceptions import RequestDataTooBig, SuspiciousOperation, TooManyFieldsSent
+from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpRequest, HttpResponse
 from django.http.multipartparser import MultiPartParserError
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from modules.accounts.api import SESSION_GENERATION_KEY, StaffRole, staff_session_required
+from modules.accounts.api import SESSION_GENERATION_KEY, StaffRole, User, staff_session_required
+from modules.media.api import project_site_logo_options
 
-from .commands import PageCommandError, save_page_content, undo_page_content
+from .commands import (
+    PageCommandError,
+    rename_page,
+    save_page_content,
+    set_page_publication,
+    undo_page_content,
+    validate_page_name,
+)
 from .editor import (
+    action_copy_control,
     EditorProjectionError,
     deferred_fields,
     employee_patch,
@@ -26,7 +36,21 @@ from .editor import (
     rich_controls,
     validate_editor_changes,
 )
-from .models import Page, PageGrant, Route, RouteMode
+from .grants import (
+    GrantCommandError,
+    eligible_grant_groups,
+    grant_state_hash,
+    revoke_page_grant,
+    set_page_grant,
+)
+from .models import Page, PageGrant, PageKind, Route, RouteMode, SiteSettings
+from .site_settings import SiteSettingsCommandError, update_site_settings
+from .staff import (
+    StaffLifecycleError,
+    deactivate_employee,
+    reactivate_employee,
+    staff_grants_digest,
+)
 
 
 _RICH_ACTIONS = (
@@ -127,6 +151,7 @@ def page_editor_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
         "price_control": price_control(snapshot),
         "process_control": process_control(snapshot),
         "partner_links_control": partner_links_control(snapshot),
+        "action_copy_control": action_copy_control(snapshot),
         "prices_only": (
             request.staff_actor.role == StaffRole.EMPLOYEE
             and snapshot.can_edit_prices
@@ -296,6 +321,35 @@ def _links_wire(post: Any, *, changed: str) -> list[dict[str, str]] | None:
     return links
 
 
+def _action_copy_wire(post: Any, snapshot: Any) -> list[dict[str, str]] | None:
+    if not snapshot.can_edit_action_copy:
+        return None
+    current = snapshot.content.current_payload["fields"]["actions"]
+    if len(current) > 32:
+        raise ValueError("actions-cap")
+    actions: list[dict[str, str]] = []
+    for index, item in enumerate(current):
+        title = _single(post, f"actions.{index}.title")
+        flag = _single(post, f"actions.{index}.body.changed")
+        value_key = f"actions.{index}.body.value"
+        if flag == "0":
+            if value_key in post:
+                raise ValueError("actions-wire")
+            body = item["body"]
+        elif flag == "1":
+            body = _single(post, value_key)
+            if len(body.encode("utf-8")) > 1_048_576:
+                raise ValueError("actions-wire")
+        else:
+            raise ValueError("actions-wire")
+        actions.append({
+            "title": title,
+            "body": body,
+            "internal_url": item["internal_url"],
+        })
+    return actions
+
+
 def _save_wire(post: Any, snapshot: Any, *, is_owner: bool) -> tuple[tuple[uuid.UUID, int, str], object]:
     basis_keys = {"operation_id", "base_generation", "base_current_hash"}
     scalar_keys = {"seo.title", "seo.description", "seo.allow_index", "heading.h1"} if is_owner else set()
@@ -304,6 +358,15 @@ def _save_wire(post: Any, snapshot: Any, *, is_owner: bool) -> tuple[tuple[uuid.
     price_keys = {"price.changed", "price.column", "price.row", "price.cell"} if snapshot.can_edit_prices else set()
     process_keys = {"process.changed", "process.step"} if snapshot.can_edit_process else set()
     links_keys = {"links.changed", "links.item"} if snapshot.can_edit_links else set()
+    action_required = {
+        key
+        for index in range(len(snapshot.content.current_payload["fields"].get("actions", ())))
+        for key in (f"actions.{index}.title", f"actions.{index}.body.changed")
+    } if snapshot.can_edit_action_copy else set()
+    action_values = {
+        f"actions.{index}.body.value"
+        for index in range(len(snapshot.content.current_payload["fields"].get("actions", ())))
+    } if snapshot.can_edit_action_copy else set()
     submitted = set(post) - {"csrfmiddlewaretoken"}
     required = (
         basis_keys
@@ -312,8 +375,9 @@ def _save_wire(post: Any, snapshot: Any, *, is_owner: bool) -> tuple[tuple[uuid.
         | ({"price.changed"} if snapshot.can_edit_prices else set())
         | ({"process.changed"} if snapshot.can_edit_process else set())
         | ({"links.changed"} if snapshot.can_edit_links else set())
+        | action_required
     )
-    allowed = required | value_keys | price_keys | process_keys | links_keys
+    allowed = required | value_keys | price_keys | process_keys | links_keys | action_values
     if not required <= submitted or not submitted <= allowed:
         raise ValueError("wire")
 
@@ -348,6 +412,7 @@ def _save_wire(post: Any, snapshot: Any, *, is_owner: bool) -> tuple[tuple[uuid.
         if snapshot.can_edit_links
         else None
     )
+    action_copy = _action_copy_wire(post, snapshot)
     if not is_owner and not snapshot.rich_names and prices is None:
         raise ValueError("empty-patch")
     basis = _basis(post)
@@ -359,6 +424,7 @@ def _save_wire(post: Any, snapshot: Any, *, is_owner: bool) -> tuple[tuple[uuid.
             prices=prices,
             process_steps=process_steps,
             links=links,
+            action_copy=action_copy,
         )
         if is_owner
         else employee_patch(snapshot, rich=rich, prices=prices)
@@ -392,6 +458,289 @@ def _command_error(request: HttpRequest, exc: PageCommandError, *, page_id: uuid
     }:
         return HttpResponse("INVALID_EDITOR_INPUT", status=400, content_type="text/plain")
     return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+
+
+def _publication_conflict(
+    request: HttpRequest,
+    *,
+    page_id: uuid.UUID,
+    generation: int | None,
+) -> HttpResponse:
+    return render(
+        request,
+        "pages/page_publication_conflict.html",
+        {"page_id": page_id, "generation": generation},
+        status=409,
+    )
+
+
+def _rename_conflict(
+    request: HttpRequest,
+    *,
+    page_id: uuid.UUID,
+    generation: int | None,
+) -> HttpResponse:
+    return render(
+        request,
+        "pages/page_rename_conflict.html",
+        {"page_id": page_id, "generation": generation},
+        status=409,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_rename_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            with transaction.atomic():
+                settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+                page = Page.objects.select_for_update().get(pk=page_id)
+                context = {
+                    "page": page,
+                    "structure_generation": settings.structure_generation,
+                }
+        except Page.DoesNotExist:
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        except Exception:
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        return render(request, "pages/page_rename.html", context)
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        keys = set(post)
+        if keys not in (
+            {"base_structure_generation", "name"},
+            {"csrfmiddlewaretoken", "base_structure_generation", "name"},
+        ):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        generation_value = _single(post, "base_structure_generation")
+        name = _single(post, "name")
+        generation = int(generation_value)
+        if generation < 1 or str(generation) != generation_value:
+            raise ValueError("wire")
+        validate_page_name(name)
+    except (
+        PageCommandError,
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_PAGE_RENAME_INPUT", status=400, content_type="text/plain")
+    try:
+        rename_page(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            page_id=page_id,
+            base_structure_generation=generation,
+            name=name,
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code == "FORBIDDEN":
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code == "PAGE_NOT_FOUND":
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        if exc.code in {"STALE_STRUCTURE", "NO_CHANGE"}:
+            return _rename_conflict(
+                request,
+                page_id=page_id,
+                generation=exc.generation,
+            )
+        if exc.code in {"INVALID_BASIS", "INVALID_PAGE_NAME"}:
+            return HttpResponse("INVALID_PAGE_RENAME_INPUT", status=400, content_type="text/plain")
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-page-editor", page_id=page_id)
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_publication_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            page = Page.objects.get(pk=page_id)
+        except Page.DoesNotExist:
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        try:
+            settings = SiteSettings.objects.get(singleton_key=True)
+        except SiteSettings.DoesNotExist:
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        return render(
+            request,
+            "pages/page_publication.html",
+            {"page": page, "structure_generation": settings.structure_generation},
+        )
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        keys = set(post)
+        if keys not in (
+            {"base_structure_generation", "desired_published"},
+            {"csrfmiddlewaretoken", "base_structure_generation", "desired_published"},
+        ):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        generation_value = _single(post, "base_structure_generation")
+        desired_value = _single(post, "desired_published")
+        generation = int(generation_value)
+        if generation < 1 or str(generation) != generation_value or desired_value not in {"0", "1"}:
+            raise ValueError("wire")
+    except (
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_PUBLICATION_INPUT", status=400, content_type="text/plain")
+    try:
+        set_page_publication(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            page_id=page_id,
+            base_structure_generation=generation,
+            desired_published=desired_value == "1",
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code == "FORBIDDEN":
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code == "PAGE_NOT_FOUND":
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        if exc.code in {"STALE_STRUCTURE", "NO_CHANGE"}:
+            return _publication_conflict(
+                request,
+                page_id=page_id,
+                generation=exc.generation,
+            )
+        if exc.code in {"INVALID_BASIS", "INVALID_PUBLICATION"}:
+            return HttpResponse("INVALID_PUBLICATION_INPUT", status=400, content_type="text/plain")
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-page-editor", page_id=page_id)
+
+
+_SETTINGS_FIELDS = (
+    "organization_name",
+    "phone_display",
+    "phone_e164",
+    "address",
+    "opening_hours",
+    "contact_email",
+    "map_url",
+)
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def site_settings_view(request: HttpRequest) -> HttpResponse:
+    actor = request.staff_actor
+    if request.method == "POST" and actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+
+    if request.method == "GET":
+        try:
+            settings = SiteSettings.objects.get(singleton_key=True)
+            logo_options = project_site_logo_options(
+                settings_id=settings.id,
+                current_logo_id=settings.logo_asset_id,
+                include_options=actor.role == StaffRole.OWNER,
+            )
+            current_logo = next(
+                option for option in logo_options if option.asset_id == settings.logo_asset_id
+            )
+        except Exception:
+            return HttpResponse(
+                "PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain"
+            )
+        return render(
+            request,
+            "pages/site_settings.html",
+            {
+                "settings": settings,
+                "current_logo": current_logo,
+                "logo_options": logo_options if actor.role == StaffRole.OWNER else (),
+                "can_edit": actor.role == StaffRole.OWNER,
+            },
+        )
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        expected = {"base_settings_generation", *_SETTINGS_FIELDS, "logo_asset_id"}
+        keys = set(post)
+        if keys not in (expected, expected | {"csrfmiddlewaretoken"}):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        raw_generation = _single(post, "base_settings_generation")
+        generation = int(raw_generation)
+        if generation < 1 or str(generation) != raw_generation:
+            raise ValueError("wire")
+        raw_logo_id = _single(post, "logo_asset_id")
+        logo_id = uuid.UUID(raw_logo_id)
+        if str(logo_id) != raw_logo_id:
+            raise ValueError("wire")
+        values = {name: _single(post, name) for name in _SETTINGS_FIELDS}
+    except (
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_SETTINGS_INPUT", status=400, content_type="text/plain")
+
+    try:
+        update_site_settings(
+            actor_id=actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            base_settings_generation=generation,
+            logo_asset_id=logo_id,
+            **values,
+        )
+    except SiteSettingsCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code == "FORBIDDEN":
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code in {"STALE_SETTINGS", "NO_CHANGE"}:
+            return render(
+                request,
+                "pages/site_settings_conflict.html",
+                {"generation": exc.generation},
+                status=409,
+            )
+        if exc.code in {"INVALID_BASIS", "INVALID_SETTINGS"}:
+            return HttpResponse(
+                "INVALID_SETTINGS_INPUT", status=400, content_type="text/plain"
+            )
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-site-settings")
 
 
 @require_POST
@@ -458,3 +807,386 @@ def page_undo_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
     except Exception:
         return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
     return redirect("manage-page-editor", page_id=page_id)
+
+
+def _owner_only(request: HttpRequest) -> HttpResponse | None:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    return None
+
+
+def _employee_target(staff_id: uuid.UUID) -> User | None:
+    try:
+        return User.objects.get(
+            pk=staff_id,
+            role=StaffRole.EMPLOYEE,
+            is_active=True,
+            is_staff=True,
+            is_superuser=False,
+        )
+    except User.DoesNotExist:
+        return None
+
+
+def _employee_state(staff_id: uuid.UUID, *, active: bool) -> User | None:
+    try:
+        return User.objects.get(
+            pk=staff_id,
+            role=StaffRole.EMPLOYEE,
+            is_active=active,
+            is_staff=True,
+            is_superuser=False,
+        )
+    except User.DoesNotExist:
+        return None
+
+
+@require_GET
+@staff_session_required
+def grant_staff_list_view(request: HttpRequest) -> HttpResponse:
+    denied = _owner_only(request)
+    if denied is not None:
+        return denied
+    try:
+        selected = list(
+            User.objects.filter(
+                role=StaffRole.EMPLOYEE,
+                is_active=True,
+                is_staff=True,
+                is_superuser=False,
+            ).order_by("username", "id")[:101]
+        )
+        if len(selected) > 100:
+            raise ValueError("staff-cap")
+        rows = tuple(
+            {"id": employee.id, "username": employee.username, "generation": employee.generation}
+            for employee in selected
+        )
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return render(request, "pages/grant_staff_list.html", {"rows": rows})
+
+
+def _grant_page_rows(employee: User) -> tuple[dict[str, object], ...]:
+    eligible_kinds = tuple(kind for kind in PageKind.values if eligible_grant_groups(kind))
+    pages = (
+        Page.objects.filter(kind__in=eligible_kinds)
+        .prefetch_related(
+            Prefetch(
+                "routes",
+                queryset=Route.objects.filter(mode=RouteMode.PRIMARY),
+                to_attr="grant_primary_routes",
+            ),
+            Prefetch(
+                "grants",
+                queryset=PageGrant.objects.filter(staff=employee),
+                to_attr="grant_target_rows",
+            ),
+        )
+        .order_by("position", "id")[:501]
+    )
+    selected = list(pages)
+    if len(selected) > 500:
+        raise ValueError("page-cap")
+    rows: list[dict[str, object]] = []
+    for page in selected:
+        routes = page.grant_primary_routes
+        grants = page.grant_target_rows
+        if len(routes) != 1 or len(grants) > 1:
+            raise ValueError("grant-composition")
+        groups = tuple(grants[0].groups) if grants else ()
+        if any(group not in eligible_grant_groups(page.kind) for group in groups):
+            raise ValueError("grant-composition")
+        rows.append({
+            "id": page.id,
+            "name": page.name,
+            "path": routes[0].target,
+            "kind": page.kind,
+            "groups": groups,
+        })
+    return tuple(rows)
+
+
+@require_GET
+@staff_session_required
+def grant_employee_view(request: HttpRequest, staff_id: uuid.UUID) -> HttpResponse:
+    denied = _owner_only(request)
+    if denied is not None:
+        return denied
+    employee = _employee_target(staff_id)
+    if employee is None:
+        return HttpResponse("STAFF_NOT_FOUND", status=404, content_type="text/plain")
+    try:
+        rows = _grant_page_rows(employee)
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return render(
+        request,
+        "pages/grant_employee.html",
+        {"employee": employee, "rows": rows},
+    )
+
+
+def _grant_form_projection(
+    employee: User,
+    page_id: uuid.UUID,
+) -> tuple[Page, str, tuple[str, ...], tuple[str, ...], str] | None:
+    try:
+        page = Page.objects.prefetch_related(
+            Prefetch(
+                "routes",
+                queryset=Route.objects.filter(mode=RouteMode.PRIMARY),
+                to_attr="grant_primary_routes",
+            ),
+            Prefetch(
+                "grants",
+                queryset=PageGrant.objects.filter(staff=employee),
+                to_attr="grant_target_rows",
+            ),
+        ).get(pk=page_id)
+    except Page.DoesNotExist:
+        return None
+    eligible = eligible_grant_groups(page.kind)
+    if not eligible:
+        return None
+    routes = page.grant_primary_routes
+    grants = page.grant_target_rows
+    if len(routes) != 1 or len(grants) > 1:
+        raise ValueError("grant-composition")
+    groups = tuple(grants[0].groups) if grants else ()
+    if any(group not in eligible for group in groups):
+        raise ValueError("grant-composition")
+    return page, routes[0].target, groups, eligible, grant_state_hash(employee.id, page.id, groups)
+
+
+def _grant_command_error(
+    request: HttpRequest,
+    exc: GrantCommandError,
+    *,
+    staff_id: uuid.UUID,
+    page_id: uuid.UUID,
+) -> HttpResponse:
+    if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+        logout(request)
+        return redirect("manage-login")
+    if exc.code == "FORBIDDEN":
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if exc.code == "PAGE_NOT_FOUND":
+        return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+    if exc.code in {"STALE_GRANT", "NO_CHANGE"}:
+        return render(
+            request,
+            "pages/grant_conflict.html",
+            {
+                "staff_id": staff_id,
+                "page_id": page_id,
+                "generation": exc.user_generation,
+                "grant_hash": exc.grant_hash,
+            },
+            status=409,
+        )
+    if exc.code in {"INVALID_BASIS", "INVALID_GROUPS"}:
+        return HttpResponse("INVALID_GRANT_INPUT", status=400, content_type="text/plain")
+    return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def grant_form_view(
+    request: HttpRequest,
+    staff_id: uuid.UUID,
+    page_id: uuid.UUID,
+) -> HttpResponse:
+    denied = _owner_only(request)
+    if denied is not None:
+        return denied
+    employee = _employee_target(staff_id)
+    if employee is None:
+        return HttpResponse("STAFF_NOT_FOUND", status=404, content_type="text/plain")
+    try:
+        projection = _grant_form_projection(employee, page_id)
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    if projection is None:
+        return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+    page, primary_path, groups, eligible, current_hash = projection
+    if request.method == "GET":
+        return render(
+            request,
+            "pages/grant_form.html",
+            {
+                "employee": employee,
+                "page": page,
+                "primary_path": primary_path,
+                "groups": groups,
+                "eligible_groups": eligible,
+                "base_grant_hash": current_hash,
+            },
+        )
+
+    try:
+        if request.FILES:
+            raise ValueError("files")
+        post = request.POST
+        submitted = set(post) - {"csrfmiddlewaretoken"}
+        required = {"base_user_generation", "base_grant_hash"}
+        if not required <= submitted or not submitted <= required | {"group"}:
+            raise ValueError("wire")
+        generation_value = _single(post, "base_user_generation")
+        base_hash = _single(post, "base_grant_hash")
+        generation = int(generation_value)
+        if generation < 1 or str(generation) != generation_value:
+            raise ValueError("basis")
+        desired = post.getlist("group")
+    except (
+        ValueError,
+        TypeError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_GRANT_INPUT", status=400, content_type="text/plain")
+    try:
+        command: Any = set_page_grant if desired else revoke_page_grant
+        kwargs = {
+            "actor_id": request.staff_actor.id,
+            "session_generation": request.session.get(SESSION_GENERATION_KEY),
+            "staff_id": staff_id,
+            "page_id": page_id,
+            "base_user_generation": generation,
+            "base_grant_hash": base_hash,
+        }
+        if desired:
+            kwargs["desired_groups"] = desired
+        command(**kwargs)
+    except GrantCommandError as exc:
+        return _grant_command_error(request, exc, staff_id=staff_id, page_id=page_id)
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-grant-employee", staff_id=staff_id)
+
+
+def _staff_lifecycle_error(request: HttpRequest, exc: StaffLifecycleError) -> HttpResponse:
+    if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+        logout(request)
+        return redirect("manage-login")
+    if exc.code in {"STALE_STAFF", "NO_CHANGE"}:
+        return render(
+            request,
+            "accounts/staff_conflict.html",
+            {"generation": exc.generation},
+            status=409,
+        )
+    if exc.code == "FORBIDDEN":
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if exc.code == "INVALID_BASIS":
+        return HttpResponse("INVALID_STAFF_INPUT", status=400, content_type="text/plain")
+    return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+
+
+def _staff_lifecycle_post(request: HttpRequest, keys: set[str]) -> Any:
+    if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+        raise ValueError("wire")
+    post = request.POST
+    actual = set(post)
+    allowed = (keys, keys | {"csrfmiddlewaretoken"})
+    if actual not in allowed:
+        raise ValueError("wire")
+    if "csrfmiddlewaretoken" in actual and len(post.getlist("csrfmiddlewaretoken")) != 1:
+        raise ValueError("wire")
+    if any(len(post.getlist(key)) != 1 for key in keys):
+        raise ValueError("wire")
+    return post
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def staff_deactivate_view(request: HttpRequest, staff_id: uuid.UUID) -> HttpResponse:
+    denied = _owner_only(request)
+    if denied is not None:
+        return denied
+    employee = _employee_state(staff_id, active=True)
+    if employee is None:
+        return HttpResponse("STAFF_NOT_FOUND", status=404, content_type="text/plain")
+    current = list(
+        PageGrant.objects.filter(staff=employee)
+        .order_by("page_id")
+        .values_list("page_id", "groups")
+    )
+    try:
+        digest = staff_grants_digest(employee.id, current)
+    except StaffLifecycleError:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    if request.method == "GET":
+        return render(
+            request,
+            "accounts/staff_deactivate.html",
+            {"employee": employee, "grant_count": len(current), "base_grants_digest": digest},
+        )
+    try:
+        post = _staff_lifecycle_post(
+            request, {"base_user_generation", "base_grants_digest"}
+        )
+        value = _single(post, "base_user_generation")
+        generation = int(value)
+        if generation < 1 or str(generation) != value:
+            raise ValueError("basis")
+        deactivate_employee(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            employee_id=staff_id,
+            base_user_generation=generation,
+            base_grants_digest=_single(post, "base_grants_digest"),
+        )
+    except (
+        ValueError,
+        TypeError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_STAFF_INPUT", status=400, content_type="text/plain")
+    except StaffLifecycleError as exc:
+        return _staff_lifecycle_error(request, exc)
+    return redirect("manage-staff")
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def staff_reactivate_view(request: HttpRequest, staff_id: uuid.UUID) -> HttpResponse:
+    denied = _owner_only(request)
+    if denied is not None:
+        return denied
+    employee = _employee_state(staff_id, active=False)
+    if employee is None:
+        return HttpResponse("STAFF_NOT_FOUND", status=404, content_type="text/plain")
+    if request.method == "GET":
+        if PageGrant.objects.filter(staff=employee).exists():
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        return render(request, "accounts/staff_reactivate.html", {"employee": employee})
+    try:
+        post = _staff_lifecycle_post(request, {"base_user_generation"})
+        value = _single(post, "base_user_generation")
+        generation = int(value)
+        if generation < 1 or str(generation) != value:
+            raise ValueError("basis")
+        reactivate_employee(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            employee_id=staff_id,
+            base_user_generation=generation,
+        )
+    except (
+        ValueError,
+        TypeError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_STAFF_INPUT", status=400, content_type="text/plain")
+    except StaffLifecycleError as exc:
+        return _staff_lifecycle_error(request, exc)
+    return redirect("manage-staff")

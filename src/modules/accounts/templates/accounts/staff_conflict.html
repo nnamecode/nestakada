@@ -1,0 +1,7 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Данные сотрудника изменились — Эстакада{% endblock %}
+{% block content %}
+  <h1>Данные сотрудника уже изменились</h1>
+  {% if generation %}<p>Текущее поколение: {{ generation }}</p>{% endif %}
+  <p><a href="{% url 'manage-staff' %}">Перезагрузить список сотрудников</a></p>
+{% endblock %}

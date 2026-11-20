@@ -1,0 +1,12 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Переименование — {{ page.name }} — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-page-editor' page.id %}">← К редактору</a></p>
+  <h1>Переименовать страницу</h1>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="base_structure_generation" value="{{ structure_generation }}">
+    <label>Название <input type="text" name="name" maxlength="500" required value="{{ page.name }}"></label>
+    <button type="submit">Сохранить название</button>
+  </form>
+{% endblock %}

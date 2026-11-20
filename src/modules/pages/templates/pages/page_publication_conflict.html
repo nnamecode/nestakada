@@ -1,0 +1,7 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Публикация изменилась — Эстакада{% endblock %}
+{% block content %}
+  <h1>Публикация уже изменилась</h1>
+  <p>Текущее поколение структуры: {{ generation }}.</p>
+  <p><a href="{% url 'manage-page-publication' page_id %}">Перезагрузить состояние</a></p>
+{% endblock %}

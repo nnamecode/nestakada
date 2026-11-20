@@ -193,7 +193,8 @@ Staff User в MVP не удаляется физически: owner может �
 | изменить/удалить gallery album/page | gallery | accounts actor DTO from HTTP adapter → lock gallery composition → media usages → pages narrow leaf-delete participant → audit append |
 | upload/replace/delete Asset | media | media staging/locks/rows/usages → audit append; filesystem finalize/cleanup по явному failure contract |
 | принять заявку | requests | validate/throttle → ServiceRequest + safe audit in one commit; `on_commit` вызывает injected NotificationPort вне transaction |
-| staff create/reactivate/password | accounts | accounts rows+generation → audit append; employee role fixed, owner invariant unchanged |
+| staff create/password | accounts | accounts rows+generation → audit append; employee role fixed, owner invariant unchanged |
+| staff reactivate | pages | accounts lock/reactivate+bump participant → transactional PageGrant zero proof → audit append; grants remain empty |
 | PageGrant create/change/revoke | pages | accounts lock target User+bump generation participant → lock Page/PageGrant → exact groups → audit append |
 | staff deactivate with grants | pages | accounts lock target User → lock/delete all PageGrant → accounts deactivate+bump participant → audit append |
 
@@ -233,15 +234,15 @@ Accounts сразу объявляет `User(AbstractUser)` как `AUTH_USER_MO
 
 `PageGrant` имеет unique `(staff_id, page_id)` и ровно `groups` как sorted non-empty subset closed enum `{text, prices}` из content contract. Grant допустим только active `EMPLOYEE`; owner не нуждается в grant. Empty desired groups означает revoke и удаляет row. Отдельных grant version/history/expiry/inheritance, wildcard page/field и deny-rules нет.
 
-Pages владеет тремя owner-only commands: `set_page_grant(staff_id, page_id, desired_groups, base_user_generation, base_grant_hash)`, `revoke_page_grant(...)` как desired empty set и `deactivate_staff(staff_id, base_user_generation, base_grants_digest)`. Accounts предоставляет только узкие participants `lock_staff_for_grant()` и `bump_generation()/deactivate_and_bump()`; participant не открывает transaction, не импортирует pages и меняет только User.
+Pages владеет четырьмя owner-only commands: `set_page_grant(staff_id, page_id, desired_groups, base_user_generation, base_grant_hash)`, `revoke_page_grant(...)` как desired empty set, `deactivate_staff(staff_id, base_user_generation, base_grants_digest)` и `reactivate_staff(staff_id, base_user_generation)`. Accounts предоставляет только узкие participants `lock_staff_for_grant()` и `bump_generation()/deactivate_and_bump()/reactivate_and_bump()`; participant не открывает transaction, не импортирует pages и меняет только User.
 
 Единый lock order для auth/grant-sensitive writes: все затронутые User rows в ascending UUID → Page в ascending UUID → PageGrant → PageContent → media usages → audit. Actor owner и target employee блокируются accounts participant в этом порядке; затем повторно проверяются owner session generation, target generation/active/role, Page kind и base grant hash. Password/reset/active operations используют тот же User-first order. Это сохраняет exact DAG `pages→accounts`, обратного import нет.
 
-Успешный set/revoke в одной pages-owned transaction меняет/удаляет ровно один PageGrant, увеличивает target `User.generation` на 1 и пишет один safe AuditEvent. Успешная deactivation в одной pages-owned transaction удаляет все grants target employee, ставит `is_active=false`, увеличивает generation один раз и пишет один aggregate event с count без page names/content. Fault откатывает grants, User и audit целиком. Reactivation выполняет accounts только в active=true state без автоматического восстановления grants и также увеличивает generation.
+Успешный set/revoke в одной pages-owned transaction меняет/удаляет ровно один PageGrant, увеличивает target `User.generation` на 1 и пишет один safe AuditEvent. Успешная deactivation в одной pages-owned transaction удаляет все grants target employee, ставит `is_active=false`, увеличивает generation один раз и пишет один aggregate event с count без page names/content. Fault откатывает grants, User и audit целиком. Reactivation также имеет pages-owned outer transaction: после User-first locks она транзакционно доказывает PageGrant count0, вызывает accounts `reactivate_and_bump` participant и пишет audit; grants автоматически не восстанавливаются, generation увеличивается один раз, reverse accounts→pages import отсутствует.
 
 Стандартная server-side session хранит exact User generation. Каждый private request до use case сравнивает session generation с текущей User; protected write повторяет проверку под User lock. После grant mutation/deactivation все прежние sessions target employee получают 401 на следующем private request. Новая login session видит только current grants.
 
-Concurrent save/revoke сериализуются User-first: если save получил lock первым, он может завершить одну разрешённую mutation, затем revoke commit отзывает дальнейшие requests; если revoke получил lock первым, save после ожидания видит stale session generation/отсутствующий grant и не меняет content/usages/audit. Concurrent grant commands с одним base имеют одного winner, второй получает 409+reload. Immediate lost-response retry допускает idempotent success только если current grant exact равен desired, generation=`base+1` и matching safe audit target/action существует; после любой intervening generation change — 409, без receipt table.
+Concurrent save/revoke сериализуются User-first: если save получил lock первым, он может завершить одну разрешённую mutation, затем revoke commit отзывает дальнейшие requests; если revoke получил lock первым, save после ожидания видит stale session generation/отсутствующий grant и не меняет content/usages/audit. Concurrent grant commands с одним base имеют одного winner, второй получает 409+reload. Exact lost-response retry без отдельной operation identity наблюдаемо неотличим от concurrent identical command, поэтому любой stale `base_user_generation/base_grant_hash`, включая такой retry, получает 409+reload и не повторяет mutation/audit. Operation receipt/history/audit lookup не добавляются.
 
 Acceptance:
 
@@ -253,7 +254,7 @@ Acceptance:
 - `GRANT-AC-006`: every old target session is rejected after committed grant/deactivate/password/active generation bump;
 - `GRANT-AC-007`: save-first vs revoke-first has the two exact serialized outcomes above, never unauthorized post-revoke mutation;
 - `GRANT-AC-008`: two grant commands with one base yield one success/one 409; grant/user/audit never diverge;
-- `GRANT-AC-009`: immediate lost-response retry is no-op only at generation base+1 with matching desired state+audit; intervening mutation gives 409;
+- `GRANT-AC-009`: lost-response retry и concurrent identical loser с stale base одинаково получают 409+reload; mutation/audit0, operation identity/history0;
 - `GRANT-AC-010`: lock-order fitness test proves User→Page→Grant→Content for grant, save, deactivate and password/active participants; reverse edge accounts→pages absent.
 
 ### 7.5. Media decode boundary

@@ -183,10 +183,12 @@
     const price = form.querySelector("[data-price-control]");
     const process = form.querySelector("[data-process-control]");
     const links = form.querySelector("[data-links-control]");
+    const actions = form.querySelector("[data-actions-control]");
     form.dataset.editorReady = "1";
     if ((!price || form.dataset.priceReady === "1")
         && (!process || form.dataset.processReady === "1")
-        && (!links || form.dataset.linksReady === "1")) {
+        && (!links || form.dataset.linksReady === "1")
+        && (!actions || form.dataset.actionsReady === "1")) {
       save.disabled = form.hasAttribute("data-prices-only")
         && price?.querySelector("[data-price-changed]").value !== "1";
     }

@@ -1,0 +1,7 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Название уже изменилось — Эстакада{% endblock %}
+{% block content %}
+  <h1>Название страницы уже изменилось</h1>
+  <p>Текущее поколение структуры: {{ generation }}.</p>
+  <p><a href="{% url 'manage-page-rename' page_id %}">Перезагрузить состояние</a></p>
+{% endblock %}

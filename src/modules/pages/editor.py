@@ -10,15 +10,9 @@ from django.utils.safestring import SafeString, mark_safe
 from modules.accounts.api import StaffRole
 
 from .content import FIELD_SETS, RICH_BY_KIND, canonical_payload_hash, validate_payload
+from .grants import eligible_grant_groups
 from .models import Page, PageContent, PageGrant, Route, RouteMode
 
-
-_EMPLOYEE_TEXT_KINDS = frozenset({
-    "service_section_overview",
-    "service_detail",
-    "article",
-    "legacy_news_article",
-})
 _DEFERRED_LABELS = {
     "service_refs": "Связанные услуги",
     "process_steps": "Этапы работы",
@@ -109,6 +103,19 @@ class PartnerLinksControl:
 
 
 @dataclass(frozen=True, slots=True)
+class ActionCopy:
+    index: int
+    title: str
+    body: SafeString
+    internal_url: str
+
+
+@dataclass(frozen=True, slots=True)
+class ActionCopyControl:
+    actions: tuple[ActionCopy, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class EditorSnapshot:
     page: Page
     content: PageContent
@@ -118,6 +125,7 @@ class EditorSnapshot:
     can_edit_prices: bool
     can_edit_process: bool
     can_edit_links: bool
+    can_edit_action_copy: bool
     has_valid_previous: bool
 
 
@@ -166,16 +174,18 @@ def load_editor_snapshot(*, actor: Any, page_id: object) -> EditorSnapshot:
         can_edit_prices = page.kind == "service_detail"
         can_edit_process = page.kind == "home"
         can_edit_links = page.kind == "legacy_partner_links"
+        can_edit_action_copy = page.kind == "actions"
     else:
         groups = tuple(grant.groups)
         rich_names = (
             ("intro", "body")
-            if "text" in grant.groups and page.kind in _EMPLOYEE_TEXT_KINDS
+            if "text" in grant.groups and "text" in eligible_grant_groups(page.kind)
             else ()
         )
-        can_edit_prices = page.kind == "service_detail" and "prices" in grant.groups
+        can_edit_prices = "prices" in grant.groups and "prices" in eligible_grant_groups(page.kind)
         can_edit_process = False
         can_edit_links = False
+        can_edit_action_copy = False
     return EditorSnapshot(
         page,
         content,
@@ -185,6 +195,7 @@ def load_editor_snapshot(*, actor: Any, page_id: object) -> EditorSnapshot:
         can_edit_prices,
         can_edit_process,
         can_edit_links,
+        can_edit_action_copy,
         has_previous,
     )
 
@@ -206,6 +217,8 @@ def deferred_fields(snapshot: EditorSnapshot) -> tuple[DeferredField, ...]:
         deferred.discard("process_steps")
     if snapshot.can_edit_links:
         deferred.discard("links")
+    if snapshot.can_edit_action_copy:
+        deferred.discard("actions")
     rows: list[DeferredField] = []
     for name in sorted(deferred):
         value = fields[name]
@@ -255,6 +268,16 @@ def partner_links_control(snapshot: EditorSnapshot) -> PartnerLinksControl | Non
     return PartnerLinksControl(tuple(PartnerLink(item["label"], item["https_url"]) for item in value))
 
 
+def action_copy_control(snapshot: EditorSnapshot) -> ActionCopyControl | None:
+    if not snapshot.can_edit_action_copy:
+        return None
+    value = snapshot.content.current_payload["fields"]["actions"]
+    return ActionCopyControl(tuple(
+        ActionCopy(index, item["title"], mark_safe(item["body"]), item["internal_url"])
+        for index, item in enumerate(value)
+    ))
+
+
 def owner_candidate(
     snapshot: EditorSnapshot,
     *,
@@ -263,6 +286,7 @@ def owner_candidate(
     prices: dict | None = None,
     process_steps: list[dict[str, str]] | None = None,
     links: list[dict[str, str]] | None = None,
+    action_copy: list[dict[str, str]] | None = None,
 ) -> dict:
     candidate = copy.deepcopy(snapshot.content.current_payload)
     fields = candidate["fields"]
@@ -280,6 +304,8 @@ def owner_candidate(
         fields["process_steps"] = process_steps
     if links is not None:
         fields["links"] = links
+    if action_copy is not None:
+        fields["actions"] = action_copy
     return candidate
 
 

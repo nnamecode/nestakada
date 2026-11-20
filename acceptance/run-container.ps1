@@ -1,11 +1,11 @@
 param(
-    [ValidateSet('harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list')][string]$Mode = 'harness',
+    [ValidateSet('harness', 'documents', 'driver-safety', 'public-http', 'public-contracts', 'application-contracts', 'form-contracts', 'form-windows', 'form-native', 'form-cache', 'home-source', 'shared-component-restore', 'url-reserve', 'url-reuse', 'url-transition', 'service-quota', 'version-storage', 'price-editor', 'price-home', 'shared-blocks', 'backup-contracts', 'html-build', 'content-lifecycle', 'fallback-contracts', 'media-contracts', 'logging-contracts', 'request-lifecycle', 'seo-contracts', 'editor-boundaries', 'editor-safety', 'rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native', 'action-editor-native', 'version-time', 'auth-login', 'unsaved-editor', 'log-quota', 'background-jobs', 'restore-contracts', 'log-delete-failures', 'migration-contracts', 'migration-source', 'foundation-security', 'list')][string]$Mode = 'harness',
     [switch]$ListOnly
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $scratch = Join-Path $repo 'work\acceptance-container'
-$richMode = $Mode -in @('rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native')
+$richMode = $Mode -in @('rich-editor-native', 'price-editor-native', 'process-editor-native', 'links-editor-native', 'action-editor-native')
 if ($ListOnly -and -not $richMode) { throw 'ListOnly is allowed only for native editor modes.' }
 $richRoot = Join-Path $scratch $Mode
 $package = if ($richMode) { Join-Path $richRoot 'acceptance' } else { Join-Path $scratch 'acceptance' }
@@ -72,6 +72,7 @@ if ($richMode) {
         'price-editor-native' { 'price-editor-native.spec.js' }
         'process-editor-native' { 'process-editor-native.spec.js' }
         'links-editor-native' { 'links-editor-native.spec.js' }
+        'action-editor-native' { 'action-editor-native.spec.js' }
         default { 'rich-editor-native.spec.js' }
     }
     foreach ($file in @('package.json', 'pnpm-lock.yaml', 'playwright.config.js', $nativeSpec)) {
@@ -165,6 +166,10 @@ $playwrightArgs = switch ($Mode) {
     'links-editor-native' {
         if ($ListOnly) { '--project=links-editor-native --list' }
         else { '--project=links-editor-native --max-failures=1' }
+    }
+    'action-editor-native' {
+        if ($ListOnly) { '--project=action-editor-native --list' }
+        else { '--project=action-editor-native --max-failures=1' }
     }
     'auth-login' { '--project=auth-login --max-failures=1' }
     'unsaved-editor' { '--project=unsaved-editor --max-failures=1' }
@@ -288,6 +293,14 @@ if ($richMode) {
             throw 'Partner links editor source must be one regular file.'
         }
         $richSourceMount += @('--mount', "type=bind,source=$linksSource,target=/source/partner-links-editor.js,readonly")
+    }
+    if ($Mode -eq 'action-editor-native') {
+        $actionSource = Join-Path $repo 'src\modules\pages\static\pages\action-copy-editor.js'
+        $actionItem = Get-Item -LiteralPath $actionSource -Force
+        if ($actionItem.PSIsContainer -or ($actionItem.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw 'Action copy editor source must be one regular file.'
+        }
+        $richSourceMount += @('--mount', "type=bind,source=$actionSource,target=/source/action-copy-editor.js,readonly")
     }
     & docker image inspect $image *> $null
     if ($LASTEXITCODE -ne 0) { throw 'Pinned Playwright image disappeared before the test container.' }

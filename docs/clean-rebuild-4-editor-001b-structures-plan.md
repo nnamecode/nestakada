@@ -1,6 +1,6 @@
 # RB4 typed editor 001B-S — owner-only literal structures
 
-Дата: 2026-11-19. ID: `RB4-EDITOR-001B-S`. Статус: **`S1-PROCESS` completed by D-1601: PostgreSQL exact51 and Chromium exact8 independently ACCEPTED0/0/0, product0/no-bloat; S2/S3/S4 remain separate and closed**.
+Дата: 2026-11-19. ID: `RB4-EDITOR-001B-S`. Статус: **S1-PROCESS, S2A-LINKS and S3A-ACTION-COPY completed; S4-REFS no-code deferred by D-1642 review0/0/0/product0/no-bloat; S2B/S3B/media remain B002-bound**.
 
 ## 1. Граница и порядок
 
@@ -8,10 +8,10 @@
 
 1. `RB4-EDITOR-001B-S1-PROCESS` — `home.process_steps[]`, exact shape `{title, body}`, cap12;
 2. `RB4-EDITOR-001B-S2A-LINKS` — `legacy_partner_links.links[]`, separate literal no-media plan; `S2B-REVIEWS` remains closed until B002/exact thumbnail-position contract;
-3. `RB4-EDITOR-001B-S3-ACTIONS` — `actions.actions[]`, только после отдельного плана, потому что каждый объект содержит rich body;
+3. `RB4-EDITOR-001B-S3A-ACTION-COPY` — fixed-position action title+rich body only; count/order/internal URL/banner remain immutable because action order is positionally coupled to media; structural S3B stays B002/S4-bound;
 4. `RB4-EDITOR-001B-S4-REFS` — `home.service_refs[]`, `brand_refs[]`, `review_refs[]`, только после утверждения допустимых target kinds, проверки существования целей и bounded owner-facing projection.
 
-`S1-PROCESS` is closed by D-1601. `S2A-LINKS` now has its own separate plan; other items remain ordering markers, not code permission. `001B-M` stays closed until B002. Универсальный repeater/form/schema builder, registry адаптеров, JSON editor/carrier, общий selector, raw UUID input, media picker и новая зависимость отсутствуют.
+`S1-PROCESS` is closed by D-1601, `S2A-LINKS` by D-1618 and fixed-copy `S3A-ACTION-COPY` by D-1640. `S4-REFS` is explicitly deferred no-code by D-1642 until per-field B002/public authority; S2B/S3B remain ordering markers, not code permission. `001B-M` stays closed until B002. Универсальный repeater/form/schema builder, registry адаптеров, JSON editor/carrier, общий selector, raw UUID input, media picker и новая зависимость отсутствуют.
 
 Это минимальный полезный срез: frozen authority содержит пять реальных `process_steps`, а три home reference array сейчас пусты. Объединение steps, URL-объектов, rich actions и UUID refs создало бы абстракцию до появления общего доказанного контракта и является stop condition.
 

@@ -1,0 +1,13 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Публикация — {{ page.name }} — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-page-editor' page.id %}">← К редактору</a></p>
+  <h1>Публикация: {{ page.name }}</h1>
+  <p>Сейчас: {% if page.is_published %}опубликована{% else %}скрыта{% endif %}.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="base_structure_generation" value="{{ structure_generation }}">
+    <input type="hidden" name="desired_published" value="{% if page.is_published %}0{% else %}1{% endif %}">
+    <button type="submit">{% if page.is_published %}Скрыть страницу{% else %}Опубликовать страницу{% endif %}</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Доступ {{ employee.username }} — {{ page.name }}{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-grant-employee' employee.id %}">← К доступу сотрудника</a></p>
+  <h1>{{ employee.username }}: {{ page.name }}</h1>
+  <dl>
+    <dt>Адрес</dt><dd>{{ primary_path }}</dd>
+    <dt>Тип</dt><dd>{{ page.kind }}</dd>
+    <dt>Поколение доступа</dt><dd>{{ employee.generation }}</dd>
+  </dl>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="base_user_generation" value="{{ employee.generation }}">
+    <input type="hidden" name="base_grant_hash" value="{{ base_grant_hash }}">
+    {% for group in eligible_groups %}
+      <label><input type="checkbox" name="group" value="{{ group }}"{% if group in groups %} checked{% endif %}> {{ group }}</label>
+    {% endfor %}
+    <button type="submit">Сохранить доступ</button>
+  </form>
+  <p>Если снять все флажки, доступ к странице будет отозван.</p>
+{% endblock %}

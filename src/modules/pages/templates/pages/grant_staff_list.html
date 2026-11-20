@@ -1,0 +1,16 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Сотрудники — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-pages' %}">← К страницам</a></p>
+  <h1>Доступ сотрудников</h1>
+  <table>
+    <thead><tr><th>Сотрудник</th><th>Поколение доступа</th><th></th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+        <tr><td>{{ row.username }}</td><td>{{ row.generation }}</td><td><a href="{% url 'manage-grant-employee' row.id %}">Настроить доступ</a></td></tr>
+      {% empty %}
+        <tr><td colspan="3">Нет активных сотрудников.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

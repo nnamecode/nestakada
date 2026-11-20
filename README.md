@@ -1,5 +1,283 @@
 # Новый сайт автосервиса «Эстакада»
 
+> **Текущая точка D-1752 (2026-11-20): PAGE RENAME EXACT172 OWNER RUNTIME GATE.** Coordinator APPROVED0/0/0 at SHA `C76DBAC…D6D0`; syntax/privacy/cleanup/no-bloat PASS. Docker/runtime0. Next requires fresh explicit owner permission for one full disposable exact172 run, no retry/fallback.
+
+> **Текущая точка D-1751 (2026-11-20): PAGE RENAME COORDINATOR REPEAT REVIEW.** First review0/3/0 remediated: django.setup, create ID capture before rejection and logs-before-exit triage. New SHA `C76DBAC…D6D0`, syntax0/diff-check PASS; Docker/runtime0. Next: repeat independent coordinator review.
+
+> **Текущая точка D-1750 (2026-11-20): PAGE RENAME EXACT172 COORDINATOR REVIEW.** Temporary coordinator created at SHA `D0A0637…3B59`; PowerShell syntax0/diff-check PASS, Docker/runtime0. Next: independent SHA/privacy/cleanup/no-bloat review; owner permission only after approval.
+
+> **Текущая точка D-1749 (2026-11-20): PAGE RENAME EXACT172 PLAN APPROVED.** Repeat review0/0/0;17 labels=172, origins9, cleanup/privacy/no-bloat PASS. Coordinator not created; Docker/runtime0. Next: temporary coordinator implementation and independent review, then fresh explicit owner permission.
+
+> **Текущая точка D-1748 (2026-11-20): PAGE RENAME EXACT172 PLAN REPEAT REVIEW.** First review0/1/1; ID-before-output-validation and exact timing/OK/error-empty oracles remediated. Arithmetic/origins/no-bloat PASS; coordinator/Docker/runtime0. Next: repeat plan review.
+
+> **Текущая точка D-1747 (2026-11-20): PAGE RENAME EXACT172 RUN PLAN REVIEW.** Proposal combines accepted exact162 + rename exact10 across17 literal modules with origins9 and the accepted disposable PG/TLS/read-only/cleanup boundary. Coordinator not created; Docker/runtime0. Next: independent plan review, then temporary coordinator review, then fresh explicit owner permission.
+
+> **Текущая точка D-1746 (2026-11-20): PAGE RENAME SOURCE APPROVED; RUNTIME GATE.** Exact10 tests-first owner Page.name CAS/audit/private HTTP source final review APPROVED0/0/0 after bounded remediation; privacy/DAG/no-bloat PASS. Exact10/diff-check PASS, model/migration/public URL/content/media/JS0. Local AST launcher unavailable under anti-loop; Docker/runtime0. WBS48–50%, remaining6/13/27h. Next: separate exact172 PostgreSQL run plan/review, then fresh explicit owner permission.
+
+> **Текущая точка D-1745 (2026-11-20): PAGE RENAME SOURCE REPEAT REVIEW.** Plan APPROVED0/0/0; exact10 tests-first source first review0/1/4 remediated in-place with coherent GET race, UUID precheck, full rollback/HTTP matrices and bounded concurrency. Exact10/diff-check PASS; local AST unavailable under anti-loop, Docker/runtime0. Next: repeat independent source/no-bloat review.
+
+> **Текущая точка D-1744 (2026-11-20): PAGE RENAME PLAN FINAL REVIEW.** Repeat review0/1/0 confirmed prior findings closed; CSRF-before-view test preconditions are now exact (valid-CSRF PUT→405, tokenless POST→403). Scope/exact10 unchanged, code/runtime0. Next: final repeat independent review.
+
+> **Текущая точка D-1743 (2026-11-20): PAGE RENAME PLAN REPEAT REVIEW.** First review1/3/0/no-bloat PASS; coherent locked GET, early OWNER denial, exact HTTP/405/body-cap outcomes and public/private URL scope remediated without growth. Exact10 unchanged, code/runtime0. Next: repeat independent architecture/no-bloat review.
+
+> **Текущая точка D-1742 (2026-11-20): PAGE RENAME PLAN REVIEW.** `RB4-SLICE-004B-PAGE-RENAME` фиксирует только owner-only exact Page.name mutation через существующий structure CAS/audit и fixed no-JS HTTP; exact10 acceptance записан до кода. Model/migration/dependency/URL/content/navigation/media/B002/runtime0. Next: independent architecture/no-bloat review.
+
+> **Текущая точка D-1741 (2026-11-20): SITESETTINGS GATE REPEAT-CLOSED; CLEANUP COMPLETE.** Owner authorized exact temp-runner removal; sandbox denied the first Remove-Item, then the same SHA/path-verified command succeeded with approved access. Runner absent, permanent artifact0, Docker leftovers0. Exact162 ACCEPTED_PASS and WBS48–50% / remaining6/13/27h unchanged. Next: separate bounded product planning.
+
+> **Текущая точка D-1740 (2026-11-20): SITESETTINGS GATE CLOSED; TEMP-RUNNER CLEANUP PAUSED.** Run5 ACCEPTED_PASS exact162 and Docker leftovers0 remain valid. Temporary coordinator exact SHA `19AE94F2…05B5` still exists: two `apply_patch` deletion attempts returned the same failure, so anti-loop stopped a third method. Task paused to owner only for exact-file cleanup choice; product/server result is not reopened.
+
+> **Текущая точка D-1739 (2026-11-20): SITESETTINGS SERVER GATE CLOSED.** Run5 exact162/162 PASS in103.249s, migrations/check0, standalone OK, test DB destroyed, app exit0/OOM0/dead0, cleanup+leftovers0. Independent final review ACCEPTED_PASS0/0/0, product0, privacy/cleanup/no-bloat/anti-loop PASS, rerun0. Overall48–50%, remaining6/13/27h. Next: separate bounded product planning; browser/media bytes/storage/public renderer/B002/live/deploy/push closed.
+
+> **Текущая точка D-1738 (2026-11-20): SITESETTINGS RUN4 PRODUCT PASS; TEST ORACLE APPROVED.** Exact162 ran in99.933s: prior146+model4+commands7+HTTP4 PASS, one HTTP test-only CSRF-order failure; DB destroyed, cleanup/leftovers0. One-line valid-CSRF PUT remediation independently APPROVED0/0/0; product findings0, exact12/runner unchanged. Fresh explicit full exact162 permission required. WBS47–49%, remaining7/14/28h.
+
+> **Текущая точка D-1737 (2026-11-20): SITESETTINGS RUN3 PRODUCT FINDING REMEDIATED; REVIEW APPROVED.** Exact162 discovered/run, migrations/check0, test DB destroyed; prior146 passed, SiteSettings155/162 with5F/2E. Root causes: singleton candidate validated as adding row (product1) and logout-form overbroad assertion (test1). Persisted-instance full validation + narrow controls assertion independently APPROVED0/0/0; runner unchanged SHA `19AE94F2…05B5`, cleanup/leftovers0. Fresh explicit full exact162 permission required. WBS47–49%, remaining7/14/28h.
+
+> **Текущая точка D-1736 (2026-11-20): SITESETTINGS RUN2 APP-BOOTSTRAP FAIL; REMEDIATION APPROVED.** Images2/origins9/network/PG readiness4 PASS, then `/run/runner.py` lacked `/app` import root; discovery/test DB/tests0, product findings0. Cleanup0 and exact leftovers0. Sole `PYTHONPATH=/app` remediation independently APPROVED0/0/0 at SHA `19AE94F2…05B5`; fresh explicit permission required for run3. WBS47–49%, remaining7/14/28h.
+
+> **Текущая точка D-1735 (2026-11-20): SITESETTINGS RUN1 COORDINATOR FAIL; REMEDIATION APPROVED.** Run1 stopped after images2/origins9 before PostgreSQL/tests because Docker ID capture kept one character; cleanup masked the primary error and left one empty internal network. Exact JSON identity audit removed it; containers/networks/task-dir/cert0. Product run0/findings0/retry0. Remediation independently APPROVED0/0/0 at runner SHA `E3D54241…C8F08`; fresh explicit permission required for run2. WBS remains47–49%, remaining7/14/28h.
+
+> **Текущая точка D-1734 (2026-11-20): SITESETTINGS SOURCE APPROVED; RUNTIME GATE.** Exact12 tests-first implementation independently APPROVED after bounded 0/1/3→0/0/1 remediation, final0/0/0/product0; privacy/DAG/no-bloat/anti-loop PASS. Diff-check and static scope checks PASS; model/migration/dependency/storage/media-byte/public-renderer changes0. Docker/PostgreSQL tests remain0 pending a fresh explicit local-runtime permission.
+
+> **Текущая точка D-1733 (2026-11-20): SITESETTINGS PLAN APPROVED; TESTS-FIRST CODE.** Repeat review0/0/0/no-bloat; exact12 bounded core8+READY-logo implementation active. Model/migration/dependency/storage/bytes/public renderer/runtime0.
+
+> **Текущая точка D-1732 (2026-11-20): SITESETTINGS PLAN 1/2/1 REMEDIATED; REPEAT REVIEW.** Full usage-set coherence on command+GET, exact HTTP matrix and selector1..64/same-logo semantics added without new layer. Code/runtime0; repeat architecture/no-bloat review next.
+
+> **Текущая точка D-1731 (2026-11-20): SITESETTINGS 002A PLAN REVIEW.** Proposed fixed core8+READY SITE_ASSET selector only; gated legal/social preserved, media bytes/storage/public renderer0. Exact12 acceptance before code; independent architecture/no-bloat review next.
+
+> **Текущая точка D-1730 (2026-11-20): LEGACY-PLAIN GATE REPEAT-CLOSED.** Repeat closure review0/0/0, product0, cleanup/privacy/no-bloat/anti-loop PASS; exact146 accepted, rerun0, temporary runner absent. Overall47–49%, remaining7/14/28h. Next: separately bounded product-slice planning; closed runtime/media/live gates remain.
+
+> **Текущая точка D-1729 (2026-11-20): LEGACY-PLAIN SERVER GATE CLOSED.** Run3 exact146/146 independently ACCEPTED_PASS0/1/0; stale plan status remediated, product0/cleanup/privacy/no-bloat/anti-loop PASS, rerun0. Overall47–49%, remaining7/14/28 productive hours. HTTP/template/browser/media/B002/live/deploy/push closed.
+
+> **Текущая точка D-1728 (2026-11-20): LEGACY-PLAIN RUN3 PASS146; RESULT REVIEW.** Exact146/146 OK in67.695s, migrations/check0, test DB destroyed, app exit0/OOM0/dead0/error-empty, cleanup0. Independent result review before server-gate/WBS closure; rerun0.
+
+> **Текущая точка D-1727 (2026-11-20): LEGACY-PLAIN LOG REMEDIATION APPROVED; OWNER GATE.** Repeat review0/0/0 at exact coordinator SHA `DA26B914…A1A3F87C`; product0/privacy/no-bloat/anti-loop PASS. Fresh full exact146 needs new explicit permission; retry/fallback0.
+
+> **Текущая точка D-1726 (2026-11-20): LEGACY-PLAIN LOG REMEDIATION REPEAT REVIEW.** Run2 accepted-fail0/2/0, product result unavailable/findings0, cleanup/no-bloat/anti-loop PASS. Local EAP save/Continue/finally-restore plus captured exit code; exact146/product boundaries unchanged. Runtime closed pending repeat review.
+
+> **Текущая точка D-1725 (2026-11-20): LEGACY-PLAIN RUN2 LOG-RETRIEVAL TRIAGE.** Origins28/images2/names3/cert/PG readiness4/app boundary passed; app completed, but Windows PowerShell combined stderr retrieval terminated on normal Django output before state/result oracles. Cleanup0, retry0; exact146 result unavailable. Independent triage required.
+
+> **Текущая точка D-1724 (2026-11-20): LEGACY-PLAIN ACCESS REMEDIATION APPROVED; OWNER GATE.** Repeat review0/0/0, product0, cleanup/privacy/no-bloat/anti-loop PASS. Same exact146 coordinator outside restricted sandbox; fresh explicit permission required, retry/fallback0.
+
+> **Текущая точка D-1723 (2026-11-20): LEGACY-PLAIN ACCESS REMEDIATION OWNER GATE.** Run1 independently ACCEPTED_FAIL0/1/0, product0/cleanup/no-bloat/anti-loop PASS; stale plan status remediated. Same coordinator outside restricted sandbox is the only changed condition. Fresh exact146 needs new explicit permission; retry/fallback0.
+
+> **Текущая точка D-1722 (2026-11-20): LEGACY-PLAIN RUN1 DOCKER-API ACCESS TRIAGE.** Origins28 PASS; Docker Desktop API denied access at first image inspect, before images/names/objects/PG/tests. Cleanup0/product0/retry0. Independent result triage required; no automatic rerun.
+
+> **Текущая точка D-1721 (2026-11-20): LEGACY-PLAIN PG146 OWNER GATE.** Runtime plan approved0/0/0, product0/no-bloat/privacy/anti-loop PASS; exact146/origins28. Docker0. One explicit disposable-run permission required; no retry/fallback.
+
+> **Текущая точка D-1720 (2026-11-20): LEGACY-PLAIN CODE APPROVED; PG146 PLAN REVIEW.** Repeat code/no-bloat review0/0/0, product0, exact10. Proposed one-shot runtime reuses accepted D-1715 exact136 boundary plus new exact10/origin28; Docker0 pending review and explicit permission.
+
+> **Текущая точка D-1719 (2026-11-20): LEGACY-PLAIN CODE P2×2 REMEDIATED; REPEAT REVIEW.** Missing-content is typed UNAVAILABLE; exact10 now reaches final-generation DB fault and checks exact ordered link label+URL. Product/query/scope unchanged; runtime0.
+
+> **Текущая точка D-1718 (2026-11-20): LEGACY-PLAIN PLAN APPROVED; TESTS-FIRST CODE.** Repeat architecture/no-bloat review0/0/0, product0. Exact four media-free kinds, exact3 queries and exact10 methods approved; HTTP/media/B002/model/migration/dependency/runtime0.
+
+> **Текущая точка D-1717 (2026-11-20): LEGACY-PLAIN PLAN P1×2 REMEDIATED; REPEAT REVIEW.** Same routes statement now revalidates exact requested target+mode; hide before final generation check is UNAVAILABLE, only post-check mutation may race. Exact10/no-bloat scope unchanged; product code/runtime0.
+
+> **Текущая точка D-1716 (2026-11-19): HTTP CATCH-ALL DEFERRED; LEGACY-PLAIN PROJECTION PLAN REVIEW.** Shared Header/Footer+READY logo keep real HTTP rendering B002-bound. Light candidate is one media-free typed legacy projection; placeholder/layout fork/registry0, code/runtime0.
+
+> **Текущая точка D-1715 (2026-11-19): PUBLIC READ SERVER GATE CLOSED.** Run9 exact136/136 independently ACCEPTED_PASS0/0/0; product0/cleanup/no-bloat PASS, repeat0. Overall46–48%, remaining8/15/29 productive hours.
+
+> **Текущая точка D-1714 (2026-11-19): PUBLIC READ RUN9 PASS136; RESULT REVIEW.** Exact136/136 OK in67.304s, app exit0/test DB destroyed/cleanup0; outer stdout-only log oracle false-negative after success. No rerun proposed.
+
+> **Текущая точка D-1713 (2026-11-19): PUBLIC READ RUN9 OWNER GATE.** Run8 135/136 test-only failure accepted; exact ordering assertions approved0/0/0 product0/no-bloat. Fresh full exact136 required.
+
+> **Текущая точка D-1712 (2026-11-19): PUBLIC READ RUN8 135/136 TEST-ORACLE TRIAGE.** App image fix proved discovery136; one ordering assertion reversed approved position0<1 semantics. Product0/cleanup0; test-only review next.
+
+> **Текущая точка D-1711 (2026-11-19): PUBLIC READ APP-IMAGE FIX APPROVED; RUN8 OWNER GATE.** Root cause closed, app782+nh3 verified, review0/0/0 product0/no-bloat. Fresh full exact136 requires permission.
+
+> **Текущая точка D-1710 (2026-11-19): PUBLIC READ ROOT CAUSE FOUND; APP-IMAGE REMEDIATION REVIEW.** D-1709 exact six×missing nh3; coordinator used base image instead of approved app image782 with verified nh3. Product0, full run8 closed.
+
+> **Текущая точка D-1709 (2026-11-19): PUBLIC READ APP-ONLY IMPORT DIAGNOSTIC OWNER GATE.** Script approved0/0/0/no-bloat at exact SHA; network-none, PG/TLS/DB/tests0. Full run8 prohibited.
+
+> **Текущая точка D-1708 (2026-11-19): PUBLIC READ RUN7 IMPORT-BOUNDARY TRIAGE.** Evidence isolates six loader errors to commands-importing labels; DB/tests0, cleanup0/product0. App-only network-none diagnostic review next; full run8 prohibited.
+
+> **Текущая точка D-1707 (2026-11-19): PUBLIC READ RUN7 OWNER GATE.** Mismatch evidence approved0/0/0 product0/no-bloat; full-if136 or bounded diagnostic-if57. No blind run8.
+
+> **Текущая точка D-1706 (2026-11-19): PUBLIC READ RUN6 DISCOVERY57 TRIAGE.** Standard lifecycle still57, prior hypothesis withdrawn; DB/tests0, cleanup0/product0/retry0. Mismatch-only per-label evidence review next.
+
+> **Текущая точка D-1705 (2026-11-19): PUBLIC READ RUN5 ACCEPTED; RUN6 OWNER GATE.** Exact Django5.2 build_suite signature fix approved0/0/0 product0/no-bloat. Fresh full exact136 run6 requires permission.
+
+> **Текущая точка D-1704 (2026-11-19): PUBLIC READ RUN5 DJANGO-SIGNATURE ACCEPTED-FAIL TRIAGE.** PG/app gates PASS; obsolete extra_tests positional failed pre-discovery, cleanup0/product0/retry0. Exact installed-signature remediation review next.
+
+> **Текущая точка D-1703 (2026-11-19): PUBLIC READ RUN4 ACCEPTED; RUN5 OWNER GATE.** Standard guarded DiscoverRunner approved0/0/0 product0/no-bloat; exact136 before DB, no filtering/rewrite. Fresh full run5 requires permission.
+
+> **Текущая точка D-1702 (2026-11-19): PUBLIC READ RUN4 DISCOVERY-LIFECYCLE ACCEPTED-FAIL TRIAGE.** Transport/PG passed; premature internal build_suite returned57 before DB/tests while static labels remain136. Standard guarded DiscoverRunner remediation review next.
+
+> **Текущая точка D-1701 (2026-11-19): PUBLIC READ RUN3 ACCEPTED; RUN4 OWNER GATE.** Bounded base64 app transport approved0/0/0 product0/no-bloat; extra Docker probe deliberately omitted. Fresh full exact136 requires new permission.
+
+> **Текущая точка D-1700 (2026-11-19): PUBLIC READ RUN3 APP-TRANSPORT ACCEPTED-FAIL TRIAGE.** PG readiness4/app boundary PASS; inline python quoting failed before discovery, cleanup0/product0/retry0. Bounded base64 stdin-shell remediation review next.
+
+> **Текущая точка D-1699 (2026-11-19): PUBLIC READ RUN2 ACCEPTED; RUN3 OWNER GATE.** RNG/hex remediation independently accepted0/0/0; exact same-host probe PASS/exit0, product0/no-bloat/anti-loop PASS. Fresh full exact136 requires new permission.
+
+> **Текущая точка D-1698 (2026-11-19): PUBLIC READ RUN2 HOST-RNG ACCEPTED-FAIL TRIAGE.** TLS remediation passed; static RNG.Fill failed before Docker objects/PG/tests, cleanup0/product0/retry0. Minimal Create/GetBytes remediation review next.
+
+> **Текущая точка D-1697 (2026-11-19): PUBLIC READ RUN1 ACCEPTED; RUN2 OWNER GATE.** Remediation review0/0/0 product0/no-bloat; independently approved same-host RSACng→PKCS#8 probe PASS/exit0. Fresh full exact136 requires new permission.
+
+> **Текущая точка D-1696 (2026-11-19): PUBLIC READ RUN1 HOST-TLS ACCEPTED-FAIL TRIAGE.** Origins27/images2/names3 passed; Windows RSACng export API failed before Docker objects/PG/tests, cleanup0/product0/retry0. Test-only remediation review next.
+
+> **Текущая точка D-1695 (2026-11-19): PUBLIC READ PG136 OWNER GATE.** Runtime plan independently approved0/0/0 product0/no-bloat; exact136/origins27. Docker0, one explicit disposable-run permission required.
+
+> **Текущая точка D-1694 (2026-11-19): PUBLIC READ CODE APPROVED; PG136 PLAN REVIEW.** Exact10 review0/0/0 product0/no-bloat; Docker0.
+
+> **Текущая точка D-1693 (2026-11-19): PUBLIC READ CODE REMEDIATED.** Two P2 closed without scope growth; exact10 repeat review, runtime0.
+
+> **Текущая точка D-1692 (2026-11-19): PUBLIC READ EXACT10 CODE REVIEW.** One bounded pages.public module, static scope/diff PASS; HTTP/renderer/B002/runtime0.
+
+> **Текущая точка D-1691 (2026-11-19): PUBLIC READ PLAN APPROVED; EXACT10 CODE.** Typed read authority only, review0/0/0/no-bloat; HTTP/renderer/B002/runtime0.
+
+> **Текущая точка D-1690 (2026-11-19): PUBLIC READ INITIAL FENCE RE-REVIEW.** Same-statement scalar generation fence preserves hidden1/published3/navigation4 without locks/cache/snapshot/framework; code/runtime0.
+
+> **Текущая точка D-1689 (2026-11-19): PUBLIC READ PLAN RE-REVIEW.** Existing structure-generation recapture closes the only P1 hybrid gap; no locks/cache/snapshot/framework, code/runtime0.
+
+> **Текущая точка D-1688 (2026-11-19): PUBLIC READ AUTHORITY PLAN REVIEW.** Light candidate resolves BLANK/PAGE/REDIRECT and navigation promotion only; no catch-all placeholder, renderer or new storage/framework. Code/runtime0.
+
+> **Текущая точка D-1687 (2026-11-19): PUBLICATION SERVER GATE CLOSED.** Run2 exact126/126 independently accepted0/0/0; cleanup/no-bloat PASS, repeat0. Overall45–47%, remaining9/16/30 productive hours.
+
+> **Текущая точка D-1686 (2026-11-19): PUBLICATION RUN2 PASS126; RESULT REVIEW.** Origins26, exact126/126 OK in65.948s, migrations/check0, app exit0 and exact cleanup PASS. Gate closure awaits independent review.
+
+> **Текущая точка D-1685 (2026-11-19): PUBLICATION RUN2 OWNER GATE.** Run1 test-only failure accepted; remediation approved0/0/0 product0/no-bloat, exact126 unchanged. Fresh full run2 requires explicit permission.
+
+> **Текущая точка D-1684 (2026-11-19): PUBLICATION RUN1 TEST-ORACLE TRIAGE.** Exact126 reached125 pass/1 test-only failure caused by Django TestCase outer transaction; product0 observed, cleanup PASS, no retry. Review remediation before fresh permission.
+
+> **Текущая точка D-1683 (2026-11-19): PUBLICATION PG126 OWNER GATE.** Approved plan0/0/0 product0/no-bloat; exact126/origins26. Docker not started; one explicit disposable-run permission required.
+
+> **Текущая точка D-1682 (2026-11-19): PUBLICATION CODE APPROVED; PG126 PLAN REVIEW.** Exact15 final review0/0/0 product0/no-bloat. Disposable regression126 candidate reuses accepted boundary; Docker/runtime0 pending review and permission.
+
+> **Текущая точка D-1681 (2026-11-19): PUBLICATION 004A PLAN APPROVED; TESTS-FIRST CODE.** Repeat review0/0/0 product0/no-bloat; exact15 acceptance. Only fixed publish/hide slice enters code; Docker/runtime0.
+
+> **Текущая точка D-1680 (2026-11-19): PUBLICATION PLAN FINDINGS REMEDIATED; RE-REVIEW.** First review2/1/0 product0/no-bloat; exact read-only media proof, emergency-hide short branch and literal `1|0` wire now pinned. Code/runtime0.
+
+> **Текущая точка D-1679 (2026-11-19): PUBLICATION 004A BOUNDED PLAN REVIEW.** B002 storage remains deferred; minimal owner-only existing-Page publish/hide uses structure generation and current integrity. Public renderer/generic structure framework0, code/runtime0.
+
+> **Текущая точка D-1678 (2026-11-19): STAFF SERVER GATE CLOSED.** Run2 exact111/111 independently accepted0/0/0; cleanup/no-bloat PASS, repeat0. Overall44–46%, remaining10/17/31 productive hours.
+
+> **Текущая точка D-1677 (2026-11-19): STAFF RUN2 PASS111; RESULT REVIEW.** Origins23, exact111/111 OK in66.726s, migrations/check0, app exit0 and exact cleanup PASS. Gate closure awaits independent review.
+
+> **Текущая точка D-1676 (2026-11-19): STAFF TEST-ONLY REMEDIATION APPROVED; RUN2 OWNER GATE.** Run1 accepted-fail, review0/0/0 product0/no-bloat; exact111 unchanged. One fresh full run2 requires explicit permission.
+
+> **Текущая точка D-1675 (2026-11-19): STAFF RUN1 ACCEPTED-FAIL TRIAGE.** Exact111 executed with 4 failures/1 error; all five are test-contract fixtures, product finding0 observed, cleanup PASS. Test-only remediation is under independent review; no retry authorized.
+
+> **Текущая точка D-1674 (2026-11-19): STAFF EXACT111 PG OWNER GATE.** Plan0/0/0, origins23; Docker awaits explicit permission.
+
+> **Текущая точка D-1673 (2026-11-19): STAFF PG ORIGINS EXACT23.** Runtime plan count remediated, exact111 unchanged; repeat review, Docker0.
+
+> **Текущая точка D-1672 (2026-11-19): STAFF CODE APPROVED.** Exact21 code gate0/0/0; exact111 PostgreSQL plan review, Docker0.
+
+> **Текущая точка D-1671 (2026-11-19): STAFF CODE REMEDIATED.** Auth-first/savepoint plus exact21 matrix; repeat code review, runtime0.
+
+> **Текущая точка D-1670 (2026-11-19): STAFF 003B CODE REVIEW.** Minimal code/tests candidate, schema/dependency/framework0; runtime0.
+
+> **Текущая точка D-1669 (2026-11-19): STAFF REACTIVATE AUTHORITY SYNC.** Pages outer→accounts participant now consistent; final plan review, code/runtime0.
+
+> **Текущая точка D-1668 (2026-11-19): STAFF LIGHT CREATE409 SELECTED.** No replay/audit lookup; repeat plan review, code/runtime0.
+
+> **Текущая точка D-1667 (2026-11-19): STAFF CREATE RETRY CHOICE.** Light recommended existing UUID→409; alternative adds bounded hash+audit lookup. Other plan findings remediated, code/runtime0.
+
+> **Текущая точка D-1666 (2026-11-19): STAFF 003B PLAN REVIEW.** Minimal EMPLOYEE lifecycle only; no generic user admin/B002 expansion, code/runtime0.
+
+> **Текущая точка D-1665 (2026-11-19): PAGEGRANT SERVER GATE CLOSED.** Run5 exact90/90 independently accepted0/0/0; cleanup/no-bloat PASS, repeat0. Overall43–45%, remaining11/18/32 productive hours.
+
+> **Текущая точка D-1664 (2026-11-19): PAGEGRANT RUN5 PASS90.** Origins15, exact90/90, migrations/check0, app exit0 and cleanup OK. Independent result review pending.
+
+> **Текущая точка D-1663 (2026-11-19): BOUNDED PG BOOTSTRAP APPROVED.** Review0/0/0, product0, no-bloat PASS. One run5 awaits fresh explicit permission.
+
+> **Текущая точка D-1662 (2026-11-19): BOUNDED PG BOOTSTRAP SELECTED.** Existing wrapper only: exact parent/data/PGDATA999:999/0700 proof; no bloat, review pending, run5 unauthorized.
+
+> **Текущая точка D-1661 (2026-11-19): PAGEGRANT PG OWNERSHIP CHOICE.** Run4 accepted-fail0/1/0, product0, cleanup/no-bloat PASS. Recommended bounded bootstrap repair; diagnostic-only alternative. Runtime unauthorized.
+
+> **Текущая точка D-1660 (2026-11-19): PAGEGRANT RUN4 READINESS FAIL.** tmpfs3/Mounts0/ports0 passed; PostgreSQL parent-data mkdir permission denied. Product/tests0, cleanup OK; independent triage pending.
+
+> **Текущая точка D-1659 (2026-11-19): EXACT EMPTY-MOUNTS ORACLE APPROVED.** Review0/0/0, product0, no-bloat PASS. One run4 awaits fresh explicit permission.
+
+> **Текущая точка D-1658 (2026-11-19): RUN3 ACCEPTED_FAIL; LIGHT ORACLE REVIEW.** Exact raw `[]` replaces the faulty PowerShell empty-array parse. Product0, cleanup/no-bloat PASS; run4 unauthorized.
+
+> **Текущая точка D-1657 (2026-11-19): PAGEGRANT RUN3 PRE-START FAIL.** PowerShell empty-array oracle rejected valid Docker `Mounts=[]`; product/DB/tests0, cleanup OK. Independent triage pending; no retry.
+
+> **Текущая точка D-1656 (2026-11-19): BOUNDED BASE64 TRANSPORT APPROVED.** Repeat review0/0/0, product0, no-bloat PASS. Exact90 run3 awaits fresh explicit permission; runtime0.
+
+> **Текущая точка D-1655 (2026-11-19): CERT BASE64 CONTRACT REMEDIATED.** Full-string regex rejects whitespace/extras; CreateFromPem+Dispose is explicit. Repeat review, run3 unauthorized.
+
+> **Текущая точка D-1654 (2026-11-19): BOUNDED BASE64 CERT TRANSPORT SELECTED.** docker-cp удалён; timeout/source/base64/PEM/CreateNew/re-read contract under review. Shared volume/helper0, run3 не разрешён.
+
+> **Текущая точка D-1653 (2026-11-19): PAGEGRANT PG PAUSED_OWNER.** Certificate docker-cp failed twice before app/tests; product finding0, cleanup OK. Anti-loop forbids run3 until owner selects bounded base64 transport or defer. Готовность42–44%, остаток12/19/33 часа unchanged.
+
+> **Текущая точка D-1652 (2026-11-19): PAGEGRANT RUN2 OWNER GATE.** Harness-only cert transport fix approved0/0/0/product0/no-bloat. Exact90 unchanged; Docker retry не выполнялся.
+
+> **Текущая точка D-1651 (2026-11-19): PAGEGRANT RUN1 STOPPED BEFORE TESTS.** PostgreSQL boundary/readiness passed; public synthetic certificate transport failed, product finding0, cleanup OK. Minimal harness-only remediation under review; retry0.
+
+> **Текущая точка D-1650 (2026-11-19): PAGEGRANT EXACT90 PG OWNER GATE.** Plan0/0/0/product0/no-bloat, origins15. Docker не запускался; требуется одно явное разрешение на run+recorded cleanup, без retry.
+
+> **Текущая точка D-1649 (2026-11-19): PAGEGRANT CODE APPROVED.** Final review0/0/0/product0/no-bloat. Подготовлен отдельный exact90 PostgreSQL plan; Docker ещё не запускался. Готовность42–44%, остаток12/19/33 часа до runtime evidence.
+
+> **Текущая точка D-1648 (2026-11-19): PAGEGRANT FINAL CODE REVIEW.** Product findings0; PostgreSQL lock-order oracle усилен до actual FOR UPDATE + ascending User UUID. Код/runtime без изменений.
+
+> **Текущая точка D-1647 (2026-11-19): PAGEGRANT CODE REMEDIATED; REPEAT REVIEW.** Исправлен missing PageKind import; добавлены SQL lock-order/DAG и оба Save↔Revoke concurrency oracle. Новых слоёв нет, runtime0.
+
+> **Текущая точка D-1646 (2026-11-19): PAGEGRANT 003A PLAN APPROVED.** Review0/0/0/product0/no-bloat. Начата bounded tests-first реализация existing active employee grant set/change/revoke; migration/dependency/JS/staff lifecycle/B002/runtime0.
+
+> **Текущая точка D-1645 (2026-11-19): PAGEGRANT LIGHT OPTION1 SELECTED.** Любой stale/lost-response retry получает409+reload; operation ID/history/audit expansion0. План исправлен и проходит повторное review; code/runtime0, готовность42–44%.
+
+> **Текущая точка D-1644 (2026-11-19): PAGEGRANT PLAN PAUSED_OWNER.** Review1/2/0/product0/no-bloat: exact hash и revoke-wrapper исправлены; осталось выбрать retry semantics. Рекомендуется любой stale/lost-response retry→409+reload без нового состояния; operation UUID расширит audit scope. Code/runtime0, готовность42–44%, остаток12/19/33 часа.
+
+> **Текущая точка D-1643 (2026-11-19): B002 STORAGE DEFERRED; PAGEGRANT 003A PLAN REVIEW.** Вместо локального storage workaround выбран лёгкий независимый срез: owner-only grant set/change/revoke для существующего сотрудника и одной Page. Staff lifecycle/bulk/history/API/media0; code/runtime0. Готовность42–44%, осталось12/19/33 продуктивных часа.
+
+> **Текущая точка D-1642 (2026-11-19): S4 REFS DEFERRED NO-CODE.** Independent review0/0/0/product0/no-bloat: target/lifecycle authority отсутствует, поэтому refs остаются read-only до B002/public composition. Готовность42–44%, остаток12/19/33 часа без искусственного прироста.
+
+> **Текущая точка D-1641 (2026-11-19): S4 REFS AUTHORITY REVIEW.** Current refs empty; target kinds/existence/concurrency/deletion semantics absent, Brand/Review IDs0. Candidate keeps read-only instead of adding generic selector/index. Code/runtime0.
+
+> **Текущая точка D-1640 (2026-11-19): ACTION S3A FULLY CLOSED.** Server59+Chromium8 accepted0/0/0/product0/no-bloat, repeat0. Готовность42–44%, осталось12/19/33 продуктивных часа. Structure/media/B002 и универсальный builder не добавлены.
+
+> **Текущая точка D-1639 (2026-11-19): ACTION LIST8+CHROMIUM8 PASS.** Offline exact discovery and real network-none Chromium8/8 in12.6s, exit0; result review pending.
+
+> **Текущая точка D-1638 (2026-11-19): ACTION BROWSER EXACT8 OWNER GATE.** Plan принят0/0/0/product0/no-bloat. Нужна явная conditional ListOnly8→Chromium8 команда; retry/fallback0.
+
+> **Текущая точка D-1637 (2026-11-19): ACTION BROWSER EXACT8 PLAN REVIEW.** Candidate reuses offline/network-none two-JS runner; ListOnly8 only then Chromium8. Runtime0, no builder/policy mirror.
+
+> **Текущая точка D-1636 (2026-11-19): ACTION S3A SERVER59 CLOSED.** Run4 accepted0/0/0/product0/no-bloat:59/59, DB destroyed, cleanup OK. Готовность41–43%, осталось13/20/34 продуктивных часа. Следующий отдельный gate — action browser8.
+
+> **Текущая точка D-1635 (2026-11-19): ACTION PG RUN4 PASS59/59.** System check0, exit0, DB destroyed, cleanup OK; independent result acceptance pending.
+
+> **Текущая точка D-1634 (2026-11-19): ACTION PG EXACT59 RERUN OWNER GATE.** Full fixture remediation принята0/0/0/product0/no-bloat. Нужна свежая команда на полный exact59+recorded cleanup; browser/retry0.
+
+> **Текущая точка D-1633 (2026-11-19): SECOND FIXTURE ROUTE FIX REVIEW.** Reviewer found remaining duplicate Route target; second exact32 fixture now uses `/actions-exact32/`. Product/runtime unchanged.
+
+> **Текущая точка D-1632 (2026-11-19): ACTION FIXTURE FIX REVIEW.** Run3 прошёл инфраструктуру/check0, но дал57/59 из-за двух test fixtures. Minimal position5+valid page=1 remediation; product/policy unchanged.
+
+> **Текущая точка D-1631 (2026-11-19): ACTION PG RUN3 57PASS/2 FIXTURE DEFECTS.** Product findings0/no-bloat, cleanup OK. Автоповтора нет; исправляются только duplicate position и forbidden fixture URL.
+
+> **Текущая точка D-1630 (2026-11-19): ACTION PG RUN3 OWNER GATE.** Выбранный light fix принят0/0/0/product0/no-bloat. Нужна свежая команда на exact59 run3+recorded cleanup; browser/retry0.
+
+> **Текущая точка D-1629 (2026-11-19): ВЫБРАН LIGHT TMPFS FIX.** Только exact create literals512m/16m/32m; общий unit parser и post-start oracle0. Независимое review до нового разрешения run3.
+
+> **Текущая точка D-1628 (2026-11-19): ACTION PG PAUSED_OWNER.** Два pre-start tmpfs oracle отказа; PG/app/DB/tests/product0, cleanup OK. Anti-loop запрещает run3 до выбора: рекомендованы exact literals512m/16m/32m; post-start oracle несёт угрозу раздувания и не предлагается.
+
+> **Текущая точка D-1627 (2026-11-19): ACTION PG RUN2 OWNER GATE.** Harness fix принят0/0/0/product0/no-bloat. Нужна свежая явная команда на changed-condition exact59 run2+recorded cleanup; browser/retry0.
+
+> **Текущая точка D-1626 (2026-11-19): ACTION PG HARNESS FIX REVIEW.** Run1 product/tests0/cleanup OK; единственный P2 — order-sensitive tmpfs oracle. Exact closed token-set remediation prepared; run2 not authorized.
+
+> **Текущая точка D-1625 (2026-11-19): ACTION PG RUN1 PRE-START STOP.** Images/names passed, raw tmpfs oracle failed before PG/app/DB/tests. Product finding0, recorded cleanup OK, retry0.
+
+> **Текущая точка D-1624 (2026-11-19): S3A SERVER EXACT59 OWNER GATE.** PostgreSQL plan одобрен0/0/0/product0/no-bloat; Docker0. Нужна одна явная команда на exact59+recorded cleanup; browser/retry не входят.
+
+> **Текущая точка D-1623 (2026-11-19): S3A SERVER EXACT59 PLAN REVIEW.** Код action copy принят0/0/0/no-bloat; подготовлен только one-shot PostgreSQL plan. Docker не запускался; после review потребуется отдельное разрешение. Browser exact8 остаётся отдельным gate.
+
+> **Текущая точка D-1622 (2026-11-19): S3A ACTION COPY CODE APPROVED.** Final review0/0/0/no-bloat после локального all-or-nothing fail-closed fix. Fixed title/body, immutable URL/order/banner; server59/browser8 подготовлены, runtime0.
+
+> **Текущая точка D-1621 (2026-11-19): S3A FIXED ACTION COPY PLAN APPROVED; CODE GATE.** Review0/0/0/no-bloat. Only same-position title+existing rich body is approved; URL/banner/count/order stay immutable. Code/runtime0.
+
+> **Текущая точка D-1620 (2026-11-19): S3A PLAN REMEDIATED; REPEAT REVIEW.** Positive count0/exact32 and negative cap33/context drift are explicit; canonical rich renders as safe DOM without executable source. Scope/code/runtime unchanged0.
+
+> **Текущая точка D-1619 (2026-11-19): S3 SPLIT; FIXED ACTION COPY PLAN REVIEW.** Banner positional coupling blocks add/remove/reorder. Candidate edits only title+existing rich body at fixed positions and preserves URL/banner; no nested builder or media expansion. Code/runtime0.
+
+> **Текущая точка D-1618 (2026-11-19): 001B-S2A-LINKS CLOSED; PG55 + CHROMIUM8 ACCEPTED.** Browser result0/0/0/product0/no-bloat, repeat0. Готовность40–42%, осталось14/21/35 продуктивных часов. Следующий отдельный кандидат — literal S3 actions без общего repeater/rich builder; read-only fallback сохраняется.
+
+> **Текущая точка D-1617 (2026-11-19): LINKS LIST8 + CHROMIUM8 PASS; RESULT REVIEW.** Offline exact discovery and real network-none Chromium passed8/8 in19.4s, exit0. Independent acceptance pending before full partner-links closure.
+
+> **Текущая точка D-1616 (2026-11-19): LINKS BROWSER EXACT8 PLAN APPROVED; OWNER GATE.** Independent review0/0/0/no-bloat. One conditional offline ListOnly8→real Chromium8 sequence now requires explicit permission.
+
+> **Текущая точка D-1615 (2026-11-19): LINKS SERVER55 CLOSED; BROWSER8 PLAN REVIEW.** Corrected PostgreSQL result independently accepted0/0/0/product0/no-bloat. Separate native exact8 browser plan is under review; browser runtime0.
+
+> **Текущая точка D-1614 (2026-11-19): LINKS PG RUN2 PASS55/55; RESULT REVIEW.** Migrations/check0, exact55/55 in10.544s, exit0 and recorded cleanup OK. Product finding0 observed; independent acceptance pending before browser gate.
+
 > **Исправление D-1613 (2026-11-19):** остаток `15/22/36` — это продуктивные **часы**, а не дни: примерно2/3/4.5 восьмичасовых рабочих дня. Готовность39–41% и точка продолжения D-1612 не изменились.
 
 > **Текущая точка D-1612 (2026-11-19): СМЕНА ЗАКРЫТА; ПРОДОЛЖЕНИЕ С LINKS PG RUN2.** Готовность примерно39–41%, осталось15/22/36 продуктивных часов; за смену около+5–7 п.п. Corrected exact55 run2 одобрен, но не запускался и требует свежего разрешения.

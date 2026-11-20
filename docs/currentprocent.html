@@ -12,15 +12,15 @@
 <body><main>
   <p class="note">Актуальная сводка по плану чистой пересборки</p>
   <h1>Готовность новой версии «Эстакады»</h1>
-  <p class="lead">Обновлено: <strong>19 ноября 2026 года</strong>. Текущая точка: <strong>D-1612, смена закрыта; RB4 links PG run2 owner gate</strong>.</p>
+  <p class="lead">Обновлено: <strong>20 ноября 2026 года</strong>. Текущая точка: <strong>D-1739, SiteSettings server gate закрыт: PostgreSQL exact162/162</strong>.</p>
 
   <div class="card">
-    <strong>Текущая WBS-оценка:</strong> готовность <strong>39–41%</strong>; осталось примерно <strong>15 / 22 / 36 продуктивных часов</strong> в fast / realistic / cautious сценариях — около 2 / 3 / 4.5 восьмичасовых рабочих дня чистой работы.
-    За смену 19 ноября прибавлено ориентировочно 5–7 процентных пунктов. Ожидание владельца, новый scope, B002/реальный импорт, live/deploy и удаление старого runtime в процент не спрятаны.
+    <strong>Текущая WBS-оценка:</strong> готовность <strong>48–50%</strong>; осталось примерно <strong>6 / 13 / 27 продуктивных часов</strong> в fast / realistic / cautious сценариях — около 0.8 / 1.6 / 3.4 восьмичасовых рабочих дня чистой работы.
+    Ожидание владельца, новый scope, B002/реальный импорт, live/deploy и удаление старого runtime в процент не спрятаны.
   </div>
 
   <div class="card blocked">
-    <strong>Текущий статус:</strong> REBUILD-3 synthetic importer и media tracking закрыты. В REBUILD-4 закрыты private auth/list, rich editor001A, price001B-P и process001B-S1. Partner-links S2A code принят; исправленный PostgreSQL exact55 run2 одобрен, но не запускался.
+    <strong>Текущий статус:</strong> REBUILD-3 synthetic importer и media tracking закрыты. В REBUILD-4 закрыты private auth/list, editor groups, PageGrant, minimal staff lifecycle, owner publish/hide, public authority/legacy projection и SiteSettings source+server с PostgreSQL exact162. Browser, media bytes/storage, shared public renderer и B002 остаются отдельными воротами.
   </div>
 
   <h2>Фазы нового плана</h2>
@@ -31,7 +31,7 @@
       <tr><td>REBUILD-1</td><td>Read-only inventory старой БД/медиа, точные URL, manifest и фактический WBS</td><td class="done">✅ Условно завершён D-1411; один exact source blocker перенесён на REBUILD-3 freeze</td></tr>
       <tr><td>REBUILD-2</td><td>Чистый Django skeleton и минимальные accounts/pages/audit</td><td class="done">✅ Завершено D-1428; result review APPROVED 0/0/0</td></tr>
       <tr><td>REBUILD-3</td><td>Media schema и одноразовый importer в пустую целевую пару DB+media</td><td class="active">🟡 Synthetic exact168 и media tracking14 приняты; реальный импорт остаётся B002-blocked</td></tr>
-      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td class="active">🟡 Auth/list, rich, price и process закрыты; partner links code approved, PG/browser gates впереди</td></tr>
+      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td class="active">🟡 Auth/list, editor groups, PageGrant, staff lifecycle, publication, public authority и SiteSettings server gate закрыты; refs/media/shared public renderer B002-bound</td></tr>
       <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и все 115 URL</td><td class="closed">⬜ Не начато</td></tr>
       <tr><td>REBUILD-6</td><td>Галерея и минимальная заявка после правового/технического допуска</td><td class="closed">⬜ Не начато</td></tr>
       <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td class="closed">⬜ Не начато</td></tr>
@@ -65,7 +65,7 @@
   </table></div>
 
   <h2>Ближайший безопасный шаг</h2>
-  <p>Следующий шаг — после свежего явного разрешения один corrected Docker/PostgreSQL run2 <code>RB4-EDITOR-LINKS-PG-001</code> exact55 с HostConfig.Tmpfs3/Mounts0 и cleanup только записанных ID. Автоповтор, browser, real import, cutover и live этим не разрешены.</p>
+  <p>Ближайший шаг — отдельно выбрать и спланировать следующий незаблокированный bounded product slice. Browser, media bytes/storage, shared public renderer, real import, cutover и live остаются закрыты.</p>
 
   <p class="note">Основные источники: <a href="clean-rebuild-plan.md">план чистой пересборки</a>, <a href="tasks.md">реестр задач</a>, <a href="pipeline.md">процесс</a> и <a href="decisions.md">решения</a>. Старый сайт, VPS и production этой работой не меняются.</p>
 </main></body>

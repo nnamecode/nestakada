@@ -1,0 +1,37 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Настройки сайта — Эстакада{% endblock %}
+{% block content %}
+  <h1>Настройки сайта</h1>
+  {% if can_edit %}
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="base_settings_generation" value="{{ settings.settings_generation }}">
+      <p><label>Название организации <input name="organization_name" value="{{ settings.organization_name }}" required maxlength="120"></label></p>
+      <p><label>Телефон <input name="phone_display" value="{{ settings.phone_display }}" required maxlength="64"></label></p>
+      <p><label>Телефон E.164 <input name="phone_e164" value="{{ settings.phone_e164 }}" required maxlength="16"></label></p>
+      <p><label>Адрес <input name="address" value="{{ settings.address }}" required maxlength="255"></label></p>
+      <p><label>Часы работы <input name="opening_hours" value="{{ settings.opening_hours }}" required maxlength="128"></label></p>
+      <p><label>Контактный email <input type="email" name="contact_email" value="{{ settings.contact_email }}" required maxlength="254"></label></p>
+      <p><label>Ссылка на карту <input type="url" name="map_url" value="{{ settings.map_url }}" required maxlength="2048"></label></p>
+      <p><label>Логотип
+        <select name="logo_asset_id">
+          {% for option in logo_options %}
+            <option value="{{ option.asset_id }}"{% if option.asset_id == settings.logo_asset_id %} selected{% endif %}>{{ option.asset_id }} — {{ option.mime_type }}{% if option.width %} — {{ option.width }}×{{ option.height }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </label></p>
+      <button type="submit">Сохранить</button>
+    </form>
+  {% else %}
+    <dl>
+      <dt>Название организации</dt><dd>{{ settings.organization_name }}</dd>
+      <dt>Телефон</dt><dd>{{ settings.phone_display }}</dd>
+      <dt>Телефон E.164</dt><dd>{{ settings.phone_e164 }}</dd>
+      <dt>Адрес</dt><dd>{{ settings.address }}</dd>
+      <dt>Часы работы</dt><dd>{{ settings.opening_hours }}</dd>
+      <dt>Контактный email</dt><dd>{{ settings.contact_email }}</dd>
+      <dt>Ссылка на карту</dt><dd>{{ settings.map_url }}</dd>
+      <dt>Логотип</dt><dd>{{ current_logo.asset_id }} — {{ current_logo.mime_type }}{% if current_logo.width %} — {{ current_logo.width }}×{{ current_logo.height }}{% endif %}</dd>
+    </dl>
+  {% endif %}
+{% endblock %}

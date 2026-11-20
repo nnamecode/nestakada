@@ -215,6 +215,56 @@ class TypedEditorHttpTests(TestCase):
             data["links.item"] = list(links)
         return data
 
+    def _actions_page(
+        self,
+        *,
+        actions: list[dict[str, str]] | None = None,
+        banners=(),
+        position: int = 4,
+        target: str = "/actions/",
+    ):
+        page = Page.objects.create(name="Actions", kind=PageKind.ACTIONS, position=position, is_published=True)
+        Route.objects.create(
+            page=page,
+            target=target,
+            mode=RouteMode.PRIMARY,
+            outcome=RouteOutcome.ACTIONS,
+        )
+        value = minimal_payload(PageKind.ACTIONS)
+        value["fields"]["actions"] = actions or []
+        value["fields"]["media"]["banner"] = [str(item) for item in banners]
+        PageContent.objects.create(
+            page=page,
+            generation=1,
+            current_payload=value,
+            current_hash=canonical_payload_hash(value),
+            current_author=self.owner,
+            current_created_at=timezone.now(),
+        )
+        return page, value
+
+    def _actions_save_data(self, response, *, titles=None, bodies=None) -> dict:
+        titles = titles or {}
+        bodies = bodies or {}
+        data = {
+            "csrfmiddlewaretoken": response.client.cookies["csrftoken"].value,
+            "operation_id": str(response.context["save_operation_id"]),
+            "base_generation": str(response.context["generation"]),
+            "base_current_hash": response.context["base_current_hash"],
+            "seo.title": "Actions title",
+            "seo.description": "Actions description",
+            "seo.allow_index": "1",
+            "heading.h1": "Actions heading",
+            "rich.intro.changed": "0",
+        }
+        for action in response.context["action_copy_control"].actions:
+            data[f"actions.{action.index}.title"] = titles.get(action.index, action.title)
+            changed = "1" if action.index in bodies else "0"
+            data[f"actions.{action.index}.body.changed"] = changed
+            if changed == "1":
+                data[f"actions.{action.index}.body.value"] = bodies[action.index]
+        return data
+
     def test_price_multipart_limits_cover_exact_contract_without_unbounded_parser(self):
         exact_fields = 1 + 3 + 4 + 2 + 2 + 1 + 32 + 500 + 10_000
         self.assertEqual(exact_fields, 10_545)
@@ -629,6 +679,177 @@ class TypedEditorHttpTests(TestCase):
             response = self._post_save(client, service)
         self.assertEqual(response.status_code, 400)
         command.assert_not_called()
+
+    def test_action_copy_wire_exact106_and_zero_exact32_bounds(self):
+        astral = "\U0001f600"
+        pairs = [
+            ("csrfmiddlewaretoken", "x" * 64),
+            ("operation_id", str(uuid.UUID(int=1))),
+            ("base_generation", str(2**63 - 1)),
+            ("base_current_hash", "a" * 64),
+            ("seo.title", astral * 255),
+            ("seo.description", astral * 1000),
+            ("seo.allow_index", "1"),
+            ("heading.h1", astral * 255),
+            ("rich.intro.changed", "1"),
+            ("rich.intro.value", "<p>Intro</p>"),
+        ]
+        for index in range(32):
+            pairs.extend((
+                (f"actions.{index}.title", astral * 500),
+                (f"actions.{index}.body.changed", "1"),
+                (f"actions.{index}.body.value", f"<p>{astral * 6000}</p>"),
+            ))
+        boundary = b"b" * 70
+        body = bytearray()
+        for name, value in pairs:
+            body.extend(b"--" + boundary + b"\r\n")
+            body.extend(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("ascii"))
+            body.extend(value.encode("utf-8"))
+            body.extend(b"\r\n")
+        body.extend(b"--" + boundary + b"--\r\n")
+        self.assertEqual(len(pairs), 106)
+        self.assertLess(len(body), 1_100_000)
+        self.assertLess(len(body), settings.DATA_UPLOAD_MAX_MEMORY_SIZE)
+        self.assertLess(len(pairs), settings.DATA_UPLOAD_MAX_NUMBER_FIELDS)
+
+        client = self._client(self.owner)
+        empty_page, _ = self._actions_page()
+        empty_editor = client.get(reverse("manage-page-editor", args=(empty_page.id,)))
+        empty_saved = client.post(
+            reverse("manage-page-save", args=(empty_page.id,)),
+            data=self._actions_save_data(empty_editor),
+        )
+        self.assertEqual(empty_saved.status_code, 302)
+
+        exact32 = [
+            {"title": f"Action {index}", "body": "<p>Body</p>", "internal_url": f"/action-{index}/"}
+            for index in range(32)
+        ]
+        page, _ = self._actions_page(
+            actions=exact32,
+            position=5,
+            target="/actions-exact32/",
+        )
+        editor = client.get(reverse("manage-page-editor", args=(page.id,)))
+        saved = client.post(
+            reverse("manage-page-save", args=(page.id,)),
+            data=self._actions_save_data(editor),
+        )
+        self.assertEqual(saved.status_code, 302)
+        self.assertEqual(PageContent.objects.get(page=page).current_payload["fields"]["actions"], exact32)
+
+    def test_action_copy_projection_is_escaped_and_employee_disclosure_is_zero(self):
+        actions = [
+            {
+                "title": "<Акция>",
+                "body": "<p>&lt;Описание&gt; &amp;</p>",
+                "internal_url": "/actions/?page=1",
+            },
+            {"title": "Вторая", "body": "<p>Текст</p>", "internal_url": "/actions/two/"},
+        ]
+        page, _ = self._actions_page(actions=actions)
+        owner = self._client(self.owner)
+        response = owner.get(reverse("manage-page-editor", args=(page.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="&lt;Акция&gt;"')
+        self.assertContains(response, "<p>&lt;Описание&gt; &amp;</p>", html=True)
+        self.assertContains(response, "/actions/?page=1")
+        self.assertNotContains(response, "Добавить акцию")
+        self.assertNotContains(response, "Удалить акцию")
+        self.assertEqual(len(response.context["action_copy_control"].actions), 2)
+        self.assertNotIn("Акции", [field.label for field in response.context["deferred_fields"]])
+
+        PageGrant.objects.create(staff=self.employee, page=page, groups=["text"])
+        hidden = self._client(self.employee).get(reverse("manage-page-editor", args=(page.id,)))
+        self.assertEqual(hidden.status_code, 200)
+        for forbidden in ("data-actions-control", "actions.0.title", "<Акция>", "/actions/two/"):
+            self.assertNotContains(hidden, forbidden)
+
+    def test_action_copy_save_preserves_structure_media_pagecas_and_replay(self):
+        assets = [
+            Asset.objects.create(purpose=AssetPurpose.CONTENT, source_sha256=character * 64, state=AssetState.READY)
+            for character in ("b", "c")
+        ]
+        initial_actions = [
+            {"title": "One", "body": "<p>Body one</p>", "internal_url": "/one/"},
+            {"title": "Two", "body": "<p>Body two</p>", "internal_url": "/two/"},
+        ]
+        page, initial = self._actions_page(actions=initial_actions, banners=[item.id for item in assets])
+        client = self._client(self.owner)
+        editor = client.get(reverse("manage-page-editor", args=(page.id,)))
+        data = self._actions_save_data(
+            editor,
+            titles={0: "Changed title"},
+            bodies={1: "<p><strong>Changed body</strong></p>"},
+        )
+        saved = client.post(reverse("manage-page-save", args=(page.id,)), data=data)
+        replay = dict(data)
+        replay["actions.0.title"] = "Must not replace replay"
+        retained = client.post(reverse("manage-page-save", args=(page.id,)), data=replay)
+        self.assertEqual((saved.status_code, retained.status_code), (302, 302))
+        content = PageContent.objects.get(page=page)
+        self.assertEqual(content.generation, 2)
+        self.assertEqual(content.current_payload["fields"]["actions"], [
+            {"title": "Changed title", "body": "<p>Body one</p>", "internal_url": "/one/"},
+            {"title": "Two", "body": "<p><strong>Changed body</strong></p>", "internal_url": "/two/"},
+        ])
+        self.assertEqual(content.current_payload["fields"]["media"], initial["fields"]["media"])
+        self.assertEqual(content.previous_payload["fields"]["actions"], initial_actions)
+        self.assertEqual(AuditEvent.objects.filter(action=Action.PAGE_CONTENT_SAVED).count(), 1)
+        self.assertEqual(
+            set(AssetUsage.objects.filter(asset__in=assets).values_list("scope", "asset_id", "slot", "position")),
+            {
+                (scope, asset.id, "banner", position)
+                for scope in (UsageScope.PAGE_CURRENT, UsageScope.PAGE_PREVIOUS)
+                for position, asset in enumerate(assets)
+            },
+        )
+
+    def test_action_copy_malformed_drift_and_wrong_kind_never_invoke_command(self):
+        actions = [
+            {"title": "One", "body": "<p>Body one</p>", "internal_url": "/one/"},
+            {"title": "Two", "body": "<p>Body two</p>", "internal_url": "/two/"},
+        ]
+        page, _ = self._actions_page(actions=actions)
+        client = self._client(self.owner)
+        editor = client.get(reverse("manage-page-editor", args=(page.id,)))
+        base = self._actions_save_data(editor)
+        missing = dict(base); missing.pop("actions.0.title")
+        changed_without_value = dict(base); changed_without_value["actions.0.body.changed"] = "1"
+        cases = (
+            missing,
+            {**base, "actions.2.title": "Injected"},
+            {**base, "actions.0.title": ["One", "Duplicate"]},
+            {**base, "actions.0.body.changed": "2"},
+            {**base, "actions.0.body.value": "<p>Unexpected</p>"},
+            changed_without_value,
+            {**base, "actions.0.title": ""},
+            {**base, "actions.0.body.changed": "1", "actions.0.body.value": "x" * 1_048_577},
+        )
+        for index, invalid in enumerate(cases):
+            with self.subTest(index=index), patch("modules.pages.web.save_page_content") as command:
+                response = client.post(reverse("manage-page-save", args=(page.id,)), data=invalid)
+                self.assertEqual(response.status_code, 400)
+                command.assert_not_called()
+
+        forged = self._save_data(self._get(client))
+        forged.update({"actions.0.title": "Injected", "actions.0.body.changed": "0"})
+        with patch("modules.pages.web.save_page_content") as command:
+            response = self._post_save(client, forged)
+        self.assertEqual(response.status_code, 400)
+        command.assert_not_called()
+
+        over_cap = minimal_payload(PageKind.ACTIONS)
+        over_cap["fields"]["actions"] = [
+            {"title": f"Action {index}", "body": "<p>Body</p>", "internal_url": f"/a-{index}/"}
+            for index in range(33)
+        ]
+        PageContent.objects.filter(page=page).update(
+            current_payload=over_cap,
+            current_hash=canonical_payload_hash(over_cap),
+        )
+        self.assertEqual(client.get(reverse("manage-page-editor", args=(page.id,))).status_code, 503)
 
     def test_owner_get_has_only_supported_controls_and_deferred_counts(self):
         response = self._get(self._client(self.owner))
