@@ -1,0 +1,29 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Создать страницу — Эстакада{% endblock %}
+{% block content %}
+  <h1>Создать страницу</h1>
+  <form method="post" action="{% url 'manage-page-create' %}">
+    {% csrf_token %}
+    <input type="hidden" name="page_id" value="{{ page_id }}">
+    <input type="hidden" name="base_structure_generation" value="{{ structure_generation }}">
+    <label>Название
+      <input type="text" name="name" maxlength="255" required>
+    </label>
+    <label>Тип
+      <select name="kind" required>
+        {% for kind in kinds %}<option value="{{ kind }}">{{ kind }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Родитель
+      <select name="parent_id" required>
+        <option value="root">Корень</option>
+        {% for parent in parents %}<option value="{{ parent.id }}">{{ parent.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Основной адрес
+      <input type="text" name="primary_path" maxlength="2048" required>
+    </label>
+    <button type="submit">Создать</button>
+  </form>
+  <p><a href="{% url 'manage-pages' %}">Вернуться к страницам</a></p>
+{% endblock %}

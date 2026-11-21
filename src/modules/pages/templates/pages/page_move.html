@@ -1,0 +1,18 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Перемещение страницы — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-page-editor' page.id %}">← К странице</a></p>
+  <h1>Переместить страницу</h1>
+  <form method="post" action="{% url 'manage-page-move' page.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="base_structure_generation" value="{{ structure_generation }}">
+    <label>Новое место
+      <select name="placement" required>
+        {% for option in placement_options %}
+          <option value="{{ option.value }}">{{ option.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Переместить</button>
+  </form>
+{% endblock %}

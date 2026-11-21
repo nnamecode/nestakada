@@ -1,0 +1,7 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Структура страниц изменилась — Эстакада{% endblock %}
+{% block content %}
+  <h1>Структура страниц уже изменилась</h1>
+  <p>Перезагрузите состояние и выберите новое место ещё раз.</p>
+  <p><a href="{% url 'manage-page-move' page_id %}">Перезагрузить состояние</a></p>
+{% endblock %}

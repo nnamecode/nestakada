@@ -1,0 +1,28 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Порядок страниц — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-pages' %}">← К списку страниц</a></p>
+  <h1>Порядок страниц</h1>
+  <p>Раздел: {% if parent_name %}{{ parent_name }}{% else %}корень{% endif %}</p>
+  {% if children %}
+    <form method="post" action="{% url 'manage-page-reorder' %}">
+      {% csrf_token %}
+      <input type="hidden" name="base_structure_generation" value="{{ structure_generation }}">
+      <input type="hidden" name="parent" value="{{ parent_token }}">
+      {% for child in children %}
+        <input type="hidden" name="child_id" value="{{ child.id }}">
+      {% endfor %}
+      <ol>
+        {% for child in children %}
+          <li>
+            {{ child.name }}
+            <button type="submit" name="move" value="{{ child.id }}|up"{% if not child.can_up %} disabled{% endif %}>Вверх</button>
+            <button type="submit" name="move" value="{{ child.id }}|down"{% if not child.can_down %} disabled{% endif %}>Вниз</button>
+          </li>
+        {% endfor %}
+      </ol>
+    </form>
+  {% else %}
+    <p>Нет дочерних страниц.</p>
+  {% endif %}
+{% endblock %}

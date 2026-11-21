@@ -12,6 +12,8 @@
     <dt>Доступ</dt><dd>{{ grant_groups|join:", " }}</dd>
   </dl>
   {% if is_owner %}
+    <p><a href="{% url 'manage-page-reorder' %}?parent={{ page.id }}">Упорядочить дочерние страницы</a></p>
+    <p><a href="{% url 'manage-page-move' page.id %}">Переместить страницу</a></p>
     <p><a href="{% url 'manage-page-rename' page.id %}">Переименовать страницу</a></p>
     <p><a href="{% url 'manage-page-publication' page.id %}">Изменить публикацию</a></p>
   {% endif %}

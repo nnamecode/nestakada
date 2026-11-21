@@ -2,6 +2,8 @@
 {% block title %}Страницы — Эстакада{% endblock %}
 {% block content %}
   <h1>Страницы</h1>
+  {% if can_create %}<p><a href="{% url 'manage-page-create' %}">Создать страницу</a></p>{% endif %}
+  {% if can_reorder %}<p><a href="{% url 'manage-page-reorder' %}?parent=root">Упорядочить корневые страницы</a></p>{% endif %}
   <table>
     <thead><tr><th>Название</th><th>Адрес</th><th>Тип</th><th>Публикация</th><th>Поколение</th><th>Доступ</th></tr></thead>
     <tbody>

@@ -18,6 +18,11 @@ _PAGE_PUBLICATION_PATH = re.compile(
 _PAGE_RENAME_PATH = re.compile(
     r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/rename/\Z"
 )
+_PAGE_MOVE_PATH = re.compile(
+    r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/move/\Z"
+)
+_PAGE_CREATE_PATH = "/manage/pages/new/"
+_PAGE_REORDER_PATH = "/manage/pages/reorder/"
 _PAGE_SAVE_MAX_BODY = 4_194_304
 _STAFF_PASSWORD_PATH = re.compile(
     r"\A/manage/staff/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/password/\Z"
@@ -57,6 +62,9 @@ class PrivateIngressMiddleware:
             _PAGE_SAVE_PATH.fullmatch(request.path_info)
             or _PAGE_PUBLICATION_PATH.fullmatch(request.path_info)
             or _PAGE_RENAME_PATH.fullmatch(request.path_info)
+            or _PAGE_MOVE_PATH.fullmatch(request.path_info)
+            or request.path_info == _PAGE_CREATE_PATH
+            or request.path_info == _PAGE_REORDER_PATH
             or _STAFF_PASSWORD_PATH.fullmatch(request.path_info)
             or request.path_info == _STAFF_CREATE_PATH
             or request.path_info == _SITE_SETTINGS_PATH
@@ -72,11 +80,15 @@ class PrivateIngressMiddleware:
                 body = (
                     "INVALID_SETTINGS_INPUT"
                     if request.path_info == _SITE_SETTINGS_PATH
-                    else (
-                        "INVALID_PAGE_RENAME_INPUT"
-                        if _PAGE_RENAME_PATH.fullmatch(request.path_info)
-                        else "INVALID_EDITOR_INPUT"
-                    )
+                    else "INVALID_PAGE_REORDER_INPUT"
+                    if request.path_info == _PAGE_REORDER_PATH
+                    else "INVALID_PAGE_MOVE_INPUT"
+                    if _PAGE_MOVE_PATH.fullmatch(request.path_info)
+                    else "INVALID_PAGE_CREATE_INPUT"
+                    if request.path_info == _PAGE_CREATE_PATH
+                    else "INVALID_PAGE_RENAME_INPUT"
+                    if _PAGE_RENAME_PATH.fullmatch(request.path_info)
+                    else "INVALID_EDITOR_INPUT"
                 )
                 response = HttpResponse(body, status=400, content_type="text/plain")
                 response["Cache-Control"] = "private, no-store"

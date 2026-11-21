@@ -17,10 +17,14 @@ from modules.media.api import project_site_logo_options
 
 from .commands import (
     PageCommandError,
+    create_page,
+    move_page,
     rename_page,
+    reorder_children,
     save_page_content,
     set_page_publication,
     undo_page_content,
+    validate_page_create_input,
     validate_page_name,
 )
 from .editor import (
@@ -106,7 +110,15 @@ def page_list_view(request: HttpRequest) -> HttpResponse:
             })
     except Exception:
         return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
-    return render(request, "pages/page_list.html", {"rows": rows})
+    return render(
+        request,
+        "pages/page_list.html",
+        {
+            "rows": rows,
+            "can_create": actor.role == StaffRole.OWNER,
+            "can_reorder": actor.role == StaffRole.OWNER,
+        },
+    )
 
 
 def _projection_error(exc: EditorProjectionError) -> HttpResponse:
@@ -169,6 +181,137 @@ def _single(post: Any, key: str) -> str:
     if len(values) != 1:
         raise ValueError("wire")
     return values[0]
+
+
+def _canonical_create_uuid(value: str) -> uuid.UUID:
+    parsed = uuid.UUID(value)
+    if str(parsed) != value:
+        raise ValueError("uuid")
+    return parsed
+
+
+def _page_create_form_context() -> dict[str, Any]:
+    with transaction.atomic():
+        settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+        pages = list(Page.objects.order_by("id")[:513])
+        if len(pages) > 512:
+            raise ValueError("graph")
+        page_by_id = {page.id: page for page in pages}
+        for page in pages:
+            if page.parent_id is not None and page.parent_id not in page_by_id:
+                raise ValueError("graph")
+            seen: set[uuid.UUID] = set()
+            current: Page | None = page
+            while current is not None:
+                if current.id in seen:
+                    raise ValueError("graph")
+                seen.add(current.id)
+                current = (
+                    None if current.parent_id is None else page_by_id[current.parent_id]
+                )
+        return {
+            "page_id": uuid.uuid4(),
+            "structure_generation": settings.structure_generation,
+            "kinds": tuple(PageKind.values),
+            "parents": pages,
+        }
+
+
+def _page_create_conflict(request: HttpRequest) -> HttpResponse:
+    return render(request, "pages/page_create_conflict.html", status=409)
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_create_view(request: HttpRequest) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            context = _page_create_form_context()
+        except Exception:
+            return HttpResponse(
+                "PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain"
+            )
+        return render(request, "pages/page_create.html", context)
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        expected = {
+            "page_id", "base_structure_generation", "kind", "name",
+            "parent_id", "primary_path",
+        }
+        keys = set(post)
+        if keys not in (expected, expected | {"csrfmiddlewaretoken"}):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        page_id = _canonical_create_uuid(_single(post, "page_id"))
+        raw_generation = _single(post, "base_structure_generation")
+        generation = int(raw_generation)
+        if generation < 1 or str(generation) != raw_generation:
+            raise ValueError("wire")
+        kind = _single(post, "kind")
+        name = _single(post, "name")
+        primary_path = _single(post, "primary_path")
+        parent_token = _single(post, "parent_id")
+        parent_id = (
+            None if parent_token == "root" else _canonical_create_uuid(parent_token)
+        )
+        validate_page_create_input(kind, name, primary_path)
+    except PageCommandError as exc:
+        if exc.code == "CREATE_UNAVAILABLE":
+            return HttpResponse(
+                "PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain"
+            )
+        return HttpResponse(
+            "INVALID_PAGE_CREATE_INPUT", status=400, content_type="text/plain"
+        )
+    except (
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse(
+            "INVALID_PAGE_CREATE_INPUT", status=400, content_type="text/plain"
+        )
+    try:
+        result = create_page(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            page_id=page_id,
+            base_structure_generation=generation,
+            kind=kind,
+            name=name,
+            parent_id=parent_id,
+            primary_path=primary_path,
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code == "FORBIDDEN":
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code in {
+            "STALE_STRUCTURE", "PATH_OCCUPIED", "INVALID_PARENT", "PAGE_ID_CONFLICT",
+        }:
+            return _page_create_conflict(request)
+        if exc.code in {"INVALID_BASIS", "INVALID_PAGE_CREATE"}:
+            return HttpResponse(
+                "INVALID_PAGE_CREATE_INPUT", status=400, content_type="text/plain"
+            )
+        return HttpResponse(
+            "PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain"
+        )
+    except Exception:
+        return HttpResponse(
+            "PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain"
+        )
+    return redirect("manage-page-editor", page_id=result.page_id)
 
 
 def _basis(post: Any) -> tuple[uuid.UUID, int, str]:
@@ -486,6 +629,361 @@ def _rename_conflict(
         {"page_id": page_id, "generation": generation},
         status=409,
     )
+
+
+def _move_conflict(
+    request: HttpRequest,
+    *,
+    page_id: uuid.UUID,
+    generation: int | None,
+) -> HttpResponse:
+    return render(
+        request,
+        "pages/page_move_conflict.html",
+        {"page_id": page_id, "generation": generation},
+        status=409,
+    )
+
+
+def _canonical_move_uuid(token: str) -> uuid.UUID:
+    if type(token) is not str or len(token) != 36:
+        raise ValueError("wire")
+    parsed = uuid.UUID(token)
+    if str(parsed) != token:
+        raise ValueError("wire")
+    return parsed
+
+
+def _move_form_context(page_id: uuid.UUID) -> dict[str, Any]:
+    with transaction.atomic():
+        settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+        pages = list(Page.objects.order_by("id")[:513])
+        if len(pages) > 512:
+            raise ValueError("graph")
+        page_by_id = {page.id: page for page in pages}
+        if page_id not in page_by_id:
+            raise PageCommandError("PAGE_NOT_FOUND")
+        if len(page_by_id) != len(pages):
+            raise ValueError("graph")
+        children: dict[uuid.UUID | None, list[Page]] = {}
+        for page in pages:
+            if page.parent_id == page.id:
+                raise ValueError("graph")
+            if page.parent_id is not None and page.parent_id not in page_by_id:
+                raise ValueError("graph")
+            children.setdefault(page.parent_id, []).append(page)
+        for page in pages:
+            seen: set[uuid.UUID] = set()
+            current: Page | None = page
+            while current is not None:
+                if current.id in seen:
+                    raise ValueError("graph")
+                seen.add(current.id)
+                current = (
+                    None
+                    if current.parent_id is None
+                    else page_by_id[current.parent_id]
+                )
+        descendants: set[uuid.UUID] = set()
+        pending = list(children.get(page_id, ()))
+        while pending:
+            current = pending.pop()
+            if current.id in descendants:
+                raise ValueError("graph")
+            descendants.add(current.id)
+            pending.extend(children.get(current.id, ()))
+        for siblings in children.values():
+            siblings.sort(key=lambda page: (page.position, page.id))
+
+        options: list[dict[str, str]] = []
+        parent_candidates: list[Page | None] = [None]
+        parent_candidates.extend(
+            page for page in pages
+            if page.id != page_id and page.id not in descendants
+        )
+        for parent in parent_candidates:
+            siblings = [
+                child for child in children.get(None if parent is None else parent.id, ())
+                if child.id != page_id
+            ]
+            parent_token = "root" if parent is None else str(parent.id)
+            parent_label = "Корень" if parent is None else parent.name
+            for child in siblings:
+                options.append({
+                    "value": f"{parent_token}|{child.id}",
+                    "label": f"{parent_label}: перед «{child.name}»",
+                })
+            options.append({
+                "value": f"{parent_token}|end",
+                "label": f"{parent_label}: в конец",
+            })
+        if len(options) > 2 * len(pages) + 1:
+            raise ValueError("graph")
+        return {
+            "page": page_by_id[page_id],
+            "structure_generation": settings.structure_generation,
+            "placement_options": options,
+        }
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_move_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            context = _move_form_context(page_id)
+        except PageCommandError as exc:
+            if exc.code == "PAGE_NOT_FOUND":
+                return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        except Exception:
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        return render(request, "pages/page_move.html", context)
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        keys = set(post)
+        if keys not in (
+            {"base_structure_generation", "placement"},
+            {"csrfmiddlewaretoken", "base_structure_generation", "placement"},
+        ):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        generation_value = _single(post, "base_structure_generation")
+        placement = _single(post, "placement")
+        generation = int(generation_value)
+        if (
+            generation < 1
+            or str(generation) != generation_value
+            or not 8 <= len(placement) <= 73
+            or placement.count("|") != 1
+        ):
+            raise ValueError("wire")
+        parent_token, before_token = placement.split("|")
+        destination_parent_id = (
+            None if parent_token == "root" else _canonical_move_uuid(parent_token)
+        )
+        before_page_id = (
+            None if before_token == "end" else _canonical_move_uuid(before_token)
+        )
+    except (
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_PAGE_MOVE_INPUT", status=400, content_type="text/plain")
+    try:
+        move_page(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            page_id=page_id,
+            base_structure_generation=generation,
+            destination_parent_id=destination_parent_id,
+            before_page_id=before_page_id,
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code == "FORBIDDEN":
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code == "PAGE_NOT_FOUND":
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        if exc.code in {"STALE_STRUCTURE", "NO_CHANGE", "INVALID_PLACEMENT"}:
+            return _move_conflict(
+                request, page_id=page_id, generation=exc.generation
+            )
+        if exc.code == "INVALID_BASIS":
+            return HttpResponse("INVALID_PAGE_MOVE_INPUT", status=400, content_type="text/plain")
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-page-editor", page_id=page_id)
+
+
+def _canonical_reorder_uuid(token: str) -> uuid.UUID:
+    try:
+        value = uuid.UUID(token)
+    except (AttributeError, TypeError, ValueError):
+        raise ValueError("uuid") from None
+    if str(value) != token:
+        raise ValueError("uuid")
+    return value
+
+
+def _reorder_web_snapshot(
+    parent_id: uuid.UUID | None,
+) -> tuple[
+    tuple[uuid.UUID, uuid.UUID | None, int, str] | None,
+    tuple[tuple[uuid.UUID, uuid.UUID | None, int, str], ...],
+]:
+    parent = None
+    if parent_id is not None:
+        parent = (
+            Page.objects.filter(pk=parent_id)
+            .values_list("id", "parent_id", "position", "name")
+            .first()
+        )
+        if parent is None:
+            raise PageCommandError("PARENT_NOT_FOUND")
+    children = tuple(
+        Page.objects.filter(parent_id=parent_id)
+        .order_by("id")
+        .values_list("id", "parent_id", "position", "name")[:513]
+    )
+    if len(children) > 512:
+        raise PageCommandError("REORDER_UNAVAILABLE")
+    return parent, children
+
+
+def _reorder_form_context(parent_id: uuid.UUID | None) -> dict[str, Any]:
+    with transaction.atomic():
+        settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+        discovered = _reorder_web_snapshot(parent_id)
+        parent, child_rows = discovered
+        affected_ids = {row[0] for row in child_rows}
+        if parent is not None:
+            affected_ids.add(parent[0])
+        locked = list(
+            Page.objects.select_for_update().filter(pk__in=affected_ids).order_by("id")
+        )
+        if len(locked) != len(affected_ids):
+            raise PageCommandError("REORDER_UNAVAILABLE")
+        if _reorder_web_snapshot(parent_id) != discovered:
+            raise PageCommandError("REORDER_UNAVAILABLE")
+        ordered = sorted(child_rows, key=lambda row: (row[2], row[0]))
+        return {
+            "parent_name": None if parent is None else parent[3],
+            "parent_token": "root" if parent_id is None else str(parent_id),
+            "structure_generation": settings.structure_generation,
+            "children": [
+                {
+                    "id": row[0], "name": row[3],
+                    "can_up": index > 0, "can_down": index + 1 < len(ordered),
+                }
+                for index, row in enumerate(ordered)
+            ],
+        }
+
+
+def _reorder_location(parent_token: str) -> str:
+    return f"/manage/pages/reorder/?parent={parent_token}"
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_reorder_view(request: HttpRequest) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            if set(request.GET) != {"parent"} or len(request.GET.getlist("parent")) != 1:
+                raise ValueError("query")
+            parent_token = request.GET["parent"]
+            parent_id = (
+                None if parent_token == "root" else _canonical_reorder_uuid(parent_token)
+            )
+            context = _reorder_form_context(parent_id)
+        except ValueError:
+            return HttpResponse(
+                "INVALID_PAGE_REORDER_INPUT", status=400, content_type="text/plain"
+            )
+        except PageCommandError as exc:
+            if exc.code == "PARENT_NOT_FOUND":
+                return HttpResponse("PARENT_NOT_FOUND", status=404, content_type="text/plain")
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        except Exception:
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        return render(request, "pages/page_reorder.html", context)
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        keys = set(post)
+        if keys not in (
+            {"base_structure_generation", "parent", "child_id", "move"},
+            {"csrfmiddlewaretoken", "base_structure_generation", "parent", "child_id", "move"},
+        ):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        generation_value = _single(post, "base_structure_generation")
+        parent_token = _single(post, "parent")
+        move_token = _single(post, "move")
+        generation = int(generation_value)
+        if generation < 1 or str(generation) != generation_value:
+            raise ValueError("wire")
+        parent_id = (
+            None if parent_token == "root" else _canonical_reorder_uuid(parent_token)
+        )
+        child_tokens = post.getlist("child_id")
+        if not 1 <= len(child_tokens) <= 512:
+            raise ValueError("wire")
+        child_ids = [_canonical_reorder_uuid(token) for token in child_tokens]
+        if len(set(child_ids)) != len(child_ids):
+            raise ValueError("wire")
+        if move_token.count("|") != 1 or len(move_token) not in {39, 41}:
+            raise ValueError("wire")
+        move_id_token, direction = move_token.split("|")
+        move_id = _canonical_reorder_uuid(move_id_token)
+        if direction not in {"up", "down"} or move_id not in child_ids:
+            raise ValueError("wire")
+        index = child_ids.index(move_id)
+        other = index - 1 if direction == "up" else index + 1
+        if other < 0 or other >= len(child_ids):
+            raise ValueError("wire")
+        child_ids[index], child_ids[other] = child_ids[other], child_ids[index]
+    except (
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse(
+            "INVALID_PAGE_REORDER_INPUT", status=400, content_type="text/plain"
+        )
+    try:
+        reorder_children(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            base_structure_generation=generation,
+            parent_id=parent_id,
+            ordered_child_ids=child_ids,
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code == "FORBIDDEN":
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code == "PARENT_NOT_FOUND":
+            return HttpResponse("PARENT_NOT_FOUND", status=404, content_type="text/plain")
+        if exc.code in {"STALE_STRUCTURE", "NO_CHANGE", "CHILD_SET_CONFLICT"}:
+            return render(
+                request,
+                "pages/page_reorder_conflict.html",
+                {"reload_url": _reorder_location(parent_token)},
+                status=409,
+            )
+        if exc.code == "INVALID_PAGE_REORDER":
+            return HttpResponse(
+                "INVALID_PAGE_REORDER_INPUT", status=400, content_type="text/plain"
+            )
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    response = HttpResponse(status=302)
+    response["Location"] = _reorder_location(parent_token)
+    return response
 
 
 @require_http_methods(["GET", "POST"])

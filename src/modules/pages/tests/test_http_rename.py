@@ -43,7 +43,7 @@ class PageRenameHttpTests(PublicationFixture, TestCase):
 
     def test_access_get_and_owner_only_editor_link_are_exact(self) -> None:
         anonymous = Client().get(self.path)
-        self.assertEqual((anonymous.status_code, anonymous["Location"]), (302, f"/manage/login/?next={self.path}"))
+        self.assertEqual((anonymous.status_code, anonymous["Location"]), (302, "/manage/login/"))
         self.assertEqual(anonymous["Cache-Control"], "private, no-store")
         employee = self._login(self.employee)
         with patch("modules.pages.web.SiteSettings.objects.select_for_update") as query:
