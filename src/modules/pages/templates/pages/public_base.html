@@ -1,0 +1,54 @@
+{% load static %}<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ document.seo.title }}</title>
+  <meta name="description" content="{{ document.seo.description }}">
+  <meta name="robots" content="{{ robots }}">
+  <link rel="canonical" href="{{ canonical_target }}">
+  <link rel="icon" href="{% static 'pages/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'pages/public.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body id="estakada-public-v4">
+  <svg class="es-symbols" aria-hidden="true">
+    <symbol id="es-i-wrench" viewBox="0 0 64 64"><path d="M39 9a14 14 0 0 0-17 17L8 40a7 7 0 0 0 10 10l14-14A14 14 0 0 0 49 19l-9 9-8-2-2-8 9-9Z"/></symbol>
+    <symbol id="es-i-body" viewBox="0 0 64 64"><path d="M10 39h44l-4-15-10-8H24l-10 8-4 15Z"/><path d="M16 39v9h8v-9m16 0v9h8v-9M19 27h26M7 36h50"/></symbol>
+    <symbol id="es-i-scan" viewBox="0 0 64 64"><path d="M18 8H8v10m38-10h10v10M18 56H8V46m38 10h10V46"/><circle cx="32" cy="32" r="13"/><path d="M24 32h5l3-7 5 14 3-7h5"/></symbol>
+    <symbol id="es-i-oil" viewBox="0 0 64 64"><path d="M33 8S18 27 18 40a15 15 0 0 0 30 0C48 27 33 8 33 8Z"/><path d="M28 47c5 3 11 0 13-5"/></symbol>
+    <symbol id="es-i-wheel" viewBox="0 0 64 64"><circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="8"/><path d="M32 10v14m0 16v14M10 32h14m16 0h14M17 17l10 10m10 10 10 10m0-30L37 27M27 37 17 47"/></symbol>
+    <symbol id="es-i-plus" viewBox="0 0 64 64"><circle cx="32" cy="32" r="23"/><path d="M32 20v24M20 32h24"/></symbol>
+    <symbol id="es-i-clipboard" viewBox="0 0 64 64"><path d="M20 13h-7v43h38V13h-7M24 8h16l3 10H21l3-10Z"/><path d="m22 36 7 7 14-16"/></symbol>
+    <symbol id="es-i-worker" viewBox="0 0 64 64"><path d="M18 29v-5a14 14 0 0 1 28 0v5M14 29h36M21 29v6a11 11 0 0 0 22 0v-6M10 56c2-10 9-15 22-15s20 5 22 15"/></symbol>
+    <symbol id="es-i-discount" viewBox="0 0 64 64"><path d="m32 6 7 6 9-1 3 9 7 5-4 8 2 9-9 3-5 8-9-4-8 4-5-8-9-3 2-9-4-8 7-5 3-9 9 1 7-6Z"/><circle cx="24" cy="25" r="4"/><circle cx="40" cy="39" r="4"/><path d="m21 43 22-22"/></symbol>
+    <symbol id="es-i-van" viewBox="0 0 64 64"><path d="M7 17h31v31H7V17Zm31 12h10l9 10v9H38V29Z"/><circle cx="18" cy="49" r="6"/><circle cx="48" cy="49" r="6"/></symbol>
+    <symbol id="es-i-service" viewBox="0 0 64 64"><circle cx="32" cy="32" r="9"/><path d="M32 7v8m0 34v8M7 32h8m34 0h8M14 14l6 6m24 24 6 6m0-36-6 6M20 44l-6 6"/></symbol>
+    <symbol id="es-i-vat" viewBox="0 0 64 64"><path d="M13 7h38v50H13zM13 19h38M22 29h10m-5-5v10M39 27h5m-5 8h5M21 44h10m8 0 7 7m0-7-7 7"/></symbol>
+    <symbol id="es-i-warehouse" viewBox="0 0 64 64"><path d="M7 25 32 8l25 17v31H7V25Z"/><path d="M17 31h30v25H17zM17 42h30M32 31v25"/></symbol>
+    <symbol id="es-i-wash" viewBox="0 0 64 64"><path d="M10 40h44l-4-13-10-8H24l-10 8-4 13Z"/><path d="M16 40v8h8v-8m16 0v8h8v-8M19 29h26"/></symbol>
+  </svg>
+  <a class="es-skip" href="#es-main">К содержанию</a>
+  <header class="es-header">
+    <a class="es-brand" href="/" aria-label="{{ shell.organization_name }} — главная"><img src="{{ shell.logo_url }}" alt="{{ shell.organization_name }}"{% if shell.logo_width %} width="{{ shell.logo_width }}" height="{{ shell.logo_height }}"{% endif %}></a>
+    <button class="es-menu-button" type="button" aria-expanded="false" aria-controls="es-nav"><span></span><span></span><span></span><b>Меню</b></button>
+    <nav id="es-nav" aria-label="Основное меню">{% for item in shell.menu %}<a href="{{ item.target }}">{{ item.label }}</a>{% endfor %}</nav>
+    <div class="es-header-contacts">
+      <div class="es-header-socials" aria-hidden="true">
+        <span class="es-social-telegram"><svg viewBox="0 0 32 32"><path d="M5 15.1 25.8 7c1-.4 1.8.2 1.5 1.7l-3.5 16.5c-.3 1.2-1 1.5-2 1l-5.3-3.9-2.6 2.5c-.3.3-.5.5-1 .5l.4-5.4 9.8-8.8c.4-.4-.1-.6-.7-.2l-12.1 7.6-5.2-1.6c-1.1-.4-1.1-1.2-.1-1.8Z"/></svg></span>
+        <span class="es-social-max"><svg viewBox="0 0 32 32"><path d="M16.2 25.7c-2.7 0-4-.4-6.1-2-1.4 1.8-5.7 3.2-5.9.8 0-1.8-.4-3.3-.8-4.9-.6-2-.9-4.2-.9-7.5C2.5 4.4 8.9-1.4 16.4-1.4c7.6 0 13.5 6.1 13.5 13.6.1 7.4-5.9 13.4-13.7 13.5Zm.1-17.4c-3.7-.2-6.5 2.3-7.2 6.3-.5 3.3.4 7.3 1.2 7.5.4.1 1.3-.7 1.9-1.3 1 .7 2.1 1.1 3.3 1.2 3.8.2 7-2.7 7.3-6.5.1-3.8-2.8-7-6.5-7.2Z"/></svg></span>
+        <span class="es-social-instagram"><svg viewBox="0 0 32 32"><rect x="7" y="7" width="18" height="18" rx="5"/><circle cx="16" cy="16" r="4.3"/><circle cx="22" cy="10.4" r="1.2"/></svg></span>
+      </div>
+      <a class="es-header-address" href="{{ shell.map_url }}" rel="noopener noreferrer"><b>Москва</b><span>Проспект 60-летия Октября, 15Б · Яндекс Карты ↗</span></a>
+      <a class="es-header-phone" href="tel:{{ shell.phone_e164 }}"><strong>{{ shell.phone_display }}</strong><span>{{ shell.opening_hours }}</span></a>
+    </div>
+  </header>
+  <main id="es-main">{% block content %}{% endblock %}</main>
+  <footer class="es-footer">
+    <div class="es-footer-left"><a class="es-brand" href="/"><img src="{{ shell.logo_url }}" alt=""></a><p>© 2026 Автотехцентр «Эстакада». Все права защищены.</p></div>
+    <div class="es-footer-legal"><span>Политика конфиденциальности</span><span>Условия использования файлов cookie</span><span class="es-footer-credit">Сделано в <b>noname</b></span></div>
+  </footer>
+  <script defer src="{% static 'pages/public_shell.js' %}"></script>
+  {% block extra_body %}{% endblock %}
+</body>
+</html>

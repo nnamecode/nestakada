@@ -34,6 +34,7 @@ from rebuild3_importer.runtime_target import (
     TARGET_RUNTIME_SETTINGS_SQL,
     TARGET_SESSION_COUNT_SQL,
     TARGET_SETTINGS_PROOF_SQL,
+    INSERT_PAGE_SQL,
     INSERT_GRANT_SQL,
     INSERT_STAFF_SQL,
     CommittedReadback,
@@ -671,6 +672,11 @@ class TargetProjectionTests(TestCase):
         self.assertEqual(connection.begin_count, 1)
         sql = [event[0] for event in connection.events]
         self.assertLess(sql.index(INSERT_STAFF_SQL), sql.index(TARGET_INVARIANT_SQL))
+        self.assertIn("primary_url_mutable", INSERT_PAGE_SQL)
+        self.assertIn("FALSE", INSERT_PAGE_SQL)
+        self.assertIn("p.primary_url_mutable IS DISTINCT FROM FALSE", TARGET_INVARIANT_SQL)
+        page_insert = next(event for event in connection.events if event[0] == INSERT_PAGE_SQL)
+        self.assertEqual(len(page_insert[1]), 6)
         self.assertNotIn("owner-password", repr(connection.events))
 
     def test_page_cycle_and_invariant_failure_block_commit(self):
@@ -774,7 +780,7 @@ class TargetCommittedReadbackTests(TestCase):
                 f"img/{fixture.ASSET_ID}/main.png", DIGEST, 1,
                 "image/png", 1, 1,
             ),),
-            "pages": ((fixture.PAGE_ID, "Главная", "home", None, 0, True),),
+            "pages": ((fixture.PAGE_ID, "Главная", "home", None, 0, True, False),),
             "routes": ((fixture.ROUTE_ID, fixture.PAGE_ID, "/", "PRIMARY", "home"),),
             "settings": ((
                 settings["id"], 1, 1, "Эстакада", None, "+7 499 110-25-52",
@@ -833,6 +839,13 @@ class TargetCommittedReadbackTests(TestCase):
                 manifest, private, ledger, MEDIA_DIGEST, MEDIA_DIGEST,
             )
         self.assertEqual(connection.table_reads, 0)
+        manifest, private, ledger, rows, counts = self.fixtures()
+        pages_sql = TARGET_READBACK_QUERIES["pages"]
+        rows[pages_sql] = (rows[pages_sql][0][:-1] + (True,),)
+        with self.assertRaisesRegex(TargetRuntimeError, "target-readback-drift"):
+            CommittedReadback(self.Connection(rows, counts)).read(
+                manifest, private, ledger, MEDIA_DIGEST, MEDIA_DIGEST,
+            )
 
     def test_fixed_row_bounds_types_and_normalization_contracts(self):
         mutations = (
@@ -1102,7 +1115,7 @@ class TargetMigrationRunnerTests(TestCase):
         ("audit", "0001_initial"),
         ("accounts", "0001_initial"),
         ("media", "0001_initial"),
-        ("pages", "0002_sitesettings"),
+        ("pages", "0003_page_primary_url_mutable"),
         ("gallery", "0001_initial"),
     })
 

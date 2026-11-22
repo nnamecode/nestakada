@@ -201,6 +201,206 @@ def _uuid_list(value: Any, cap: int, code: str) -> list[str]:
     return result
 
 
+def _profile_plain(
+    value: Any,
+    cap: int,
+    code: str,
+    *,
+    multiline: bool = False,
+) -> str:
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) > cap
+        or unicodedata.normalize("NFC", value) != value
+        or "<" in value
+        or ">" in value
+        or any(
+            (ord(char) < 32 and not (multiline and char == "\n"))
+            or ord(char) == 127
+            for char in value
+        )
+    ):
+        raise ContentValidationError(code)
+    return value
+
+
+def _profile_uuid(value: Any, code: str, *, nullable: bool = False) -> str | None:
+    if value is None and nullable:
+        return None
+    return _uuid(value, code)
+
+
+def _profile_url(value: Any, code: str) -> str:
+    value = _profile_plain(value, 300, code)
+    if re.fullmatch(r"/[a-z0-9][a-z0-9/-]*/?", value) is None:
+        raise ContentValidationError(code)
+    return value
+
+
+def _validate_home_profile(value: Any, media: dict[str, list[str]]) -> None:
+    profile = _closed(
+        value,
+        {
+            "schema", "schema_version", "hero", "advantages", "comparisons",
+            "steps", "services", "prices", "photo_strip", "works", "reviews",
+        },
+        "home-profile-shape",
+    )
+    if profile["schema"] != "estakada.home-profile" or profile["schema_version"] != 1:
+        raise ContentValidationError("home-profile-version")
+
+    hero = _closed(profile["hero"], {"alt", "asset_id"}, "home-profile-hero")
+    _profile_plain(hero["alt"], 300, "home-profile-hero")
+    hero_asset = _uuid(hero["asset_id"], "home-profile-asset")
+
+    advantages = profile["advantages"]
+    if not isinstance(advantages, list) or len(advantages) != 8:
+        raise ContentValidationError("home-profile-advantages")
+    for item in advantages:
+        _profile_plain(item, 160, "home-profile-advantages")
+
+    comparisons = profile["comparisons"]
+    if not isinstance(comparisons, list) or len(comparisons) != 3:
+        raise ContentValidationError("home-profile-comparisons")
+    for item in comparisons:
+        item = _closed(
+            item,
+            {"heading", "bullets", "result_mark", "result_text"},
+            "home-profile-comparison",
+        )
+        _profile_plain(item["heading"], 160, "home-profile-comparison", multiline=True)
+        _profile_plain(item["result_mark"], 8, "home-profile-comparison")
+        _profile_plain(item["result_text"], 300, "home-profile-comparison")
+        if not isinstance(item["bullets"], list) or not 4 <= len(item["bullets"]) <= 5:
+            raise ContentValidationError("home-profile-comparison")
+        for bullet in item["bullets"]:
+            _profile_plain(bullet, 300, "home-profile-comparison")
+
+    steps = profile["steps"]
+    if not isinstance(steps, list) or len(steps) != 5:
+        raise ContentValidationError("home-profile-steps")
+    step_assets: list[str] = []
+    for item in steps:
+        item = _closed(item, {"alt", "asset_id"}, "home-profile-step")
+        _profile_plain(item["alt"], 300, "home-profile-step")
+        step_assets.append(_uuid(item["asset_id"], "home-profile-asset"))
+
+    item_ids: set[str] = set()
+    services = profile["services"]
+    if not isinstance(services, list) or len(services) != 8:
+        raise ContentValidationError("home-profile-services")
+    service_assets: list[str] = []
+    for item in services:
+        item = _closed(
+            item,
+            {"id", "label", "caption", "url", "alt", "fallback_visible", "source_page_id", "asset_id"},
+            "home-profile-service",
+        )
+        identifier = _uuid(item["id"], "home-profile-id")
+        if identifier in item_ids:
+            raise ContentValidationError("home-profile-id")
+        item_ids.add(identifier)
+        _profile_plain(item["label"], 160, "home-profile-service")
+        _profile_plain(item["caption"], 160, "home-profile-service")
+        _profile_url(item["url"], "home-profile-service")
+        _profile_plain(item["alt"], 300, "home-profile-service")
+        if not isinstance(item["fallback_visible"], bool):
+            raise ContentValidationError("home-profile-service")
+        _profile_uuid(item["source_page_id"], "home-profile-binding", nullable=True)
+        service_assets.append(_uuid(item["asset_id"], "home-profile-asset"))
+
+    prices = profile["prices"]
+    if not isinstance(prices, list) or len(prices) != 6:
+        raise ContentValidationError("home-profile-prices")
+    price_keys: set[str] = set()
+    source_rows: set[str] = set()
+    for group in prices:
+        group = _closed(
+            group,
+            {"id", "key", "url", "label", "rows", "source_page_id"},
+            "home-profile-price-group",
+        )
+        identifier = _uuid(group["id"], "home-profile-id")
+        if identifier in item_ids:
+            raise ContentValidationError("home-profile-id")
+        item_ids.add(identifier)
+        key = _profile_plain(group["key"], 40, "home-profile-price-group")
+        if re.fullmatch(r"[a-z][a-z0-9-]*", key) is None or key in price_keys:
+            raise ContentValidationError("home-profile-price-group")
+        price_keys.add(key)
+        _profile_url(group["url"], "home-profile-price-group")
+        _profile_plain(group["label"], 160, "home-profile-price-group")
+        _profile_uuid(group["source_page_id"], "home-profile-binding", nullable=True)
+        if not isinstance(group["rows"], list) or not 1 <= len(group["rows"]) <= 8:
+            raise ContentValidationError("home-profile-price-group")
+        for row in group["rows"]:
+            row = _closed(
+                row,
+                {"id", "url", "label", "price_text", "fallback_visible", "source_page_id", "source_row_id"},
+                "home-profile-price-row",
+            )
+            row_id = _uuid(row["id"], "home-profile-id")
+            if row_id in item_ids:
+                raise ContentValidationError("home-profile-id")
+            item_ids.add(row_id)
+            _profile_url(row["url"], "home-profile-price-row")
+            _profile_plain(row["label"], 160, "home-profile-price-row")
+            _profile_plain(row["price_text"], 160, "home-profile-price-row")
+            if not isinstance(row["fallback_visible"], bool):
+                raise ContentValidationError("home-profile-price-row")
+            source_page = _profile_uuid(row["source_page_id"], "home-profile-binding", nullable=True)
+            source_row = _profile_uuid(row["source_row_id"], "home-profile-binding", nullable=True)
+            if (source_page is None) != (source_row is None):
+                raise ContentValidationError("home-profile-binding")
+            if source_row is not None:
+                if source_row in source_rows:
+                    raise ContentValidationError("home-profile-binding")
+                source_rows.add(source_row)
+
+    photo_strip = _closed(profile["photo_strip"], {"alt", "asset_id"}, "home-profile-photo-strip")
+    _profile_plain(photo_strip["alt"], 300, "home-profile-photo-strip")
+    photo_asset = _uuid(photo_strip["asset_id"], "home-profile-asset")
+
+    works = profile["works"]
+    if not isinstance(works, list) or len(works) != 6:
+        raise ContentValidationError("home-profile-works")
+    work_assets: list[str] = []
+    for item in works:
+        item = _closed(
+            item,
+            {"id", "source_page_id", "url", "label", "photo_count_text", "asset_id", "alt", "fallback_visible"},
+            "home-profile-work",
+        )
+        identifier = _uuid(item["id"], "home-profile-id")
+        if identifier in item_ids:
+            raise ContentValidationError("home-profile-id")
+        item_ids.add(identifier)
+        _profile_uuid(item["source_page_id"], "home-profile-binding", nullable=True)
+        _profile_url(item["url"], "home-profile-work")
+        _profile_plain(item["label"], 160, "home-profile-work", multiline=True)
+        _profile_plain(item["photo_count_text"], 80, "home-profile-work")
+        _profile_plain(item["alt"], 300, "home-profile-work")
+        if not isinstance(item["fallback_visible"], bool):
+            raise ContentValidationError("home-profile-work")
+        work_assets.append(_uuid(item["asset_id"], "home-profile-asset"))
+
+    reviews = _closed(profile["reviews"], {"heading", "url", "label"}, "home-profile-reviews")
+    _profile_plain(reviews["heading"], 80, "home-profile-reviews")
+    _profile_url(reviews["url"], "home-profile-reviews")
+    _profile_plain(reviews["label"], 160, "home-profile-reviews")
+    if reviews != {"heading": "ОТЗЫВЫ", "url": "/reviews", "label": "ОТКРЫТЬ ВСЕ ВИДЕО-ОТЗЫВЫ"}:
+        raise ContentValidationError("home-profile-reviews")
+
+    if (
+        media.get("hero") != [hero_asset]
+        or media.get("process") != step_assets
+        or media.get("service_cards") != service_assets
+        or media.get("works") != [photo_asset, *work_assets]
+    ):
+        raise ContentValidationError("home-profile-media")
+
+
 def _price(value: Any) -> None:
     value = _closed(value, {"columns", "rows"}, "price-shape")
     columns, rows = value["columns"], value["rows"]
@@ -244,7 +444,11 @@ def validate_payload(payload: Any, expected_kind: str) -> dict[str, list[str]]:
         raise ContentValidationError("payload-kind")
     if len(json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")) > MIB:
         raise ContentValidationError("payload-bytes")
-    fields = _closed(payload["fields"], FIELD_SETS[expected_kind], "payload-fields")
+    field_names = set(FIELD_SETS[expected_kind])
+    raw_fields = payload["fields"]
+    if expected_kind == "home" and isinstance(raw_fields, dict) and "home_profile" in raw_fields:
+        field_names.add("home_profile")
+    fields = _closed(raw_fields, field_names, "payload-fields")
     seo = _closed(fields["seo"], {"title", "description", "allow_index"}, "payload-seo")
     _plain(seo["title"], 255, "payload-title"); _plain(seo["description"], 1000, "payload-description", empty=True)
     if not isinstance(seo["allow_index"], bool): raise ContentValidationError("payload-index")
@@ -290,4 +494,6 @@ def validate_payload(payload: Any, expected_kind: str) -> dict[str, list[str]]:
         if sum(map(len, media.values())) > 64: raise ContentValidationError("payload-media-cap")
         if expected_kind == "reviews" and len(media["thumbnail"]) > len(fields["reviews"]): raise ContentValidationError("payload-media-cap")
         if expected_kind == "actions" and len(media["banner"]) > len(fields["actions"]): raise ContentValidationError("payload-media-cap")
+    if "home_profile" in fields:
+        _validate_home_profile(fields["home_profile"], media)
     return media

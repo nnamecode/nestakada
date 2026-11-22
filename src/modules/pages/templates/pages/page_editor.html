@@ -15,7 +15,9 @@
     <p><a href="{% url 'manage-page-reorder' %}?parent={{ page.id }}">Упорядочить дочерние страницы</a></p>
     <p><a href="{% url 'manage-page-move' page.id %}">Переместить страницу</a></p>
     <p><a href="{% url 'manage-page-rename' page.id %}">Переименовать страницу</a></p>
+    {% if can_change_url %}<p><a href="{% url 'manage-page-url' page.id %}">Изменить URL</a></p>{% endif %}
     <p><a href="{% url 'manage-page-publication' page.id %}">Изменить публикацию</a></p>
+    <p><a href="{% url 'manage-page-delete' page.id %}">Удалить страницу</a></p>
   {% endif %}
   {% if deferred_fields %}
     <section><h2>Поля следующего этапа</h2><p>Эти данные сохраняются без изменений.</p>

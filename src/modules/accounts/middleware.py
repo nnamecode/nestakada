@@ -21,6 +21,12 @@ _PAGE_RENAME_PATH = re.compile(
 _PAGE_MOVE_PATH = re.compile(
     r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/move/\Z"
 )
+_PAGE_DELETE_PATH = re.compile(
+    r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/delete/\Z"
+)
+_PAGE_URL_PATH = re.compile(
+    r"\A/manage/pages/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/url/\Z"
+)
 _PAGE_CREATE_PATH = "/manage/pages/new/"
 _PAGE_REORDER_PATH = "/manage/pages/reorder/"
 _PAGE_SAVE_MAX_BODY = 4_194_304
@@ -63,6 +69,8 @@ class PrivateIngressMiddleware:
             or _PAGE_PUBLICATION_PATH.fullmatch(request.path_info)
             or _PAGE_RENAME_PATH.fullmatch(request.path_info)
             or _PAGE_MOVE_PATH.fullmatch(request.path_info)
+            or _PAGE_DELETE_PATH.fullmatch(request.path_info)
+            or _PAGE_URL_PATH.fullmatch(request.path_info)
             or request.path_info == _PAGE_CREATE_PATH
             or request.path_info == _PAGE_REORDER_PATH
             or _STAFF_PASSWORD_PATH.fullmatch(request.path_info)
@@ -86,6 +94,10 @@ class PrivateIngressMiddleware:
                     if _PAGE_MOVE_PATH.fullmatch(request.path_info)
                     else "INVALID_PAGE_CREATE_INPUT"
                     if request.path_info == _PAGE_CREATE_PATH
+                    else "INVALID_PAGE_DELETE_INPUT"
+                    if _PAGE_DELETE_PATH.fullmatch(request.path_info)
+                    else "INVALID_PAGE_URL_INPUT"
+                    if _PAGE_URL_PATH.fullmatch(request.path_info)
                     else "INVALID_PAGE_RENAME_INPUT"
                     if _PAGE_RENAME_PATH.fullmatch(request.path_info)
                     else "INVALID_EDITOR_INPUT"

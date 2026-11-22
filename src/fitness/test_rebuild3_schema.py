@@ -7,6 +7,7 @@ from typing import Any
 
 from django.apps import apps
 from django.db import models
+from django.db.migrations.operations.fields import AddField
 from django.db.migrations.operations.models import CreateModel
 from django.test import SimpleTestCase
 
@@ -56,6 +57,22 @@ def _field_signature(field: models.Field) -> Any:
 
 
 class Rebuild3SchemaSourceTests(SimpleTestCase):
+    def test_page_url_authority_field_matches_ordinary_add_field_migration(self) -> None:
+        model_field = apps.get_model("pages", "Page")._meta.get_field(
+            "primary_url_mutable"
+        )
+        migration = importlib.import_module(
+            "modules.pages.migrations.0003_page_primary_url_mutable"
+        ).Migration
+        operations = [operation for operation in migration.operations if isinstance(operation, AddField)]
+        self.assertEqual(len(operations), 1)
+        operation = operations[0]
+        self.assertEqual((operation.model_name, operation.name), ("page", "primary_url_mutable"))
+        self.assertEqual(_field_signature(model_field), _field_signature(operation.field))
+        self.assertIsInstance(model_field, models.BooleanField)
+        self.assertFalse(model_field.null)
+        self.assertFalse(model_field.default)
+
     def test_exact_approved_nh3_pin_is_in_the_foundation_input(self) -> None:
         repo = Path(__file__).resolve().parents[2]
         pin = "nh3==0.3.7 --hash=sha256:70f5ac8626e899a4bab0ef74ca2f5bd602f49c7b739e6e5026b4afc6d63dac42"

@@ -1,0 +1,26 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Удалить {{ preview.name }} — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-page-editor' preview.page_id %}">← К странице</a></p>
+  <h1>Удалить страницу</h1>
+  <dl>
+    <dt>Название</dt><dd>{{ preview.name }}</dd>
+    <dt>PRIMARY URL</dt><dd>{{ preview.primary_path }}</dd>
+    <dt>Current hash</dt><dd>{{ preview.current_hash }}</dd>
+    <dt>Previous hash</dt><dd>{% if preview.previous_hash %}{{ preview.previous_hash }}{% else %}нет{% endif %}</dd>
+    <dt>Маршруты</dt><dd>{% for mode,count in preview.route_counts %}{{ mode }}: {{ count }}{% if not forloop.last %}; {% endif %}{% endfor %}</dd>
+    <dt>Права</dt><dd>{{ preview.grant_count }}</dd>
+    <dt>Media current/previous</dt><dd>{{ preview.current_usage_count }}/{{ preview.previous_usage_count }}</dd>
+    <dt>Дочерние страницы</dt><dd>0</dd>
+  </dl>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="base_structure_generation" value="{{ preview.structure_generation }}">
+    <input type="hidden" name="composition_digest" value="{{ preview.composition_digest }}">
+    <label>Точное название <input name="expected_name" maxlength="500" required></label>
+    <label>Точный PRIMARY URL <input name="expected_primary_path" maxlength="2048" required></label>
+    <label>Текущий пароль <input type="password" name="current_password" maxlength="4096" autocomplete="current-password" required></label>
+    <label><input type="checkbox" name="confirm_delete" value="1" required> Подтверждаю удаление</label>
+    <button type="submit">Удалить страницу и current + previous</button>
+  </form>
+{% endblock %}

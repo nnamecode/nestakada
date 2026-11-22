@@ -36,7 +36,10 @@ class PageCreateCommandTests(PublicationFixture, TestCase):
                 (result.page_id, result.structure_generation, result.content_generation, result.replayed),
                 (page_id, index + 1, 1, False),
             )
-            self.assertEqual((page.kind, page.is_published), (kind, False))
+            self.assertEqual(
+                (page.kind, page.is_published, page.primary_url_mutable),
+                (kind, False, True),
+            )
             self.assertEqual((route.mode, route.outcome), (RouteMode.PRIMARY, kind))
             self.assertFalse(any(validate_payload(content.current_payload, kind).values()))
             self.assertFalse(content.current_payload["fields"]["seo"]["allow_index"])

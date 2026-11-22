@@ -2,6 +2,7 @@
 {% block title %}Страницы — Эстакада{% endblock %}
 {% block content %}
   <h1>Страницы</h1>
+  {% if can_view_audit %}<p><a href="{% url 'manage-audit' %}">Журнал действий</a></p>{% endif %}
   {% if can_create %}<p><a href="{% url 'manage-page-create' %}">Создать страницу</a></p>{% endif %}
   {% if can_reorder %}<p><a href="{% url 'manage-page-reorder' %}?parent=root">Упорядочить корневые страницы</a></p>{% endif %}
   <table>

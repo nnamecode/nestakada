@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import re
 import unicodedata
 import uuid
@@ -10,13 +12,17 @@ from urllib.parse import unquote, urlsplit
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 
 from modules.accounts.api import StaffAccessError, StaffRole, lock_staff_session
 from modules.audit.api import Action, ActorRef, TargetType, append_event
 from modules.audit.models import AuditEvent
 from modules.media.api import (
+    PageUsageSnapshot,
     MediaUsageError,
+    delete_locked_page_usage_snapshot,
+    lock_page_usage_snapshot,
     replace_page_usages,
     verify_page_current_usages,
 )
@@ -39,6 +45,7 @@ from .models import (
     PageKind,
     Route,
     RouteMode,
+    RouteOutcome,
     SiteSettings,
 )
 
@@ -91,12 +98,41 @@ class ReorderResult:
 
 
 @dataclass(frozen=True, slots=True)
+class UrlChangeResult:
+    structure_generation: int
+    primary_path: str
+    redirect_path: str
+
+
+@dataclass(frozen=True, slots=True)
 class CreateResult:
     page_id: uuid.UUID
     structure_generation: int
     content_generation: int
     current_hash: str
     replayed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class DeleteResult:
+    page_id: uuid.UUID
+    structure_generation: int
+    already_deleted: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class DeletePreview:
+    page_id: uuid.UUID
+    name: str
+    primary_path: str
+    structure_generation: int
+    composition_digest: str
+    route_counts: tuple[tuple[str, int], ...]
+    current_hash: str
+    previous_hash: str | None
+    grant_count: int
+    current_usage_count: int
+    previous_usage_count: int
 
 
 def validate_page_name(value: object) -> str:
@@ -136,22 +172,24 @@ def _create_uuid(value: object, *, nullable: bool, code: str) -> uuid.UUID | Non
         raise PageCommandError(code) from None
 
 
-def _create_path(value: object) -> str:
+def validate_new_public_path(value: object, *, error_code: str) -> str:
     if (
         type(value) is not str
         or not 1 <= len(value) <= 2048
         or unicodedata.normalize("NFC", value) != value
         or re.search(r"%(?![0-9A-Fa-f]{2})", value)
     ):
-        raise PageCommandError("INVALID_PAGE_CREATE")
+        raise PageCommandError(error_code)
     try:
         parsed = urlsplit(value)
         decoded = unquote(parsed.path, errors="strict")
     except (UnicodeDecodeError, ValueError) as exc:
-        raise PageCommandError("INVALID_PAGE_CREATE") from exc
+        raise PageCommandError(error_code) from exc
     if (
         not value.startswith("/")
         or value.startswith("//")
+        or not decoded.startswith("/")
+        or decoded.startswith("//")
         or parsed.scheme
         or parsed.netloc
         or parsed.query
@@ -163,7 +201,7 @@ def _create_path(value: object) -> str:
         or decoded == "/manage"
         or decoded.startswith("/manage/")
     ):
-        raise PageCommandError("INVALID_PAGE_CREATE")
+        raise PageCommandError(error_code)
     return value
 
 
@@ -224,7 +262,10 @@ def validate_page_create_input(
     if kind not in PageKind.values:
         raise PageCommandError("INVALID_PAGE_CREATE")
     valid_name = _create_name(name)
-    valid_path = _create_path(primary_path)
+    valid_path = validate_new_public_path(
+        primary_path,
+        error_code="INVALID_PAGE_CREATE",
+    )
     initial_page_payload(kind, valid_name)
     return kind, valid_name, valid_path
 
@@ -411,6 +452,7 @@ def _create_replay(
         or page.parent_id != parent_id
         or page.position != expected_position
         or page.is_published
+        or page.primary_url_mutable is not True
         or content.generation != 1
         or content.current_payload != payload
         or content.current_hash != current_hash
@@ -536,6 +578,7 @@ def create_page(
                 parent_id=valid_parent_id,
                 position=position,
                 is_published=False,
+                primary_url_mutable=True,
             )
             page.full_clean()
             page.save(force_insert=True)
@@ -572,6 +615,120 @@ def create_page(
                 settings.structure_generation,
                 content.generation,
                 current_hash,
+            )
+    except StaffAccessError as exc:
+        raise PageCommandError(exc.code) from exc
+
+
+_URL_CHANGE_ROUTE_CAP = 512
+
+
+def _url_change_page_id(value: object) -> uuid.UUID:
+    if isinstance(value, uuid.UUID):
+        return value
+    if type(value) is not str:
+        raise PageCommandError("PAGE_NOT_FOUND")
+    try:
+        parsed = uuid.UUID(value)
+    except ValueError:
+        raise PageCommandError("PAGE_NOT_FOUND") from None
+    if str(parsed) != value:
+        raise PageCommandError("PAGE_NOT_FOUND")
+    return parsed
+
+
+def change_primary_url(
+    *,
+    actor_id: object,
+    session_generation: object,
+    page_id: object,
+    base_structure_generation: object,
+    new_path: object,
+) -> UrlChangeResult:
+    if type(base_structure_generation) is not int or base_structure_generation < 1:
+        raise PageCommandError("INVALID_BASIS")
+    valid_page_id = _url_change_page_id(page_id)
+    valid_path = validate_new_public_path(new_path, error_code="INVALID_PAGE_URL")
+    try:
+        with transaction.atomic():
+            actor = lock_staff_session(
+                actor_id=actor_id,
+                session_generation=session_generation,
+            )
+            if actor.role != StaffRole.OWNER:
+                raise PageCommandError("FORBIDDEN")
+            try:
+                settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+            except SiteSettings.DoesNotExist:
+                raise PageCommandError("SETTINGS_MISSING") from None
+            page = _page_lock(valid_page_id)
+            routes = list(
+                Route.objects.select_for_update()
+                .filter(page=page)
+                .order_by("id")[: _URL_CHANGE_ROUTE_CAP + 1]
+            )
+            if len(routes) >= _URL_CHANGE_ROUTE_CAP:
+                raise PageCommandError("URL_CHANGE_UNAVAILABLE")
+            primary = [route for route in routes if route.mode == RouteMode.PRIMARY]
+            try:
+                for route in routes:
+                    route.clean()
+            except ValidationError:
+                raise PageCommandError("URL_CHANGE_UNAVAILABLE") from None
+            if (
+                len(primary) != 1
+                or any(route.mode not in RouteMode.values for route in routes)
+                or any(
+                    route.outcome not in PageKind.values
+                    and route.outcome != RouteOutcome.SERVICE_WASH_LEGACY_ALIAS
+                    for route in routes
+                )
+                or any(
+                    route.mode == RouteMode.REDIRECT and route.target == primary[0].target
+                    for route in routes
+                )
+            ):
+                raise PageCommandError("URL_CHANGE_UNAVAILABLE")
+            if settings.structure_generation != base_structure_generation:
+                raise PageCommandError(
+                    "STALE_STRUCTURE",
+                    generation=settings.structure_generation,
+                )
+            if page.primary_url_mutable is not True:
+                raise PageCommandError("LEGACY_URL_PROTECTED")
+            current = primary[0]
+            if current.target == valid_path:
+                raise PageCommandError(
+                    "NO_CHANGE",
+                    generation=settings.structure_generation,
+                )
+            if Route.objects.filter(target=valid_path).exists():
+                raise PageCommandError("PATH_OCCUPIED")
+            old_path = current.target
+            replacement = Route(
+                page=page,
+                target=old_path,
+                mode=RouteMode.REDIRECT,
+                outcome=page.kind,
+            )
+            replacement.clean()
+            current.target = valid_path
+            current.clean()
+            current.save(update_fields=("target",))
+            replacement.save(force_insert=True)
+            settings.structure_generation += 1
+            settings.save(update_fields=("structure_generation",))
+            append_event(
+                action=Action.PAGE_URL_CHANGED,
+                actor=_actor_ref(actor),
+                target_type=TargetType.PAGE,
+                target_uuid=page.id,
+                detail={"generation": settings.structure_generation},
+            )
+            return UrlChangeResult(
+                settings.structure_generation,
+                valid_path,
+                old_path,
             )
     except StaffAccessError as exc:
         raise PageCommandError(exc.code) from exc
@@ -627,6 +784,252 @@ def rename_page(
                 detail={"generation": settings.structure_generation},
             )
             return RenameResult(settings.structure_generation, valid_name)
+    except StaffAccessError as exc:
+        raise PageCommandError(exc.code) from exc
+
+
+_DELETE_ROUTE_CAP = 512
+_DELETE_GRANT_CAP = 100
+_DELETE_DIGEST = re.compile(r"[0-9a-f]{64}")
+
+
+def _require_empty_refs(payload: dict[str, Any]) -> None:
+    fields = payload.get("fields")
+    if type(fields) is not dict:
+        raise ContentValidationError("payload-fields")
+    for key in ("service_refs", "brand_refs", "review_refs"):
+        if key in fields and fields[key] != []:
+            raise ContentValidationError("payload-refs")
+
+
+def _delete_payload(page: Page, content: PageContent) -> tuple[dict[str, Any], dict[str, Any]]:
+    try:
+        current_media = validate_payload(content.current_payload, expected_kind=page.kind)
+        if canonical_payload_hash(content.current_payload) != content.current_hash:
+            raise ContentValidationError("hash")
+        previous_media: dict[str, Any] = {}
+        if content.previous_payload is not None:
+            previous_media = validate_payload(content.previous_payload, expected_kind=page.kind)
+            if canonical_payload_hash(content.previous_payload) != content.previous_hash:
+                raise ContentValidationError("hash")
+        for payload in (content.current_payload, content.previous_payload):
+            if payload is None:
+                continue
+            _require_empty_refs(payload)
+        return current_media, previous_media
+    except (ContentValidationError, KeyError, TypeError):
+        raise PageCommandError("DELETE_UNAVAILABLE") from None
+
+
+def _delete_rows(page: Page) -> tuple[list[Route], PageContent, list[PageGrant], PageUsageSnapshot]:
+    if Page.objects.select_for_update().filter(parent=page).exists():
+        raise PageCommandError("PAGE_HAS_CHILDREN")
+    routes = list(Route.objects.select_for_update().filter(page=page).order_by("id")[:513])
+    if len(routes) > _DELETE_ROUTE_CAP:
+        raise PageCommandError("DELETE_UNAVAILABLE")
+    primary = [route for route in routes if route.mode == RouteMode.PRIMARY]
+    if len(primary) != 1:
+        raise PageCommandError("DELETE_UNAVAILABLE")
+    try:
+        for route in routes:
+            route.clean()
+        content = PageContent.objects.select_for_update().get(page=page)
+    except (ValidationError, PageContent.DoesNotExist):
+        raise PageCommandError("DELETE_UNAVAILABLE") from None
+    grants = list(PageGrant.objects.select_for_update().filter(page=page).order_by("id")[:101])
+    if len(grants) > _DELETE_GRANT_CAP:
+        raise PageCommandError("DELETE_UNAVAILABLE")
+    eligible = eligible_grant_groups(page.kind)
+    if any(type(grant.groups) is not list or tuple(grant.groups) not in ((), ("text",), ("prices",), ("text", "prices"))
+           or any(group not in eligible for group in grant.groups) for grant in grants):
+        raise PageCommandError("DELETE_UNAVAILABLE")
+    current_media, previous_media = _delete_payload(page, content)
+    try:
+        usage = lock_page_usage_snapshot(
+            page_id=page.id,
+            expected_current=current_media,
+            expected_previous=previous_media,
+        )
+    except MediaUsageError as exc:
+        raise PageCommandError("DELETE_UNAVAILABLE") from exc
+    return routes, content, grants, usage
+
+
+def _delete_composition(
+    page: Page,
+    routes: list[Route],
+    content: PageContent,
+    grants: list[PageGrant],
+    usage: PageUsageSnapshot,
+) -> tuple[str, str, tuple[tuple[str, int], ...], int, int]:
+    primary_path = next(route.target for route in routes if route.mode == RouteMode.PRIMARY)
+    envelope = {
+        "domain": "estakada.page-delete-composition@1",
+        "page": {
+            "id": str(page.id), "name": page.name, "kind": page.kind,
+            "parent_id": None if page.parent_id is None else str(page.parent_id),
+            "position": page.position, "is_published": page.is_published,
+            "primary_url_mutable": page.primary_url_mutable,
+        },
+        "routes": [
+            {"id": str(row.id), "mode": row.mode, "target": row.target, "outcome": row.outcome}
+            for row in routes
+        ],
+        "content": {
+            "generation": content.generation,
+            "current_hash": content.current_hash,
+            "current_author_id": str(content.current_author_id),
+            "current_created_at": content.current_created_at.isoformat(),
+            "previous_hash": content.previous_hash,
+            "previous_author_id": None if content.previous_author_id is None else str(content.previous_author_id),
+            "previous_created_at": None if content.previous_created_at is None else content.previous_created_at.isoformat(),
+            "last_operation_id": None if content.last_operation_id is None else str(content.last_operation_id),
+            "last_operation_action": content.last_operation_action,
+            "last_result_generation": content.last_result_generation,
+            "last_result_hash": content.last_result_hash,
+        },
+        "grants": [
+            {"id": str(row.id), "staff_id": str(row.staff_id), "groups": row.groups}
+            for row in grants
+        ],
+        "usages": [
+            {"id": str(row[0]), "scope": row[1], "slot": row[2], "position": row[3], "asset_id": str(row[4])}
+            for row in usage.rows
+        ],
+        "child_count": 0,
+    }
+    encoded = json.dumps(
+        envelope, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+    ).encode("utf-8")
+    counts: dict[str, int] = {}
+    for route in routes:
+        counts[route.mode] = counts.get(route.mode, 0) + 1
+    current_count = sum(row[1] == UsageScope.PAGE_CURRENT for row in usage.rows)
+    previous_count = sum(row[1] == UsageScope.PAGE_PREVIOUS for row in usage.rows)
+    return hashlib.sha256(encoded).hexdigest(), primary_path, tuple(sorted(counts.items())), current_count, previous_count
+
+
+def _delete_page_id(page_id: object) -> uuid.UUID:
+    try:
+        return page_id if isinstance(page_id, uuid.UUID) else uuid.UUID(page_id)
+    except (AttributeError, TypeError, ValueError):
+        raise PageCommandError("PAGE_NOT_FOUND") from None
+
+
+def load_page_delete_preview(
+    *, actor_id: object, session_generation: object, page_id: object,
+) -> DeletePreview:
+    valid_page_id = _delete_page_id(page_id)
+    try:
+        with transaction.atomic():
+            actor = lock_staff_session(actor_id=actor_id, session_generation=session_generation)
+            if actor.role != StaffRole.OWNER:
+                raise PageCommandError("FORBIDDEN")
+            try:
+                settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+                page = Page.objects.select_for_update().get(pk=valid_page_id)
+            except SiteSettings.DoesNotExist:
+                raise PageCommandError("SETTINGS_MISSING") from None
+            except Page.DoesNotExist:
+                raise PageCommandError("PAGE_NOT_FOUND") from None
+            if page.kind == PageKind.GALLERY_ALBUM:
+                raise PageCommandError("GALLERY_DELETE_REQUIRED")
+            routes, content, grants, usage = _delete_rows(page)
+            digest, primary, counts, current_count, previous_count = _delete_composition(
+                page, routes, content, grants, usage
+            )
+            return DeletePreview(
+                page.id, page.name, primary, settings.structure_generation, digest, counts,
+                content.current_hash, content.previous_hash, len(grants), current_count, previous_count,
+            )
+    except StaffAccessError as exc:
+        raise PageCommandError(exc.code) from exc
+
+
+def delete_leaf_page(
+    *, actor_id: object, session_generation: object, page_id: object,
+    base_structure_generation: object, expected_name: object,
+    expected_primary_path: object, expected_composition_digest: object,
+    current_password: object,
+) -> DeleteResult:
+    if type(base_structure_generation) is not int or base_structure_generation < 1:
+        raise PageCommandError("INVALID_BASIS")
+    if (type(expected_name) is not str or len(expected_name) > 500
+            or type(expected_primary_path) is not str or len(expected_primary_path) > 2048
+            or type(expected_composition_digest) is not str
+            or _DELETE_DIGEST.fullmatch(expected_composition_digest) is None
+            or type(current_password) is not str or not 1 <= len(current_password) <= 4096):
+        raise PageCommandError("INVALID_PAGE_DELETE")
+    valid_page_id = _delete_page_id(page_id)
+    try:
+        with transaction.atomic():
+            actor = lock_staff_session(actor_id=actor_id, session_generation=session_generation)
+            if actor.role != StaffRole.OWNER:
+                raise PageCommandError("FORBIDDEN")
+            if not actor.check_password(current_password):
+                raise PageCommandError("CURRENT_PASSWORD_INVALID")
+            try:
+                settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+            except SiteSettings.DoesNotExist:
+                raise PageCommandError("SETTINGS_MISSING") from None
+            page = Page.objects.select_for_update().filter(pk=valid_page_id).first()
+            if page is None:
+                events = list(AuditEvent.objects.select_for_update().filter(
+                    action=Action.PAGE_DELETED, target_uuid=valid_page_id,
+                ).order_by("id")[:2])
+                if not events:
+                    raise PageCommandError("PAGE_NOT_FOUND")
+                expected_generation = base_structure_generation + 1
+                if len(events) != 1:
+                    raise PageCommandError("DELETE_UNAVAILABLE")
+                event = events[0]
+                if (
+                    event.target_type != TargetType.PAGE
+                    or event.actor_kind != "USER"
+                    or event.actor_uuid != actor.id
+                    or event.actor_role != StaffRole.OWNER
+                    or event.secondary_uuid is not None
+                    or event.detail != {"generation": expected_generation}
+                    or expected_generation > settings.structure_generation
+                ):
+                    raise PageCommandError("DELETE_UNAVAILABLE")
+                return DeleteResult(valid_page_id, expected_generation, True)
+            if settings.structure_generation != base_structure_generation:
+                raise PageCommandError("STALE_STRUCTURE", generation=settings.structure_generation)
+            if page.kind == PageKind.GALLERY_ALBUM:
+                raise PageCommandError("GALLERY_DELETE_REQUIRED")
+            routes, content, grants, usage = _delete_rows(page)
+            digest, primary, _counts, _current_count, _previous_count = _delete_composition(
+                page, routes, content, grants, usage
+            )
+            if (page.name != expected_name or primary != expected_primary_path
+                    or digest != expected_composition_digest):
+                raise PageCommandError("DELETE_CONFIRMATION_STALE", generation=settings.structure_generation)
+            if AuditEvent.objects.select_for_update().filter(
+                action=Action.PAGE_DELETED, target_uuid=page.id,
+            ).exists():
+                raise PageCommandError("DELETE_UNAVAILABLE")
+            try:
+                delete_locked_page_usage_snapshot(usage)
+                Route.objects.filter(pk__in=[row.id for row in routes]).delete()
+                PageGrant.objects.filter(pk__in=[row.id for row in grants]).delete()
+                PageContent.objects.filter(pk=content.pk).delete()
+                if (Page.objects.select_for_update().filter(parent=page).exists()
+                        or Route.objects.filter(page=page).exists()
+                        or PageGrant.objects.filter(page=page).exists()
+                        or PageContent.objects.filter(page=page).exists()):
+                    raise PageCommandError("DELETE_UNAVAILABLE")
+                page.delete()
+            except (MediaUsageError, ProtectedError) as exc:
+                raise PageCommandError("DELETE_UNAVAILABLE") from exc
+            settings.structure_generation += 1
+            settings.save(update_fields=("structure_generation",))
+            append_event(
+                action=Action.PAGE_DELETED, actor=_actor_ref(actor),
+                target_type=TargetType.PAGE, target_uuid=valid_page_id,
+                detail={"generation": settings.structure_generation},
+            )
+            return DeleteResult(valid_page_id, settings.structure_generation)
     except StaffAccessError as exc:
         raise PageCommandError(exc.code) from exc
 
@@ -1103,6 +1506,8 @@ def save_page_content(
                     granted_groups=grant.groups,
                 )
             current_media = validate_payload(candidate, page.kind)
+            _require_empty_refs(content.current_payload)
+            _require_empty_refs(candidate)
             new_hash = canonical_payload_hash(candidate)
             now = timezone.now()
 
@@ -1184,6 +1589,8 @@ def undo_page_content(
                 raise PageCommandError("CONTENT_CORRUPT")
             new_current_media = validate_payload(content.previous_payload, page.kind)
             new_previous_media = validate_payload(content.current_payload, page.kind)
+            _require_empty_refs(content.current_payload)
+            _require_empty_refs(content.previous_payload)
 
             old_current = (
                 content.current_payload,

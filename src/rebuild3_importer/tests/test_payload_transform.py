@@ -119,6 +119,7 @@ class PayloadTransformTests(unittest.TestCase):
             previous, source_kind="home", page_url="/",
         )
         self.assertEqual((result["fields"]["lead"], result["fields"]["about"]), ("", ""))
+        self.assertNotIn("home_profile", result["fields"])
         self.assertTrue(all(
             value is None or value == []
             for value in result["fields"]["media"].values()

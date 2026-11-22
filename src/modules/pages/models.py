@@ -84,6 +84,7 @@ class Page(models.Model):
     )
     position = models.PositiveIntegerField()
     is_published = models.BooleanField(default=False)
+    primary_url_mutable = models.BooleanField(default=False)
 
     class Meta:
         ordering = ("position", "id")
@@ -129,6 +130,8 @@ class Route(models.Model):
         if (
             not self.target.startswith("/")
             or self.target.startswith("//")
+            or not decoded_path.startswith("/")
+            or decoded_path.startswith("//")
             or parsed.scheme
             or parsed.netloc
             or parsed.fragment

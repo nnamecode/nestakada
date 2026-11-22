@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from html import escape
 from typing import Any
 
@@ -160,6 +161,47 @@ def _home_about(profile: dict[str, Any]) -> str:
     return "".join(parts)
 
 
+def _target_home_profile(
+    source: dict[str, Any], profile: dict[str, Any]
+) -> dict[str, Any]:
+    image_assets, _ = _image_assets(source)
+
+    def asset(image_id: str) -> str:
+        value = image_assets.get(image_id)
+        if value is None:
+            raise ManifestError("legacy-home-profile")
+        return value
+
+    services = []
+    for row in profile["services"]:
+        value = {key: copy.deepcopy(item) for key, item in row.items() if key != "image_id"}
+        value["asset_id"] = asset(row["image_id"])
+        services.append(value)
+    steps = [
+        {"alt": row["alt"], "asset_id": asset(row["image_id"])}
+        for row in profile["steps"]
+    ]
+    works = []
+    for row in profile["works"]:
+        value = {key: copy.deepcopy(item) for key, item in row.items() if key != "image_id"}
+        if value["asset_id"] != asset(row["image_id"]):
+            raise ManifestError("legacy-home-profile")
+        works.append(value)
+    return {
+        "schema": "estakada.home-profile",
+        "schema_version": 1,
+        "hero": {"alt": profile["hero"]["alt"], "asset_id": asset(profile["hero"]["image_id"])},
+        "advantages": copy.deepcopy(profile["advantages"]),
+        "comparisons": copy.deepcopy(profile["comparisons"]),
+        "steps": steps,
+        "services": services,
+        "prices": copy.deepcopy(profile["prices"]),
+        "photo_strip": {"alt": profile["photo_strip"]["alt"], "asset_id": asset(profile["photo_strip"]["image_id"])},
+        "works": works,
+        "reviews": copy.deepcopy(profile["reviews"]),
+    }
+
+
 def _base(source: dict[str, Any], target_kind: str) -> dict[str, Any]:
     return {
         "seo": {
@@ -232,6 +274,7 @@ def transform_legacy_payload(
                     f'{escape(profile["reviews"]["label"], quote=False)}</a></p>'
                 ),
                 "media": media,
+                "home_profile": _target_home_profile(source, profile),
             })
     elif target_kind in {
         "services_master_catalog", "articles_catalog", "gallery_catalog",

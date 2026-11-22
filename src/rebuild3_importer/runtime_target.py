@@ -87,7 +87,7 @@ TARGET_MIGRATION_LEAVES = frozenset({
     ("audit", "0001_initial"),
     ("accounts", "0001_initial"),
     ("media", "0001_initial"),
-    ("pages", "0002_sitesettings"),
+    ("pages", "0003_page_primary_url_mutable"),
     ("gallery", "0001_initial"),
 })
 
@@ -101,8 +101,9 @@ INSERT INTO app.media_assetfile
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
 """.strip()
 INSERT_PAGE_SQL = """
-INSERT INTO app.pages_page (id, name, kind, parent_id, position, is_published)
-VALUES (%s, %s, %s, %s, %s, %s)
+INSERT INTO app.pages_page
+  (id, name, kind, parent_id, position, is_published, primary_url_mutable)
+VALUES (%s, %s, %s, %s, %s, %s, FALSE)
 """.strip()
 INSERT_ROUTE_SQL = """
 INSERT INTO app.pages_route (id, page_id, target, mode, outcome)
@@ -177,6 +178,8 @@ WITH violations AS (
     AND (s.id IS NULL OR u.slot <> 'logo' OR u.position <> 0)
   UNION ALL SELECT 'content-missing' FROM app.pages_page p
   LEFT JOIN app.pages_pagecontent c ON c.page_id = p.id WHERE c.page_id IS NULL
+  UNION ALL SELECT 'page-url-authority' FROM app.pages_page p
+  WHERE p.primary_url_mutable IS DISTINCT FROM FALSE
   UNION ALL SELECT 'grant-shape' FROM app.pages_pagegrant g
   JOIN app.accounts_user u ON u.id = g.staff_id
   WHERE u.role <> 'EMPLOYEE' OR NOT u.is_active
@@ -189,7 +192,7 @@ SELECT count(*) FROM violations
 TARGET_READBACK_QUERIES = {
     "assets": "SELECT id,purpose,source_sha256,state,(created_at IS NOT NULL AND created_at <= CURRENT_TIMESTAMP) FROM app.media_asset ORDER BY id",
     "files": "SELECT id,asset_id,kind,storage_key,sha256,byte_size,mime_type,width,height FROM app.media_assetfile ORDER BY id",
-    "pages": "SELECT id,name,kind,parent_id,position,is_published FROM app.pages_page ORDER BY id",
+    "pages": "SELECT id,name,kind,parent_id,position,is_published,primary_url_mutable FROM app.pages_page ORDER BY id",
     "routes": "SELECT id,page_id,target,mode,outcome FROM app.pages_route ORDER BY id",
     "settings": "SELECT id,structure_generation,settings_generation,organization_name,legal_name,phone_display,phone_e164,address,opening_hours,contact_email,map_url,max_url,telegram_url,logo_asset_id FROM app.pages_sitesettings ORDER BY id",
     "usages": "SELECT id,asset_id,scope,target_uuid,slot,position FROM app.media_assetusage ORDER BY id",
@@ -1487,7 +1490,7 @@ class CommittedReadback:
             ) for row in sections["files"])),
             "pages": tuple(sorted((
                 row["id"], row["name"], row["kind"], row["parent_id"],
-                row["position"], row["is_published"],
+                row["position"], row["is_published"], False,
             ) for row in sections["pages"])),
             "routes": tuple(sorted((
                 row["id"], row["page_id"], row["target"], row["mode"], row["outcome"],

@@ -1,0 +1,16 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Изменить URL — Эстакада{% endblock %}
+{% block content %}
+  <p><a href="{% url 'manage-page-editor' page.id %}">← К странице</a></p>
+  <h1>Изменить URL страницы</h1>
+  <p>{{ page.name }}</p>
+  <p>Текущий URL: <code>{{ primary_path }}</code></p>
+  <form method="post" action="{% url 'manage-page-url' page.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="base_structure_generation" value="{{ structure_generation }}">
+    <label>Новый URL
+      <input name="new_path" maxlength="2048" required value="{{ primary_path }}">
+    </label>
+    <button type="submit">Изменить URL</button>
+  </form>
+{% endblock %}

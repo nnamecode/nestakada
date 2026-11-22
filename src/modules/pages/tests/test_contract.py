@@ -32,6 +32,7 @@ class RouteAndGrantContractTests(SimpleTestCase):
         page = Page(id=uuid.uuid4(), name="Article", kind=PageKind.ARTICLE, position=0)
         for target in (
             "//host/path",
+            "/%2Fmanage/path",
             "/a/../b",
             "/a/%2e%2e/b",
             "/a\\b",

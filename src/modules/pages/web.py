@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+import re
 import uuid
 from typing import Any
 
 from django.contrib.auth import logout
-from django.core.exceptions import RequestDataTooBig, SuspiciousOperation, TooManyFieldsSent
+from django.core.exceptions import (
+    RequestDataTooBig,
+    SuspiciousOperation,
+    TooManyFieldsSent,
+    ValidationError,
+)
 from django.db import transaction
 from django.db.models import Prefetch
 from django.http import HttpRequest, HttpResponse
@@ -17,7 +23,10 @@ from modules.media.api import project_site_logo_options
 
 from .commands import (
     PageCommandError,
+    change_primary_url,
     create_page,
+    delete_leaf_page,
+    load_page_delete_preview,
     move_page,
     rename_page,
     reorder_children,
@@ -47,7 +56,7 @@ from .grants import (
     revoke_page_grant,
     set_page_grant,
 )
-from .models import Page, PageGrant, PageKind, Route, RouteMode, SiteSettings
+from .models import Page, PageGrant, PageKind, Route, RouteMode, RouteOutcome, SiteSettings
 from .site_settings import SiteSettingsCommandError, update_site_settings
 from .staff import (
     StaffLifecycleError,
@@ -117,6 +126,7 @@ def page_list_view(request: HttpRequest) -> HttpResponse:
             "rows": rows,
             "can_create": actor.role == StaffRole.OWNER,
             "can_reorder": actor.role == StaffRole.OWNER,
+            "can_view_audit": actor.role == StaffRole.OWNER,
         },
     )
 
@@ -149,6 +159,10 @@ def page_editor_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
         "base_current_hash": snapshot.content.current_hash,
         "grant_groups": snapshot.grant_groups,
         "is_owner": request.staff_actor.role == StaffRole.OWNER,
+        "can_change_url": (
+            request.staff_actor.role == StaffRole.OWNER
+            and snapshot.page.primary_url_mutable is True
+        ),
         "can_save": can_save,
         "save_operation_id": uuid.uuid4() if can_save else None,
         "undo_operation_id": (
@@ -631,6 +645,15 @@ def _rename_conflict(
     )
 
 
+def _url_conflict(request: HttpRequest, *, page_id: uuid.UUID) -> HttpResponse:
+    return render(
+        request,
+        "pages/page_url_conflict.html",
+        {"reload_url": f"/manage/pages/{page_id}/url/"},
+        status=409,
+    )
+
+
 def _move_conflict(
     request: HttpRequest,
     *,
@@ -1061,6 +1084,193 @@ def page_rename_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
     except Exception:
         return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
     return redirect("manage-page-editor", page_id=page_id)
+
+
+def _page_url_form_context(page_id: uuid.UUID) -> dict[str, Any]:
+    with transaction.atomic():
+        settings = SiteSettings.objects.select_for_update().get(singleton_key=True)
+        page = Page.objects.select_for_update().get(pk=page_id)
+        routes = list(
+            Route.objects.select_for_update().filter(page=page).order_by("id")[:513]
+        )
+        primary = [route for route in routes if route.mode == RouteMode.PRIMARY]
+        try:
+            for route in routes:
+                route.clean()
+        except ValidationError as exc:
+            raise ValueError("composition") from exc
+        if page.primary_url_mutable is not True:
+            raise PageCommandError("LEGACY_URL_PROTECTED")
+        if (
+            len(routes) >= 512
+            or len(primary) != 1
+            or any(route.mode not in RouteMode.values for route in routes)
+            or any(route.outcome not in RouteOutcome.values for route in routes)
+            or any(
+                route.mode == RouteMode.REDIRECT and route.target == primary[0].target
+                for route in routes
+            )
+        ):
+            raise ValueError("composition")
+        return {
+            "page": page,
+            "primary_path": primary[0].target,
+            "structure_generation": settings.structure_generation,
+        }
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_url_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            return render(request, "pages/page_url.html", _page_url_form_context(page_id))
+        except Page.DoesNotExist:
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        except PageCommandError as exc:
+            if exc.code == "LEGACY_URL_PROTECTED":
+                return HttpResponse(exc.code, status=403, content_type="text/plain")
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        except Exception:
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        keys = set(post)
+        if keys not in (
+            {"base_structure_generation", "new_path"},
+            {"csrfmiddlewaretoken", "base_structure_generation", "new_path"},
+        ):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        generation_value = _single(post, "base_structure_generation")
+        new_path = _single(post, "new_path")
+        generation = int(generation_value)
+        if generation < 1 or str(generation) != generation_value:
+            raise ValueError("wire")
+    except (
+        ValueError,
+        RequestDataTooBig,
+        TooManyFieldsSent,
+        MultiPartParserError,
+        SuspiciousOperation,
+    ):
+        return HttpResponse("INVALID_PAGE_URL_INPUT", status=400, content_type="text/plain")
+    try:
+        change_primary_url(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            page_id=page_id,
+            base_structure_generation=generation,
+            new_path=new_path,
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request)
+            return redirect("manage-login")
+        if exc.code in {"FORBIDDEN", "LEGACY_URL_PROTECTED"}:
+            return HttpResponse(exc.code, status=403, content_type="text/plain")
+        if exc.code == "PAGE_NOT_FOUND":
+            return HttpResponse(exc.code, status=404, content_type="text/plain")
+        if exc.code in {"STALE_STRUCTURE", "NO_CHANGE", "PATH_OCCUPIED"}:
+            return _url_conflict(request, page_id=page_id)
+        if exc.code in {"INVALID_BASIS", "INVALID_PAGE_URL"}:
+            return HttpResponse("INVALID_PAGE_URL_INPUT", status=400, content_type="text/plain")
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-page-editor", page_id=page_id)
+
+
+def _delete_conflict(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
+    return render(
+        request, "pages/page_delete_conflict.html",
+        {"reload_url": f"/manage/pages/{page_id}/delete/"}, status=409,
+    )
+
+
+@require_http_methods(["GET", "POST"])
+@staff_session_required
+def page_delete_view(request: HttpRequest, page_id: uuid.UUID) -> HttpResponse:
+    if request.staff_actor.role != StaffRole.OWNER:
+        return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+    if request.method == "GET":
+        try:
+            preview = load_page_delete_preview(
+                actor_id=request.staff_actor.id,
+                session_generation=request.session.get(SESSION_GENERATION_KEY),
+                page_id=page_id,
+            )
+        except PageCommandError as exc:
+            if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+                logout(request); return redirect("manage-login")
+            if exc.code == "PAGE_NOT_FOUND":
+                return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+            if exc.code == "GALLERY_DELETE_REQUIRED":
+                return HttpResponse("GALLERY_DELETE_REQUIRED", status=409, content_type="text/plain")
+            if exc.code == "PAGE_HAS_CHILDREN":
+                return _delete_conflict(request, page_id)
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        except Exception:
+            return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+        return render(request, "pages/page_delete.html", {"preview": preview})
+
+    try:
+        if request.content_type != "application/x-www-form-urlencoded" or request.FILES:
+            raise ValueError("wire")
+        post = request.POST
+        required = {
+            "base_structure_generation", "composition_digest", "expected_name",
+            "expected_primary_path", "current_password", "confirm_delete",
+        }
+        keys = set(post)
+        if keys not in (required, required | {"csrfmiddlewaretoken"}):
+            raise ValueError("wire")
+        if "csrfmiddlewaretoken" in keys and len(post.getlist("csrfmiddlewaretoken")) != 1:
+            raise ValueError("wire")
+        values = {key: _single(post, key) for key in required}
+        generation = int(values["base_structure_generation"])
+        if (generation < 1 or str(generation) != values["base_structure_generation"]
+                or len(values["expected_name"]) > 500
+                or len(values["expected_primary_path"]) > 2048
+                or re.fullmatch(r"[0-9a-f]{64}", values["composition_digest"]) is None
+                or not 1 <= len(values["current_password"]) <= 4096
+                or values["confirm_delete"] != "1"):
+            raise ValueError("wire")
+    except (ValueError, RequestDataTooBig, TooManyFieldsSent, MultiPartParserError, SuspiciousOperation):
+        return HttpResponse("INVALID_PAGE_DELETE_INPUT", status=400, content_type="text/plain")
+    try:
+        delete_leaf_page(
+            actor_id=request.staff_actor.id,
+            session_generation=request.session.get(SESSION_GENERATION_KEY),
+            page_id=page_id,
+            base_structure_generation=generation,
+            expected_name=values["expected_name"],
+            expected_primary_path=values["expected_primary_path"],
+            expected_composition_digest=values["composition_digest"],
+            current_password=values["current_password"],
+        )
+    except PageCommandError as exc:
+        if exc.code in {"AUTH_REQUIRED", "STALE_SESSION"}:
+            logout(request); return redirect("manage-login")
+        if exc.code in {"FORBIDDEN", "CURRENT_PASSWORD_INVALID"}:
+            return HttpResponse("FORBIDDEN", status=403, content_type="text/plain")
+        if exc.code == "PAGE_NOT_FOUND":
+            return HttpResponse("PAGE_NOT_FOUND", status=404, content_type="text/plain")
+        if exc.code == "GALLERY_DELETE_REQUIRED":
+            return HttpResponse("GALLERY_DELETE_REQUIRED", status=409, content_type="text/plain")
+        if exc.code in {"STALE_STRUCTURE", "DELETE_CONFIRMATION_STALE", "PAGE_HAS_CHILDREN"}:
+            return _delete_conflict(request, page_id)
+        if exc.code in {"INVALID_BASIS", "INVALID_PAGE_DELETE"}:
+            return HttpResponse("INVALID_PAGE_DELETE_INPUT", status=400, content_type="text/plain")
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    except Exception:
+        return HttpResponse("PRIVATE_DATA_UNAVAILABLE", status=503, content_type="text/plain")
+    return redirect("manage-pages")
 
 
 @require_http_methods(["GET", "POST"])

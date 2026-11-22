@@ -1,0 +1,45 @@
+{% extends "pages/public_base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}">{% endblock %}
+{% block content %}
+<section class="es-hero">
+  <div class="es-hero-copy"><h1><span>АВТОТЕХЦЕНТР</span><br><mark>ЭСТАКАДА</mark></h1>{% if lead_html %}<div class="es-lead">{{ lead_html }}</div>{% endif %}</div>
+  <div class="es-hero-art"><img src="{{ document.hero.url }}" alt="{{ document.hero.alt }}"{% if document.hero.width %} width="{{ document.hero.width }}" height="{{ document.hero.height }}"{% endif %}></div>
+</section>
+<section class="es-proof" aria-label="Почему выбирают автотехцентр Эстакада">
+  {% for item in document.advantages %}<article><span class="es-icon"><svg><use href="#{% cycle 'es-i-clipboard' 'es-i-worker' 'es-i-discount' 'es-i-van' 'es-i-service' 'es-i-wrench' 'es-i-vat' 'es-i-warehouse' %}"/></svg></span><h2>{{ item }}</h2></article>{% endfor %}
+</section>
+<section class="es-solutions" aria-label="Сравнение подходов к ремонту автомобиля"><div class="es-solutions-grid">
+  {% for item in document.comparisons %}<article class="es-compare-card{% if forloop.last %} es-compare-card-us{% endif %}">
+    <div class="es-compare-head"><h2>{{ item.heading|linebreaksbr }}</h2><span aria-hidden="true">{% if forloop.last %}✓{% else %}×{% endif %}</span></div>
+    <span class="es-compare-line" aria-hidden="true"></span><ul>{% for bullet in item.bullets %}<li>{{ bullet }}</li>{% endfor %}</ul>
+    <div class="es-compare-result"><b>{{ item.result_mark }}</b><p>{{ item.result_text }}</p></div>
+  </article>{% endfor %}
+</div></section>
+<section class="es-process" id="es-process"><div class="es-process-title"><h2>КАК МЫ <mark>РАБОТАЕМ</mark></h2></div>
+  <ol class="es-step-grid">{% for item in document.steps %}<li><img src="{{ item.image.url }}" alt="{{ item.image.alt }}"{% if item.image.width %} width="{{ item.image.width }}" height="{{ item.image.height }}"{% endif %}><span class="es-step-mark">{% if forloop.last %}✓{% else %}→{% endif %}</span><div><h3>{{ item.title }}</h3><p>{{ item.body }}</p></div></li>{% endfor %}</ol>
+</section>
+<section class="es-section es-services" id="es-services"><div class="es-section-head"><div><h2><span>РЕШАЕМ ЗАДАЧИ</span><mark>ЛЮБОЙ СЛОЖНОСТИ</mark></h2></div></div>
+  <div class="es-service-grid">{% for item in document.services %}<a class="es-service-card" href="{{ item.target }}"><img src="{{ item.image.url }}" alt="{{ item.image.alt }}"{% if item.image.width %} width="{{ item.image.width }}" height="{{ item.image.height }}"{% endif %}><div class="es-card-body"><span class="es-service-icon"><svg><use href="#{% cycle 'es-i-body' 'es-i-oil' 'es-i-wrench' 'es-i-scan' 'es-i-wheel' 'es-i-scan' 'es-i-wash' 'es-i-plus' %}"/></svg></span><h3>{{ item.label }}</h3><p>{{ item.caption }}</p><i>↗</i></div></a>{% endfor %}</div>
+</section>
+{% if document.prices %}<section class="es-section es-prices" id="es-prices" data-home-prices><div class="es-section-head"><div><h2>УСЛУГИ И <mark>ЦЕНЫ</mark></h2></div></div><div class="es-price-shell">
+  <div class="es-price-tabs" role="group" aria-label="Категории прайса">{% for group in document.prices %}<button type="button" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}" data-price="{{ group.key }}" data-href="{{ group.target }}">{{ group.label }}</button>{% endfor %}</div>
+  {% for group in document.prices %}<div class="es-price-panel" data-panel="{{ group.key }}"{% if not forloop.first %} hidden{% endif %}>{% for row in group.rows %}<div><a href="{{ row.target }}">{{ row.label }}</a><b>{{ row.price_text }}</b></div>{% endfor %}</div>{% endfor %}
+  <a class="es-button es-button-dark" data-price-all href="{{ document.prices.0.target }}">Открыть все услуги <span>↗</span></a>
+</div></section>{% endif %}
+<section class="es-photo-strip" aria-label="Фотография техцентра Эстакада"><img class="es-photo-strip-image" src="{{ document.photo_strip.url }}" alt="{{ document.photo_strip.alt }}"{% if document.photo_strip.width %} width="{{ document.photo_strip.width }}" height="{{ document.photo_strip.height }}"{% endif %}></section>
+<section class="es-section es-works" id="es-works"><div class="es-section-head"><div><h2>НАШИ <mark>РАБОТЫ</mark></h2></div></div><div class="es-work-grid">
+  {% for item in document.works %}<a class="es-work-card" href="{{ item.target }}"><img src="{{ item.image.url }}" alt="{{ item.image.alt }}"{% if item.image.width %} width="{{ item.image.width }}" height="{{ item.image.height }}"{% endif %}><div><span>{{ item.photo_count_text }}</span><h3>{{ item.label|linebreaksbr }}</h3><i>↗</i></div></a>{% endfor %}
+</div><a class="es-button es-button-orange es-all-works" href="/gallery-of-works/">Все наши работы <span>↗</span></a></section>
+<section class="es-section es-reviews" id="es-reviews"><div class="es-section-head"><div><h2>{{ document.reviews_heading }}</h2></div></div><div class="es-local-reviews">
+  <div class="es-local-review-copy"><b>5,0</b><h3>ОТЗЫВЫ КЛИЕНТОВ</h3><p>Официальный виджет будет подключён после правового решения. До этого страница не обращается к внешним сервисам.</p></div>
+  <aside class="es-video-reviews-banner"><div class="es-video-reviews-title"><span>ОТЗЫВЫ ВЛАДЕЛЬЦЕВ</span><h3>ВИДЕО-ОТЗЫВЫ</h3></div><a class="es-video-reviews-all" href="{{ document.reviews_target }}">{{ document.reviews_label }} <b>↗</b></a></aside>
+</div></section>
+<section class="es-service-contact" id="es-contact">
+  <div class="es-service-contact-left"><div class="es-booking-copy"><p class="es-kicker">ЗАПИСЬ В АВТОСЕРВИС</p><h2>ЗАПИСАТЬСЯ<br>НА <mark>РЕМОНТ</mark></h2><p>Форма останется выключенной до отдельного правового и технического разрешения.</p></div>
+    <div class="es-form" aria-label="Неактивный макет формы записи"><div class="es-faux-field"><span>Ваше имя *</span><i>Как к вам обращаться</i></div><div class="es-faux-field"><span>Телефон *</span><i>+7 (___) ___-__-__</i></div><div class="es-faux-field"><span>Автомобиль</span><i>Марка, модель, год — необязательно</i></div><div class="es-faux-field"><span>Комментарий</span><i>Что случилось — необязательно</i></div><div class="es-consent"><span>□</span><span>Согласие на обработку персональных данных будет утверждено до запуска.</span></div><span class="es-button">Отправить сообщение</span></div>
+  </div>
+  <div class="es-service-contact-right"><div class="es-contact-main"><p class="es-kicker">КОНТАКТЫ</p><h2>СВЯЖИТЕСЬ<br>С <mark>НАМИ</mark></h2><div class="es-contact-list"><div><b>ТЕЛЕФОН</b><a href="tel:{{ shell.phone_e164 }}">{{ shell.phone_display }}</a><span>{{ shell.opening_hours }}</span></div><div><b>АДРЕС</b><span>{{ shell.address }}</span></div></div></div><div class="es-map-placeholder">КАРТА БУДЕТ ПОДКЛЮЧЕНА ПОСЛЕ LEGAL-01</div></div>
+</section>
+{% endblock %}
+{% block extra_body %}<script defer src="{% static 'pages/public_home.js' %}"></script>{% endblock %}

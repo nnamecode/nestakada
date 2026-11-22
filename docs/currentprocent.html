@@ -4,69 +4,128 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>Готовность новой «Эстакады»</title>
+  <meta name="description" content="Текущее состояние разработки новой версии автосервиса Эстакада">
+  <title>Текущее состояние — «Эстакада 2.0»</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;background:#fff;color:#18202b;font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1080px;margin:auto;padding:24px}h1{margin:0 0 8px;font-size:28px}h2{margin:32px 0 12px;font-size:21px}p{margin:10px 0}a{color:#245fbe}code{font-size:.93em}.lead{font-size:17px}.note{color:#5b6573}.card{margin:20px 0;padding:16px 18px;border:1px solid #dfe4eb;border-radius:10px;background:#f8fafc}.blocked{border-color:#e0b65c;background:#fff9eb}.table-wrap{overflow-x:auto;margin:14px 0 24px}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:11px 12px;border-bottom:1px solid #e4e8ee;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#f4f6f9}th:first-child{width:16%}th:nth-child(2){width:25%}.done{color:#1b6b3a}.active{color:#8a5a00}.closed{color:#5b6573}@media(max-width:650px){main{padding:14px}table{min-width:720px}h1{font-size:24px}}
+    :root{--ink:#17202d;--muted:#687384;--line:#dfe5ec;--soft:#f6f8fb;--green:#18753d;--green-bg:#edf8f1;--amber:#9a6200;--amber-bg:#fff8e6;--blue:#245fbe;--blue-bg:#eef4ff;--red:#a53b32;--red-bg:#fff2f0}
+    *{box-sizing:border-box}
+    html{background:#fff;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+    body{margin:0;background:#fff}
+    main{max-width:1120px;margin:0 auto;padding:38px 28px 64px}
+    h1{margin:4px 0 10px;font-size:clamp(30px,4vw,46px);line-height:1.12;letter-spacing:-.03em}
+    h2{margin:42px 0 14px;font-size:23px;letter-spacing:-.015em}
+    p{margin:9px 0}a{color:var(--blue);text-underline-offset:3px}code{padding:.08em .3em;border-radius:4px;background:#eef1f5;font-size:.9em}
+    .eyebrow{margin:0;color:var(--green);font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase}
+    .lead{max-width:820px;color:#465264;font-size:18px}.muted{color:var(--muted)}
+    .summary{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(250px,.8fr);gap:18px;margin:28px 0}
+    .card{padding:20px 22px;border:1px solid var(--line);border-radius:14px;background:var(--soft)}
+    .progress-card{background:linear-gradient(135deg,#f5fbf7,#f7faff)}
+    .progress-number{font-size:38px;font-weight:800;line-height:1;color:var(--green)}
+    .progress-track{height:10px;margin:16px 0 10px;overflow:hidden;border-radius:99px;background:#dce4e1}
+    .progress-fill{width:58%;height:100%;border-radius:99px;background:linear-gradient(90deg,#1d8b4b,#48a36b)}
+    .priority{border-color:#c9d9f2;background:var(--blue-bg)}
+    .priority strong{color:#174d9d}
+    .table-wrap{overflow-x:auto;margin:14px 0 28px;border:1px solid var(--line);border-radius:12px}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    th,td{padding:17px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+    tr:last-child td{border-bottom:0}th{background:#f4f6f9;color:#465264;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+    th:first-child{width:16%}th:nth-child(2){width:33%}
+    .status{display:inline-flex;align-items:flex-start;gap:9px}.icon{display:inline-grid;flex:0 0 20px;width:20px;height:20px;margin-top:2px;place-items:center;border:1.5px solid currentColor;font-size:14px;font-weight:800;line-height:1}
+    .done{color:var(--green)}.done .icon{background:#38d15c;color:#062d13;border-color:#122b19}
+    .active{color:var(--amber)}.active .icon{border-radius:50%;background:#ffe500;color:#322800;border-color:#282300}
+    .closed{color:var(--muted)}.closed .icon{background:#fff;color:transparent;border-color:#222}
+    .paused{color:var(--red)}.paused .icon{border-radius:50%;background:#ffb2aa;color:#5f140f;border-color:#6f1d16}
+    .list-card{padding:6px 22px 6px 42px}.list-card li{margin:10px 0;padding-left:4px}
+    .rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:15px}
+    .rule{padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:#fff}.rule strong{display:block;margin-bottom:4px}
+    .footer{margin-top:42px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+    @media(max-width:760px){main{padding:24px 14px 44px}.summary,.rules{grid-template-columns:1fr}.table-wrap{border-radius:8px}table{min-width:760px}th,td{padding:14px 12px}}
   </style>
 </head>
 <body><main>
-  <p class="note">Актуальная сводка по плану чистой пересборки</p>
-  <h1>Готовность новой версии «Эстакады»</h1>
-  <p class="lead">Обновлено: <strong>20 ноября 2026 года</strong>. Текущая точка: <strong>D-1739, SiteSettings server gate закрыт: PostgreSQL exact162/162</strong>.</p>
+  <p class="eyebrow">Эстакада 2.0 · оперативный статус</p>
+  <h1>Текущее состояние проекта</h1>
+  <p class="lead">Обновлено 22 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
 
-  <div class="card">
-    <strong>Текущая WBS-оценка:</strong> готовность <strong>48–50%</strong>; осталось примерно <strong>6 / 13 / 27 продуктивных часов</strong> в fast / realistic / cautious сценариях — около 0.8 / 1.6 / 3.4 восьмичасовых рабочих дня чистой работы.
-    Ожидание владельца, новый scope, B002/реальный импорт, live/deploy и удаление старого runtime в процент не спрятаны.
+  <section class="summary" aria-label="Краткая сводка">
+    <div class="card progress-card">
+      <div class="progress-number">58–59%</div>
+      <div class="progress-track" aria-label="Готовность около 58 процентов"><div class="progress-fill"></div></div>
+      <p><strong>Ориентировочная готовность.</strong> Процент не скрывает B002, публичный дизайн, browser-приёмку, live/deploy и незавершённые runtime-ветки.</p>
+    </div>
+    <div class="card priority">
+      <strong>Главный приоритет</strong>
+      <p>Функционал и стабильность. Работаем local-first: следующий этап — публичный REBUILD-5 и Docker-preview новой версии из <code>src/</code>; FirstVDS нужен только при финальном переносе.</p>
+    </div>
+  </section>
+
+  <h2>Фазы проекта</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Фаза</th><th>Содержание</th><th>Текущее состояние</th></tr></thead>
+    <tbody>
+      <tr><td>REBUILD-0</td><td>Требования, границы MVP, архитектура и приёмочные контракты</td><td><span class="status done"><span class="icon">✓</span><span>Завершено и утверждено</span></span></td></tr>
+      <tr><td>REBUILD-1</td><td>Read-only inventory старой БД и медиа, точные URL, manifest и WBS</td><td><span class="status done"><span class="icon">✓</span><span>Условно завершено; один source blocker перенесён к import freeze</span></span></td></tr>
+      <tr><td>REBUILD-2</td><td>Чистая Django-основа и минимальные accounts/pages/audit</td><td><span class="status done"><span class="icon">✓</span><span>Завершено; чистая серверная основа готова</span></span></td></tr>
+      <tr><td>REBUILD-3</td><td>Media schema, synthetic importer и перенос в пустую целевую DB+media</td><td><span class="status active"><span class="icon"></span><span>Synthetic importer и media tracking закрыты; реальный импорт B002-blocked</span></span></td></tr>
+      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td><span class="status active"><span class="icon"></span><span>Все семь Page-команд, auth/list, editor, grants, staff, publication, SiteSettings, public authority и минимальный Audit source-approved; незавершённые runtime-ветки остаются отдельными</span></span></td></tr>
+      <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и 115 URL</td><td><span class="status active"><span class="icon"></span><span>Public shell функционально готов. HOME checkpoint D-1855 повторно визуально отклонён владельцем в D-1856; исправление переносится на следующую смену</span></span></td></tr>
+      <tr><td>REBUILD-6</td><td>Галерея и минимальная заявка после правового и технического допуска</td><td><span class="status closed"><span class="icon"></span><span>Не начато</span></span></td></tr>
+      <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td><span class="status closed"><span class="icon"></span><span>Не начато</span></span></td></tr>
+      <tr><td>REBUILD-8</td><td>Удаление старого runtime после принятого local cutover</td><td><span class="status paused"><span class="icon">‖</span><span>Отложено; требует отдельного destructive confirmation</span></span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Что уже работает или доказано</h2>
+  <div class="card list-card"><ul>
+    <li>Чистая Django/PostgreSQL-основа и ключевые границы модулей.</li>
+    <li>Synthetic importer и media tracking без изменения production.</li>
+    <li>Auth/list, editor groups, PageGrant, staff lifecycle, publication, public authority и SiteSettings.</li>
+    <li>Page Rename и Page Create закрыты вместе с PostgreSQL-проверками.</li>
+    <li>Page Reorder, Page Delete и Page URL Change реализованы и прошли независимое source review.</li>
+    <li>Минимальный owner-only Audit: безопасный read-only список и retention180/batch5000 с aggregate event.</li>
+    <li>Старый сайт, VPS и production этой работой не изменяются.</li>
+  </ul></div>
+
+  <h2>Открытые ограничения</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Область</th><th>Что известно</th><th>Решение сейчас</th></tr></thead>
+    <tbody>
+      <tr><td>Page Delete runtime</td><td>PostgreSQL проходит create/boundary/start и выходит до readiness; product result остаётся <code>UNDETERMINED</code>, cleanup чистый</td><td><span class="status paused"><span class="icon">‖</span><span>Пауза. Не повторять прежний readiness-сценарий без нового свидетельства</span></span></td></tr>
+      <tr><td>Page Reorder TLS</td><td>Host TLS/RNG ветка остановлена anti-loop</td><td><span class="status paused"><span class="icon">‖</span><span>Не блокировать ею новый функциональный срез</span></span></td></tr>
+      <tr><td>Page Move runtime</td><td>Runtime-ветка остановлена anti-loop; source-работа сохранена</td><td><span class="status paused"><span class="icon">‖</span><span>Вернуться перед общей приёмкой или при реальном блокере</span></span></td></tr>
+      <tr><td>Page URL Change</td><td><code>PAGE_CREATED</code> не используется как origin из-за retention/ABA. D-1846 утвердил <code>Page.primary_url_mutable</code>: default/import=false, только create_page=true. URL history ограничена Route cap512</td><td><span class="status active"><span class="icon"></span><span>Plan и source APPROVED 0/0/0; exact12 + affected25 = exact37 подготовлены. Runtime transport не выбран: прежние TLS/RNG и socket/readiness пути owner-paused</span></span></td></tr>
+      <tr><td>Audit minimal</td><td>Owner-only read-only list, action/date/target filters, compound keyset; retention180 суток, oldest batch≤5000 и SYSTEM aggregate</td><td><span class="status active"><span class="icon"></span><span>Plan и source APPROVED 0/0/0; exact8 подготовлен. Scheduler не добавлен; PostgreSQL concurrency остаётся общему runtime package</span></span></td></tr>
+      <tr><td>REBUILD-5 public shell</td><td>Exact raw routing, Header/Footer, strict public media boundary и read-only Nginx temp paths</td><td><span class="status done"><span class="icon">✓</span><span><code>nginx -t</code> PASS; обновлённый exact12=12/12 PASS, test DB и временные контейнеры очищены</span></span></td></tr>
+      <tr><td>REBUILD-5 HOME</td><td>Closed target profile, exact media projection, coherent dynamic prices/visibility и server-rendered responsive v4</td><td><span class="status paused"><span class="icon">‖</span><span>D-1856: текущий preview владельцем визуально не принят. Технические проверки сохранены, но дизайн не готов. Исправление продолжится в следующую смену с повторной сверки точного visual authority; шесть gallery originals пока synthetic</span></span></td></tr>
+      <tr><td>REBUILD-4 gap audit</td><td>Независимая проверка не нашла ещё одного утверждённого самостоятельного функционального среза: оставшееся требует B002, LEGAL/enable либо нового продуктового решения</td><td><span class="status done"><span class="icon">✓</span><span>Закрыт. Не создавать искусственную работу ради движения процента</span></span></td></tr>
+      <tr><td>B002 и публичный shell</td><td>Выбран Selectel S3: native Linux POSIX primary + encrypted exact-version remote authority. Для primary выбран независимый FirstVDS; сервер пока не заказан, Windows Docker/WSL/VHD и S3/FUSE primary не подходят</td><td><span class="status active"><span class="icon"></span><span>Core exact23 и adapter exact12 ACCEPTED_PASS; source/operational plan 0/0/0, cleanup/privacy PASS. Рекомендован «Разгон»: Москва/KVM, 2 CPU, 4 ГБ RAM, NVMe 80 ГБ, Ubuntu 24.04 LTS, IPv4, без панели. Заказ, ключи, установки и сеть закрыты</span></span></td></tr>
+      <tr><td>Live/deploy/cutover</td><td>Не входят в текущую локальную разработку</td><td><span class="status closed"><span class="icon"></span><span>Закрыто до отдельных явных разрешений</span></span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Ближайший приоритет</h2>
+  <div class="card priority"><ol>
+    <li><strong>Следующая смена:</strong> заново сверить HOME с точным утверждённым visual authority и исправить отклонённый D-1855 checkpoint; до принятия владельцем не переходить к остальным семействам.</li>
+    <li>После приёмки HOME реализовать остальные семейства публичных шаблонов, не добавляя внешние виджеты и intake. Gallery originals подключать только отдельным media-read gate.</li>
+    <li>FirstVDS, production B002, domain/TLS и перенос оставить финальным этапом после локальной приёмки.</li>
+    <li>Paused TLS/RNG и socket/readiness пути не повторять без нового свидетельства; вернуться к ним только перед общей приёмкой или при реальном блокере.</li>
+    <li>Gallery и intake открывать только отдельным решением: gallery нужен media lifecycle, intake — LEGAL-01 и разрешение включения.</li>
+  </ol></div>
+
+  <h2>Как теперь работаем без лишней бюрократии</h2>
+  <div class="rules">
+    <div class="rule"><strong>Один статус</strong><span>Канонический источник — этот файл, <code>currentprocent.html</code>. Дополнительный current-файл не создаётся; README, tasks и pipeline не копируют каждый микроэтап.</span></div>
+    <div class="rule"><strong>Один ID на результат</strong><span>Probe, review и малое исправление остаются внутри существенного work package.</span></div>
+    <div class="rule"><strong>Ревью по риску</strong><span>Independent review — для архитектуры, security, данных, concurrency, migrations и release. Малые docs/test/harness fixes — self-review и static checks.</span></div>
+    <div class="rule"><strong>Меньше runtime-gates</strong><span>Одно bounded-разрешение покрывает initial run и одну materially changed confirmation только при stop-before-product, чистом cleanup/post-audit и неизменном scope.</span></div>
+    <div class="rule"><strong>Жёсткие ворота сохранены</strong><span>Live/deploy, push, install, destructive actions, secrets и расширение scope всегда требуют отдельного разрешения.</span></div>
+    <div class="rule"><strong>История остаётся в Git</strong><span>Подробные старые журналы не удалены, но больше не обязательны для чтения и не продолжают разрастаться.</span></div>
   </div>
 
-  <div class="card blocked">
-    <strong>Текущий статус:</strong> REBUILD-3 synthetic importer и media tracking закрыты. В REBUILD-4 закрыты private auth/list, editor groups, PageGrant, minimal staff lifecycle, owner publish/hide, public authority/legacy projection и SiteSettings source+server с PostgreSQL exact162. Browser, media bytes/storage, shared public renderer и B002 остаются отдельными воротами.
+  <div class="footer">
+    <strong>Текущий этап:</strong> конец смены, D-1856: HOME checkpoint визуально отклонён владельцем и сохранён как незавершённый.<br>
+    <strong>Следующий этап:</strong> после визуальной приёмки HOME — остальные public family templates и outcomes. FirstVDS, production B002/domain/TLS, перенос, live/deploy и push отложены до отдельного решения после локальной приёмки.<br>
+    Источники подробностей: <a href="decisions.md">решения</a>, <a href="tasks.md">задачи</a>, <a href="pipeline.md">процесс</a>.
   </div>
-
-  <h2>Фазы нового плана</h2>
-  <div class="table-wrap"><table>
-    <thead><tr><th>Фаза</th><th>Содержание</th><th>Статус</th></tr></thead>
-    <tbody>
-      <tr><td>REBUILD-0</td><td>Архитектура, границы модулей, MVP, приёмочные контракты и независимое review</td><td class="done">✅ Завершено и утверждено владельцем</td></tr>
-      <tr><td>REBUILD-1</td><td>Read-only inventory старой БД/медиа, точные URL, manifest и фактический WBS</td><td class="done">✅ Условно завершён D-1411; один exact source blocker перенесён на REBUILD-3 freeze</td></tr>
-      <tr><td>REBUILD-2</td><td>Чистый Django skeleton и минимальные accounts/pages/audit</td><td class="done">✅ Завершено D-1428; result review APPROVED 0/0/0</td></tr>
-      <tr><td>REBUILD-3</td><td>Media schema и одноразовый importer в пустую целевую пару DB+media</td><td class="active">🟡 Synthetic exact168 и media tracking14 приняты; реальный импорт остаётся B002-blocked</td></tr>
-      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td class="active">🟡 Auth/list, editor groups, PageGrant, staff lifecycle, publication, public authority и SiteSettings server gate закрыты; refs/media/shared public renderer B002-bound</td></tr>
-      <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и все 115 URL</td><td class="closed">⬜ Не начато</td></tr>
-      <tr><td>REBUILD-6</td><td>Галерея и минимальная заявка после правового/технического допуска</td><td class="closed">⬜ Не начато</td></tr>
-      <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td class="closed">⬜ Не начато</td></tr>
-      <tr><td>REBUILD-8</td><td>Отдельное удаление старого runtime после принятого local cutover</td><td class="closed">⏸ Не блокирует новую версию; требует отдельного destructive confirmation</td></tr>
-    </tbody>
-  </table></div>
-
-  <h2>Что уже доказано в REBUILD-1</h2>
-  <div class="table-wrap"><table>
-    <thead><tr><th>Область</th><th>Результат</th><th>Граница</th></tr></thead>
-    <tbody>
-      <tr><td>Статические authority-файлы</td><td>115 уникальных route outcomes, 20 transport types, 19 payload kinds и точные contract/design digests зафиксированы</td><td>Это ещё не полный DB/media baseline</td></tr>
-      <tr><td>DBPRE contract</td><td>Least-privilege роль, allowlist14, 29 aggregate facts и exact cleanup приняты независимым result review</td><td>Source DB baseline принят; private rows не публиковались</td></tr>
-      <tr><td>Media baseline</td><td>Exact301 hashes приняты; DB binding/reconciliation доказали matched237, unmatched1 и обязательные usages2+1</td><td>Duplicate matched pair остаётся отдельным target-schema вопросом</td></tr>
-      <tr><td>Source verifier</td><td>Bounded offline evidence сохранена; unmatched eligible source честно зафиксирован</td><td>Точное разрешение перенесено на coherent REBUILD-3/B002 freeze без нового subsystem</td></tr>
-      <tr><td>Финальное состояние</td><td>Последние выполненные probes завершались project containers0/secret0; новый runner имеет exact known/UNKNOWN cleanup contracts</td><td>Следующий запуск только по отдельному owner gate</td></tr>
-    </tbody>
-  </table></div>
-
-  <h2>Ворота</h2>
-  <div class="table-wrap"><table>
-    <thead><tr><th>Gate</th><th>Условие</th><th>Состояние</th></tr></thead>
-    <tbody>
-      <tr><td>REBUILD-Q001</td><td>Принять clean-rebuild подход и открыть только REBUILD-0/1</td><td class="done">✅ APPROVED</td></tr>
-      <tr><td>RB1-READ-Q001</td><td>Один bounded source-DB preflight</td><td class="done">✅ PASS и result review APPROVED</td></tr>
-      <tr><td>RB1-MEDIA-SOURCE-Q001</td><td>Bounded source evidence и unmatched-source decision</td><td class="done">✅ Offline work closed; exact unmatched resolution deferred to B002 freeze</td></tr>
-      <tr><td>REBUILD-Q002</td><td>После принятого baseline разрешить новый <code>src/</code> и реализацию</td><td class="done">✅ Code-only scope approved D-1412; runtime/target/freeze не разрешены</td></tr>
-      <tr><td>REBUILD-Q003</td><td>После полной приёмки разрешить local cutover</td><td class="closed">🔒 Закрыто</td></tr>
-      <tr><td>REBUILD-Q004</td><td>Подтвердить точные destructive targets старого runtime после backup/rollback window</td><td class="closed">🔒 Закрыто</td></tr>
-    </tbody>
-  </table></div>
-
-  <h2>Ближайший безопасный шаг</h2>
-  <p>Ближайший шаг — отдельно выбрать и спланировать следующий незаблокированный bounded product slice. Browser, media bytes/storage, shared public renderer, real import, cutover и live остаются закрыты.</p>
-
-  <p class="note">Основные источники: <a href="clean-rebuild-plan.md">план чистой пересборки</a>, <a href="tasks.md">реестр задач</a>, <a href="pipeline.md">процесс</a> и <a href="decisions.md">решения</a>. Старый сайт, VPS и production этой работой не меняются.</p>
 </main></body>
 </html>

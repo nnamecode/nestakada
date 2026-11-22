@@ -279,5 +279,10 @@ class ZeroLedgerAuthorityTests(TestCase):
         self.assertNotIn("restore", public)
         self.assertEqual(
             {name for name in public if name.endswith("zero_genesis")},
-            {"create_zero_genesis", "verify_zero_genesis"},
+            {
+                "create_zero_genesis",
+                "verify_zero_genesis",
+                "create_s3_zero_genesis",
+                "verify_s3_zero_genesis",
+            },
         )

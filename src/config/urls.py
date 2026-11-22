@@ -1,5 +1,6 @@
-from django.urls import URLPattern, path
+from django.urls import URLPattern, path, re_path
 
+from modules.audit.web import audit_event_list_view
 from modules.accounts.web import (
     login_view,
     logout_view,
@@ -12,6 +13,7 @@ from modules.pages.web import (
     grant_form_view,
     grant_staff_list_view,
     page_create_view,
+    page_delete_view,
     page_editor_view,
     page_list_view,
     page_move_view,
@@ -20,15 +22,18 @@ from modules.pages.web import (
     page_reorder_view,
     page_save_view,
     page_undo_view,
+    page_url_view,
     site_settings_view,
     staff_deactivate_view,
     staff_reactivate_view,
 )
+from modules.pages.public_http import public_page_view
 
 
 urlpatterns: list[URLPattern] = [
     path("manage/login/", login_view, name="manage-login"),
     path("manage/logout/", logout_view, name="manage-logout"),
+    path("manage/audit/", audit_event_list_view, name="manage-audit"),
     path("manage/staff/", staff_list_view, name="manage-staff"),
     path("manage/staff/new/", staff_create_view, name="manage-staff-create"),
     path(
@@ -66,6 +71,16 @@ urlpatterns: list[URLPattern] = [
         page_rename_view,
         name="manage-page-rename",
     ),
+    path(
+        "manage/pages/<uuid:page_id>/url/",
+        page_url_view,
+        name="manage-page-url",
+    ),
+    path(
+        "manage/pages/<uuid:page_id>/delete/",
+        page_delete_view,
+        name="manage-page-delete",
+    ),
     path("manage/pages/<uuid:page_id>/save/", page_save_view, name="manage-page-save"),
     path("manage/pages/<uuid:page_id>/undo/", page_undo_view, name="manage-page-undo"),
     path("manage/grants/", grant_staff_list_view, name="manage-grant-staff"),
@@ -75,4 +90,5 @@ urlpatterns: list[URLPattern] = [
         grant_form_view,
         name="manage-grant-form",
     ),
+    re_path(r"^.*$", public_page_view, name="public-page"),
 ]

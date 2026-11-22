@@ -23,6 +23,8 @@ from rebuild3_importer.freeze_authority import (
     compose_page_route_authority,
     freeze_capture_digest,
 )
+from rebuild3_importer.content import validate_payload
+from rebuild3_importer.errors import ManifestError
 from rebuild3_importer.source import SourceSession
 
 
@@ -341,8 +343,47 @@ class PageRouteAuthorityTests(TestCase):
             *home_fields["media"]["works"],
         }
         self.assertEqual(projected_assets, embedded_assets)
+        profile = home_fields["home_profile"]
+        self.assertEqual(
+            (
+                profile["schema"],
+                profile["schema_version"],
+                len(profile["advantages"]),
+                len(profile["comparisons"]),
+                len(profile["steps"]),
+                len(profile["services"]),
+                len(profile["prices"]),
+                len(profile["works"]),
+            ),
+            ("estakada.home-profile", 1, 8, 3, 5, 8, 6, 6),
+        )
+        self.assertEqual(
+            [row["asset_id"] for row in profile["services"]],
+            home_fields["media"]["service_cards"],
+        )
+        self.assertEqual(
+            [row["asset_id"] for row in profile["steps"]],
+            home_fields["media"]["process"],
+        )
+        self.assertEqual(
+            [profile["photo_strip"]["asset_id"], *[
+                row["asset_id"] for row in profile["works"]
+            ]],
+            home_fields["media"]["works"],
+        )
+        for mutate in (
+            lambda value: value["services"].pop(),
+            lambda value: value["services"][0].__setitem__("url", "https://example.test/"),
+            lambda value: value["hero"].__setitem__("asset_id", str(uuid.uuid4())),
+            lambda value: value["reviews"].__setitem__("url", "/other"),
+        ):
+            invalid = json.loads(json.dumps(home["current_payload"]))
+            mutate(invalid["fields"]["home_profile"])
+            with self.subTest(mutate=mutate), self.assertRaises(ManifestError):
+                validate_payload(invalid, "home")
         previous_fields = home["previous_payload"]["fields"]
         self.assertEqual((previous_fields["lead"], previous_fields["about"]), ("", ""))
+        self.assertNotIn("home_profile", previous_fields)
         self.assertTrue(all(
             value is None or value == []
             for value in previous_fields["media"].values()
