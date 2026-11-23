@@ -28,9 +28,12 @@ from modules.pages.web import (
     staff_reactivate_view,
 )
 from modules.pages.public_http import public_page_view
+from modules.pages.public_seo import robots_view, sitemap_view
 
 
 urlpatterns: list[URLPattern] = [
+    path("sitemap.xml", sitemap_view, name="sitemap"),
+    path("robots.txt", robots_view, name="robots"),
     path("manage/login/", login_view, name="manage-login"),
     path("manage/logout/", logout_view, name="manage-logout"),
     path("manage/audit/", audit_event_list_view, name="manage-audit"),

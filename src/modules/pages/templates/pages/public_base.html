@@ -27,6 +27,7 @@
     <symbol id="es-i-vat" viewBox="0 0 64 64"><path d="M13 7h38v50H13zM13 19h38M22 29h10m-5-5v10M39 27h5m-5 8h5M21 44h10m8 0 7 7m0-7-7 7"/></symbol>
     <symbol id="es-i-warehouse" viewBox="0 0 64 64"><path d="M7 25 32 8l25 17v31H7V25Z"/><path d="M17 31h30v25H17zM17 42h30M32 31v25"/></symbol>
     <symbol id="es-i-wash" viewBox="0 0 64 64"><path d="M10 40h44l-4-13-10-8H24l-10 8-4 13Z"/><path d="M16 40v8h8v-8m16 0v8h8v-8M19 29h26"/></symbol>
+    <symbol id="es-i-arrow" viewBox="0 0 64 64"><path d="M14 50 50 14M25 14h25v25"/></symbol>
   </svg>
   <a class="es-skip" href="#es-main">К содержанию</a>
   <header class="es-header">
@@ -35,9 +36,9 @@
     <nav id="es-nav" aria-label="Основное меню">{% for item in shell.menu %}<a href="{{ item.target }}">{{ item.label }}</a>{% endfor %}</nav>
     <div class="es-header-contacts">
       <div class="es-header-socials" aria-hidden="true">
-        <span class="es-social-telegram"><svg viewBox="0 0 32 32"><path d="M5 15.1 25.8 7c1-.4 1.8.2 1.5 1.7l-3.5 16.5c-.3 1.2-1 1.5-2 1l-5.3-3.9-2.6 2.5c-.3.3-.5.5-1 .5l.4-5.4 9.8-8.8c.4-.4-.1-.6-.7-.2l-12.1 7.6-5.2-1.6c-1.1-.4-1.1-1.2-.1-1.8Z"/></svg></span>
-        <span class="es-social-max"><svg viewBox="0 0 32 32"><path d="M16.2 25.7c-2.7 0-4-.4-6.1-2-1.4 1.8-5.7 3.2-5.9.8 0-1.8-.4-3.3-.8-4.9-.6-2-.9-4.2-.9-7.5C2.5 4.4 8.9-1.4 16.4-1.4c7.6 0 13.5 6.1 13.5 13.6.1 7.4-5.9 13.4-13.7 13.5Zm.1-17.4c-3.7-.2-6.5 2.3-7.2 6.3-.5 3.3.4 7.3 1.2 7.5.4.1 1.3-.7 1.9-1.3 1 .7 2.1 1.1 3.3 1.2 3.8.2 7-2.7 7.3-6.5.1-3.8-2.8-7-6.5-7.2Z"/></svg></span>
-        <span class="es-social-instagram"><svg viewBox="0 0 32 32"><rect x="7" y="7" width="18" height="18" rx="5"/><circle cx="16" cy="16" r="4.3"/><circle cx="22" cy="10.4" r="1.2"/></svg></span>
+        <span><img src="{% static 'pages/social-telegram.svg' %}" alt=""></span>
+        <span><img src="{% static 'pages/social-max.svg' %}" alt=""></span>
+        <span><img src="{% static 'pages/social-instagram.svg' %}" alt=""></span>
       </div>
       <a class="es-header-address" href="{{ shell.map_url }}" rel="noopener noreferrer"><b>Москва</b><span>Проспект 60-летия Октября, 15Б · Яндекс Карты ↗</span></a>
       <a class="es-header-phone" href="tel:{{ shell.phone_e164 }}"><strong>{{ shell.phone_display }}</strong><span>{{ shell.opening_hours }}</span></a>

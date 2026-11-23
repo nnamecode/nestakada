@@ -1,13 +1,26 @@
 {% extends "pages/public_base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}?v=20261123-legacy1"><link rel="stylesheet" href="{% static 'pages/public_legacy.css' %}?v=20261123-legacy1">{% endblock %}
 {% block content %}
-<article class="plain-page">
-  <h1>{{ document.h1 }}</h1>
-  {% if intro_html %}<div class="rich-text intro">{{ intro_html }}</div>{% endif %}
-  {% if body_html %}<div class="rich-text">{{ body_html }}</div>{% endif %}
-  {% if document.links %}
-    <ul class="partner-links">
-      {% for link in document.links %}<li><a href="{{ link.https_url }}" rel="noopener noreferrer">{{ link.label }}</a></li>{% endfor %}
-    </ul>
-  {% endif %}
-</article>
+{% if is_legacy_empty %}
+<section class="es-legacy-empty" aria-label="{{ document.h1 }}"></section>
+{% else %}
+<section class="es-legacy-page">
+  <nav class="es-legacy-breadcrumbs" aria-label="Хлебные крошки">
+    <a href="/">Главная</a>
+    {% for item in document.breadcrumbs %}<span aria-hidden="true">/</span>{% if forloop.last %}<span aria-current="page">{{ item.label }}</span>{% else %}<a href="{{ item.target }}">{{ item.label }}</a>{% endif %}{% endfor %}
+  </nav>
+  <article class="es-legacy-card{% if not intro_html and not body_html and not document.links %} es-legacy-card-empty{% endif %}">
+    <span class="es-legacy-kicker">Автотехцентр «Эстакада»</span>
+    <h1>{{ document.h1 }}</h1>
+    {% if intro_html %}<div class="es-legacy-rich es-legacy-intro">{{ intro_html }}</div>{% endif %}
+    {% if body_html %}<div class="es-legacy-rich">{{ body_html }}</div>{% endif %}
+    {% if document.links %}
+      <ul class="es-partner-links">
+        {% for link in document.links %}<li><a href="{{ link.https_url }}" rel="noopener noreferrer"><span>{{ link.label }}</span><i aria-hidden="true">↗</i></a></li>{% endfor %}
+      </ul>
+    {% endif %}
+  </article>
+</section>
+{% endif %}
 {% endblock %}

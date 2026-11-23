@@ -1,0 +1,18 @@
+{% extends "pages/public_base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}?v=20261122-actions1"><link rel="stylesheet" href="{% static 'pages/public_actions.css' %}?v=20261122-actions2">{% endblock %}
+{% block content %}
+<section class="es-actions-page">
+  <nav class="es-actions-breadcrumbs" aria-label="Хлебные крошки"><a href="/">Главная</a><span aria-hidden="true">/</span><span aria-current="page">{{ document.h1 }}</span></nav>
+  <article class="es-actions-content">
+    <h1>{{ document.h1 }}</h1>
+    {% if intro_html %}<div class="es-actions-intro">{{ intro_html }}</div>{% endif %}
+    <div class="es-promo-grid" aria-label="Действующие акции автотехцентра Эстакада">
+      {% for card in document.cards %}<article class="es-promo-card">
+        <div class="es-promo-visual"><img src="{{ card.image.url }}" alt="{{ card.image.alt }}"{% if card.image.width and card.image.height %} width="{{ card.image.width }}" height="{{ card.image.height }}"{% endif %}><span class="es-promo-ribbon">Акция</span></div>
+        <div class="es-promo-copy"><h2>{{ card.title_prefix }}{% if card.title_accent %}<mark>{{ card.title_accent }}</mark>{% endif %}{{ card.title_suffix }}</h2><div>{{ card.body|safe }}</div></div>
+      </article>{% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

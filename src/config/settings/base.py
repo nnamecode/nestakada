@@ -17,6 +17,8 @@ def _required(name: str) -> str:
 SECRET_KEY = _required("ESTAKADA_DJANGO_SECRET")
 DEBUG = False
 ALLOWED_HOSTS = tuple(filter(None, _required("ESTAKADA_ALLOWED_HOSTS").split(",")))
+PUBLIC_ORIGIN = os.environ.get("ESTAKADA_PUBLIC_ORIGIN")
+SEO_ROBOTS_PROFILE = os.environ.get("ESTAKADA_SEO_ROBOTS_PROFILE")
 
 INSTALLED_APPS = [
     "django.contrib.auth",

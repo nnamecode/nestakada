@@ -144,6 +144,47 @@ def validate_https(value: Any, code: str, *, nullable: bool = False) -> str | No
     return value
 
 
+def _validate_legacy_partner_url(value: Any, code: str) -> str:
+    """Accept the six archived partner URLs without weakening rich-content links."""
+
+    value = _plain(value, 2048, code)
+    try:
+        parsed = urlsplit(value)
+        host = parsed.hostname
+        port = parsed.port
+        decoded = unquote(parsed.path, errors="strict")
+        decoded_query = unquote(parsed.query, errors="strict")
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise ContentValidationError(code) from exc
+    labels = host.split(".") if host else []
+    if (
+        parsed.scheme not in {"http", "https"}
+        or not host
+        or not host.isascii()
+        or len(labels) < 2
+        or any(
+            re.fullmatch(
+                r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?",
+                label,
+            )
+            is None
+            for label in labels
+        )
+        or port is not None
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.fragment
+        or re.search(r"%(?![0-9A-Fa-f]{2})", value)
+        or "\\" in decoded
+        or any(
+            char.isspace() or ord(char) < 32 or ord(char) == 127
+            for char in decoded + decoded_query
+        )
+    ):
+        raise ContentValidationError(code)
+    return value
+
+
 class _RichInspector(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -479,7 +520,7 @@ def validate_payload(payload: Any, expected_kind: str) -> dict[str, list[str]]:
         if not isinstance(fields["links"], list) or len(fields["links"]) > 64: raise ContentValidationError("payload-links")
         for link in fields["links"]:
             link = _closed(link, {"label", "https_url"}, "payload-link")
-            _plain(link["label"], 500, "payload-link"); validate_https(link["https_url"], "payload-link")
+            _plain(link["label"], 500, "payload-link"); _validate_legacy_partner_url(link["https_url"], "payload-link")
     if "price_rows" in fields: _price(fields["price_rows"])
     if visible > 200_000 or nodes > 20_000: raise ContentValidationError("payload-visible-shape")
     media: dict[str, list[str]] = {}

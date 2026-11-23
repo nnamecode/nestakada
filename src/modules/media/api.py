@@ -47,6 +47,59 @@ class PublicPageMediaFile:
     height: int | None
 
 
+def project_public_gallery_files(
+    asset_ids: Sequence[uuid.UUID],
+) -> dict[uuid.UUID, PublicPageMediaFile]:
+    """Project a bounded set of READY byte-identical gallery originals."""
+
+    if (
+        not isinstance(asset_ids, (tuple, list))
+        or not 1 <= len(asset_ids) <= 64
+        or any(type(asset_id) is not uuid.UUID for asset_id in asset_ids)
+        or len(set(asset_ids)) != len(asset_ids)
+    ):
+        raise MediaUsageError("GALLERY_MEDIA_UNAVAILABLE")
+    try:
+        assets = list(Asset.objects.filter(pk__in=asset_ids).order_by("id")[:65])
+        if (
+            len(assets) != len(asset_ids)
+            or any(
+                asset.purpose != AssetPurpose.GALLERY_ORIGINAL
+                or asset.state != AssetState.READY
+                for asset in assets
+            )
+        ):
+            raise MediaUsageError("GALLERY_MEDIA_UNAVAILABLE")
+        files = list(
+            AssetFile.objects.filter(
+                asset_id__in=asset_ids,
+                kind=FileKind.LEGACY_PUBLIC,
+            ).order_by("asset_id", "id")[:65]
+        )
+        if len(files) != len(asset_ids):
+            raise MediaUsageError("GALLERY_MEDIA_UNAVAILABLE")
+        projected: dict[uuid.UUID, PublicPageMediaFile] = {}
+        for file in files:
+            if file.asset_id in projected:
+                raise MediaUsageError("GALLERY_MEDIA_UNAVAILABLE")
+            file.clean_fields(exclude=("asset",))
+            file.clean()
+            projected[file.asset_id] = PublicPageMediaFile(
+                asset_id=file.asset_id,
+                storage_key=file.storage_key,
+                mime_type=file.mime_type,
+                width=file.width,
+                height=file.height,
+            )
+        if set(projected) != set(asset_ids):
+            raise MediaUsageError("GALLERY_MEDIA_UNAVAILABLE")
+        return projected
+    except MediaUsageError:
+        raise
+    except (DatabaseError, TypeError, ValueError, ValidationError):
+        raise MediaUsageError("GALLERY_MEDIA_UNAVAILABLE") from None
+
+
 @dataclass(frozen=True, slots=True)
 class PageUsageSnapshot:
     page_id: uuid.UUID

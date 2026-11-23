@@ -1,0 +1,16 @@
+{% extends "pages/public_base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}"><link rel="stylesheet" href="{% static 'pages/public_service_content.css' %}">{% endblock %}
+{% block content %}
+<article class="es-service-content">
+  <section class="es-content-page">
+    <nav class="es-content-breadcrumbs" aria-label="Хлебные крошки"><a href="/">Главная</a><span aria-hidden="true">/</span>{% for crumb in document.breadcrumbs %}{% if not forloop.last %}<a href="{{ crumb.target }}">{{ crumb.label }}</a><span aria-hidden="true">/</span>{% else %}<span aria-current="page">{{ crumb.label }}</span>{% endif %}{% endfor %}</nav>
+    <h1>{{ document.h1 }}</h1>
+    {% if document.hero %}<section class="es-content-hero"><img src="{{ document.hero.url }}" alt="{{ document.hero.alt }}"{% if document.hero.width %} width="{{ document.hero.width }}" height="{{ document.hero.height }}"{% endif %}><div class="es-content-hero-copy">{{ intro_html }}</div></section>{% elif intro_html %}<div class="es-content-intro">{{ intro_html }}</div>{% endif %}
+    {% if body_html %}<div class="es-content-body">{{ body_html }}</div>{% endif %}
+    {% if document.body_images %}<div class="es-content-images">{% for image in document.body_images %}<img src="{{ image.url }}" alt="{{ image.alt }}"{% if image.width %} width="{{ image.width }}" height="{{ image.height }}"{% endif %}>{% endfor %}</div>{% endif %}
+    {% if document.price_columns %}<section class="es-price-wrap" aria-labelledby="es-price-title"><h2 id="es-price-title">Стоимость работ</h2><div class="es-price-scroll" tabindex="0" aria-label="Таблица стоимости; прокручивается по горизонтали на узком экране"><table><thead><tr><th>Наименование работ</th>{% for column in document.price_columns %}<th>{{ column }}</th>{% endfor %}</tr></thead><tbody>{% for row in document.price_rows %}<tr><th scope="row">{{ row.label }}</th>{% for value in row.values %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></section>{% endif %}
+  </section>
+  {% if document.works %}<section class="es-content-works"><p>Примеры выполненных работ</p><h2>Наши <mark>работы</mark></h2><div>{% for image in document.works %}<figure><img src="{{ image.url }}" alt="{{ image.alt }}"{% if image.width %} width="{{ image.width }}" height="{{ image.height }}"{% endif %}></figure>{% endfor %}</div></section>{% endif %}
+</article>
+{% endblock %}

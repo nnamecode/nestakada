@@ -15,7 +15,13 @@ from modules.media.api import MediaUsageError, project_public_site_logo
 from .models import PageKind, SiteSettings
 from .public import (
     PublicBlank,
+    PublicActionsDocument,
+    PublicArticleDocument,
+    PublicArticlesCatalogDocument,
+    PublicContactsDocument,
     PublicEmptyDocument,
+    PublicGalleryAlbumDocument,
+    PublicGalleryCatalogDocument,
     PublicHomeDocument,
     PublicHomeLegacyDocument,
     PublicLegacyTextDocument,
@@ -23,9 +29,19 @@ from .public import (
     PublicPartnerLinksDocument,
     PublicReadError,
     PublicRedirect,
+    PublicReviewsDocument,
+    PublicServiceCatalogDocument,
+    PublicServiceContentDocument,
     project_home,
+    project_actions,
+    project_articles,
+    project_contacts,
+    project_gallery,
     project_legacy_plain,
     project_public_navigation,
+    project_reviews,
+    project_service_catalog,
+    project_service_content,
     resolve_public_target,
 )
 
@@ -34,9 +50,23 @@ _PERCENT = re.compile(r"%(?![0-9A-Fa-f]{2})")
 _SUPPORTED = {
     PageKind.HOME,
     PageKind.LEGACY_PARTNER_LINKS,
+    PageKind.LEGACY_DIRECTOR_MESSAGE,
+    PageKind.LEGACY_NEWS_ARTICLE,
     PageKind.LEGACY_EMPTY_MAIN,
+    PageKind.LEGACY_NEWS_CATALOG,
     PageKind.LEGACY_UNDER_CONSTRUCTION,
     PageKind.LEGACY_CAMERA_SCHEDULE_TEXT,
+    PageKind.SERVICES_MASTER_CATALOG,
+    PageKind.SERVICE_CATALOG,
+    PageKind.SERVICE_SECTION_OVERVIEW,
+    PageKind.SERVICE_DETAIL,
+    PageKind.GALLERY_CATALOG,
+    PageKind.GALLERY_ALBUM,
+    PageKind.ARTICLES_CATALOG,
+    PageKind.ARTICLE,
+    PageKind.ACTIONS,
+    PageKind.REVIEWS,
+    PageKind.CONTACTS,
 }
 _NAVIGATION_IDENTITIES = (
     ("Акции", "/actions"),
@@ -46,7 +76,7 @@ _NAVIGATION_IDENTITIES = (
     ("Контакты", "/contacts"),
 )
 _HEADER_MENU = (
-    ("Услуги и цены", "/#es-services"),
+    ("Услуги и цены", "/services/"),
     ("Акции", "/actions"),
     ("Наши работы", "/gallery-of-works/"),
     ("Отзывы", "/reviews"),
@@ -69,6 +99,7 @@ class _SiteSnapshot:
     phone_e164: str
     address: str
     opening_hours: str
+    contact_email: str
     map_url: str
     logo_asset_id: uuid.UUID
 
@@ -86,6 +117,7 @@ class PublicSiteShell:
     phone_e164: str
     address: str
     opening_hours: str
+    contact_email: str
     map_url: str
     logo_url: str
     logo_mime_type: str
@@ -148,6 +180,7 @@ def _capture_site_snapshot() -> _SiteSnapshot:
                 "phone_e164",
                 "address",
                 "opening_hours",
+                "contact_email",
                 "map_url",
                 "logo_asset_id",
             )[:2]
@@ -170,6 +203,7 @@ def _capture_site_snapshot() -> _SiteSnapshot:
                     "phone_e164",
                     "address",
                     "opening_hours",
+                    "contact_email",
                     "map_url",
                 )
             )
@@ -184,6 +218,7 @@ def _capture_site_snapshot() -> _SiteSnapshot:
             phone_e164=row["phone_e164"],
             address=row["address"],
             opening_hours=row["opening_hours"],
+            contact_email=row["contact_email"],
             map_url=row["map_url"],
             logo_asset_id=row["logo_asset_id"],
         )
@@ -232,7 +267,7 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
     if isinstance(resolved, PublicBlank):
         return _blank()
     if isinstance(resolved, PublicRedirect):
-        response = HttpResponse(b"", status=301)
+        response = HttpResponse(b"", status=resolved.status)
         response["Location"] = resolved.primary_target
         response["Cache-Control"] = "public, max-age=0, must-revalidate"
         return response
@@ -240,11 +275,36 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
         return _constant("UNAVAILABLE", 503)
     try:
         first = _capture_site_snapshot()
-        document = (
-            project_home(resolved)
-            if resolved.kind == PageKind.HOME
-            else project_legacy_plain(resolved)
-        )
+        if resolved.kind == PageKind.HOME:
+            document = project_home(resolved)
+        elif resolved.kind == PageKind.ACTIONS:
+            document = project_actions(resolved)
+        elif resolved.kind == PageKind.REVIEWS:
+            document = project_reviews(resolved)
+        elif resolved.kind == PageKind.CONTACTS:
+            document = project_contacts(resolved)
+        elif resolved.kind in {
+            PageKind.SERVICES_MASTER_CATALOG,
+            PageKind.SERVICE_CATALOG,
+        }:
+            document = project_service_catalog(resolved)
+        elif resolved.kind in {
+            PageKind.SERVICE_SECTION_OVERVIEW,
+            PageKind.SERVICE_DETAIL,
+        }:
+            document = project_service_content(resolved)
+        elif resolved.kind in {
+            PageKind.GALLERY_CATALOG,
+            PageKind.GALLERY_ALBUM,
+        }:
+            document = project_gallery(resolved)
+        elif resolved.kind in {
+            PageKind.ARTICLES_CATALOG,
+            PageKind.ARTICLE,
+        }:
+            document = project_articles(resolved)
+        else:
+            document = project_legacy_plain(resolved)
         if isinstance(document, PublicBlank):
             return _blank()
         if not isinstance(
@@ -255,6 +315,15 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
                 PublicLegacyTextDocument,
                 PublicHomeDocument,
                 PublicHomeLegacyDocument,
+                PublicServiceCatalogDocument,
+                PublicServiceContentDocument,
+                PublicGalleryCatalogDocument,
+                PublicGalleryAlbumDocument,
+                PublicArticlesCatalogDocument,
+                PublicArticleDocument,
+                PublicActionsDocument,
+                PublicReviewsDocument,
+                PublicContactsDocument,
             ),
         ):
             raise PublicHttpError
@@ -272,6 +341,7 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
             phone_e164=first.phone_e164,
             address=first.address,
             opening_hours=first.opening_hours,
+            contact_email=first.contact_email,
             map_url=first.map_url,
             logo_url=f"/media/{logo.storage_key}",
             logo_mime_type=logo.mime_type,
@@ -281,6 +351,20 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
         )
         is_home = isinstance(document, PublicHomeDocument)
         is_legacy_home = isinstance(document, PublicHomeLegacyDocument)
+        is_service_catalog = isinstance(document, PublicServiceCatalogDocument)
+        is_service_content = isinstance(document, PublicServiceContentDocument)
+        is_gallery = isinstance(
+            document,
+            (PublicGalleryCatalogDocument, PublicGalleryAlbumDocument),
+        )
+        is_articles = isinstance(
+            document,
+            (PublicArticlesCatalogDocument, PublicArticleDocument),
+        )
+        is_actions = isinstance(document, PublicActionsDocument)
+        is_reviews = isinstance(document, PublicReviewsDocument)
+        is_contacts = isinstance(document, PublicContactsDocument)
+        is_legacy_empty = isinstance(document, PublicEmptyDocument)
         context = {
             "shell": shell,
             "document": document,
@@ -289,6 +373,20 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
             "intro_html": (
                 mark_safe(document.intro)
                 if isinstance(document, PublicLegacyTextDocument)
+                else mark_safe(document.intro)
+                if is_service_catalog
+                else mark_safe(document.intro)
+                if is_service_content
+                else mark_safe(document.intro)
+                if is_gallery
+                else mark_safe(document.intro)
+                if is_articles
+                else mark_safe(document.intro)
+                if is_actions
+                else mark_safe(document.intro)
+                if is_reviews
+                else mark_safe(document.intro)
+                if is_contacts
                 else mark_safe(document.lead)
                 if is_legacy_home
                 else ""
@@ -296,17 +394,47 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
             "body_html": (
                 mark_safe(document.body)
                 if isinstance(document, PublicLegacyTextDocument)
+                else mark_safe(document.body)
+                if is_service_content
+                else mark_safe(document.body)
+                if isinstance(document, PublicArticleDocument)
+                else mark_safe(document.body)
+                if is_contacts
                 else mark_safe(document.about)
                 if is_legacy_home
                 else ""
             ),
             "lead_html": mark_safe(document.lead) if is_home or is_legacy_home else "",
             "about_html": mark_safe(document.about) if is_home or is_legacy_home else "",
+            "is_gallery_catalog": isinstance(document, PublicGalleryCatalogDocument),
+            "is_gallery_album": isinstance(document, PublicGalleryAlbumDocument),
+            "is_articles_catalog": isinstance(document, PublicArticlesCatalogDocument),
+            "is_article": isinstance(document, PublicArticleDocument),
+            "is_actions": is_actions,
+            "is_reviews": is_reviews,
+            "is_contacts": is_contacts,
+            "is_legacy_empty": is_legacy_empty,
         }
-        html = render_to_string(
-            "pages/public_home.html" if is_home else "pages/public_legacy.html",
-            context,
+        template = (
+            "pages/public_home.html"
+            if is_home
+            else "pages/public_actions.html"
+            if is_actions
+            else "pages/public_reviews.html"
+            if is_reviews
+            else "pages/public_contacts.html"
+            if is_contacts
+            else "pages/public_articles.html"
+            if is_articles
+            else "pages/public_gallery.html"
+            if is_gallery
+            else "pages/public_service_content.html"
+            if is_service_content
+            else "pages/public_service_catalog.html"
+            if is_service_catalog
+            else "pages/public_legacy.html"
         )
+        html = render_to_string(template, context)
     except (MediaUsageError, PublicHttpError, PublicReadError, DatabaseError):
         return _constant("UNAVAILABLE", 503)
     response = HttpResponse(b"" if request.method == "HEAD" else html, content_type="text/html; charset=utf-8")

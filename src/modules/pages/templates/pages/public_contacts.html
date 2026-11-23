@@ -1,0 +1,32 @@
+{% extends "pages/public_base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}?v=20261122-actions1"><link rel="stylesheet" href="{% static 'pages/public_contacts.css' %}?v=20261123-contacts1">{% endblock %}
+{% block content %}
+<section class="es-contacts-page">
+  <nav class="es-contacts-breadcrumbs" aria-label="Хлебные крошки"><a href="/">Главная</a><span aria-hidden="true">/</span><span aria-current="page">{{ document.h1 }}</span></nav>
+  <article class="es-contacts-content">
+    <h1>{{ document.h1 }}</h1>
+    {% if intro_html %}<div class="es-contacts-intro">{{ intro_html }}</div>{% endif %}
+    <div class="es-contacts-panel">
+      <div class="es-contacts-copy">
+        <p class="es-contacts-kicker">АВТОТЕХЦЕНТР «ЭСТАКАДА»</p>
+        <h2>СВЯЖИТЕСЬ<br>С <mark>НАМИ</mark></h2>
+        {% if body_html %}<div class="es-contacts-body">{{ body_html }}</div>{% endif %}
+      </div>
+      <div class="es-contact-facts">
+        <div><b>ТЕЛЕФОН</b><a href="tel:{{ shell.phone_e164 }}">{{ shell.phone_display }}</a><span>{{ shell.opening_hours }}</span></div>
+        <div><b>АДРЕС</b><span>{{ shell.address }}</span></div>
+        <div><b>EMAIL</b><a class="es-contact-email" href="mailto:{{ shell.contact_email }}">{{ shell.contact_email }}</a></div>
+        <a class="es-contact-route" href="{{ shell.map_url }}" target="_blank" rel="noopener noreferrer">Построить маршрут <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+    <section class="es-contact-gallery" aria-labelledby="es-contact-gallery-title">
+      <p class="es-contacts-kicker">АВТОТЕХЦЕНТР ИЗНУТРИ</p>
+      <h2 id="es-contact-gallery-title">ФОТОГАЛЕРЕЯ</h2>
+      <div class="es-contact-photo-grid">
+        {% for image in document.gallery %}<figure class="es-contact-photo"><img src="{{ image.url }}" alt="{{ image.alt }}"{% if image.width and image.height %} width="{{ image.width }}" height="{{ image.height }}"{% endif %}></figure>{% endfor %}
+      </div>
+    </section>
+  </article>
+</section>
+{% endblock %}

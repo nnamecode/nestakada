@@ -26,6 +26,7 @@ backups/
 logs/
 test-results/
 playwright-report/
+.playwright-cli/
 acceptance/local-bindings.json
 acceptance/local-fixture-settings.json
 acceptance/generated-fixtures/

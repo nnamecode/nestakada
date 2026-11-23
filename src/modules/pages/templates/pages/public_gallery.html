@@ -1,0 +1,35 @@
+{% extends "pages/public_base.html" %}
+{% load static %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}"><link rel="stylesheet" href="{% static 'pages/public_gallery.css' %}">{% endblock %}
+{% block content %}
+<section class="es-gallery-page{% if is_gallery_album %} es-gallery-album{% endif %}">
+  <nav class="es-breadcrumbs" aria-label="Хлебные крошки">
+    <a href="/">Главная</a><span aria-hidden="true">/</span>
+    {% for crumb in document.breadcrumbs %}{% if not forloop.last %}<a href="{{ crumb.target }}">{{ crumb.label }}</a><span aria-hidden="true">/</span>{% else %}<span aria-current="page">{{ crumb.label }}</span>{% endif %}{% endfor %}
+  </nav>
+  <header class="es-gallery-heading">
+    <p>НАШИ РАБОТЫ</p>
+    <h1>{{ document.h1 }}</h1>
+    {% if intro_html %}<div class="es-gallery-intro">{{ intro_html }}</div>{% endif %}
+  </header>
+
+  {% if is_gallery_catalog %}
+    <div class="es-gallery-grid">
+      {% for card in document.cards %}
+        <a class="es-gallery-card" href="{{ card.target }}">
+          <img src="{{ card.cover.url }}" alt="{{ card.cover.alt }}"{% if card.cover.width %} width="{{ card.cover.width }}" height="{{ card.cover.height }}"{% endif %} loading="lazy">
+          <span><strong>{{ card.label }}</strong><small>{{ card.photo_count }} фото</small><i aria-hidden="true">↗</i></span>
+        </a>
+      {% endfor %}
+    </div>
+    {% if document.is_second_page %}<nav class="es-gallery-pagination" aria-label="Страницы галереи"><a href="/gallery-of-works/">← Все работы</a></nav>{% endif %}
+  {% else %}
+    <div class="es-gallery-photos">
+      {% for photo in document.photos %}
+        <figure><img src="{{ photo.url }}" alt="{{ photo.alt }}"{% if photo.width %} width="{{ photo.width }}" height="{{ photo.height }}"{% endif %}{% if not forloop.first %} loading="lazy"{% endif %}></figure>
+      {% endfor %}
+    </div>
+    <p class="es-gallery-back"><a href="/gallery-of-works/">← Все работы</a></p>
+  {% endif %}
+</section>
+{% endblock %}

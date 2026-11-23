@@ -22,7 +22,7 @@
     .progress-card{background:linear-gradient(135deg,#f5fbf7,#f7faff)}
     .progress-number{font-size:38px;font-weight:800;line-height:1;color:var(--green)}
     .progress-track{height:10px;margin:16px 0 10px;overflow:hidden;border-radius:99px;background:#dce4e1}
-    .progress-fill{width:58%;height:100%;border-radius:99px;background:linear-gradient(90deg,#1d8b4b,#48a36b)}
+    .progress-fill{width:68%;height:100%;border-radius:99px;background:linear-gradient(90deg,#1d8b4b,#48a36b)}
     .priority{border-color:#c9d9f2;background:var(--blue-bg)}
     .priority strong{color:#174d9d}
     .table-wrap{overflow-x:auto;margin:14px 0 28px;border:1px solid var(--line);border-radius:12px}
@@ -45,17 +45,17 @@
 <body><main>
   <p class="eyebrow">Эстакада 2.0 · оперативный статус</p>
   <h1>Текущее состояние проекта</h1>
-  <p class="lead">Обновлено 22 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
+  <p class="lead">Обновлено 23 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
 
   <section class="summary" aria-label="Краткая сводка">
     <div class="card progress-card">
-      <div class="progress-number">58–59%</div>
-      <div class="progress-track" aria-label="Готовность около 58 процентов"><div class="progress-fill"></div></div>
+      <div class="progress-number">68%</div>
+      <div class="progress-track" aria-label="Готовность около 68 процентов"><div class="progress-fill"></div></div>
       <p><strong>Ориентировочная готовность.</strong> Процент не скрывает B002, публичный дизайн, browser-приёмку, live/deploy и незавершённые runtime-ветки.</p>
     </div>
     <div class="card priority">
       <strong>Главный приоритет</strong>
-      <p>Функционал и стабильность. Работаем local-first: следующий этап — публичный REBUILD-5 и Docker-preview новой версии из <code>src/</code>; FirstVDS нужен только при финальном переносе.</p>
+      <p>Функционал и стабильность. REBUILD-5 закрыт. REBUILD-7 приостановлен по anti-loop: два разных column fingerprints подряд дали один exact mismatch <code>django_content_type.app_label</code>. Следующий осмысленный шаг — source-only field-level детализация, не новый runtime.</p>
     </div>
   </section>
 
@@ -68,9 +68,9 @@
       <tr><td>REBUILD-2</td><td>Чистая Django-основа и минимальные accounts/pages/audit</td><td><span class="status done"><span class="icon">✓</span><span>Завершено; чистая серверная основа готова</span></span></td></tr>
       <tr><td>REBUILD-3</td><td>Media schema, synthetic importer и перенос в пустую целевую DB+media</td><td><span class="status active"><span class="icon"></span><span>Synthetic importer и media tracking закрыты; реальный импорт B002-blocked</span></span></td></tr>
       <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td><span class="status active"><span class="icon"></span><span>Все семь Page-команд, auth/list, editor, grants, staff, publication, SiteSettings, public authority и минимальный Audit source-approved; незавершённые runtime-ветки остаются отдельными</span></span></td></tr>
-      <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и 115 URL</td><td><span class="status active"><span class="icon"></span><span>Public shell функционально готов. HOME checkpoint D-1855 повторно визуально отклонён владельцем в D-1856; исправление переносится на следующую смену</span></span></td></tr>
+      <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и 115 URL</td><td><span class="status done"><span class="icon">✓</span><span>Завершено локально: утверждённый HOME, все публичные семейства, exact115, responsive matrix, sitemap/robots и закрытые HTTP/SEO-границы прошли</span></span></td></tr>
       <tr><td>REBUILD-6</td><td>Галерея и минимальная заявка после правового и технического допуска</td><td><span class="status closed"><span class="icon"></span><span>Не начато</span></span></td></tr>
-      <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td><span class="status closed"><span class="icon"></span><span>Не начато</span></span></td></tr>
+      <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td><span class="status paused"><span class="icon">‖</span><span>Anti-loop: два materially different projections подряд остановились на <code>R7_RESTORE_SCHEMA_COLUMNS_DJANGO_CONTENT_TYPE_APP_LABEL_MISMATCH</code>. Cleanup обоих exact; runtime не повторять до field-level evidence и решения владельца</span></span></td></tr>
       <tr><td>REBUILD-8</td><td>Удаление старого runtime после принятого local cutover</td><td><span class="status paused"><span class="icon">‖</span><span>Отложено; требует отдельного destructive confirmation</span></span></td></tr>
     </tbody>
   </table></div>
@@ -96,7 +96,11 @@
       <tr><td>Page URL Change</td><td><code>PAGE_CREATED</code> не используется как origin из-за retention/ABA. D-1846 утвердил <code>Page.primary_url_mutable</code>: default/import=false, только create_page=true. URL history ограничена Route cap512</td><td><span class="status active"><span class="icon"></span><span>Plan и source APPROVED 0/0/0; exact12 + affected25 = exact37 подготовлены. Runtime transport не выбран: прежние TLS/RNG и socket/readiness пути owner-paused</span></span></td></tr>
       <tr><td>Audit minimal</td><td>Owner-only read-only list, action/date/target filters, compound keyset; retention180 суток, oldest batch≤5000 и SYSTEM aggregate</td><td><span class="status active"><span class="icon"></span><span>Plan и source APPROVED 0/0/0; exact8 подготовлен. Scheduler не добавлен; PostgreSQL concurrency остаётся общему runtime package</span></span></td></tr>
       <tr><td>REBUILD-5 public shell</td><td>Exact raw routing, Header/Footer, strict public media boundary и read-only Nginx temp paths</td><td><span class="status done"><span class="icon">✓</span><span><code>nginx -t</code> PASS; обновлённый exact12=12/12 PASS, test DB и временные контейнеры очищены</span></span></td></tr>
-      <tr><td>REBUILD-5 HOME</td><td>Closed target profile, exact media projection, coherent dynamic prices/visibility и server-rendered responsive v4</td><td><span class="status paused"><span class="icon">‖</span><span>D-1856: текущий preview владельцем визуально не принят. Технические проверки сохранены, но дизайн не готов. Исправление продолжится в следующую смену с повторной сверки точного visual authority; шесть gallery originals пока synthetic</span></span></td></tr>
+      <tr><td>REBUILD-5 HOME</td><td>Closed target profile, exact media projection, coherent dynamic prices/visibility и server-rendered responsive v4</td><td><span class="status done"><span class="icon">✓</span><span>Принято владельцем 22 ноября 2026 года. Ширина, vertical scroll и утверждённый desktop fixed-background параллакс восстановлены; ≤800 px остаётся статичным по RSP-AC-06. HOME visual slice завершён, без включения default-off intake и внешних виджетов</span></span></td></tr>
+      <tr><td>REBUILD-5 internal families</td><td>Услуги, галерея, статьи, акции, отзывы, контакты и legacy-страницы на точных URL</td><td><span class="status done"><span class="icon">✓</span><span>Все internal families закрыты в текущем preview. Services exact61: SHA7/payloads61 preflight PASS; PostgreSQL pages61/routes62/contents61; guarded master root-repair parent=null/position14 PASS; HTTP requests124, GET62/62, HEAD62/62, redirects0. Media read/write0, browser0</span></span></td></tr>
+      <tr><td>REBUILD-5 public acceptance</td><td>Все 115 утверждённых URL, HTTP/SEO границы и responsive-представители</td><td><span class="status done"><span class="icon">✓</span><span>Exact115 PASS: requests230, GET200=114, HEAD200=114, MAP-017 GET/HEAD302, canonical MAP-018/MAP-088 PASS. Responsive matrix 12 URL × 320/390/768/1024/1440: pages60/60, overflow0, broken images0, iframe0, error pages0; legacy-empty <code>/about</code> H1 N/A. Home photo-strip scroll≤768/fixed≥1024; mobile menu expanded true→false, links6, overflow0. Короткий visible 1440 control PASS; вкладка скрыта и закрыта сразу</span></span></td></tr>
+      <tr><td>REBUILD-5 sitemap/robots</td><td>Индексируемые canonical representatives и закрытые crawler rules</td><td><span class="status done"><span class="icon">✓</span><span>CSRF-enforced tests4/4 PASS, migrations PASS, system check0. Реальный HTTP: robots GET/HEAD/POST PASS, sitemap GET/HEAD/POST PASS, canonical locations112, POST405+Allow exact. Trusted origin/fail-closed/race coverage PASS. Cleanup containers0/test_db0; media read0, browser0</span></span></td></tr>
+      <tr><td>REBUILD-7 local restore proof</td><td>Одноразовая coherent generation и восстановление нового <code>src/</code> в пустую изолированную DB/media</td><td><span class="status paused"><span class="icon">‖</span><span><code>R7-LOCAL-001</code>: прежний <code>information_schema</code> fingerprint и reviewed direct <code>pg_catalog</code> fingerprint оба дали exact <code>R7_RESTORE_SCHEMA_COLUMNS_DJANGO_CONTENT_TYPE_APP_LABEL_MISMATCH</code>. Последний запуск не дошёл до 16-case audit behavior/HTTP; cleanup <code>containers=0 database=0 staging=0 bitmap=exact</code>, preview восстановлен, external copy/cutover/live отсутствовали. Попыток на этой exact границе: 2; проверены две materially different projections. Следующий runtime запрещён anti-loop. Возможное продолжение только source-only: безопасные per-field SHA, чтобы назвать различающийся catalog attribute, затем independent review и решение владельца</span></span></td></tr>
       <tr><td>REBUILD-4 gap audit</td><td>Независимая проверка не нашла ещё одного утверждённого самостоятельного функционального среза: оставшееся требует B002, LEGAL/enable либо нового продуктового решения</td><td><span class="status done"><span class="icon">✓</span><span>Закрыт. Не создавать искусственную работу ради движения процента</span></span></td></tr>
       <tr><td>B002 и публичный shell</td><td>Выбран Selectel S3: native Linux POSIX primary + encrypted exact-version remote authority. Для primary выбран независимый FirstVDS; сервер пока не заказан, Windows Docker/WSL/VHD и S3/FUSE primary не подходят</td><td><span class="status active"><span class="icon"></span><span>Core exact23 и adapter exact12 ACCEPTED_PASS; source/operational plan 0/0/0, cleanup/privacy PASS. Рекомендован «Разгон»: Москва/KVM, 2 CPU, 4 ГБ RAM, NVMe 80 ГБ, Ubuntu 24.04 LTS, IPv4, без панели. Заказ, ключи, установки и сеть закрыты</span></span></td></tr>
       <tr><td>Live/deploy/cutover</td><td>Не входят в текущую локальную разработку</td><td><span class="status closed"><span class="icon"></span><span>Закрыто до отдельных явных разрешений</span></span></td></tr>
@@ -105,11 +109,12 @@
 
   <h2>Ближайший приоритет</h2>
   <div class="card priority"><ol>
-    <li><strong>Следующая смена:</strong> заново сверить HOME с точным утверждённым visual authority и исправить отклонённый D-1855 checkpoint; до принятия владельцем не переходить к остальным семействам.</li>
-    <li>После приёмки HOME реализовать остальные семейства публичных шаблонов, не добавляя внешние виджеты и intake. Gallery originals подключать только отдельным media-read gate.</li>
+    <li><strong>Сейчас:</strong> пауза владельцу по anti-loop; runtime не повторять. Если продолжать — source-only добавить safe field hashes exact column attributes и провести independent review.</li>
+    <li><strong>Только после нового evidence и отдельного решения:</strong> обсуждать один bounded confirmation. HTTP/exact115 допускаются только после полного schema/16-case audit behavior PASS.</li>
+    <li>Gallery не расширять: exact17 каталогов и exact214 originals уже закрыты локально. Mobile-поведение проверить вместе с общей responsive browser-приёмкой, без повторного чтения originals.</li>
     <li>FirstVDS, production B002, domain/TLS и перенос оставить финальным этапом после локальной приёмки.</li>
     <li>Paused TLS/RNG и socket/readiness пути не повторять без нового свидетельства; вернуться к ним только перед общей приёмкой или при реальном блокере.</li>
-    <li>Gallery и intake открывать только отдельным решением: gallery нужен media lifecycle, intake — LEGAL-01 и разрешение включения.</li>
+    <li>Intake оставлять default-off до LEGAL-01 и отдельного разрешения включения.</li>
   </ol></div>
 
   <h2>Как теперь работаем без лишней бюрократии</h2>
@@ -123,8 +128,8 @@
   </div>
 
   <div class="footer">
-    <strong>Текущий этап:</strong> конец смены, D-1856: HOME checkpoint визуально отклонён владельцем и сохранён как незавершённый.<br>
-    <strong>Следующий этап:</strong> после визуальной приёмки HOME — остальные public family templates и outcomes. FirstVDS, production B002/domain/TLS, перенос, live/deploy и push отложены до отдельного решения после локальной приёмки.<br>
+    <strong>Текущий этап:</strong> <code>R7-LOCAL-001</code> приостановлен владельцу после двух exact <code>django_content_type.app_label</code> mismatches; cleanup полный, preview восстановлен точно.<br>
+    <strong>Следующий этап:</strong> решение владельца на source-only field-level диагностику; новый runtime до нового evidence запрещён. External copy, promotion, cutover и live исключены.<br>
     Источники подробностей: <a href="decisions.md">решения</a>, <a href="tasks.md">задачи</a>, <a href="pipeline.md">процесс</a>.
   </div>
 </main></body>

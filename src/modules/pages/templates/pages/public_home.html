@@ -1,6 +1,6 @@
 {% extends "pages/public_base.html" %}
 {% load static %}
-{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'pages/public_home.css' %}?v=20261122-parallax2">{% endblock %}
 {% block content %}
 <section class="es-hero">
   <div class="es-hero-copy"><h1><span>АВТОТЕХЦЕНТР</span><br><mark>ЭСТАКАДА</mark></h1>{% if lead_html %}<div class="es-lead">{{ lead_html }}</div>{% endif %}</div>
@@ -11,7 +11,7 @@
 </section>
 <section class="es-solutions" aria-label="Сравнение подходов к ремонту автомобиля"><div class="es-solutions-grid">
   {% for item in document.comparisons %}<article class="es-compare-card{% if forloop.last %} es-compare-card-us{% endif %}">
-    <div class="es-compare-head"><h2>{{ item.heading|linebreaksbr }}</h2><span aria-hidden="true">{% if forloop.last %}✓{% else %}×{% endif %}</span></div>
+    <div class="es-compare-head"><h2>{{ item.heading|linebreaksbr }}</h2>{% if forloop.first %}<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 43h38M9 43V18L24 7l15 11v25M15 23h5v5h-5zM28 23h5v5h-5zM15 33h5v5h-5zM28 33h5v5h-5z"/></svg>{% elif forloop.last %}<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5 39 11v11c0 10-6 17-15 21C15 39 9 32 9 22V11z"/><path d="m17 24 5 5 10-11"/></svg>{% else %}<svg aria-hidden="true"><use href="#es-i-body"/></svg>{% endif %}</div>
     <span class="es-compare-line" aria-hidden="true"></span><ul>{% for bullet in item.bullets %}<li>{{ bullet }}</li>{% endfor %}</ul>
     <div class="es-compare-result"><b>{{ item.result_mark }}</b><p>{{ item.result_text }}</p></div>
   </article>{% endfor %}
@@ -25,21 +25,21 @@
 {% if document.prices %}<section class="es-section es-prices" id="es-prices" data-home-prices><div class="es-section-head"><div><h2>УСЛУГИ И <mark>ЦЕНЫ</mark></h2></div></div><div class="es-price-shell">
   <div class="es-price-tabs" role="group" aria-label="Категории прайса">{% for group in document.prices %}<button type="button" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}" data-price="{{ group.key }}" data-href="{{ group.target }}">{{ group.label }}</button>{% endfor %}</div>
   {% for group in document.prices %}<div class="es-price-panel" data-panel="{{ group.key }}"{% if not forloop.first %} hidden{% endif %}>{% for row in group.rows %}<div><a href="{{ row.target }}">{{ row.label }}</a><b>{{ row.price_text }}</b></div>{% endfor %}</div>{% endfor %}
-  <a class="es-button es-button-dark" data-price-all href="{{ document.prices.0.target }}">Открыть все услуги <span>↗</span></a>
+  <a class="es-button es-button-black" data-price-all href="{{ document.prices.0.target }}">Открыть все услуги <svg><use href="#es-i-arrow"/></svg></a>
 </div></section>{% endif %}
 <section class="es-photo-strip" aria-label="Фотография техцентра Эстакада"><img class="es-photo-strip-image" src="{{ document.photo_strip.url }}" alt="{{ document.photo_strip.alt }}"{% if document.photo_strip.width %} width="{{ document.photo_strip.width }}" height="{{ document.photo_strip.height }}"{% endif %}></section>
 <section class="es-section es-works" id="es-works"><div class="es-section-head"><div><h2>НАШИ <mark>РАБОТЫ</mark></h2></div></div><div class="es-work-grid">
   {% for item in document.works %}<a class="es-work-card" href="{{ item.target }}"><img src="{{ item.image.url }}" alt="{{ item.image.alt }}"{% if item.image.width %} width="{{ item.image.width }}" height="{{ item.image.height }}"{% endif %}><div><span>{{ item.photo_count_text }}</span><h3>{{ item.label|linebreaksbr }}</h3><i>↗</i></div></a>{% endfor %}
 </div><a class="es-button es-button-orange es-all-works" href="/gallery-of-works/">Все наши работы <span>↗</span></a></section>
-<section class="es-section es-reviews" id="es-reviews"><div class="es-section-head"><div><h2>{{ document.reviews_heading }}</h2></div></div><div class="es-local-reviews">
-  <div class="es-local-review-copy"><b>5,0</b><h3>ОТЗЫВЫ КЛИЕНТОВ</h3><p>Официальный виджет будет подключён после правового решения. До этого страница не обращается к внешним сервисам.</p></div>
-  <aside class="es-video-reviews-banner"><div class="es-video-reviews-title"><span>ОТЗЫВЫ ВЛАДЕЛЬЦЕВ</span><h3>ВИДЕО-ОТЗЫВЫ</h3></div><a class="es-video-reviews-all" href="{{ document.reviews_target }}">{{ document.reviews_label }} <b>↗</b></a></aside>
+<section class="es-section es-reviews" id="es-reviews"><div class="es-section-head"><div><h2>{{ document.reviews_heading }}</h2></div><p>Мнения клиентов собраны в официальной карточке автотехцентра. Внешний виджет остаётся выключенным до правового решения.</p></div><div class="es-yandex-reviews">
+  <div class="es-yandex-widget es-yandex-widget-placeholder" aria-label="Неактивный макет официального блока отзывов"><div><b>5,0</b><span>ОТЗЫВЫ КЛИЕНТОВ</span><small>Яндекс Карты</small></div><a href="{{ shell.map_url }}" rel="noopener noreferrer">Открыть все отзывы об автотехцентре «Эстакада» на Яндекс Картах</a></div>
+  <aside class="es-video-reviews-banner"><div class="es-video-reviews-title"><span>ОТЗЫВЫ ВЛАДЕЛЬЦЕВ</span><h3>ВИДЕО-ОТЗЫВЫ</h3></div><div class="es-video-previews" aria-label="Примеры видео-отзывов будут подключены после правового решения"><a aria-disabled="true"><i aria-hidden="true">▶</i></a><a aria-disabled="true"><i aria-hidden="true">▶</i></a><a aria-disabled="true"><i aria-hidden="true">▶</i></a></div><a class="es-video-reviews-all" href="{{ document.reviews_target }}">{{ document.reviews_label }} <b>↗</b></a></aside>
 </div></section>
 <section class="es-service-contact" id="es-contact">
-  <div class="es-service-contact-left"><div class="es-booking-copy"><p class="es-kicker">ЗАПИСЬ В АВТОСЕРВИС</p><h2>ЗАПИСАТЬСЯ<br>НА <mark>РЕМОНТ</mark></h2><p>Форма останется выключенной до отдельного правового и технического разрешения.</p></div>
-    <div class="es-form" aria-label="Неактивный макет формы записи"><div class="es-faux-field"><span>Ваше имя *</span><i>Как к вам обращаться</i></div><div class="es-faux-field"><span>Телефон *</span><i>+7 (___) ___-__-__</i></div><div class="es-faux-field"><span>Автомобиль</span><i>Марка, модель, год — необязательно</i></div><div class="es-faux-field"><span>Комментарий</span><i>Что случилось — необязательно</i></div><div class="es-consent"><span>□</span><span>Согласие на обработку персональных данных будет утверждено до запуска.</span></div><span class="es-button">Отправить сообщение</span></div>
+  <div class="es-service-contact-left" id="es-booking"><div class="es-booking-copy"><p class="es-kicker">ЗАПИСЬ В АВТОСЕРВИС</p><h2>ЗАПИСАТЬСЯ<br>НА <mark>РЕМОНТ</mark></h2><p>Оставьте заявку — администратор уточнит детали и предложит удобное время. До утверждения правового процесса форма ничего не отправляет.</p></div>
+    <div class="es-form" aria-label="Неактивный макет формы записи"><label><span>Ваше имя *</span><input type="text" placeholder="Как к вам обращаться" readonly></label><label><span>Телефон *</span><input type="tel" placeholder="+7 (___) ___-__-__" readonly></label><label><span>Автомобиль</span><input type="text" placeholder="Марка, модель, год — необязательно" readonly></label><label><span>Комментарий</span><textarea rows="3" placeholder="Что случилось — необязательно" readonly></textarea></label><label class="es-consent"><input type="checkbox" disabled><span>Отдельное согласие на обработку персональных данных будет утверждено до запуска формы.</span></label><button class="es-button es-button-orange" type="button" disabled>Отправить сообщение</button></div>
   </div>
-  <div class="es-service-contact-right"><div class="es-contact-main"><p class="es-kicker">КОНТАКТЫ</p><h2>СВЯЖИТЕСЬ<br>С <mark>НАМИ</mark></h2><div class="es-contact-list"><div><b>ТЕЛЕФОН</b><a href="tel:{{ shell.phone_e164 }}">{{ shell.phone_display }}</a><span>{{ shell.opening_hours }}</span></div><div><b>АДРЕС</b><span>{{ shell.address }}</span></div></div></div><div class="es-map-placeholder">КАРТА БУДЕТ ПОДКЛЮЧЕНА ПОСЛЕ LEGAL-01</div></div>
+  <div class="es-service-contact-right"><div class="es-contact-main"><p class="es-kicker">КОНТАКТЫ</p><h2>СВЯЖИТЕСЬ<br>С <mark>НАМИ</mark></h2><div class="es-contact-list"><div><b>ТЕЛЕФОН</b><a href="tel:{{ shell.phone_e164 }}">{{ shell.phone_display }}</a><span>{{ shell.opening_hours }}</span></div><div><b>АДРЕС</b><span>{{ shell.address }}</span></div></div><div class="es-contact-actions"><span>НАПИШИТЕ НАМ</span><a aria-disabled="true"><img src="{% static 'pages/social-telegram.svg' %}" alt=""><b>Telegram</b></a><a aria-disabled="true"><img src="{% static 'pages/social-max.svg' %}" alt=""><b>MAX</b></a><a aria-disabled="true"><img src="{% static 'pages/social-instagram.svg' %}" alt=""><b>Instagram<sup>*</sup></b></a></div><p class="es-instagram-note">* Instagram принадлежит Meta, признана экстремистской организацией и запрещена в РФ.</p></div><div class="es-map-embed es-map-placeholder" aria-label="Неактивный макет карты"><div><span>КАРТА ПРОЕЗДА</span><b>ЭСТАКАДА</b><small>Москва, Проспект 60-летия Октября, 15Б</small></div></div></div>
 </section>
 {% endblock %}
-{% block extra_body %}<script defer src="{% static 'pages/public_home.js' %}"></script>{% endblock %}
+{% block extra_body %}<script defer src="{% static 'pages/public_home.js' %}?v=20261122-parallax2"></script>{% endblock %}
