@@ -45,7 +45,7 @@
 <body><main>
   <p class="eyebrow">Эстакада 2.0 · оперативный статус</p>
   <h1>Текущее состояние проекта</h1>
-  <p class="lead">Обновлено 23 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
+  <p class="lead">Обновлено 24 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
 
   <section class="summary" aria-label="Краткая сводка">
     <div class="card progress-card">
@@ -55,7 +55,7 @@
     </div>
     <div class="card priority">
       <strong>Главный приоритет</strong>
-      <p>Функционал и стабильность. REBUILD-5 закрыт. REBUILD-7 приостановлен по anti-loop: два разных column fingerprints подряд дали один exact mismatch <code>django_content_type.app_label</code>. Следующий осмысленный шаг — source-only field-level детализация, не новый runtime.</p>
+      <p>Функционал и стабильность. REBUILD-5 закрыт. REBUILD-7 local restore proof PASS. <code>R7CSI-IMP-007</code> partial confirmation: subset8/8, catchable7, crash Recover2, исправленный port-blocker и storage mismatch PASS. Run остановлен по запросу владельца перед target-replacement/duplicate-alias; финальный cleanup/post-audit exact0.</p>
     </div>
   </section>
 
@@ -70,7 +70,7 @@
       <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td><span class="status active"><span class="icon"></span><span>Все семь Page-команд, auth/list, editor, grants, staff, publication, SiteSettings, public authority и минимальный Audit source-approved; незавершённые runtime-ветки остаются отдельными</span></span></td></tr>
       <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и 115 URL</td><td><span class="status done"><span class="icon">✓</span><span>Завершено локально: утверждённый HOME, все публичные семейства, exact115, responsive matrix, sitemap/robots и закрытые HTTP/SEO-границы прошли</span></span></td></tr>
       <tr><td>REBUILD-6</td><td>Галерея и минимальная заявка после правового и технического допуска</td><td><span class="status closed"><span class="icon"></span><span>Не начато</span></span></td></tr>
-      <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td><span class="status paused"><span class="icon">‖</span><span>Anti-loop: два materially different projections подряд остановились на <code>R7_RESTORE_SCHEMA_COLUMNS_DJANGO_CONTENT_TYPE_APP_LABEL_MISMATCH</code>. Cleanup обоих exact; runtime не повторять до field-level evidence и решения владельца</span></span></td></tr>
+      <tr><td>REBUILD-7</td><td>Общая приёмка, backup/restore и локальное переключение с откатом</td><td><span class="status paused"><span class="icon">‖</span><span><code>R7-LOCAL-001</code> PASS. IMP-007 partial faults подтверждает subset8/8, catchable7, crash Recover2, port-blocker и storage mismatch. Остановлено владельцем перед target-replacement/duplicate-alias; cleanup/post-audit exact0. Q003 CLOSED</span></span></td></tr>
       <tr><td>REBUILD-8</td><td>Удаление старого runtime после принятого local cutover</td><td><span class="status paused"><span class="icon">‖</span><span>Отложено; требует отдельного destructive confirmation</span></span></td></tr>
     </tbody>
   </table></div>
@@ -100,7 +100,7 @@
       <tr><td>REBUILD-5 internal families</td><td>Услуги, галерея, статьи, акции, отзывы, контакты и legacy-страницы на точных URL</td><td><span class="status done"><span class="icon">✓</span><span>Все internal families закрыты в текущем preview. Services exact61: SHA7/payloads61 preflight PASS; PostgreSQL pages61/routes62/contents61; guarded master root-repair parent=null/position14 PASS; HTTP requests124, GET62/62, HEAD62/62, redirects0. Media read/write0, browser0</span></span></td></tr>
       <tr><td>REBUILD-5 public acceptance</td><td>Все 115 утверждённых URL, HTTP/SEO границы и responsive-представители</td><td><span class="status done"><span class="icon">✓</span><span>Exact115 PASS: requests230, GET200=114, HEAD200=114, MAP-017 GET/HEAD302, canonical MAP-018/MAP-088 PASS. Responsive matrix 12 URL × 320/390/768/1024/1440: pages60/60, overflow0, broken images0, iframe0, error pages0; legacy-empty <code>/about</code> H1 N/A. Home photo-strip scroll≤768/fixed≥1024; mobile menu expanded true→false, links6, overflow0. Короткий visible 1440 control PASS; вкладка скрыта и закрыта сразу</span></span></td></tr>
       <tr><td>REBUILD-5 sitemap/robots</td><td>Индексируемые canonical representatives и закрытые crawler rules</td><td><span class="status done"><span class="icon">✓</span><span>CSRF-enforced tests4/4 PASS, migrations PASS, system check0. Реальный HTTP: robots GET/HEAD/POST PASS, sitemap GET/HEAD/POST PASS, canonical locations112, POST405+Allow exact. Trusted origin/fail-closed/race coverage PASS. Cleanup containers0/test_db0; media read0, browser0</span></span></td></tr>
-      <tr><td>REBUILD-7 local restore proof</td><td>Одноразовая coherent generation и восстановление нового <code>src/</code> в пустую изолированную DB/media</td><td><span class="status paused"><span class="icon">‖</span><span><code>R7-LOCAL-001</code>: прежний <code>information_schema</code> fingerprint и reviewed direct <code>pg_catalog</code> fingerprint оба дали exact <code>R7_RESTORE_SCHEMA_COLUMNS_DJANGO_CONTENT_TYPE_APP_LABEL_MISMATCH</code>. Последний запуск не дошёл до 16-case audit behavior/HTTP; cleanup <code>containers=0 database=0 staging=0 bitmap=exact</code>, preview восстановлен, external copy/cutover/live отсутствовали. Попыток на этой exact границе: 2; проверены две materially different projections. Следующий runtime запрещён anti-loop. Возможное продолжение только source-only: безопасные per-field SHA, чтобы назвать различающийся catalog attribute, затем independent review и решение владельца</span></span></td></tr>
+      <tr><td>REBUILD-7 local restore proof</td><td>Одноразовая coherent generation и восстановление нового <code>src/</code> в пустую изолированную DB/media</td><td><span class="status done"><span class="icon">✓</span><span><code>R7-LOCAL-001 PASS</code>: generation-v5 tests <code>12/12</code>; empty restore доказал semantic release/schema, raw table counts/content, READY-media exact265/48667032 bytes, audit 16-case behavior, sessions0/staff generation bump1, exact115, private denial, internal network и source post-audit. Wrapper cleanup и отдельный audit <code>containers=0 database=0 staging=0 lock=0 bitmap=exact</code>; source DB running, preview app/ingress stopped. Run <code>31e34d12158246dc82ba3c9d4122c031</code>. Финальный independent evidence review <code>APPROVED 0/0/0</code>. External copy/promotion/cutover/live отсутствовали; production backup этим не доказан</span></span></td></tr>
       <tr><td>REBUILD-4 gap audit</td><td>Независимая проверка не нашла ещё одного утверждённого самостоятельного функционального среза: оставшееся требует B002, LEGAL/enable либо нового продуктового решения</td><td><span class="status done"><span class="icon">✓</span><span>Закрыт. Не создавать искусственную работу ради движения процента</span></span></td></tr>
       <tr><td>B002 и публичный shell</td><td>Выбран Selectel S3: native Linux POSIX primary + encrypted exact-version remote authority. Для primary выбран независимый FirstVDS; сервер пока не заказан, Windows Docker/WSL/VHD и S3/FUSE primary не подходят</td><td><span class="status active"><span class="icon"></span><span>Core exact23 и adapter exact12 ACCEPTED_PASS; source/operational plan 0/0/0, cleanup/privacy PASS. Рекомендован «Разгон»: Москва/KVM, 2 CPU, 4 ГБ RAM, NVMe 80 ГБ, Ubuntu 24.04 LTS, IPv4, без панели. Заказ, ключи, установки и сеть закрыты</span></span></td></tr>
       <tr><td>Live/deploy/cutover</td><td>Не входят в текущую локальную разработку</td><td><span class="status closed"><span class="icon"></span><span>Закрыто до отдельных явных разрешений</span></span></td></tr>
@@ -109,8 +109,8 @@
 
   <h2>Ближайший приоритет</h2>
   <div class="card priority"><ol>
-    <li><strong>Сейчас:</strong> пауза владельцу по anti-loop; runtime не повторять. Если продолжать — source-only добавить safe field hashes exact column attributes и провести independent review.</li>
-    <li><strong>Только после нового evidence и отдельного решения:</strong> обсуждать один bounded confirmation. HTTP/exact115 допускаются только после полного schema/16-case audit behavior PASS.</li>
+    <li><strong>Сейчас:</strong> <code>R7CSI-IMP-007</code> приостановлен владельцем. Partial fresh run подтвердил subset8/8, catchable7, crash Recover2, исправленный port-blocker и storage mismatch; target-replacement был остановлен во время baseline Bootstrap, duplicate-alias не исполнялся. После explicit cleanup финальный post-audit exact0.</li>
+    <li><strong>Следующий шаг после возобновления владельцем:</strong> fresh bounded <code>faults</code> confirmation с обязательным exact cleanup. Project PostgreSQL/media/READY-media read, actual storage, real rehearsal, durable local bootstrap, Q003, external copy, promotion, cutover и live исключены.</li>
     <li>Gallery не расширять: exact17 каталогов и exact214 originals уже закрыты локально. Mobile-поведение проверить вместе с общей responsive browser-приёмкой, без повторного чтения originals.</li>
     <li>FirstVDS, production B002, domain/TLS и перенос оставить финальным этапом после локальной приёмки.</li>
     <li>Paused TLS/RNG и socket/readiness пути не повторять без нового свидетельства; вернуться к ним только перед общей приёмкой или при реальном блокере.</li>
@@ -128,8 +128,8 @@
   </div>
 
   <div class="footer">
-    <strong>Текущий этап:</strong> <code>R7-LOCAL-001</code> приостановлен владельцу после двух exact <code>django_content_type.app_label</code> mismatches; cleanup полный, preview восстановлен точно.<br>
-    <strong>Следующий этап:</strong> решение владельца на source-only field-level диагностику; новый runtime до нового evidence запрещён. External copy, promotion, cutover и live исключены.<br>
+    <strong>Текущий этап:</strong> <code>R7CSI-IMP-007</code> приостановлен владельцем после partial confirmation; subset8/8, catchable7, crash Recover2, port-blocker и storage mismatch PASS, финальный cleanup/post-audit exact0. Q003 не разрешён.<br>
+    <strong>Следующий этап:</strong> после сообщения владельца о возобновлении — fresh bounded faults confirmation и exact cleanup. Остальные exclusions сохраняются.<br>
     Источники подробностей: <a href="decisions.md">решения</a>, <a href="tasks.md">задачи</a>, <a href="pipeline.md">процесс</a>.
   </div>
 </main></body>

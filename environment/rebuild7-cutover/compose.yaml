@@ -1,0 +1,308 @@
+name: ${R7C_PROJECT:?required}
+
+x-runtime: &runtime
+  image: ${R7C_APP_IMAGE:?required}
+  pull_policy: never
+  user: "10001:10001"
+  read_only: true
+  working_dir: /app
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 768m
+  cpus: 1.0
+  pids_limit: 128
+  restart: "no"
+  tmpfs: ['/tmp:rw,nosuid,nodev,noexec,size=64m,uid=10001,gid=10001,mode=1777']
+  labels:
+    estakada.r7c.scope: ${R7C_SCOPE:?required}
+    estakada.r7c.synthetic: ${R7C_SYNTHETIC:?required}
+
+x-app-environment: &app-environment
+  PYTHONDONTWRITEBYTECODE: "1"
+  PYTHONPATH: /app
+  DJANGO_SETTINGS_MODULE: config.settings.local_cutover
+  ESTAKADA_LOCAL_RESTORE: "1"
+  ESTAKADA_APP_IMAGE_DIGEST: ${R7C_APP_IMAGE:?required}
+  ESTAKADA_DJANGO_SECRET: r7c-local-ephemeral-only
+  ESTAKADA_ALLOWED_HOSTS: localhost,127.0.0.1,r7c-probe.invalid
+  ESTAKADA_PUBLIC_ORIGIN: http://localhost:${R7C_LOOPBACK_PORT:?required}
+  ESTAKADA_SEO_ROBOTS_PROFILE: deny-all
+  ESTAKADA_DB_PASSWORD_FILE: /run/secrets/db-password
+  ESTAKADA_DB_HOST: db
+  ESTAKADA_DB_PORT: "5432"
+  ESTAKADA_DB_SSLROOTCERT: /run/secrets/database-ca
+
+services:
+  old-app:
+    <<: *runtime
+    container_name: ${R7C_PREFIX:?required}-old-app
+    command: [python, -B, manage.py, runserver, 0.0.0.0:8000, --noreload]
+    environment:
+      <<: *app-environment
+      ESTAKADA_DB_NAME: ${R7C_OLD_DB_NAME:?required}
+      ESTAKADA_DB_USER: ${R7C_OLD_DB_USER:?required}
+      ESTAKADA_R7C_ROLE: old
+      ESTAKADA_R7C_GENERATION_SHA256: ${R7C_OLD_GENERATION:?required}
+      ESTAKADA_R7C_STORAGE_BINDING_SHA256: ${R7C_OLD_STORAGE_BINDING:?required}
+    networks:
+      old-web: {aliases: [r7c-old-app]}
+      old-db: {}
+    volumes:
+      - {type: volume, source: old-source, target: /app, read_only: true}
+      - {type: volume, source: old-media, target: /media-source, read_only: true}
+      - {type: volume, source: old-secrets, target: /run/secrets, read_only: true}
+
+  new-app:
+    <<: *runtime
+    container_name: ${R7C_PREFIX:?required}-new-app
+    command: [python, -B, manage.py, runserver, 0.0.0.0:8000, --noreload]
+    environment:
+      <<: *app-environment
+      ESTAKADA_DB_NAME: ${R7C_NEW_DB_NAME:?required}
+      ESTAKADA_DB_USER: ${R7C_NEW_DB_USER:?required}
+      ESTAKADA_R7C_ROLE: new
+      ESTAKADA_R7C_GENERATION_SHA256: ${R7C_NEW_GENERATION:?required}
+      ESTAKADA_R7C_STORAGE_BINDING_SHA256: ${R7C_NEW_STORAGE_BINDING:?required}
+    networks:
+      new-web: {aliases: [r7c-new-app]}
+      new-db: {}
+    volumes:
+      - {type: volume, source: new-source, target: /app, read_only: true}
+      - {type: volume, source: new-media, target: /media-source, read_only: true}
+      - {type: volume, source: new-secrets, target: /run/secrets, read_only: true}
+
+  ingress:
+    image: ${R7C_INGRESS_IMAGE:?required}
+    pull_policy: never
+    container_name: ${R7C_PREFIX:?required}-ingress
+    user: "101:101"
+    read_only: true
+    entrypoint: [nginx]
+    command: [-c, /preflight/nginx.conf, -g, 'daemon off;']
+    networks: [ingress, old-web, new-web]
+    ports: ['127.0.0.1:${R7C_LOOPBACK_PORT:?required}:8080']
+    volumes:
+      - {type: bind, source: ./nginx.conf, target: /preflight/nginx.conf, read_only: true}
+      - {type: bind, source: ./http.conf, target: /preflight/http.conf, read_only: true}
+      - {type: volume, source: selector, target: /selector, read_only: true}
+      - {type: volume, source: old-source, target: /srv/source-old, read_only: true}
+      - {type: volume, source: new-source, target: /srv/source-new, read_only: true}
+      - {type: volume, source: old-media, target: /srv/media-old, read_only: true}
+      - {type: volume, source: new-media, target: /srv/media-new, read_only: true}
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,uid=101,gid=101,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    restart: "no"
+    labels:
+      estakada.r7c.scope: ${R7C_SCOPE:?required}
+      estakada.r7c.synthetic: ${R7C_SYNTHETIC:?required}
+
+  ingress-validate:
+    image: ${R7C_INGRESS_IMAGE:?required}
+    pull_policy: never
+    profiles: [tools]
+    user: "101:101"
+    read_only: true
+    entrypoint: [nginx]
+    command: [-t, -c, /preflight/nginx.conf]
+    networks: [old-web, new-web]
+    volumes:
+      - {type: bind, source: ./nginx-validate.conf, target: /preflight/nginx.conf, read_only: true}
+      - {type: bind, source: ./http.conf, target: /preflight/http.conf, read_only: true}
+      - {type: volume, source: selector, target: /selector, read_only: true}
+      - {type: volume, source: old-source, target: /srv/source-old, read_only: true}
+      - {type: volume, source: new-source, target: /srv/source-new, read_only: true}
+      - {type: volume, source: old-media, target: /srv/media-old, read_only: true}
+      - {type: volume, source: new-media, target: /srv/media-new, read_only: true}
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=32m,uid=101,gid=101,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    restart: "no"
+    labels:
+      estakada.r7c.scope: ${R7C_SCOPE:?required}
+      estakada.r7c.synthetic: ${R7C_SYNTHETIC:?required}
+
+  selector-control:
+    <<: *runtime
+    profiles: [tools]
+    user: "0:0"
+    network_mode: none
+    working_dir: /project
+    command: [python, -B, /project/tools/rebuild7_selector.py, inspect]
+    environment:
+      ESTAKADA_R7C_SELECTOR_OWNER_UID: "0"
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: selector, target: /selector}
+
+  selector-verify:
+    <<: *runtime
+    profiles: [tools]
+    network_mode: none
+    working_dir: /project
+    command: [python, -B, /project/tools/rebuild7_selector.py, inspect]
+    environment:
+      ESTAKADA_R7C_SELECTOR_OWNER_UID: "0"
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: selector, target: /selector, read_only: true}
+
+  binding-old:
+    <<: *runtime
+    profiles: [tools]
+    command: [python, -B, /project/tools/rebuild7_generation.py, binding-capture]
+    environment:
+      <<: *app-environment
+      ESTAKADA_DB_NAME: ${R7C_OLD_DB_NAME:?required}
+      ESTAKADA_DB_USER: ${R7C_OLD_DB_USER:?required}
+      ESTAKADA_R7C_ROLE: old
+      ESTAKADA_R7C_GENERATION_SHA256: ${R7C_OLD_GENERATION:?required}
+      ESTAKADA_R7C_STORAGE_BINDING_SHA256: ${R7C_OLD_STORAGE_BINDING:?required}
+      ESTAKADA_R7_APP_SOURCE: /app
+    networks: [old-db]
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: old-source, target: /app, read_only: true}
+      - {type: volume, source: old-media, target: /media-source, read_only: true}
+      - {type: volume, source: old-authority, target: /authority, read_only: true}
+      - {type: volume, source: old-secrets, target: /run/secrets, read_only: true}
+
+  binding-new:
+    <<: *runtime
+    profiles: [tools]
+    command: [python, -B, /project/tools/rebuild7_generation.py, binding-capture]
+    environment:
+      <<: *app-environment
+      ESTAKADA_DB_NAME: ${R7C_NEW_DB_NAME:?required}
+      ESTAKADA_DB_USER: ${R7C_NEW_DB_USER:?required}
+      ESTAKADA_R7C_ROLE: new
+      ESTAKADA_R7C_GENERATION_SHA256: ${R7C_NEW_GENERATION:?required}
+      ESTAKADA_R7C_STORAGE_BINDING_SHA256: ${R7C_NEW_STORAGE_BINDING:?required}
+      ESTAKADA_R7_APP_SOURCE: /app
+    networks: [new-db]
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: new-source, target: /app, read_only: true}
+      - {type: volume, source: new-media, target: /media-source, read_only: true}
+      - {type: volume, source: new-authority, target: /authority, read_only: true}
+      - {type: volume, source: new-secrets, target: /run/secrets, read_only: true}
+
+  media-old:
+    <<: *runtime
+    profiles: [tools]
+    network_mode: none
+    working_dir: /project
+    command: [python, -B, /project/tools/rebuild7_media.py, check]
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: old-media, target: /media-source, read_only: true}
+      - {type: volume, source: old-authority, target: /authority, read_only: true}
+
+  media-new:
+    <<: *runtime
+    profiles: [tools]
+    network_mode: none
+    working_dir: /project
+    command: [python, -B, /project/tools/rebuild7_media.py, check]
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: new-media, target: /media-source, read_only: true}
+      - {type: volume, source: new-authority, target: /authority, read_only: true}
+
+  authority-old:
+    <<: *runtime
+    profiles: [tools]
+    network_mode: none
+    working_dir: /project
+    command: [python, -B, /project/tools/rebuild7_selector.py, media-authority]
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: old-authority, target: /authority, read_only: true}
+
+  authority-new:
+    <<: *runtime
+    profiles: [tools]
+    network_mode: none
+    working_dir: /project
+    command: [python, -B, /project/tools/rebuild7_selector.py, media-authority]
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+      - {type: volume, source: new-authority, target: /authority, read_only: true}
+
+  probe-old:
+    <<: *runtime
+    profiles: [tools]
+    networks: [old-web]
+    working_dir: /project
+    command:
+      - python
+      - -B
+      - /project/tools/rebuild7_selector_probe.py
+      - --host
+      - r7c-old-app
+      - --role
+      - old
+      - --generation
+      - ${R7C_OLD_GENERATION:?required}
+      - --storage
+      - ${R7C_OLD_STORAGE_BINDING:?required}
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+
+  probe-new:
+    <<: *runtime
+    profiles: [tools]
+    networks: [new-web]
+    working_dir: /project
+    command:
+      - python
+      - -B
+      - /project/tools/rebuild7_selector_probe.py
+      - --host
+      - r7c-new-app
+      - --role
+      - new
+      - --generation
+      - ${R7C_NEW_GENERATION:?required}
+      - --storage
+      - ${R7C_NEW_STORAGE_BINDING:?required}
+    volumes:
+      - {type: bind, source: ../.., target: /project, read_only: true}
+
+networks:
+  ingress:
+    name: ${R7C_PREFIX:?required}-ingress
+    labels: {estakada.r7c.scope: '${R7C_SCOPE:?required}', estakada.r7c.synthetic: '${R7C_SYNTHETIC:?required}'}
+  old-web:
+    name: ${R7C_PREFIX:?required}-old-web
+    internal: true
+    labels: {estakada.r7c.scope: '${R7C_SCOPE:?required}', estakada.r7c.synthetic: '${R7C_SYNTHETIC:?required}'}
+  new-web:
+    name: ${R7C_PREFIX:?required}-new-web
+    internal: true
+    labels: {estakada.r7c.scope: '${R7C_SCOPE:?required}', estakada.r7c.synthetic: '${R7C_SYNTHETIC:?required}'}
+  old-db:
+    external: true
+    name: ${R7C_OLD_DB_NETWORK:?required}
+  new-db:
+    external: true
+    name: ${R7C_NEW_DB_NETWORK:?required}
+
+volumes:
+  selector: {external: true, name: '${R7C_SELECTOR_VOLUME:?required}'}
+  old-source: {external: true, name: '${R7C_OLD_SOURCE_VOLUME:?required}'}
+  new-source: {external: true, name: '${R7C_NEW_SOURCE_VOLUME:?required}'}
+  old-media: {external: true, name: '${R7C_OLD_MEDIA_VOLUME:?required}'}
+  new-media: {external: true, name: '${R7C_NEW_MEDIA_VOLUME:?required}'}
+  old-secrets: {external: true, name: '${R7C_OLD_SECRETS_VOLUME:?required}'}
+  new-secrets: {external: true, name: '${R7C_NEW_SECRETS_VOLUME:?required}'}
+  old-authority: {external: true, name: '${R7C_OLD_AUTHORITY_VOLUME:?required}'}
+  new-authority: {external: true, name: '${R7C_NEW_AUTHORITY_VOLUME:?required}'}

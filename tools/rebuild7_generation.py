@@ -27,10 +27,11 @@ from modules.audit.models import AuditEvent  # noqa: E402
 from modules.media.models import AssetFile, AssetState  # noqa: E402
 
 
-SCHEMA = "estakada.r7-local-generation-v1"
+SCHEMA = "estakada.r7-local-generation-v5"
 PROJECT = Path("/project")
 OUTPUT = Path("/output")
 AUTHORITY = Path("/authority")
+APP_SOURCE = Path("/app")
 SOURCE_ROOTS = ("src",)
 PROJECT_APP_LABELS = frozenset({"accounts", "audit", "gallery", "media", "pages"})
 SOURCE_FILES = (
@@ -38,6 +39,7 @@ SOURCE_FILES = (
     "environment/foundation/requirements.lock",
     "scripts/rebuild7-local-restore.ps1",
     "tools/rebuild7_generation.py",
+    "tools/test_rebuild7_generation_diagnostic.py",
     "tools/rebuild7_http_smoke.py",
     "tools/rebuild7_media.py",
     "tools/rebuild7_pg.sh",
@@ -47,6 +49,31 @@ KEY_RE = re.compile(
     r"private/sources/[0-9a-f-]{36}/source\.(?:jpg|jpeg|png|webp))\Z"
 )
 AUDIT_ACTOR_CONSTRAINT = "audit_actor_shape"
+COLUMN_FIELD_NAMES = (
+    "ordinal",
+    "type",
+    "typmod",
+    "notnull",
+    "identity",
+    "generated",
+    "storage",
+    "compression",
+    "collation",
+    "default",
+)
+CONSTRAINT_FIELD_NAMES = (
+    "type",
+    "definition",
+    "deferrable",
+    "deferred",
+    "validated",
+    "noinherit",
+    "key_columns",
+)
+RESTORE_CONSTRAINT_DEFINITION_SENTINEL = (
+    "R7_RESTORE_CONSTRAINT_DEFINITION_NONAUTHORITY_V1"
+)
+RESTORE_SOURCE_CAPTURE_SENTINEL = "R7_RESTORE_SOURCE_CAPTURE_NONAUTHORITY_V1"
 RELEASE_KEYS = (
     "schema",
     "releaseId",
@@ -73,6 +100,15 @@ def digest_bytes(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
 
+def restore_semantic_constraint(row: list[object]) -> list[object]:
+    if len(row) != 9 or type(row[2]) is not str:
+        fail()
+    semantic = list(row)
+    if row[2] == "c":
+        semantic[3] = RESTORE_CONSTRAINT_DEFINITION_SENTINEL
+    return semantic
+
+
 def safe_project_file(relative: str) -> Path:
     pure = PurePosixPath(relative)
     if pure.is_absolute() or ".." in pure.parts or "\\" in relative:
@@ -83,22 +119,47 @@ def safe_project_file(relative: str) -> Path:
     return path
 
 
+def safe_inventory_file(relative: str) -> Path:
+    source_override = os.environ.get("ESTAKADA_R7_APP_SOURCE")
+    if source_override not in {None, "/app"}:
+        fail()
+    if source_override != "/app" or not relative.startswith("src/"):
+        return safe_project_file(relative)
+    pure = PurePosixPath(relative)
+    path = APP_SOURCE.joinpath(*pure.parts[1:])
+    if not path.is_file() or path.is_symlink() or APP_SOURCE not in path.resolve().parents:
+        fail()
+    return path
+
+
 def source_inventory() -> list[dict[str, object]]:
     names: set[str] = set(SOURCE_FILES)
     for root_name in SOURCE_ROOTS:
-        root = safe_project_file(root_name + "/manage.py").parent
+        source_override = os.environ.get("ESTAKADA_R7_APP_SOURCE")
+        if source_override not in {None, "/app"}:
+            fail()
+        if source_override == "/app":
+            root = safe_inventory_file(root_name + "/manage.py").parent
+            relative_root = APP_SOURCE
+        else:
+            root = safe_project_file(root_name + "/manage.py").parent
+            relative_root = PROJECT
         for path in root.rglob("*"):
             if path.is_symlink():
                 fail()
             if path.is_dir():
                 continue
-            relative = path.relative_to(PROJECT).as_posix()
+            relative = (
+                "src/" + path.relative_to(relative_root).as_posix()
+                if relative_root == APP_SOURCE
+                else path.relative_to(PROJECT).as_posix()
+            )
             if "__pycache__" in path.parts or path.suffix in {".pyc", ".pyo"}:
                 continue
             names.add(relative)
     rows = []
     for name in sorted(names):
-        data = safe_project_file(name).read_bytes()
+        data = safe_inventory_file(name).read_bytes()
         rows.append({"path": name, "bytes": len(data), "sha256": digest_bytes(data)})
     return rows
 
@@ -119,7 +180,8 @@ def schema_projection() -> dict[str, object]:
             fail()
         cursor.execute(
             """
-            SELECT r.relname, a.attname, a.attnum,
+            SELECT r.relname, a.attname,
+                   row_number() OVER (PARTITION BY r.oid ORDER BY a.attnum) AS live_ordinal,
                    tn.nspname, t.typname, a.atttypmod, a.attnotnull,
                    a.attidentity, a.attgenerated, a.attstorage, a.attcompression,
                    COALESCE(cn.nspname, ''), COALESCE(co.collname, ''),
@@ -170,6 +232,9 @@ def schema_projection() -> dict[str, object]:
             """
         )
         constraints = [list(row) for row in cursor.fetchall()]
+        semantic_constraints = [
+            restore_semantic_constraint(row) for row in constraints
+        ]
         cursor.execute(
             """
             SELECT tablename, indexname, indexdef
@@ -186,7 +251,7 @@ def schema_projection() -> dict[str, object]:
         fail()
     groups = {
         "columns": columns,
-        "constraints": constraints,
+        "constraints": semantic_constraints,
         "indexes": indexes,
     }
     components: dict[str, str] = {}
@@ -195,6 +260,12 @@ def schema_projection() -> dict[str, object]:
     }
     object_components: dict[str, dict[str, dict[str, str]]] = {
         table: {name: {} for name in groups} for table in table_names
+    }
+    column_field_components: dict[str, dict[str, dict[str, str]]] = {
+        table: {} for table in table_names
+    }
+    constraint_field_components: dict[str, dict[str, dict[str, str]]] = {
+        table: {} for table in table_names
     }
     for name, rows in groups.items():
         if any(str(row[0]) not in table_components for row in rows):
@@ -213,14 +284,65 @@ def schema_projection() -> dict[str, object]:
                 object_components[table][name][object_name] = digest_bytes(
                     canonical(row)
                 )
-    projection = {"columns": columns, "constraints": constraints, "indexes": indexes}
+                if name == "columns":
+                    if len(row) != 14:
+                        fail()
+                    field_values = {
+                        "ordinal": row[2],
+                        "type": [row[3], row[4]],
+                        "typmod": row[5],
+                        "notnull": row[6],
+                        "identity": row[7],
+                        "generated": row[8],
+                        "storage": row[9],
+                        "compression": row[10],
+                        "collation": [row[11], row[12]],
+                        "default": row[13],
+                    }
+                    if tuple(field_values) != COLUMN_FIELD_NAMES:
+                        fail()
+                    column_field_components[table][object_name] = {
+                        field: digest_bytes(canonical(value))
+                        for field, value in field_values.items()
+                    }
+                if name == "constraints":
+                    if len(row) != 9:
+                        fail()
+                    field_values = {
+                        "type": row[2],
+                        "definition": row[3],
+                        "deferrable": row[4],
+                        "deferred": row[5],
+                        "validated": row[6],
+                        "noinherit": row[7],
+                        "key_columns": row[8],
+                    }
+                    if tuple(field_values) != CONSTRAINT_FIELD_NAMES:
+                        fail()
+                    constraint_field_components[table][object_name] = {
+                        field: digest_bytes(canonical(value))
+                        for field, value in field_values.items()
+                    }
+    source_projection = {
+        "columns": columns,
+        "constraints": constraints,
+        "indexes": indexes,
+    }
+    projection = {
+        "columns": columns,
+        "constraints": semantic_constraints,
+        "indexes": indexes,
+    }
     return {
         "postgres": ".".join(str(postgres_version).split(".")[:2]),
+        "sourceCaptureSha256": digest_bytes(canonical(source_projection)),
         "sha256": digest_bytes(canonical(projection)),
         "tables": len(table_names),
         "components": components,
         "tableComponents": table_components,
         "objectComponents": object_components,
+        "columnFieldComponents": column_field_components,
+        "constraintFieldComponents": constraint_field_components,
     }
 
 
@@ -384,7 +506,7 @@ def build_release() -> tuple[dict[str, object], dict[str, object], list[dict[str
     media = media_inventory()
     facts = {
         "schema": SCHEMA,
-        "releaseSha256": digest_bytes(canonical(release)),
+        "releaseSha256": restore_release_sha256(release),
         "tableCounts": table_counts(),
         "tableContentSha256": table_content_hashes(),
         "media": {
@@ -394,6 +516,17 @@ def build_release() -> tuple[dict[str, object], dict[str, object], list[dict[str
         },
     }
     return release, facts, media
+
+
+def restore_release_sha256(release: dict[str, object]) -> str:
+    schema = release.get("schemaFingerprint")
+    if type(schema) is not dict or "sourceCaptureSha256" not in schema:
+        fail()
+    semantic_release = dict(release)
+    semantic_schema = dict(schema)
+    semantic_schema["sourceCaptureSha256"] = RESTORE_SOURCE_CAPTURE_SENTINEL
+    semantic_release["schemaFingerprint"] = semantic_schema
+    return digest_bytes(canonical(semantic_release))
 
 
 def write_new(path: Path, value: object) -> None:
@@ -454,23 +587,81 @@ def valid_sha256(value: object) -> bool:
     return type(value) is str and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
+def binding_capture_value(
+    release: object, facts: object
+) -> dict[str, object]:
+    if type(release) is not dict or type(facts) is not dict:
+        fail("R7_BINDING_CAPTURE_UNAVAILABLE")
+    source = release.get("source")
+    schema = release.get("schemaFingerprint")
+    migrations = release.get("appliedMigrations")
+    media = facts.get("media")
+    if (
+        type(source) is not dict
+        or not valid_sha256(source.get("sha256"))
+        or type(schema) is not dict
+        or type(migrations) is not list
+        or not valid_sha256(facts.get("releaseSha256"))
+        or type(facts.get("tableCounts")) is not dict
+        or type(facts.get("tableContentSha256")) is not dict
+        or type(media) is not dict
+        or set(media) != {"files", "bytes", "inventorySha256"}
+        or type(media.get("files")) is not int
+        or media["files"] < 0
+        or type(media.get("bytes")) is not int
+        or media["bytes"] < 0
+        or not valid_sha256(media.get("inventorySha256"))
+    ):
+        fail("R7_BINDING_CAPTURE_UNAVAILABLE")
+    return {
+        "schema": "estakada.r7-binding-capture-v1",
+        "sourceSha256": source["sha256"],
+        "releaseSha256": facts["releaseSha256"],
+        "schemaFingerprintSha256": digest_bytes(canonical(schema)),
+        "appliedMigrationsSha256": digest_bytes(canonical(migrations)),
+        "tableCountsSha256": digest_bytes(canonical(facts["tableCounts"])),
+        "tableContentSha256": digest_bytes(
+            canonical(facts["tableContentSha256"])
+        ),
+        "mediaInventorySha256": media["inventorySha256"],
+        "mediaFiles": media["files"],
+        "mediaBytes": media["bytes"],
+    }
+
+
+def binding_capture() -> None:
+    release, facts, _media = build_release_snapshot()
+    print(canonical(binding_capture_value(release, facts)).decode("utf-8"), end="")
+
+
 def verify_schema_fingerprint(expected: object, actual: object) -> None:
     if type(expected) is not dict or type(actual) is not dict:
         fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
     keys = {
         "postgres",
+        "sourceCaptureSha256",
         "sha256",
         "tables",
         "components",
         "tableComponents",
         "objectComponents",
+        "columnFieldComponents",
+        "constraintFieldComponents",
     }
     if set(expected) != keys or set(actual) != keys:
         fail("R7_RESTORE_SCHEMA_SHAPE_MISMATCH")
     for name in ("postgres", "tables"):
         if expected[name] != actual[name]:
             fail(f"R7_RESTORE_SCHEMA_{name.upper()}_MISMATCH")
-    if not valid_sha256(expected["sha256"]) or not valid_sha256(actual["sha256"]):
+    if any(
+        not valid_sha256(value)
+        for value in (
+            expected["sourceCaptureSha256"],
+            actual["sourceCaptureSha256"],
+            expected["sha256"],
+            actual["sha256"],
+        )
+    ):
         fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
     component_names = {"columns", "constraints", "indexes"}
     expected_components = expected["components"]
@@ -490,9 +681,17 @@ def verify_schema_fingerprint(expected: object, actual: object) -> None:
     actual_tables = actual["tableComponents"]
     expected_objects = expected["objectComponents"]
     actual_objects = actual["objectComponents"]
+    expected_column_fields = expected["columnFieldComponents"]
+    actual_column_fields = actual["columnFieldComponents"]
+    expected_constraint_fields = expected["constraintFieldComponents"]
+    actual_constraint_fields = actual["constraintFieldComponents"]
     if type(expected_tables) is not dict or type(actual_tables) is not dict:
         fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
     if type(expected_objects) is not dict or type(actual_objects) is not dict:
+        fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+    if type(expected_column_fields) is not dict or type(actual_column_fields) is not dict:
+        fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+    if type(expected_constraint_fields) is not dict or type(actual_constraint_fields) is not dict:
         fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
     for tables, table_count in (
         (expected_tables, expected["tables"]),
@@ -531,6 +730,54 @@ def verify_schema_fingerprint(expected: object, actual: object) -> None:
                     for name, value in object_hashes.items()
                 ):
                     fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+    column_field_names = set(COLUMN_FIELD_NAMES)
+    for fields, objects, table_count in (
+        (expected_column_fields, expected_objects, expected["tables"]),
+        (actual_column_fields, actual_objects, actual["tables"]),
+    ):
+        if (
+            type(table_count) is not int
+            or len(fields) != table_count
+            or set(fields) != set(objects)
+        ):
+            fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+        for table, columns in fields.items():
+            expected_columns = objects[table]["columns"]
+            if type(columns) is not dict or set(columns) != set(expected_columns):
+                fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+            for column, field_hashes in columns.items():
+                if (
+                    type(column) is not str
+                    or re.fullmatch(r"[a-z0-9_]+", column) is None
+                    or type(field_hashes) is not dict
+                    or set(field_hashes) != column_field_names
+                    or any(not valid_sha256(value) for value in field_hashes.values())
+                ):
+                    fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+    constraint_field_names = set(CONSTRAINT_FIELD_NAMES)
+    for fields, objects, table_count in (
+        (expected_constraint_fields, expected_objects, expected["tables"]),
+        (actual_constraint_fields, actual_objects, actual["tables"]),
+    ):
+        if (
+            type(table_count) is not int
+            or len(fields) != table_count
+            or set(fields) != set(objects)
+        ):
+            fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+        for table, constraints in fields.items():
+            expected_constraints = objects[table]["constraints"]
+            if type(constraints) is not dict or set(constraints) != set(expected_constraints):
+                fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
+            for constraint, field_hashes in constraints.items():
+                if (
+                    type(constraint) is not str
+                    or re.fullmatch(r"[a-z0-9_]+", constraint) is None
+                    or type(field_hashes) is not dict
+                    or set(field_hashes) != constraint_field_names
+                    or any(not valid_sha256(value) for value in field_hashes.values())
+                ):
+                    fail("R7_RESTORE_SCHEMA_DIAGNOSTIC_UNAVAILABLE")
     table_token = first_mapping_difference(expected_tables, actual_tables)
     if table_token is not None:
         table = table_token.lower()
@@ -547,6 +794,44 @@ def verify_schema_fingerprint(expected: object, actual: object) -> None:
                         expected_object_hashes, actual_object_hashes
                     )
                     if object_token is not None:
+                        if component == "columns":
+                            expected_field_hashes = expected_column_fields.get(
+                                table, {}
+                            ).get(object_token.lower())
+                            actual_field_hashes = actual_column_fields.get(
+                                table, {}
+                            ).get(object_token.lower())
+                            if (
+                                type(expected_field_hashes) is dict
+                                and type(actual_field_hashes) is dict
+                            ):
+                                field_token = first_mapping_difference(
+                                    expected_field_hashes, actual_field_hashes
+                                )
+                                if field_token is not None:
+                                    fail(
+                                        f"R7_RESTORE_SCHEMA_COLUMNS_{table_token}_"
+                                        f"{object_token}_{field_token}_MISMATCH"
+                                    )
+                        if component == "constraints":
+                            expected_field_hashes = expected_constraint_fields.get(
+                                table, {}
+                            ).get(object_token.lower())
+                            actual_field_hashes = actual_constraint_fields.get(
+                                table, {}
+                            ).get(object_token.lower())
+                            if (
+                                type(expected_field_hashes) is dict
+                                and type(actual_field_hashes) is dict
+                            ):
+                                field_token = first_mapping_difference(
+                                    expected_field_hashes, actual_field_hashes
+                                )
+                                if field_token is not None:
+                                    fail(
+                                        f"R7_RESTORE_SCHEMA_CONSTRAINTS_{table_token}_"
+                                        f"{object_token}_{field_token}_MISMATCH"
+                                    )
                         fail(
                             f"R7_RESTORE_SCHEMA_{component.upper()}_"
                             f"{table_token}_{object_token}_MISMATCH"
@@ -578,6 +863,7 @@ def verify_raw_snapshot(
         if expected_release[key] != release[key]:
             if key == "schemaFingerprint":
                 verify_schema_fingerprint(expected_release[key], release[key])
+                continue
             fail(f"R7_RESTORE_RELEASE_{key.upper()}_MISMATCH")
 
     if type(expected_facts) is not dict or type(facts) is not dict:
@@ -707,11 +993,16 @@ def verify() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("capture", "verify"))
+    parser.add_argument("mode", choices=("capture", "verify", "binding-capture"))
     args = parser.parse_args()
     if settings.SERVICE_REQUESTS_ENABLED is not False:
         fail()
-    capture() if args.mode == "capture" else verify()
+    if args.mode == "capture":
+        capture()
+    elif args.mode == "verify":
+        verify()
+    else:
+        binding_capture()
 
 
 if __name__ == "__main__":
