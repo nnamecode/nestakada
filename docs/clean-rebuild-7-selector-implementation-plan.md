@@ -222,6 +222,12 @@ Owner-approved confirmation после Recover digest fix повторно пр�
 
 Следующий owner-approved confirmation повторно прошёл filesystem `8/8`, catchable7, обе hard-crash Recover границы, исправленный host-native port-blocker и storage-binding mismatch; каждый завершённый scope имел exact cleanup. По явному запросу владельца run остановлен во время baseline Bootstrap target-replacement case, до duplicate-alias и общего suite PASS. Ctrl+C не вывел wrapper cleanup, поэтому отдельно выполнен штатный synthetic Cleanup scope `rehearsal:5d53055382ca4665b71b1596c63524df` с containers/networks/volumes0. Первый post-audit нашёл только один interrupted test root; после exact path/root/name/non-reparse проверки удалён только `work/r7c-selector-test-0ee762b0fc9848bbb4d029fd6811454e`. Финальный post-audit: testRoot/fixture/state/authority/containers/networks/volumes exact0. Partial run не считается полным faults PASS; работа приостановлена владельцем до возобновления, затем suite запускается fresh.
 
+После возобновления владельцем fresh faults run остановился до product execution на `coordinator.lock already exists`. Wrapper cleanup нового scope `rehearsal:7386d3cd2eeb42019c98686a4387ab81` дал containers/networks/volumes0. Расширенный post-audit доказал единственный остаток вчерашнего Ctrl+C: canonical lock schema с PID57044/startTicks, тогда как testRoot/fixture/state/authority/containers/networks/volumes были0; прежний аудит lock не считал. PID отсутствовал, поэтому после exact path/root/name/schema/property/type/non-reparse/size/live-owner проверки удалён только stale `work/r7c-selector-synthetic/coordinator.lock`. Финальный расширенный post-audit: testRoot/fixture/state/authority/lock/containers/networks/volumes exact0. Source/product/topology не менялись; новый fresh runtime требует отдельного решения владельца как повтор той же стадии.
+
+Owner-approved fresh confirmation 24 ноября 2026 года завершила `faults` suite с exit0 и `R7C_TEST_SUITE_PASS suite=faults`: filesystem subset `8/8`, семь catchable boundaries, обе hard-crash Recover boundaries, host-native port-blocker, storage-binding mismatch, target replacement и duplicate alias PASS. Каждый disposable scope завершён exact cleanup; отдельный финальный расширенный post-audit: testRoot/fixture/state/authority/lock/containers/networks/volumes exact0. Docker warning о deprecated `--time` не изменил command exit или semantics. Independent runtime evidence review fault mechanics: `APPROVED P0=0/P1=0/P2=0`. Final IMP-009 review затем выявил `P1`: direct `faults|synthetic` wrapper paths обходили обязательные fresh unit/generation/Django/config prerequisites, поэтому faults mechanics доказаны, но AC-014 и closure ещё нет.
+
+AC-014 source remediation объединила `all|synthetic|faults` в одну runtime branch с обязательным exact порядком unit→generation→Django→config до Setup и closed subsequent dispatch; regression oracle фиксирует общую ветку, порядок и оба dispatch condition. PowerShell parse, отдельный source oracle и `git diff --check` PASS; independent repeat source review `APPROVED P0=0/P1=0/P2=0`, bypass/cleanup regression0. Owner-approved materially changed `faults` confirmation прошла exit0: до Setup fresh selector unit `16/16`, generation diagnostics `13/13`, Django `6/6` + system check0 и compose config PASS; затем filesystem8/8, catchable7, hard-crash Recover2 и все четыре negative cases завершились общим `R7C_TEST_SUITE_PASS suite=faults`. Каждый scope очищен exact0; отдельный expanded post-audit testRoot/fixture/state/authority/lock/containers/networks/volumes exact0. Final IMP-009 review `APPROVED P0=0/P1=0/P2=0`; `R7CSI-IMP-007` CLOSED, повторный faults runtime не нужен. Project DB/media/READY-media, actual storage, real rehearsal, durable local, Q003, external copy, promotion, cutover и live не затрагивались и не разрешены.
+
 Requires separate bounded Docker permission. Runtime wrapper first executes fresh named suites in exact order: `unit`, generation-v5 diagnostics (existing 12 plus binding cases), `django`, `config`; only after all PASS may it run `synthetic`, then `faults`. Thus Windows Store Python absence cannot leave prepared tests unexecuted.
 
 Synthetic old/new targets are the real project Django app under `config.settings.local_cutover`, not a mimicking HTTP server. Each uses an isolated disposable PostgreSQL database and synthetic empty/bounded media authority created inside the test project; no project DB/media/READY-media read. Both expose the real identity view and a deterministic real public canary from an explicitly seeded synthetic page. Tests prove `ESTAKADA_RESTORE_VERIFY_WRITE` rejection and exact read-only connections before selector work.
@@ -236,28 +242,36 @@ Synthetic storage receipts and disposable DB/media are explicitly test-only and 
 
 ### `R7CSI-IMP-008` — actual storage binding confirmation
 
-Requires a new DB/media-read owner gate and exact old/fresh SEALED authorities. Runs generation-v5 capture plus actual media byte check through the proposed verifier, but does not create selector/ingress, bootstrap or switch. Confirms safe output, source post-audit, containers0 and data unchanged.
+Requires a new DB/media-read owner gate, one exact old rollback authority and one fresh `SEALED`/B002 readiness authority. Runs generation-v5 capture plus actual media byte check through the proposed verifier, but does not create selector/ingress, bootstrap or switch. Confirms safe output, source post-audit, containers0 and data unchanged.
 
 This slice cannot run while fresh SEALED/B002 authority is absent. It may remain BLOCKED without invalidating source implementation of pure selector mechanics.
+
+#### External dependency for `R7CSI-IMP-008`
+
+Production storage binding, new VPS provisioning/configuration, production B002, domain/TLS, transfer and deploy are not part of this core/local implementation plan and do not count toward its completion percentage. Their approved G01–G14 dependency bridge is retained in `docs/additional-vps-production-plan.md` with a separate progress percentage under D-1857.
+
+`R7CSI-IMP-008` therefore remains an external optional dependency. It may stay BLOCKED without preventing the core/local project from reaching 100% and owner acceptance. No provider, install, network, DB/media-read, external-copy, cutover or live action is authorized here.
 
 ### `R7CSI-IMP-009` — independent final code/config review
 
 Independent architecture/data/concurrency/security/destructive/no-bloat review checks full diff, named evidence, exact gates, current foundation unchanged, no secret/path leakage and no live apply. Findings receive bounded remediation and repeat review. Source implementation is not complete before `APPROVED P0/P1/P2=0`.
 
-Actual disposable `R7C-REHEARSAL-001`, durable local bootstrap and Q003 remain three later owner decisions; none is implied by IMP-001..009.
+Actual disposable `R7C-REHEARSAL-001`, durable production bootstrap and Q003 are external VPS/transfer-contour decisions under D-1857; none is required for core/local 100% or implied by IMP-001..009.
 
 ## 5. Acceptance matrix
+
+For D-1857 accounting, `R7CSI-AC-001..003` and `R7CSI-AC-011..014` are core source/synthetic acceptance. Actual-authority/runtime criteria `R7CSI-AC-004..010` belong only to the external VPS/transfer contour and are not required for core/local 100% or owner acceptance.
 
 - `R7CSI-AC-001` → `R7CS-AC-001`: closed canonical scope/role/alias/generation selector and caps.
 - `R7CSI-AC-002` → `R7CS-AC-002`: same-filesystem exact CAS, stale mutation0, file+parent fsync under fault injection.
 - `R7CSI-AC-003` → `R7CS-AC-003`: validation/stop/CAS/start/observation separate; HUP/reload0.
-- `R7CSI-AC-004` → `R7CS-AC-004`: actual target marker matches fresh DB/media storage binding through internal direct probe and distinct Windows host-loopback ingress proof.
+- `R7CSI-AC-004` → `R7CS-AC-004`: actual target marker matches fresh DB/media storage binding through internal direct probe and distinct Windows host-loopback ingress proof. This is external-contour acceptance, not core/local completion.
 - `R7CSI-AC-005` → `R7CS-AC-005`: fresh pre-CAS/post-start identity/network/alias/storage plus implementation/config/image inventory checks reject substitution.
 - `R7CSI-AC-006` → `R7CS-AC-006`: mutation fence and DB/media fingerprints unchanged; selector opens writes0.
 - `R7CSI-AC-007` → `R7CS-AC-007`: mandatory journal/crash boundaries; ambiguous state stopped+closed, no blind retry/third CAS.
 - `R7CSI-AC-008` → `R7CS-AC-008`: marker+canary required; mixed/unknown never success.
 - `R7CSI-AC-009` → `R7CS-AC-009`: closed safe receipt and exact staging cleanup; active/data/evidence retained.
-- `R7CSI-AC-010` → `R7CS-AC-011`: rehearsal/local resource separation and distinct ABSENT→old bootstrap.
+- `R7CSI-AC-010` → `R7CS-AC-011`: rehearsal/resource separation and distinct ABSENT→old bootstrap. This is external-contour acceptance, not core/local completion.
 - `R7CSI-AC-011`: current foundation compose/config/containers and production/live remain unchanged through source/synthetic work.
 - `R7CSI-AC-012`: synthetic PASS is not promoted to actual storage/rehearsal/Q003 evidence.
 - `R7CSI-AC-013`: exact disposable teardown removes only identity/label/no-link checked rehearsal resources after current-local unchanged; external safe receipt preserved, durable/data/evidence excluded.
@@ -269,10 +283,10 @@ Actual disposable `R7C-REHEARSAL-001`, durable local bootstrap and Q003 remain t
 2. Отдельное owner approval на source edits IMP-001..006, tests written before each implementation slice; Docker/media read0.
 3. Independent source review before any runtime.
 4. Отдельное bounded Docker approval для IMP-007; initial run плюс максимум одна materially changed confirmation по правилу проекта.
-5. Отдельное DB/media-read approval для IMP-008 только после exact authorities.
+5. External VPS/transfer contour only: отдельное DB/media-read approval для IMP-008 только после exact authorities; не требуется для core/local 100%.
 6. Final independent review IMP-009.
-7. Отдельные future gates для real rehearsal, durable local bootstrap и Q003.
+7. External VPS/transfer contour only: отдельные future gates для real rehearsal, durable production bootstrap и Q003; не требуются для core/local 100%.
 
 Та же ошибка второй раз при эквивалентном действии останавливает пакет без третьей попытки. New dependency/image/service daemon/model/migration/public endpoint/base URL/production config, change foundation compose, generic path/command input, external network или data mutation немедленно требуют plan amendment и нового review.
 
-Текущая точка: `R7CSI-IMP-007` base synthetic lifecycle и Dispose PASS; fault subset8/8 PASS. Первый injection был заблокирован array-splat positional binding; closed typed helper прошёл binding proof и repeat review `APPROVED P0=0/P1=0/P2=0`; cleanup/post-audit exact0. Runtime после harness fix не выполнялся. Следующий gate — отдельное owner approval на один bounded confirmation. Project DB/media/READY-media read, actual-storage binding, real rehearsal, durable local bootstrap, Q003, external copy, promotion, cutover и live по-прежнему не разрешены.
+Текущая точка: `R7CSI-IMP-007` CLOSED после materially changed faults confirmation exit0: mandatory fresh unit16/generation13/Django6+check0/config chain до Setup, полный faults PASS и expanded cleanup/post-audit exact0. Final `R7CSI-IMP-009` review `APPROVED P0=0/P1=0/P2=0`. По D-1857 новая VPS, production B002, actual IMP-008, domain/TLS, перенос, deploy, rehearsal/bootstrap, Q003/cutover и destructive cleanup вынесены в отдельный дополнительный контур `docs/additional-vps-production-plan.md` и не влияют на готовность core/local проекта. Следующий приоритет — локальное завершение и owner acceptance. Все внешние действия по-прежнему не разрешены.

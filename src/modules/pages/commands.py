@@ -16,9 +16,10 @@ from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 
 from modules.accounts.api import StaffAccessError, StaffRole, lock_staff_session
-from modules.audit.api import Action, ActorRef, TargetType, append_event
-from modules.audit.models import AuditEvent
+from modules.audit.api import Action, ActorRef, AuditEvent, TargetType, append_event
 from modules.media.api import (
+    AssetUsage,
+    UsageScope,
     PageUsageSnapshot,
     MediaUsageError,
     delete_locked_page_usage_snapshot,
@@ -26,7 +27,6 @@ from modules.media.api import (
     replace_page_usages,
     verify_page_current_usages,
 )
-from modules.media.models import AssetUsage, UsageScope
 
 from .content import (
     FIELD_SETS,
@@ -1639,3 +1639,4 @@ def undo_page_content(
         raise PageCommandError(exc.code) from exc
     except ContentValidationError as exc:
         raise PageCommandError("INVALID_CONTENT") from exc
+    UsageScope,

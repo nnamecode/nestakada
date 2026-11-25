@@ -17,6 +17,7 @@ SHA_C = "c" * 64
 CONTAINER_A = "1" * 64
 CONTAINER_B = "2" * 64
 CONTAINER_C = "3" * 64
+WRAPPER = Path(__file__).resolve().parents[1] / "scripts" / "test-rebuild7-selector.ps1"
 
 
 def journal_payload(scope: str = "rehearsal:" + "3" * 32) -> dict[str, object]:
@@ -45,6 +46,23 @@ def journal_payload(scope: str = "rehearsal:" + "3" * 32) -> dict[str, object]:
 
 
 class SelectorContractTests(unittest.TestCase):
+    def test_runtime_suites_cannot_bypass_fresh_prerequisites(self) -> None:
+        source = WRAPPER.read_text(encoding="utf-8")
+        start = source.index("if ($Suite -in @('all','synthetic','faults')) {")
+        end = source.index("} elseif ($Suite -ceq 'unit')", start)
+        runtime_branch = source[start:end]
+        ordered = (
+            "Invoke-Unit $authority",
+            "Invoke-Generation $authority",
+            "Invoke-Django $authority",
+            "Invoke-Config $authority",
+            "setup-rebuild7-selector-synthetic.ps1",
+        )
+        positions = [runtime_branch.index(token) for token in ordered]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("if ($Suite -in @('all','synthetic')) { Invoke-Synthetic }", runtime_branch)
+        self.assertIn("if ($Suite -in @('all','faults')) { Invoke-Faults $authority }", runtime_branch)
+
     def test_selector_is_canonical_and_round_trips(self) -> None:
         data = selector.render_selector("rehearsal:" + "3" * 32, "old", SHA_A)
         parsed = selector.parse_selector(data)

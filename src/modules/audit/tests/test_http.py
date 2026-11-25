@@ -68,7 +68,7 @@ class AuditHttpTests(TestCase):
         anonymous = Client().get(self.path)
         self.assertEqual((anonymous.status_code, anonymous["Location"]), (302, "/manage/login/"))
         employee = self._login(self.employee)
-        with patch("modules.audit.web._audit_rows") as projection:
+        with patch("config.audit_web._audit_rows") as projection:
             denied = employee.get(self.path)
         self.assertEqual((denied.status_code, denied.content), (403, b"FORBIDDEN"))
         projection.assert_not_called()
@@ -170,7 +170,7 @@ class AuditHttpTests(TestCase):
             target_uuid=target,
             detail={"generation": 1},
         )
-        with patch("modules.audit.web._audit_rows", side_effect=DatabaseError("PRIVATE-DB")):
+        with patch("config.audit_web._audit_rows", side_effect=DatabaseError("PRIVATE-DB")):
             fault = client.get(self.path + "?action=PAGE_RENAMED")
         self.assertEqual((fault.status_code, fault.content), (503, b"PRIVATE_DATA_UNAVAILABLE"))
         self.assertNotContains(fault, "PRIVATE", status_code=503)

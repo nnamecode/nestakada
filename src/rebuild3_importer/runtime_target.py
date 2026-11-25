@@ -80,6 +80,10 @@ TARGET_TABLES = (
     "gallery_galleryalbum",
     "gallery_galleryphoto",
 )
+PRIVATE_REQUEST_TABLES = (
+    "service_requests_servicerequest",
+    "service_requests_servicerequestdeletionprojection",
+)
 TARGET_MIGRATION_LEAVES = frozenset({
     ("contenttypes", "0002_remove_content_type_name"),
     ("auth", "0012_alter_user_first_name_max_length"),
@@ -89,6 +93,7 @@ TARGET_MIGRATION_LEAVES = frozenset({
     ("media", "0001_initial"),
     ("pages", "0003_page_primary_url_mutable"),
     ("gallery", "0001_initial"),
+    ("service_requests", "0001_initial"),
 })
 
 INSERT_ASSET_SQL = """
@@ -305,6 +310,8 @@ SELECT count(*) FROM pg_roles WHERE rolname = %s
 TARGET_PRIVILEGE_PROOF_SQL = """
 WITH expected(name) AS (
   SELECT unnest(%(tables)s::text[])
+), private_requests(name) AS (
+  SELECT unnest(%(private_request_tables)s::text[])
 ), app_tables AS (
   SELECT c.oid, c.relname, c.relkind, c.relowner, c.relacl
   FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -362,6 +369,11 @@ WITH expected(name) AS (
           'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
       OR has_any_column_privilege(%(importer)s, t.oid,
                                   'SELECT,INSERT,UPDATE,REFERENCES'))
+  UNION ALL SELECT 'private-request-table' FROM private_requests p
+  WHERE has_table_privilege(%(importer)s, 'app.' || p.name,
+                            'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+     OR has_any_column_privilege(%(importer)s, 'app.' || p.name,
+                                 'SELECT,INSERT,UPDATE,REFERENCES')
   UNION ALL SELECT 'importer-sequence' FROM app_tables t
   WHERE t.relkind = 'S' AND has_sequence_privilege(%(importer)s, t.oid,
                                                     'USAGE,SELECT,UPDATE')
@@ -881,6 +893,7 @@ class TargetDatabaseLifecycle:
                     TARGET_PRIVILEGE_PROOF_SQL,
                     {
                         "tables": list(TARGET_TABLES),
+                        "private_request_tables": list(PRIVATE_REQUEST_TABLES),
                         "importer": self._names.importer_role,
                         "owner": self._names.owner_role,
                     },

@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.db import DatabaseError, models
 from django.db.models import Count, Subquery
 
-from modules.gallery.models import GalleryAlbum, GalleryPhoto
+from modules.gallery.api import GalleryAlbum, GalleryPhoto
 from modules.media.api import (
     MediaUsageError,
     PublicPageMediaFile,

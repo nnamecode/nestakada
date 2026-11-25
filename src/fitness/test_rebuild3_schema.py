@@ -15,6 +15,7 @@ from django.test import SimpleTestCase
 SCHEMA_MODELS = {
     "media": frozenset({"Asset", "AssetFile", "AssetUsage"}),
     "gallery": frozenset({"GalleryAlbum", "GalleryPhoto"}),
+    "service_requests": frozenset({"ServiceRequest", "ServiceRequestDeletionProjection"}),
 }
 
 
@@ -91,6 +92,9 @@ class Rebuild3SchemaSourceTests(SimpleTestCase):
             "media": _created_models("modules.media.migrations.0001_initial"),
             "pages": _created_models("modules.pages.migrations.0002_sitesettings"),
             "gallery": _created_models("modules.gallery.migrations.0001_initial"),
+            "service_requests": _created_models(
+                "modules.service_requests.migrations.0001_initial"
+            ),
         }
         targets = (
             ("media", "Asset"),
@@ -99,6 +103,8 @@ class Rebuild3SchemaSourceTests(SimpleTestCase):
             ("pages", "SiteSettings"),
             ("gallery", "GalleryAlbum"),
             ("gallery", "GalleryPhoto"),
+            ("service_requests", "ServiceRequest"),
+            ("service_requests", "ServiceRequestDeletionProjection"),
         )
         for app_label, model_name in targets:
             with self.subTest(model=f"{app_label}.{model_name}"):

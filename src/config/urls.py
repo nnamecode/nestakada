@@ -1,6 +1,6 @@
 from django.urls import URLPattern, path, re_path
 
-from modules.audit.web import audit_event_list_view
+from config.audit_web import audit_event_list_view
 from modules.accounts.web import (
     login_view,
     logout_view,
@@ -29,6 +29,8 @@ from modules.pages.web import (
 )
 from modules.pages.public_http import public_page_view
 from modules.pages.public_seo import robots_view, sitemap_view
+from modules.service_requests.web import request_delete_view, request_detail_view, request_list_view
+from modules.service_requests.public import intake_configuration, submit_service_request
 
 
 urlpatterns: list[URLPattern] = [
@@ -37,6 +39,9 @@ urlpatterns: list[URLPattern] = [
     path("manage/login/", login_view, name="manage-login"),
     path("manage/logout/", logout_view, name="manage-logout"),
     path("manage/audit/", audit_event_list_view, name="manage-audit"),
+    path("manage/requests/", request_list_view, name="manage-service-requests"),
+    path("manage/requests/<uuid:request_id>/", request_detail_view, name="manage-service-request-detail"),
+    path("manage/requests/<uuid:request_id>/delete/", request_delete_view, name="manage-service-request-delete"),
     path("manage/staff/", staff_list_view, name="manage-staff"),
     path("manage/staff/new/", staff_create_view, name="manage-staff-create"),
     path(
@@ -95,3 +100,9 @@ urlpatterns: list[URLPattern] = [
     ),
     re_path(r"^.*$", public_page_view, name="public-page"),
 ]
+
+if intake_configuration() is not None:
+    urlpatterns.insert(
+        2,
+        path("request/submit/", submit_service_request, name="service-request-submit"),
+    )

@@ -33,7 +33,9 @@ OUTPUT = Path("/output")
 AUTHORITY = Path("/authority")
 APP_SOURCE = Path("/app")
 SOURCE_ROOTS = ("src",)
-PROJECT_APP_LABELS = frozenset({"accounts", "audit", "gallery", "media", "pages"})
+PROJECT_APP_LABELS = frozenset(
+    {"accounts", "audit", "gallery", "media", "pages", "service_requests"}
+)
 SOURCE_FILES = (
     "docs/clean-rebuild-7-local-restore-plan.md",
     "environment/foundation/requirements.lock",

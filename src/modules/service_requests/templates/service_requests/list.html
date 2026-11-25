@@ -1,0 +1,6 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Заявки — Эстакада{% endblock %}
+{% block content %}<p><a href="{% url 'manage-pages' %}">← К страницам</a></p><h1>Заявки</h1>
+<table><thead><tr><th>Время</th><th>Имя</th><th>Телефон</th><th>Автомобиль</th></tr></thead><tbody>
+{% for row in rows %}<tr><td><a href="{% url 'manage-service-request-detail' row.id %}">{{ row.created_at|date:"d.m.Y H:i:s" }}</a></td><td>{{ row.name }}</td><td>{{ row.phone }}</td><td>{{ row.vehicle_make }} {{ row.vehicle_model }} {{ row.vehicle_year }}</td></tr>{% empty %}<tr><td colspan="4">Заявок нет.</td></tr>{% endfor %}
+</tbody></table>{% if next_url %}<p><a href="{{ next_url }}" rel="next">Следующие заявки</a></p>{% endif %}{% endblock %}

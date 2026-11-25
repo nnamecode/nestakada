@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""HTTP composition for owner-only audit reads."""
+
 import json
 import re
 import uuid
@@ -16,7 +18,7 @@ from django.views.decorators.http import require_GET
 
 from modules.accounts.api import StaffRole, staff_session_required
 
-from .models import Action, ActorKind, AuditEvent, TargetType
+from modules.audit.models import Action, ActorKind, AuditEvent, TargetType
 
 
 PAGE_SIZE = 50

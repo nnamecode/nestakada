@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import copy
 import uuid
+from unittest.mock import patch
 
 from django.test import Client, TestCase
+from django.urls import NoReverseMatch, resolve, reverse
 from django.utils import timezone
 
+from modules.audit.models import AuditEvent
 from modules.media.models import (
     Asset,
     AssetFile,
@@ -16,6 +19,7 @@ from modules.media.models import (
     MediaType,
     UsageScope,
 )
+from modules.service_requests.models import ServiceRequest
 
 from ..content import canonical_payload_hash
 from ..models import Page, PageContent, PageKind, Route, RouteMode
@@ -212,12 +216,39 @@ class PublicHomeTests(PublicHttpFixture, TestCase):
             self.assertIn(marker, html)
         self.assertEqual(html.count("/legacy-public.webp"), 6)
         self.assertEqual(html.count("/main.webp"), 15)
-        for forbidden in ("<form", "<iframe", 'src="http://', 'src="https://', "fetch("):
+        for forbidden in (
+            "<form",
+            "<input",
+            "<textarea",
+            "data-service-request-form",
+            "request/submit",
+            "<iframe",
+            'src="http://',
+            'src="https://',
+            "fetch(",
+        ):
             self.assertNotIn(forbidden, html.lower())
         head = self.client.head("/", HTTP_X_ESTAKADA_REQUEST_TARGET="/")
         self.assertEqual(head.status_code, 200)
         self.assertEqual(head.content, b"")
         self.assertEqual(head["Cache-Control"], response["Cache-Control"])
+
+    def test_default_off_post_has_no_endpoint_side_effect_or_network(self) -> None:
+        with self.assertRaises(NoReverseMatch):
+            reverse("service-request-submit")
+        self.assertEqual(resolve("/request/submit/").url_name, "public-page")
+        request_count = ServiceRequest.objects.count()
+        audit_count = AuditEvent.objects.count()
+        with patch("urllib.request.urlopen") as urlopen:
+            response = self.client.post(
+                "/request/submit/",
+                {"name": "Иван", "phone": "+79991234567"},
+                HTTP_X_ESTAKADA_REQUEST_TARGET="/request/submit/",
+            )
+        self.assertEqual((response.status_code, response.content), (404, b"NOT_FOUND"))
+        self.assertEqual(ServiceRequest.objects.count(), request_count)
+        self.assertEqual(AuditEvent.objects.count(), audit_count)
+        urlopen.assert_not_called()
 
     def test_bound_price_is_dynamic_and_hidden_source_disappears(self) -> None:
         source_row = _id()

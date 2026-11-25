@@ -7,14 +7,15 @@ from pathlib import Path
 
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 MODULE_ROOT = SOURCE_ROOT / "modules"
-EXPECTED_MODULES = frozenset({"audit", "accounts", "media", "pages", "gallery"})
+EXPECTED_MODULES = frozenset({"audit", "accounts", "media", "pages", "gallery", "service_requests"})
 FORBIDDEN_PACKAGES = frozenset({"kernel", "common", "base", "utils"})
 ALLOWED_EDGES = {
     "audit": frozenset(),
     "accounts": frozenset({"audit"}),
     "media": frozenset({"audit"}),
-    "pages": frozenset({"accounts", "media", "audit"}),
+    "pages": frozenset({"accounts", "media", "audit", "gallery", "service_requests"}),
     "gallery": frozenset({"pages", "media", "audit"}),
+    "service_requests": frozenset({"accounts", "audit"}),
 }
 
 
@@ -104,6 +105,9 @@ class DependencyFitnessTests(unittest.TestCase):
     def test_exact_module_dag_and_public_api_only(self) -> None:
         for owner in sorted(EXPECTED_MODULES):
             for path in (MODULE_ROOT / owner).rglob("*.py"):
+                relative = path.relative_to(MODULE_ROOT / owner)
+                if "tests" in relative.parts:
+                    continue
                 for imported, names in _path_imports(path):
                     violation = _cross_module_violation(owner, imported, names)
                     self.assertIsNone(

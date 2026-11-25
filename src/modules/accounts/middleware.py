@@ -4,6 +4,7 @@ import ipaddress
 import re
 from collections.abc import Callable
 
+from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 
 
@@ -35,6 +36,13 @@ _STAFF_PASSWORD_PATH = re.compile(
 )
 _STAFF_CREATE_PATH = "/manage/staff/new/"
 _SITE_SETTINGS_PATH = "/manage/settings/"
+_SERVICE_REQUEST_PATH = "/request/submit/"
+_SERVICE_REQUEST_MAX_BODY = 8192
+_SERVICE_REQUEST_DELETE_PATH = re.compile(
+    r"\A/manage/requests/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-"
+    r"[0-9a-f]{4}-[0-9a-f]{12}/delete/\Z"
+)
+_SERVICE_REQUEST_DELETE_MAX_BODY = 2048
 _FORBIDDEN_FORWARDING = (
     "HTTP_FORWARDED",
     "HTTP_X_FORWARDED_FOR",
@@ -57,6 +65,11 @@ def _valid_ingress(meta: dict[str, object]) -> bool:
     return str(parsed) == value
 
 
+def _service_request_intake_configured() -> bool:
+    validator = getattr(settings, "SERVICE_REQUEST_CONFIGURATION_VALIDATOR", None)
+    return callable(validator) and validator(settings)
+
+
 class PrivateIngressMiddleware:
     """Exact private ingress guard and cache boundary; no general policy engine."""
 
@@ -64,6 +77,43 @@ class PrivateIngressMiddleware:
         self.get_response = get_response
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
+        if request.method == "POST" and _SERVICE_REQUEST_DELETE_PATH.fullmatch(request.path_info):
+            length = request.META.get("CONTENT_LENGTH")
+            if (
+                not isinstance(length, str) or not length.isascii() or not length.isdecimal()
+                or len(length) > 4 or str(int(length)) != length
+                or not 1 <= int(length) <= _SERVICE_REQUEST_DELETE_MAX_BODY
+            ):
+                response = HttpResponse("INVALID_DELETE_CONFIRMATION", status=400,
+                                        content_type="text/plain")
+                response["Cache-Control"] = "private, no-store"
+                return response
+        if (
+            settings.SERVICE_REQUESTS_ENABLED
+            and request.method == "POST"
+            and request.path_info == _SERVICE_REQUEST_PATH
+            and _service_request_intake_configured()
+        ):
+            length = request.META.get("CONTENT_LENGTH")
+            if (
+                not isinstance(length, str)
+                or not length.isascii()
+                or not length.isdecimal()
+                or len(length) > 4
+                or str(int(length)) != length
+                or not 1 <= int(length) <= _SERVICE_REQUEST_MAX_BODY
+            ):
+                response = HttpResponse(
+                    "INVALID_REQUEST_INPUT",
+                    status=400,
+                    content_type="text/plain",
+                )
+                response["Cache-Control"] = "private, no-store"
+                return response
+            if not _valid_ingress(request.META):
+                response = HttpResponse("INVALID_INGRESS", status=400, content_type="text/plain")
+                response["Cache-Control"] = "private, no-store"
+                return response
         if request.method == "POST" and (
             _PAGE_SAVE_PATH.fullmatch(request.path_info)
             or _PAGE_PUBLICATION_PATH.fullmatch(request.path_info)

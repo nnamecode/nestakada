@@ -9,6 +9,7 @@ from django.db import DatabaseError
 from django.http import HttpRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from modules.service_requests.api import form_projection
 
 from modules.media.api import MediaUsageError, project_public_site_logo
 
@@ -250,6 +251,8 @@ def _same_capture(first: _SiteSnapshot, final: _SiteSnapshot) -> bool:
 
 
 def public_page_view(request: HttpRequest) -> HttpResponse:
+    if request.path_info == "/request/submit/":
+        return _constant("NOT_FOUND", 404)
     if request.method not in {"GET", "HEAD"}:
         response = _constant("METHOD_NOT_ALLOWED", 405)
         response["Allow"] = "GET, HEAD"
@@ -414,6 +417,7 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
             "is_reviews": is_reviews,
             "is_contacts": is_contacts,
             "is_legacy_empty": is_legacy_empty,
+            "service_request_form": form_projection() if is_home else None,
         }
         template = (
             "pages/public_home.html"
@@ -434,7 +438,7 @@ def public_page_view(request: HttpRequest) -> HttpResponse:
             if is_service_catalog
             else "pages/public_legacy.html"
         )
-        html = render_to_string(template, context)
+        html = render_to_string(template, context, request=request)
     except (MediaUsageError, PublicHttpError, PublicReadError, DatabaseError):
         return _constant("UNAVAILABLE", 503)
     response = HttpResponse(b"" if request.method == "HEAD" else html, content_type="text/html; charset=utf-8")

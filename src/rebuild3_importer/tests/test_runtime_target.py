@@ -23,6 +23,7 @@ from rebuild3_importer.manifest import PublicManifest
 from rebuild3_importer.runtime_target import (
     ALLOWED_ERROR_CODES,
     EMPTY_PUBLIC_SQL,
+    PRIVATE_REQUEST_TABLES,
     TARGET_COUNT_SQL,
     TARGET_COLLISION_SQL,
     TARGET_GLOBAL_PROOF_SQL,
@@ -442,6 +443,15 @@ class TargetDatabaseLifecycleTests(TestCase):
         self.assertIn("has_any_column_privilege", TARGET_PRIVILEGE_PROOF_SQL)
         self.assertIn("'UPDATE,REFERENCES'", TARGET_PRIVILEGE_PROOF_SQL)
         self.assertIn("unexpected-importer-table", TARGET_PRIVILEGE_PROOF_SQL)
+        self.assertEqual(
+            PRIVATE_REQUEST_TABLES,
+            (
+                "service_requests_servicerequest",
+                "service_requests_servicerequestdeletionprojection",
+            ),
+        )
+        self.assertIn("private-request-table", TARGET_PRIVILEGE_PROOF_SQL)
+        self.assertIn("%(private_request_tables)s", TARGET_PRIVILEGE_PROOF_SQL)
         self.assertIn("DELETE,TRUNCATE,REFERENCES,TRIGGER", TARGET_PRIVILEGE_PROOF_SQL)
         self.assertIn("schema-owner", TARGET_PRIVILEGE_PROOF_SQL)
         self.assertIn("public-function", TARGET_PRIVILEGE_PROOF_SQL)
@@ -1117,6 +1127,7 @@ class TargetMigrationRunnerTests(TestCase):
         ("media", "0001_initial"),
         ("pages", "0003_page_primary_url_mutable"),
         ("gallery", "0001_initial"),
+        ("service_requests", "0001_initial"),
     })
 
     def run_case(

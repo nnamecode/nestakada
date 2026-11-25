@@ -219,7 +219,7 @@ try {
     Initialize-TestPaths
     $ownsTestRoot = $true
     $authority = New-StaticAuthority
-    if ($Suite -ceq 'all') {
+    if ($Suite -in @('all','synthetic','faults')) {
         Invoke-Unit $authority
         Invoke-Generation $authority
         Invoke-Django $authority
@@ -227,13 +227,8 @@ try {
         $ownsFixture = $true
         & (Join-Path $PSScriptRoot 'setup-rebuild7-selector-synthetic.ps1') -Action Setup
         $authority = Read-TestAuthority $syntheticAuthorityPath
-        Invoke-Synthetic
-        Invoke-Faults $authority
-    } elseif ($Suite -in @('synthetic','faults')) {
-        $ownsFixture = $true
-        & (Join-Path $PSScriptRoot 'setup-rebuild7-selector-synthetic.ps1') -Action Setup
-        $authority = Read-TestAuthority $syntheticAuthorityPath
-        if ($Suite -ceq 'synthetic') { Invoke-Synthetic } else { Invoke-Faults $authority }
+        if ($Suite -in @('all','synthetic')) { Invoke-Synthetic }
+        if ($Suite -in @('all','faults')) { Invoke-Faults $authority }
     } elseif ($Suite -ceq 'unit') {
         Invoke-Unit $authority
     } elseif ($Suite -ceq 'django') {

@@ -1,0 +1,5 @@
+{% extends "accounts/private_base.html" %}
+{% block title %}Заявка — Эстакада{% endblock %}
+{% block content %}<p><a href="{% url 'manage-service-requests' %}">← К заявкам</a></p><h1>Заявка</h1>
+<dl><dt>Время</dt><dd>{{ row.created_at|date:"d.m.Y H:i:s.u" }}</dd><dt>Имя</dt><dd>{{ row.name }}</dd><dt>Телефон</dt><dd>{{ row.phone }}</dd><dt>Автомобиль</dt><dd>{{ row.vehicle_make }} {{ row.vehicle_model }} {{ row.vehicle_year }}</dd><dt>Комментарий</dt><dd>{{ row.comment|linebreaksbr }}</dd><dt>Telegram</dt><dd>{{ row.telegram_outcome }}</dd></dl>
+{% if delete_confirmation %}<form method="post" action="{% url 'manage-service-request-delete' row.id %}">{% csrf_token %}<input type="hidden" name="confirmation" value="{{ delete_confirmation }}"><button type="submit">Удалить заявку</button></form>{% endif %}{% endblock %}
