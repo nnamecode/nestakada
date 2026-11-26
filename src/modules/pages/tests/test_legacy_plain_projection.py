@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ast
 import dataclasses
+import importlib.util
 import inspect
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -263,7 +265,22 @@ class LegacyPlainProjectionTests(LegacyPlainFixture, TestCase):
         source = inspect.getsource(public_api)
         projection = inspect.getsource(project_legacy_plain)
         self.assertNotIn("modules.pages.web", source)
-        self.assertNotIn("modules.media", source)
+        tree = ast.parse(source)
+        imported_modules = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_modules.extend(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                dotted = "." * node.level + (node.module or "")
+                module = importlib.util.resolve_name(dotted, public_api.__package__)
+                imported_modules.append(module)
+                if module in {"modules", "modules.media"}:
+                    imported_modules.extend(f"{module}.{alias.name}" for alias in node.names)
+        media_imports = sorted(
+            name for name in imported_modules
+            if name == "modules.media" or name.startswith("modules.media.")
+        )
+        self.assertEqual(media_imports, ["modules.media.api"])
         self.assertNotIn("transaction.atomic", projection)
         self.assertNotIn("select_for_update", projection)
         self.assertNotIn(".save(", projection)

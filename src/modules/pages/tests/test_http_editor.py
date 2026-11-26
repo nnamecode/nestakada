@@ -633,6 +633,20 @@ class TypedEditorHttpTests(TestCase):
         page, _ = self._partner_page(
             links=[{"label": "One", "https_url": "https://example.test/one"}],
         )
+        legacy_http_urls = (
+            "http://www.blackstone-russia.ru/",
+            "http://automarkirovka.ru/",
+            "http://www.argoauto-center.ru/",
+            "http://www.ton-service.ru/",
+            "http://www.rgs.ru/",
+            "http://www.motortehn.ru/",
+        )
+        for legacy_url in legacy_http_urls:
+            with self.subTest(legacy_url=legacy_url):
+                candidate = minimal_payload(PageKind.LEGACY_PARTNER_LINKS)
+                candidate["fields"]["links"] = [{"label": "Legacy", "https_url": legacy_url}]
+                validate_payload(candidate, PageKind.LEGACY_PARTNER_LINKS)
+
         client = self._client(self.owner)
         editor = client.get(reverse("manage-page-editor", args=(page.id,)))
         base = self._partner_save_data(

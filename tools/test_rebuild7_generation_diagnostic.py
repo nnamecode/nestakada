@@ -22,6 +22,7 @@ NAMES = {
     "restore_release_sha256",
     "restore_semantic_constraint",
     "binding_capture_value",
+    "generation_stage",
 }
 
 
@@ -40,6 +41,7 @@ def load_diagnostic_namespace() -> dict[str, object]:
                     "RELEASE_KEYS",
                     "RESTORE_CONSTRAINT_DEFINITION_SENTINEL",
                     "RESTORE_SOURCE_CAPTURE_SENTINEL",
+                    "GENERATION_STAGES",
                 }
                 for target in targets
             ):
@@ -54,6 +56,7 @@ def load_diagnostic_namespace() -> dict[str, object]:
         "RELEASE_KEYS",
         "RESTORE_CONSTRAINT_DEFINITION_SENTINEL",
         "RESTORE_SOURCE_CAPTURE_SENTINEL",
+        "GENERATION_STAGES",
     }.issubset(namespace):
         raise AssertionError("diagnostic source extraction incomplete")
     return namespace
@@ -147,6 +150,41 @@ class SchemaDiagnosticTests(unittest.TestCase):
         cls.field_names = namespace["COLUMN_FIELD_NAMES"]
         cls.constraint_field_names = namespace["CONSTRAINT_FIELD_NAMES"]
         cls.binding_capture = staticmethod(namespace["binding_capture_value"])
+        cls.generation_stage = staticmethod(namespace["generation_stage"])
+
+    def test_generation_stage_maps_only_generic_failure_to_closed_safe_code(self) -> None:
+        def generic_failure() -> None:
+            raise RuntimeError("R7_LOCAL_GENERATION_UNAVAILABLE")
+
+        with self.assertRaisesRegex(
+            RuntimeError, r"^R7_GENERATION_SOURCE_INVENTORY_UNAVAILABLE$"
+        ):
+            self.generation_stage("SOURCE_INVENTORY", generic_failure)
+
+    def test_generation_stage_preserves_specific_failure(self) -> None:
+        def specific_failure() -> None:
+            raise RuntimeError("R7_DEPENDENCY_LOCK_MISMATCH")
+
+        with self.assertRaisesRegex(
+            RuntimeError, r"^R7_DEPENDENCY_LOCK_MISMATCH$"
+        ):
+            self.generation_stage("DEPENDENCY_PROFILE", specific_failure)
+
+    def test_generation_stage_rejects_unknown_stage(self) -> None:
+        with self.assertRaisesRegex(
+            RuntimeError, r"^R7_GENERATION_DIAGNOSTIC_UNAVAILABLE$"
+        ):
+            self.generation_stage("OWNER_DATA", lambda: None)
+
+    def test_source_guard_is_digest_only_and_closed(self) -> None:
+        source = SOURCE.read_text(encoding="utf-8")
+        guard = source[source.index("def source_guard()") : source.index("def read_authority")]
+        self.assertIn('"schema": "estakada.r7-source-guard-v1"', guard)
+        self.assertIn('"appliedMigrationsSha256"', guard)
+        self.assertIn('"tableContentSha256"', guard)
+        self.assertNotIn('"appliedMigrations":', guard)
+        self.assertNotIn('"tableCounts":', guard)
+        self.assertNotIn('"media":', guard)
 
     def test_live_ordinal_contract_excludes_physical_attnum(self) -> None:
         self.assertEqual(self.field_names[0], "ordinal")

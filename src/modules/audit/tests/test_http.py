@@ -173,4 +173,4 @@ class AuditHttpTests(TestCase):
         with patch("config.audit_web._audit_rows", side_effect=DatabaseError("PRIVATE-DB")):
             fault = client.get(self.path + "?action=PAGE_RENAMED")
         self.assertEqual((fault.status_code, fault.content), (503, b"PRIVATE_DATA_UNAVAILABLE"))
-        self.assertNotContains(fault, "PRIVATE", status_code=503)
+        self.assertNotContains(fault, "PRIVATE-DB", status_code=503)

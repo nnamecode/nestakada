@@ -138,7 +138,11 @@ class PageReorderHttpTests(PublicationFixture, TransactionTestCase):
             f"{self.path}?parent={self.parent.id}",
         )
         self.assertEqual(root["Cache-Control"], "private, no-store")
-        User.objects.filter(pk=self.owner.id).update(role=StaffRole.EMPLOYEE)
+        User.objects.filter(pk=self.owner.id).update(
+            role=StaffRole.EMPLOYEE,
+            username="demoted-owner",
+            is_superuser=False,
+        )
         with patch("modules.pages.web.reorder_children") as command:
             role_race = self._post(owner, {
                 "csrfmiddlewaretoken": token,

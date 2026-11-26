@@ -22,7 +22,7 @@
     .progress-card{background:linear-gradient(135deg,#f5fbf7,#f7faff)}
     .progress-number{font-size:38px;font-weight:800;line-height:1;color:var(--green)}
     .progress-track{height:10px;margin:16px 0 10px;overflow:hidden;border-radius:99px;background:#dce4e1}
-    .progress-fill{width:85%;height:100%;border-radius:99px;background:linear-gradient(90deg,#1d8b4b,#48a36b)}
+    .progress-fill{width:95%;height:100%;border-radius:99px;background:linear-gradient(90deg,#1d8b4b,#48a36b)}
     .progress-fill-extra{width:5%;height:100%;border-radius:99px;background:linear-gradient(90deg,#b47500,#d49b2c)}
     .priority{border-color:#c9d9f2;background:var(--blue-bg)}
     .priority strong{color:#174d9d}
@@ -46,21 +46,21 @@
 <body><main>
   <p class="eyebrow">Эстакада 2.0 · оперативный статус</p>
   <h1>Текущее состояние проекта</h1>
-  <p class="lead">Обновлено 25 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
+  <p class="lead">Обновлено 26 ноября 2026 года. Приоритет — работающий и стабильный MVP; процесс и документация должны помогать разработке, а не замедлять её.</p>
 
   <section class="summary" aria-label="Краткая сводка">
     <div class="card progress-card">
       <strong>Разработка сайта</strong>
-      <div class="progress-number">85%</div>
-      <div class="progress-track" aria-label="Разработка сайта выполнена примерно на 85 процентов"><div class="progress-fill"></div></div>
-      <p><strong>17 из 20 core-результатов закрыты.</strong> Остаются default-off код минимальной заявки, сводная DB-backed приёмка незакрытых admin runtime-веток и финальная локальная owner acceptance. Новая VPS, production B002, domain/TLS и deploy в этот процент не входят.</p>
+      <div class="progress-number">95%</div>
+      <div class="progress-track" aria-label="Разработка сайта выполнена примерно на 95 процентов"><div class="progress-fill"></div></div>
+      <p><strong>19 из 20 core-результатов закрыты.</strong> Остаётся финальная локальная owner acceptance. Новая VPS, production B002, domain/TLS и deploy в этот процент не входят.</p>
       <p class="muted">Проверяемая основа счёта CORE-01…CORE-20 приведена ниже; каждый результат учитывается ровно один раз.</p>
     </div>
     <div class="card">
       <strong>Настройка и перенос проекта на новый VPS-сервер</strong>
       <div class="progress-number">5%</div>
       <div class="progress-track" aria-label="Настройка и перенос проекта на новый VPS-сервер выполнены примерно на 5 процентов"><div class="progress-fill-extra"></div></div>
-      <p><strong>Настройка и перенос проекта на новый VPS-сервер.</strong> Отдельный дополнительный контур: готов 1 из 20 результатов. В 85% разработки сайта не входит.</p>
+      <p><strong>Настройка и перенос проекта на новый VPS-сервер.</strong> Отдельный дополнительный контур: готов 1 из 20 результатов. В 95% разработки сайта не входит.</p>
     </div>
   </section>
 
@@ -77,14 +77,14 @@
       <tr><td>REBUILD-1</td><td>Read-only inventory старой БД и медиа, точные URL, manifest и WBS</td><td><span class="status done"><span class="icon">✓</span><span>Условно завершено; один source blocker перенесён к import freeze</span></span></td></tr>
       <tr><td>REBUILD-2</td><td>Чистая Django-основа и минимальные accounts/pages/audit</td><td><span class="status done"><span class="icon">✓</span><span>Завершено; чистая серверная основа готова</span></span></td></tr>
       <tr><td>REBUILD-3</td><td>Media schema, synthetic importer и локальная import-механика</td><td><span class="status done"><span class="icon">✓</span><span>Schema, synthetic importer и media tracking закрыты. Фактический empty restore учитывается только один раз в CORE-16/R7-LOCAL-001; production-import относится к отдельному VPS/B002-контуру</span></span></td></tr>
-      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td><span class="status active"><span class="icon"></span><span>Все семь Page-команд, auth/list, editor, grants, staff, publication, SiteSettings, public authority и минимальный Audit source-approved; незавершённые runtime-ветки остаются отдельными</span></span></td></tr>
+      <tr><td>REBUILD-4</td><td>Простая админка, фиксированный редактор, права и current+previous</td><td><span class="status done"><span class="icon">✓</span><span>Все семь Page-команд, auth/list, editor, grants, staff, publication, SiteSettings, public authority и minimal Audit закрыты; сводная PostgreSQL exact250 приёмка PASS</span></span></td></tr>
       <tr><td>REBUILD-5</td><td>Публичная тема, 5–6 семейств шаблонов, SEO, навигация и 115 URL</td><td><span class="status done"><span class="icon">✓</span><span>Завершено локально: утверждённый HOME, все публичные семейства, exact115, responsive matrix, sitemap/robots и закрытые HTTP/SEO-границы прошли</span></span></td></tr>
-      <tr><td>REBUILD-6</td><td>Галерея и минимальная default-off заявка</td><td><span class="status active"><span class="icon"></span><span>Галерея локально закрыта: exact17 каталогов и exact214 originals. У заявки IMP-001…006 полностью source-approved 0/0/0. Последняя confirmation выполнила все 148 tests: product tests прошли, остался один DAG private-import failure; он исправлен public API-шлюзом и independently APPROVED 0/0/0. Cleanup exact0. Следующая confirmation ждёт отдельного разрешения. Включение запрещено до LEGAL-01 и отдельного разрешения</span></span></td></tr>
+      <tr><td>REBUILD-6</td><td>Галерея и минимальная default-off заявка</td><td><span class="status done"><span class="icon">✓</span><span>Завершено локально: gallery exact17/exact214; CORE-18 source/runtime/final evidence APPROVED 0/0/0, 148/148 + diagnostics13/13 + exact115 PASS, cleanup exact0/DB bitmap exact. Заявка остаётся default-off до LEGAL-01 и отдельного разрешения</span></span></td></tr>
       <tr><td>REBUILD-7</td><td>Общая локальная приёмка и restore proof</td><td><span class="status active"><span class="icon"></span><span><code>R7-LOCAL-001</code> PASS. IMP-007 CLOSED; final IMP-009 review 0/0/0. Owner acceptance основного проекта заканчивается локальной демонстрацией и не требует actual IMP-008, Q003, cutover или удаления старого runtime — они относятся к дополнительному контуру настройки и переноса</span></span></td></tr>
     </tbody>
   </table></div>
 
-  <h2>Основа 85% разработки сайта</h2>
+  <h2>Основа 95% разработки сайта</h2>
   <div class="table-wrap"><table>
     <thead><tr><th>ID</th><th>Результат</th><th>Состояние и authority</th></tr></thead>
     <tbody>
@@ -105,9 +105,9 @@
       <tr><td>CORE-15</td><td>Gallery</td><td><span class="status done"><span class="icon">✓</span><span>Exact17 каталогов и exact214 originals закрыты локально</span></span></td></tr>
       <tr><td>CORE-16</td><td>Local empty restore proof</td><td><span class="status done"><span class="icon">✓</span><span>Только здесь учитывается R7-LOCAL-001 PASS</span></span></td></tr>
       <tr><td>CORE-17</td><td>Selector source/synthetic/fault evidence</td><td><span class="status done"><span class="icon">✓</span><span>IMP-007 CLOSED; IMP-009 APPROVED 0/0/0</span></span></td></tr>
-      <tr><td>CORE-18</td><td>Минимальная default-off заявка</td><td><span class="status active"><span class="icon"></span><span>IMP-001…006 полностью source-approved 0/0/0. Последняя confirmation выполнила все 148 PostgreSQL tests: product tests прошли, единственный DAG private-import failure исправлен и independently APPROVED 0/0/0. Cleanup exact containers0/networks0/volumes0/staging0. Нужна отдельно разрешённая confirmation. Включение отдельно закрыто до LEGAL-01</span></span></td></tr>
-      <tr><td>CORE-19</td><td>Сводная DB-backed приёмка admin runtime-хвостов</td><td><span class="status active"><span class="icon"></span><span>Page Delete/Reorder/Move/URL Change/Audit незакрытые runtime-ветки требуют одного согласованного acceptance result</span></span></td></tr>
-      <tr><td>CORE-20</td><td>Финальная локальная owner acceptance</td><td><span class="status active"><span class="icon"></span><span>Открыто; VPS/production/cutover не входят</span></span></td></tr>
+      <tr><td>CORE-18</td><td>Минимальная default-off заявка</td><td><span class="status done"><span class="icon">✓</span><span>CLOSED: source/runtime/final review 0/0/0; 148/148 + diagnostics13/13 + exact115 PASS; rows0, audit mutation0, external network0, cleanup exact0/DB bitmap exact. Activation отдельно закрыта до LEGAL-01</span></span></td></tr>
+      <tr><td>CORE-19</td><td>Сводная DB-backed приёмка admin runtime-хвостов</td><td><span class="status done"><span class="icon">✓</span><span>CLOSED: PostgreSQL exact250 PASS, failures0/errors0/skips0; cleanup containers0/networks0/volumes0/staging0; final evidence review APPROVED 0/0/0</span></span></td></tr>
+      <tr><td>CORE-20</td><td>Финальная локальная owner acceptance</td><td><span class="status paused"><span class="icon">‖</span><span>Последняя confirmation остановилась до DB start/clone/browser/media с exact <code>CORE20_RECOVERY_BITMAP_INVALID</code>: после host/Docker interruption source DB оказался stopped, app/ingress тоже stopped; exact IDs сохранены, CORE20 resources0, lock <code>3edf38fc…</code>. Exact DB-start recovery и eleven-link disposition independently APPROVED 0/0/0; runtime ждёт отдельного решения владельца</span></span></td></tr>
     </tbody>
   </table></div>
 
@@ -143,7 +143,7 @@
 
   <h2>Ближайший приоритет</h2>
   <div class="card priority"><ol>
-    <li><strong>Сейчас:</strong> CORE-18 IMP-001…006 source-approved 0/0/0; последняя confirmation выполнила все 148 tests, product tests прошли, единственный DAG private-import failure исправлен и repeat-review APPROVED 0/0/0. Ожидается отдельное разрешение на одну bounded confirmation. VPS/production не являются этапом или блокером основного проекта.</li>
+    <li><strong>Сейчас:</strong> CORE-20 preflight точно обнаружил stopped source DB после host/Docker interruption; app/ingress stopped и CORE20 resources0. Exact DB-start recovery и eleven-link disposition independently APPROVED 0/0/0; следующий шаг — отдельное решение владельца.</li>
     <li>Gallery не расширять: exact17 каталогов и exact214 originals уже закрыты локально. Mobile-поведение проверить вместе с общей responsive browser-приёмкой, без повторного чтения originals.</li>
     <li>Paused TLS/RNG и socket/readiness пути не повторять без нового свидетельства; вернуться к ним только перед общей приёмкой или при реальном блокере.</li>
     <li>Intake оставлять default-off до LEGAL-01 и отдельного разрешения включения.</li>
@@ -164,7 +164,7 @@
     <div class="card">
       <div class="progress-number">5%</div>
       <div class="progress-track" aria-label="Настройка и перенос проекта на новый VPS-сервер выполнены примерно на 5 процентов"><div class="progress-fill-extra"></div></div>
-      <p><strong>Собственный процент выполнения.</strong> Выполнен 1 из 20 результатов: закрыты план и независимое review; G01–G14 и P15–P19 не начаты. Этот счётчик не входит в 85% разработки сайта.</p>
+      <p><strong>Собственный процент выполнения.</strong> Выполнен 1 из 20 результатов: закрыты план и независимое review; G01–G14 и P15–P19 не начаты. Этот счётчик не входит в 95% разработки сайта.</p>
     </div>
     <div class="card">
       <strong>Статус: отложено до приёмки сайта</strong>
@@ -174,8 +174,8 @@
   </section>
 
   <div class="footer">
-    <strong>Текущий этап основного проекта:</strong> CORE-18 default-off заявка; system/migration checks PASS, все 148 tests выполнены, product tests прошли, единственный DAG private-import failure remediated и independently APPROVED 0/0/0, cleanup exact0.<br>
-    <strong>Следующий этап основного проекта:</strong> по отдельному разрешению выполнить одну bounded PostgreSQL/Linux synthetic confirmation с exact cleanup; real secrets/network/data, LEGAL enable, VPS и deploy не входят.<br>
+    <strong>Текущий этап основного проекта:</strong> CORE-20; confirmation остановлена preflight на stopped source DB до product/runtime execution, CORE20 resources0. Exact DB-start recovery APPROVED 0/0/0.<br>
+    <strong>Следующий этап основного проекта:</strong> по отдельному разрешению запустить только pinned source DB и выполнить одну bounded confirmation с exact cleanup. Source DB mutation, parity exception, external copy, VPS, deploy, cutover и live не разрешены.<br>
     <strong>Дополнительный контур:</strong> настройка и перенос на VPS 5%, отложены; G01 открывается только после локальной приёмки и нового решения владельца.<br>
     Источники подробностей: <a href="decisions.md">решения</a>, <a href="tasks.md">задачи</a>, <a href="pipeline.md">процесс</a>.
   </div>

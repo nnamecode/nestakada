@@ -146,7 +146,7 @@ class PageDeleteCommandTests(PublicationFixture, TransactionTestCase):
         Route.objects.create(page=page, target="/home/", mode="PRIMARY", outcome=PageKind.HOME)
         page.kind = PageKind.HOME; page.save(update_fields=("kind",))
         content = PageContent.objects.get(page=page)
-        empty = page_commands._initial_payload(PageKind.HOME, "Home")
+        empty = page_commands.initial_page_payload(PageKind.HOME, "Home")
         content.current_payload = empty; content.current_hash = canonical_payload_hash(empty)
         content.previous_payload = copy.deepcopy(empty); content.previous_hash = canonical_payload_hash(empty)
         content.previous_author = owner; content.previous_created_at = timezone.now(); content.save()
@@ -224,7 +224,7 @@ class PageDeleteCommandTests(PublicationFixture, TransactionTestCase):
         self.assertEqual(raised.exception.code, "DELETE_UNAVAILABLE")
         with patch("modules.media.api._PAGE_DELETE_USAGE_CAP", 2):
             self.assertEqual(load_page_delete_preview(actor_id=owner.id, session_generation=1, page_id=page.id).current_usage_count, 2)
-        initial = page_commands._initial_payload(PageKind.HOME, "Home")
+        initial = page_commands.initial_page_payload(PageKind.HOME, "Home")
         self.assertEqual([initial["fields"][key] for key in ("service_refs", "brand_refs", "review_refs")], [[], [], []])
         settings.delete()
         with self.assertRaises(PageCommandError) as raised:

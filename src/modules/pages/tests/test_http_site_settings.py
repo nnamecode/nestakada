@@ -168,7 +168,7 @@ class SiteSettingsHttpTests(SiteSettingsFixture, TestCase):
         self.assertNotIn("modules.pages", media_source)
         projection = media_source[
             media_source.index("def project_site_logo_options"):
-            media_source.index("def replace_site_logo_usage")
+            media_source.index("def project_public_site_logo")
         ]
         for private_name in ("storage_key", "sha256", "byte_size", "PRIVATE_SOURCE"):
             self.assertNotIn(private_name, projection)

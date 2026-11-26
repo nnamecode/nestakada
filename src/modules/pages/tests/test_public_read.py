@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import ast
+import importlib.util
 import inspect
 import threading
 import uuid
@@ -226,7 +228,22 @@ class PublicReadTests(PublicReadFixture, TestCase):
                 project_public_navigation()
         self.assertEqual(raised.exception.code, "UNAVAILABLE")
         source = inspect.getsource(public_api)
-        self.assertNotIn("modules.media", source)
+        tree = ast.parse(source)
+        imported_modules = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_modules.extend(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                dotted = "." * node.level + (node.module or "")
+                module = importlib.util.resolve_name(dotted, public_api.__package__)
+                imported_modules.append(module)
+                if module in {"modules", "modules.media"}:
+                    imported_modules.extend(f"{module}.{alias.name}" for alias in node.names)
+        media_imports = sorted(
+            name for name in imported_modules
+            if name == "modules.media" or name.startswith("modules.media.")
+        )
+        self.assertEqual(media_imports, ["modules.media.api"])
         self.assertNotIn("modules.pages.web", source)
         self.assertNotIn("transaction.atomic", source)
         self.assertNotIn("select_for_update", source)

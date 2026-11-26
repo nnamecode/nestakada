@@ -144,45 +144,25 @@ def validate_https(value: Any, code: str, *, nullable: bool = False) -> str | No
     return value
 
 
+LEGACY_PARTNER_HTTP_URLS = frozenset({
+    "http://www.blackstone-russia.ru/",
+    "http://automarkirovka.ru/",
+    "http://www.argoauto-center.ru/",
+    "http://www.ton-service.ru/",
+    "http://www.rgs.ru/",
+    "http://www.motortehn.ru/",
+})
+
+
 def _validate_legacy_partner_url(value: Any, code: str) -> str:
-    """Accept the six archived partner URLs without weakening rich-content links."""
+    """Allow exact archived HTTP values; require strict HTTPS otherwise."""
 
     value = _plain(value, 2048, code)
-    try:
-        parsed = urlsplit(value)
-        host = parsed.hostname
-        port = parsed.port
-        decoded = unquote(parsed.path, errors="strict")
-        decoded_query = unquote(parsed.query, errors="strict")
-    except (UnicodeDecodeError, ValueError) as exc:
-        raise ContentValidationError(code) from exc
-    labels = host.split(".") if host else []
-    if (
-        parsed.scheme not in {"http", "https"}
-        or not host
-        or not host.isascii()
-        or len(labels) < 2
-        or any(
-            re.fullmatch(
-                r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?",
-                label,
-            )
-            is None
-            for label in labels
-        )
-        or port is not None
-        or parsed.username is not None
-        or parsed.password is not None
-        or parsed.fragment
-        or re.search(r"%(?![0-9A-Fa-f]{2})", value)
-        or "\\" in decoded
-        or any(
-            char.isspace() or ord(char) < 32 or ord(char) == 127
-            for char in decoded + decoded_query
-        )
-    ):
-        raise ContentValidationError(code)
-    return value
+    if value in LEGACY_PARTNER_HTTP_URLS:
+        return value
+    validated = validate_https(value, code)
+    assert validated is not None
+    return validated
 
 
 class _RichInspector(HTMLParser):

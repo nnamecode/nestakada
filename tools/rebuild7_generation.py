@@ -88,10 +88,37 @@ RELEASE_KEYS = (
     "contracts",
     "configuration",
 )
+GENERATION_STAGES = frozenset(
+    {
+        "SOURCE_INVENTORY",
+        "SCHEMA_PROJECTION",
+        "APPLIED_MIGRATIONS",
+        "DEPENDENCY_PROFILE",
+        "MEDIA_INVENTORY",
+        "RELEASE_DIGEST",
+        "TABLE_COUNTS",
+        "TABLE_CONTENT_HASHES",
+        "WRITE_RELEASE",
+        "WRITE_FACTS",
+        "WRITE_MEDIA",
+        "WRITE_SOURCE_GUARD",
+    }
+)
 
 
 def fail(message: str = "R7_LOCAL_GENERATION_UNAVAILABLE") -> None:
     raise RuntimeError(message)
+
+
+def generation_stage(stage: str, action, *args):
+    if stage not in GENERATION_STAGES:
+        fail("R7_GENERATION_DIAGNOSTIC_UNAVAILABLE")
+    try:
+        return action(*args)
+    except RuntimeError as error:
+        if error.args == ("R7_LOCAL_GENERATION_UNAVAILABLE",):
+            fail(f"R7_GENERATION_{stage}_UNAVAILABLE")
+        raise
 
 
 def canonical(value: object) -> bytes:
@@ -447,9 +474,9 @@ def media_inventory() -> list[dict[str, object]]:
 
 
 def build_release() -> tuple[dict[str, object], dict[str, object], list[dict[str, object]]]:
-    inventory = source_inventory()
-    schema = schema_projection()
-    migrations = applied_migrations()
+    inventory = generation_stage("SOURCE_INVENTORY", source_inventory)
+    schema = generation_stage("SCHEMA_PROJECTION", schema_projection)
+    migrations = generation_stage("APPLIED_MIGRATIONS", applied_migrations)
     files = migration_files(inventory)
     project_migrations = {
         f"{PurePosixPath(row['path']).parts[2]}.{PurePosixPath(row['path']).stem}"
@@ -459,15 +486,17 @@ def build_release() -> tuple[dict[str, object], dict[str, object], list[dict[str
         migration for migration in migrations if migration.split(".", 1)[0] in PROJECT_APP_LABELS
     }
     if not files or project_migrations != applied_project_migrations:
-        fail()
+        fail("R7_GENERATION_MIGRATION_PARITY_UNAVAILABLE")
     image_digest = os.environ.get("ESTAKADA_APP_IMAGE_DIGEST", "")
     if re.fullmatch(r"sha256:[0-9a-f]{64}", image_digest) is None:
-        fail()
+        fail("R7_GENERATION_IMAGE_DIGEST_UNAVAILABLE")
     release = {
         "schema": SCHEMA,
         "releaseId": "src-" + digest_bytes(canonical(inventory))[:16],
         "source": {"files": len(inventory), "sha256": digest_bytes(canonical(inventory))},
-        "dependencies": dependency_profile(inventory),
+        "dependencies": generation_stage(
+            "DEPENDENCY_PROFILE", dependency_profile, inventory
+        ),
         "runtime": {
             "image": image_digest,
             "python": ".".join(platform.python_version().split(".")[:2]),
@@ -505,12 +534,16 @@ def build_release() -> tuple[dict[str, object], dict[str, object], list[dict[str
             ],
         },
     }
-    media = media_inventory()
+    media = generation_stage("MEDIA_INVENTORY", media_inventory)
     facts = {
         "schema": SCHEMA,
-        "releaseSha256": restore_release_sha256(release),
-        "tableCounts": table_counts(),
-        "tableContentSha256": table_content_hashes(),
+        "releaseSha256": generation_stage(
+            "RELEASE_DIGEST", restore_release_sha256, release
+        ),
+        "tableCounts": generation_stage("TABLE_COUNTS", table_counts),
+        "tableContentSha256": generation_stage(
+            "TABLE_CONTENT_HASHES", table_content_hashes
+        ),
         "media": {
             "files": len(media),
             "bytes": sum(int(row["bytes"]) for row in media),
@@ -548,13 +581,43 @@ def build_release_snapshot() -> tuple[dict[str, object], dict[str, object], list
 
 def capture() -> None:
     release, facts, media = build_release_snapshot()
-    write_new(OUTPUT / "release-manifest.json", release)
-    write_new(OUTPUT / "capture-facts.json", facts)
-    write_new(OUTPUT / "media-inventory.json", media)
+    generation_stage(
+        "WRITE_RELEASE", write_new, OUTPUT / "release-manifest.json", release
+    )
+    generation_stage("WRITE_FACTS", write_new, OUTPUT / "capture-facts.json", facts)
+    generation_stage("WRITE_MEDIA", write_new, OUTPUT / "media-inventory.json", media)
     print(
         f"R7_GENERATION_CAPTURE_OK tables={len(facts['tableCounts'])} "
         f"media_files={facts['media']['files']} media_bytes={facts['media']['bytes']}"
     )
+
+
+def source_guard() -> None:
+    with transaction.atomic():
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE, READ ONLY, DEFERRABLE"
+            )
+        schema = generation_stage("SCHEMA_PROJECTION", schema_projection)
+        migrations = generation_stage("APPLIED_MIGRATIONS", applied_migrations)
+        counts = generation_stage("TABLE_COUNTS", table_counts)
+        content = generation_stage("TABLE_CONTENT_HASHES", table_content_hashes)
+        media = generation_stage("MEDIA_INVENTORY", media_inventory)
+    guard = {
+        "schema": "estakada.r7-source-guard-v1",
+        "schemaSha256": str(schema["sha256"]),
+        "schemaSourceCaptureSha256": str(schema["sourceCaptureSha256"]),
+        "appliedMigrationsSha256": digest_bytes(canonical(migrations)),
+        "tableCountsSha256": digest_bytes(canonical(counts)),
+        "tableContentSha256": digest_bytes(canonical(content)),
+        "mediaInventorySha256": digest_bytes(canonical(media)),
+        "mediaFiles": len(media),
+        "mediaBytes": sum(int(row["bytes"]) for row in media),
+    }
+    generation_stage(
+        "WRITE_SOURCE_GUARD", write_new, OUTPUT / "source-guard.json", guard
+    )
+    print("R7_GENERATION_SOURCE_GUARD_OK")
 
 
 def read_authority(name: str) -> object:
@@ -995,16 +1058,20 @@ def verify() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=("capture", "verify", "binding-capture"))
+    parser.add_argument(
+        "mode", choices=("capture", "verify", "binding-capture", "source-guard")
+    )
     args = parser.parse_args()
     if settings.SERVICE_REQUESTS_ENABLED is not False:
-        fail()
+        fail("R7_GENERATION_REQUESTS_NOT_DISABLED")
     if args.mode == "capture":
         capture()
     elif args.mode == "verify":
         verify()
-    else:
+    elif args.mode == "binding-capture":
         binding_capture()
+    else:
+        source_guard()
 
 
 if __name__ == "__main__":
