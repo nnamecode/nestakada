@@ -38,12 +38,15 @@ PROJECT_APP_LABELS = frozenset(
 )
 SOURCE_FILES = (
     "docs/clean-rebuild-7-local-restore-plan.md",
+    "docs/clean-rebuild-7-core20-owner-acceptance-plan.md",
     "environment/foundation/requirements.lock",
     "scripts/rebuild7-local-restore.ps1",
     "tools/rebuild7_generation.py",
     "tools/test_rebuild7_generation_diagnostic.py",
     "tools/rebuild7_http_smoke.py",
     "tools/rebuild7_media.py",
+    "tools/rebuild7_owner_preview_projection.py",
+    "tools/test_rebuild7_owner_preview_projection.py",
     "tools/rebuild7_pg.sh",
 )
 KEY_RE = re.compile(

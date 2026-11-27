@@ -30,6 +30,7 @@ from rebuild3_importer.freeze_authority import (
     compose_page_route_authority,
 )
 from rebuild3_importer.manifest import ManifestLimits
+from rebuild3_importer.service_media import INFOGRAPHIC_ASSET_ID, service_media_by_pair
 
 
 EVIDENCE_SHA256 = "52823a26c535f6bcbb45601fccad630278d59d421ab5f87b25bb1390d28867ca"
@@ -40,7 +41,6 @@ EVIDENCE_ROLES = frozenset({
     "illustration-or-layout",
 })
 LOGO_EVIDENCE_ID = "MED-0105"
-INFOGRAPHIC_ASSET_ID = "6fa5cdd8-dabd-52ab-b994-4e10ef2cb2c8"
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 MIME_BY_EXTENSION = {
     "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
@@ -332,8 +332,19 @@ def compose_freeze_package(capture: FreezeCapture) -> FreezePackage:
     ]
     if len(package_only) != EXACT_PACKAGE_MEDIA:
         raise FreezeError("media-package-only-count")
+    service_media = service_media_by_pair()
+    bound_service_media: set[tuple[str, int]] = set()
     for row in package_only:
-        asset_id, file_id = uuid.uuid4(), uuid.uuid4()
+        pair = (row["sha256"], row["byte_size"])
+        service_row = service_media.get(pair)
+        if service_row is None:
+            asset_id, file_id = uuid.uuid4(), uuid.uuid4()
+        else:
+            if row["source_path"] != service_row["source_path"]:
+                raise FreezeError("service-media-authority")
+            asset_id = uuid.UUID(service_row["asset_id"])
+            file_id = uuid.UUID(service_row["file_id"])
+            bound_service_media.add(pair)
         assets.append({
             "id": str(asset_id), "purpose": "CONTENT",
             "source_sha256": row["sha256"], "state": "READY",
@@ -346,6 +357,8 @@ def compose_freeze_package(capture: FreezeCapture) -> FreezePackage:
         media_bindings.append(MediaBinding(
             asset_id, file_id, "APPROVED_PACKAGE", None, None, False,
         ))
+    if bound_service_media != set(service_media):
+        raise FreezeError("service-media-authority")
     if len(assets) != EXACT_TARGET_MEDIA or len(files) != EXACT_TARGET_MEDIA:
         raise FreezeError("media-target-count")
 
@@ -493,7 +506,7 @@ def compose_run_authority(
     )
     if (
         len(maximum_snapshot_id) != 200
-        or len(package.usages) != 30
+        or len(package.usages) != 53
         or total_bytes != 56_440_807
         or gallery_bytes != 41_176_391
         or len(trusted_svg) != 3

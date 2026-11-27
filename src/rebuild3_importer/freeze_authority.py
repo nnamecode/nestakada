@@ -32,6 +32,7 @@ from rebuild3_importer.payload_transform import (
     target_page_kind,
     transform_legacy_payload,
 )
+from rebuild3_importer.service_media import bind_service_media
 
 
 @dataclass(frozen=True, slots=True, repr=False)
@@ -189,6 +190,7 @@ def _literal_page_route_inputs() -> tuple[
             profile=home["profile"] if is_home else profile,
             page_name=descriptor["name"],
         )
+        target_current = bind_service_media(target_current, descriptor["page_id"])
         target_previous = (
             transform_legacy_payload(
                 source_previous,

@@ -4,7 +4,9 @@
 param(
     [switch]$RecoverStoppedSource,
     [switch]$RecoverGenerationDiagnostic,
-    [switch]$DisposableCloneRemediation
+    [switch]$DisposableCloneRemediation,
+    [switch]$OwnerEvidenceRecapture,
+    [switch]$OwnerInteractivePreview
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,6 +40,34 @@ $expectedCloneHostTransportFailureRun = 'd40d43cd-cd66-4b70-bc62-ba4812731443'
 $expectedCloneBrowserFailureRun = '32aefdbf-50db-45fe-8086-75d588b99496'
 $expectedClonePolicyFailureRun = '8a775d4f-693a-41cf-9627-763e36f52261'
 $expectedCloneStoppedDbFailureRun = '3edf38fc-bd3c-4619-9b10-c59f46cd06c9'
+$expectedClonePolicyRepeatFailureRun = 'fa7afac4-7bcc-4451-815e-f289867fda33'
+$expectedClonePolicyStateFailureRun = 'ff7eb977-67d9-496e-933d-8a3864d6f0e2'
+$expectedCloneBrowserResultFailureRun = '4ef11768-ada5-4c4f-bac3-6c04e7cd67ab'
+$expectedCloneNavigationFailureRun = 'ca53b402-0252-41bf-9bdd-95a82cb4f3f3'
+$expectedCloneVisualFailureRun = 'edd9bf83-4705-45b7-828f-c57b0a8b6498'
+$expectedCloneBrokenImagesFailureRun = 'e2b08cb7-312d-4371-bacb-6f1feffce810'
+$expectedCloneHeaderSocialsFailureRun = 'a66555c9-8bdd-477e-92dc-d4e551a43344'
+$expectedCloneAssertionFailureRun = 'a15fdb61-3293-4d16-ba8d-a0448c287b66'
+$expectedCloneExternalFailureRun = 'd46796d2-9e2f-40c0-a408-791a2e6dc97f'
+$expectedCloneExternalHostFailureRun = 'e6c8013d-6009-4bb3-a311-e5833acc87d4'
+$expectedCloneExternalActiveFailureRun = 'ed20182f-1997-421f-ad0b-548fc8c0d5ce'
+$expectedCloneExternalScriptFailureRun = '66fb6430-dfe3-4be5-9f1d-4348adffc146'
+$expectedCloneExternalOtherHostFailureRun = 'b8582ab9-9dab-4577-b8bc-84c45969862b'
+$expectedCloneExternalDomScriptFailureRun = '07bf998a-57c9-466a-b46c-be0c034e6a83'
+$expectedCloneExternalKasperskyFailureRun = '74965e97-7c43-4c1a-8bf9-f0e3282ce326'
+$expectedCloneLatestBrokenImagesFailureRun = 'a7e7e15d-0c3c-48ba-9cb4-e11a7324fd0b'
+$expectedCloneBrowserTimeoutRun = 'b38d54e1-2697-4ddc-8c19-35a16551427d'
+$expectedOwnerEvidenceRun = '150f756a-8d63-40f8-a1fa-da2024a2090f'
+$expectedOwnerEvidenceManifestSha = '488d7836ba6c9a696dc8ff4e7715135b3ca25dbe0d994b36232ebb4b35f8d215'
+$expectedOwnerEvidenceNames = @(
+    'manifest.json',
+    'MAP-001-desktop.png', 'MAP-001-mobile.png',
+    'MAP-002-desktop.png', 'MAP-002-mobile.png',
+    'MAP-003-desktop.png',
+    'MAP-007-desktop.png', 'MAP-007-mobile.png',
+    'MAP-008-desktop.png', 'MAP-008-mobile.png',
+    'MAP-015-desktop.png', 'MAP-036-desktop.png'
+) | Sort-Object
 $runId = [guid]::NewGuid().ToString('D').ToLowerInvariant()
 $runToken = $runId.Replace('-', '')
 $staging = Join-Path $stagingRoot $runToken
@@ -60,6 +90,8 @@ $cloneNginxConfig = Join-Path $staging 'nginx.conf'
 $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $evidenceParent = [IO.Path]::GetFullPath((Join-Path $tempRoot 'estakada-core20-owner-acceptance'))
 $evidence = [IO.Path]::GetFullPath((Join-Path $evidenceParent $runId))
+$ownerAuthorityRequested = $OwnerEvidenceRecapture -or $OwnerInteractivePreview
+$disposableCloneRequested = $DisposableCloneRemediation -or $ownerAuthorityRequested
 $session = "core20-$runToken"
 $lock = $null
 $lockOwned = $false
@@ -74,6 +106,8 @@ $ingressStarted = $false
 $walkthroughComplete = $false
 $evidencePrepared = $false
 $evidenceComplete = $false
+$evidenceCreated = $false
+$authorityHandles = [Collections.Generic.List[IO.FileStream]]::new()
 $failure = $null
 $cleanupErrors = [Collections.Generic.List[string]]::new()
 $screenshots = [Collections.Generic.List[object]]::new()
@@ -583,7 +617,11 @@ function Assert-OwnedCloneContainer([string]$Name, [string]$Role, [string]$Image
     $expectedMounts = switch ($Role) {
         migrate { @{ '/app' = (Join-Path $repo 'src'); '/run/secrets/db-password' = (Join-Path $private 'migrator-password'); '/run/secrets/database-ca' = (Join-Path $private 'database-ca') } }
         app { @{ '/app' = (Join-Path $repo 'src'); '/run/secrets/db-password' = (Join-Path $private 'migrator-password'); '/run/secrets/database-ca' = (Join-Path $private 'database-ca') } }
-        ingress { @{ '/etc/nginx/nginx.conf' = $cloneNginxConfig; '/srv/public-media' = (Join-Path $repo 'work\rb5-home-preview\media') } }
+        ingress { @{
+            '/etc/nginx/nginx.conf' = $cloneNginxConfig
+            '/srv/public-media' = (Join-Path $repo 'work\rb5-home-preview\media')
+            '/srv/static' = (Join-Path $repo 'src\modules\pages\static')
+        } }
     }
     if ([string]$item.Id -cne $ExpectedId -or ($RequireExactName -and [string]$item.Name -cne "/$Name") -or [string]$item.Image -cne $Image -or
         [string]$item.Config.Labels.'estakada.scope' -cne 'core20-disposable-clone' -or
@@ -743,7 +781,7 @@ function Remove-DisposableCloneDatabase {
 }
 
 function New-DisposableCloneDatabase {
-    if (!$DisposableCloneRemediation -or $cloneDatabase -notmatch '^estakada_core20_[0-9a-f]{32}$') { Fail-Core20 'CORE20_DATABASE_SCOPE_INVALID' }
+    if (!$disposableCloneRequested -or $cloneDatabase -notmatch '^estakada_core20_[0-9a-f]{32}$') { Fail-Core20 'CORE20_DATABASE_SCOPE_INVALID' }
     Assert-ZeroClients $sourceDatabase
     Assert-CloneDatabaseAbsent
     Invoke-Docker @(
@@ -877,13 +915,17 @@ function Start-ClonePreview {
 
     $mediaSource = Join-Path $repo 'work\rb5-home-preview\media'
     Assert-Contained $repo $mediaSource $true
+    $staticSource = Join-Path $repo 'src\modules\pages\static'
+    Assert-Contained $repo $staticSource $true
+    Assert-PlainDirectory $staticSource
     $ingressArgs = @(
         'create', '--name', $cloneIngress,
         '--label', 'estakada.scope=core20-disposable-clone', '--label', "estakada.run=$runToken", '--label', 'estakada.role=ingress',
         '--network', $previewNetwork, '--read-only', '--user', '101:101', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=32m,uid=101,gid=101,mode=1777',
         '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges:true', '--memory', '256m', '--cpus', '0.5', '--pids-limit', '64',
         '--publish', '127.0.0.1:18085:8080', '--mount', "type=bind,source=$cloneNginxConfig,target=/etc/nginx/nginx.conf,readonly",
-        '--mount', "type=bind,source=$mediaSource,target=/srv/public-media,readonly", '--entrypoint', 'nginx',
+        '--mount', "type=bind,source=$mediaSource,target=/srv/public-media,readonly",
+        '--mount', "type=bind,source=$staticSource,target=/srv/static,readonly", '--entrypoint', 'nginx',
         $expectedIngressImage, '-g', 'daemon off;'
     )
     $ingressIds = @(Invoke-Docker $ingressArgs 60000)
@@ -934,8 +976,11 @@ function Assert-ClonePreviewBoundary {
     }
     $appSource = @($app.Mounts | Where-Object { [string]$_.Destination -ceq '/app' })
     $media = @($ingress.Mounts | Where-Object { [string]$_.Destination -ceq '/srv/public-media' })
+    $static = @($ingress.Mounts | Where-Object { [string]$_.Destination -ceq '/srv/static' })
     $config = @($ingress.Mounts | Where-Object { [string]$_.Destination -ceq '/etc/nginx/nginx.conf' })
     if ($appSource.Count -ne 1 -or [bool]$appSource[0].RW -or $media.Count -ne 1 -or [bool]$media[0].RW -or
+        $static.Count -ne 1 -or [bool]$static[0].RW -or
+        [IO.Path]::GetFullPath([string]$static[0].Source) -cne [IO.Path]::GetFullPath((Join-Path $repo 'src\modules\pages\static')) -or
         $config.Count -ne 1 -or [bool]$config[0].RW) { Fail-Core20 'CORE20_CLONE_PREVIEW_INVALID' }
     return [ordered]@{ app = Get-ContainerStaticProjection $app; ingress = Get-ContainerStaticProjection $ingress }
 }
@@ -946,8 +991,11 @@ function Invoke-Playwright(
     [bool]$Cleanup = $false,
     [string]$FailureCode = 'CORE20_BROWSER_FAILED'
 ) {
-    if ($FailureCode -notmatch '^CORE20_BROWSER_(?:OPEN|POLICY|PID|RESIZE|NAVIGATION|SCREENSHOT|EXTERNAL)_FAILED$' -and
-        $FailureCode -cne 'CORE20_BROWSER_FAILED') { Fail-Core20 'CORE20_BROWSER_DIAGNOSTIC_INVALID' }
+    if ($FailureCode -notmatch '^CORE20_BROWSER_(?:OPEN|POLICY|POLICY_FUNCTION|POLICY_STATE|POLICY_ROUTE|PID|RESIZE|NAVIGATION|HTTP|VISUAL|BROKEN_IMAGES|BROKEN_HEADER_LOGO|BROKEN_HEADER_SOCIALS|BROKEN_HOME_HERO|BROKEN_HOME_STEPS|BROKEN_HOME_SERVICES|BROKEN_HOME_STRIP|BROKEN_HOME_WORKS|BROKEN_HOME_CONTACTS|BROKEN_FOOTER_LOGO|OVERFLOW|SCREENSHOT|EXTERNAL|EXTERNAL_SCHEME|EXTERNAL_HOST|EXTERNAL_PORT|EXTERNAL_LOCALHOST|EXTERNAL_IPV6_LOOPBACK|EXTERNAL_OTHER_HOST|EXTERNAL_KASPERSKY_HOST|EXTERNAL_NON_KASPERSKY_HOST|EXTERNAL_DOM_SCRIPT|EXTERNAL_SCRIPT_NO_CURRENT_DOM|EXTERNAL_DOCUMENT|EXTERNAL_ACTIVE|EXTERNAL_SCRIPT|EXTERNAL_XHR|EXTERNAL_FETCH|EXTERNAL_WEBSOCKET|EXTERNAL_EVENTSOURCE|EXTERNAL_VISUAL|EXTERNAL_METADATA|CONSOLE_ERROR|PAGE_ERROR|FINALIZE)_FAILED$' -and
+        $FailureCode -cne 'CORE20_BROWSER_FAILED' -and $FailureCode -cne 'CORE20_EXTERNAL_REQUEST_DETECTED' -and
+        $FailureCode -cne 'CORE20_BROWSER_ASSERTION_FAILED') {
+        Fail-Core20 'CORE20_BROWSER_DIAGNOSTIC_INVALID'
+    }
     $args = @("-s=$session")
     if ($Raw) { $args += '--raw' }
     $args += $Arguments
@@ -1002,32 +1050,67 @@ function Invoke-BrowserState([string]$Url) {
     $escaped = $Url.Replace("'", "\'")
     $code = @"
 async page => {
-page.__core20Console = [];
-page.__core20PageErrors = [];
-page.on('console', message => { if (message.type() === 'error') page.__core20Console.push(message.text()); });
-page.on('pageerror', error => page.__core20PageErrors.push(error.name));
 const response = await page.goto('$escaped', { waitUntil: 'networkidle', timeout: 20000 });
+if (!response || response.status() !== 200) throw new Error('http');
 await page.evaluate(async () => {
-  const pending = Array.from(document.images).filter(image => !image.complete).map(image => new Promise(resolve => {
+  const images = Array.from(document.images);
+  for (const image of images) image.loading = 'eager';
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const pending = images.filter(image => !image.complete).map(image => new Promise(resolve => {
     const done = () => resolve(); image.addEventListener('load', done, { once: true }); image.addEventListener('error', done, { once: true });
   }));
   await Promise.race([Promise.all(pending), new Promise(resolve => setTimeout(resolve, 10000))]);
 });
-const state = await page.evaluate(() => ({
-  brokenImages: Array.from(document.images).filter(image => !image.complete || image.naturalWidth === 0).length,
-  overflow: Math.max(document.documentElement.scrollWidth, document.body ? document.body.scrollWidth : 0) > window.innerWidth
-}));
-return JSON.stringify({ status: response ? response.status() : 0, brokenImages: state.brokenImages, overflow: state.overflow,
-  consoleErrors: page.__core20Console.length, pageErrors: page.__core20PageErrors.length });
 }
 "@
-    $output = @(Invoke-Playwright @('run-code', $code) $true $false 'CORE20_BROWSER_NAVIGATION_FAILED')
-    $jsonLine = @($output | Where-Object { [string]$_ -match '^\{.*\}$' })
-    if ($jsonLine.Count -ne 1) { Fail-Core20 'CORE20_BROWSER_RESULT_INVALID' }
-    $state = [string]$jsonLine[0] | ConvertFrom-Json
-    if ([int]$state.status -ne 200 -or [int]$state.brokenImages -ne 0 -or [bool]$state.overflow -or
-        [int]$state.consoleErrors -ne 0 -or [int]$state.pageErrors -ne 0) { Fail-Core20 'CORE20_BROWSER_ASSERTION_FAILED' }
-    return $state
+    Invoke-Playwright @('run-code', $code) $true $false 'CORE20_BROWSER_HTTP_FAILED' | Out-Null
+    Assert-BrowserVisual
+    Assert-BrowserLatches
+    return [pscustomobject]@{ status = 200; brokenImages = 0; overflow = $false; consoleErrors = 0; pageErrors = 0; productExternalRequests = 0 }
+}
+
+function Assert-BrowserVisual {
+    $visualCode = @"
+async page => {
+const selectors = [
+  '.es-header > .es-brand img', '.es-header-socials img', '.es-hero-art img',
+  '.es-step-grid img', '.es-service-grid img', '.es-photo-strip-image',
+  '.es-work-grid img', '.es-contact-actions img', '.es-footer .es-brand img'
+];
+const failed = await page.evaluate(selectors => {
+  const broken = image => !image.complete || image.naturalWidth === 0;
+  return selectors.some(selector => Array.from(document.querySelectorAll(selector)).some(broken)) ||
+    Array.from(document.images).some(broken) ||
+    Math.max(document.documentElement.scrollWidth, document.body ? document.body.scrollWidth : 0) > window.innerWidth;
+}, selectors);
+if (failed) throw new Error('visual');
+}
+"@
+    Invoke-Playwright @('run-code', $visualCode) $true $false 'CORE20_BROWSER_VISUAL_FAILED' | Out-Null
+}
+
+function Assert-BrowserLatches {
+    $checkpointCode = @"
+async page => {
+const productFailed = () => page.__core20ExternalDetected || page.__core20ConsoleErrorDetected || page.__core20PageErrorDetected;
+if (productFailed()) throw new Error('product-latch');
+const found = await page.evaluate(() => Array.from(document.scripts).some(script => {
+  if (!script.src) return false;
+  const url = new URL(script.src, document.baseURI);
+  const local = url.protocol === 'http:' && url.hostname === '127.0.0.1' && url.port === '18085';
+  const kaspersky = url.protocol === 'http:' && url.port === '' &&
+    (url.hostname === 'kaspersky-labs.com' || url.hostname.endsWith('.kaspersky-labs.com'));
+  return !local && !kaspersky;
+}));
+if (found || productFailed()) throw new Error('checkpoint');
+}
+"@
+    Invoke-Playwright @('run-code', $checkpointCode) $true $false 'CORE20_BROWSER_ASSERTION_FAILED' | Out-Null
+}
+
+function Complete-BrowserPolicy {
+    $code = "async page => { const failed = () => page.__core20ExternalDetected || page.__core20ConsoleErrorDetected || page.__core20PageErrorDetected; if (failed()) throw new Error('blocked'); await page.close(); if (failed()) throw new Error('blocked'); }"
+    Invoke-Playwright @('run-code', $code) $true $false 'CORE20_BROWSER_FINALIZE_FAILED' | Out-Null
 }
 
 function Get-PngDimensions([string]$Path) {
@@ -1048,29 +1131,105 @@ function Get-PngDimensions([string]$Path) {
     return [pscustomobject]@{ width = $width; height = $height }
 }
 
+function Read-ExactStreamBytes([IO.FileStream]$Stream, [string]$Code) {
+    if ($Stream.Length -le 0 -or $Stream.Length -gt 20MB) { Fail-Core20 $Code }
+    $bytes = [byte[]]::new([int]$Stream.Length)
+    $Stream.Position = 0
+    $offset = 0
+    while ($offset -lt $bytes.Length) {
+        $read = $Stream.Read($bytes, $offset, $bytes.Length - $offset)
+        if ($read -le 0) { Fail-Core20 $Code }
+        $offset += $read
+    }
+    return ,$bytes
+}
+
+function Assert-OwnerEvidenceRecaptureAuthority {
+    $authority = [IO.Path]::GetFullPath((Join-Path $evidenceParent $expectedOwnerEvidenceRun))
+    if (!(Test-Path -LiteralPath $evidenceParent) -or !(Test-Path -LiteralPath $authority)) {
+        Fail-Core20 'CORE20_RECAPTURE_AUTHORITY_MISSING'
+    }
+    Assert-PlainDirectory $evidenceParent
+    Assert-Contained $evidenceParent $authority $true
+    Assert-PlainDirectory $authority
+    $files = @(Get-ChildItem -Force -File -LiteralPath $authority)
+    $directories = @(Get-ChildItem -Force -Directory -LiteralPath $authority)
+    if ($files.Count -ne 12 -or $directories.Count -ne 0 -or @($files | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }).Count -ne 0 -or
+        @(Compare-Object $expectedOwnerEvidenceNames @($files.Name | Sort-Object) -CaseSensitive).Count -ne 0) {
+        Fail-Core20 'CORE20_RECAPTURE_AUTHORITY_INVALID'
+    }
+    $streams = @{}
+    foreach ($name in $expectedOwnerEvidenceNames) {
+        $stream = [IO.File]::Open((Join-Path $authority $name), [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+        $authorityHandles.Add($stream)
+        $streams[$name] = $stream
+    }
+    $manifestBytes = Read-ExactStreamBytes $streams['manifest.json'] 'CORE20_RECAPTURE_AUTHORITY_INVALID'
+    $manifestSha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
+    if ($manifestSha -cne $expectedOwnerEvidenceManifestSha) {
+        Fail-Core20 'CORE20_RECAPTURE_AUTHORITY_INVALID'
+    }
+    $manifest = [Text.Encoding]::UTF8.GetString($manifestBytes) | ConvertFrom-Json
+    if ([string]$manifest.schema -cne 'estakada.core20-owner-evidence-v2' -or
+        [string]$manifest.runId -cne $expectedOwnerEvidenceRun -or
+        [int]$manifest.readiness.status -ne 200 -or [int]$manifest.browser.productExternalRequests -ne 0 -or
+        ![bool]$manifest.acceptanceProjection.equal -or ![bool]$manifest.sourceGuard.equal -or
+        @($manifest.screenshots).Count -ne 11) {
+        Fail-Core20 'CORE20_RECAPTURE_AUTHORITY_INVALID'
+    }
+    foreach ($name in @($expectedOwnerEvidenceNames | Where-Object { $_ -ne 'manifest.json' })) {
+        $rows = @($manifest.screenshots | Where-Object { [string]$_.filename -ceq $name })
+        $bytes = Read-ExactStreamBytes $streams[$name] 'CORE20_RECAPTURE_AUTHORITY_INVALID'
+        $sha = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+        if ($rows.Count -ne 1 -or [long]$rows[0].bytes -ne $bytes.Length -or [string]$rows[0].sha256 -cne $sha) {
+            Fail-Core20 'CORE20_RECAPTURE_AUTHORITY_INVALID'
+        }
+    }
+}
+
 function Add-Screenshot([string]$Map, [string]$Path, [string]$Viewport, [int]$Width, [int]$Height) {
     Invoke-Playwright @('resize', [string]$Width, [string]$Height) $false $false 'CORE20_BROWSER_RESIZE_FAILED' | Out-Null
     $url = "http://127.0.0.1:18085$Path"
     $state = Invoke-BrowserState $url
+    $fixedBackgroundProjection = $Map -ceq 'MAP-001' -and $Viewport -ceq 'desktop'
+    if ($fixedBackgroundProjection) {
+        $projectionCode = @"
+async page => {
+const valid = await page.evaluate(async () => {
+  const strip = document.querySelector('#estakada-public-v4 .es-photo-strip');
+  if (!strip || window.innerWidth <= 800 || getComputedStyle(strip).backgroundImage === 'none') return false;
+  strip.style.setProperty('background-attachment', 'scroll', 'important');
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  return getComputedStyle(strip).backgroundImage !== 'none' && getComputedStyle(strip).backgroundAttachment === 'scroll';
+});
+if (!valid) throw new Error('fixed-background-projection');
+}
+"@
+        Invoke-Playwright @('run-code', $projectionCode) $true $false 'CORE20_BROWSER_ASSERTION_FAILED' | Out-Null
+    }
     $filename = "$Map-$Viewport.png"
     $destination = Join-Path $evidence $filename
-    Invoke-Playwright @('screenshot', '--filename', $destination) $false $false 'CORE20_BROWSER_SCREENSHOT_FAILED' | Out-Null
+    Invoke-Playwright @('screenshot', '--filename', $destination, '--full-page') $false $false 'CORE20_BROWSER_SCREENSHOT_FAILED' | Out-Null
+    Assert-BrowserVisual
+    Assert-BrowserLatches
     $item = Get-Item -Force -LiteralPath $destination
     if ($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $item.Length -le 0 -or $item.Length -gt 20MB) {
         Fail-Core20 'CORE20_EVIDENCE_INVALID'
     }
     $dimensions = Get-PngDimensions $destination
-    if ($dimensions.width -ne $Width -or $dimensions.height -ne $Height) { Fail-Core20 'CORE20_EVIDENCE_INVALID' }
+    if ($dimensions.width -ne $Width -or $dimensions.height -lt $Height -or $dimensions.height -gt 65535) { Fail-Core20 'CORE20_EVIDENCE_INVALID' }
     $screenshots.Add([ordered]@{
-        map = $Map; path = $Path; viewport = $Viewport; width = $Width; height = $Height
+        map = $Map; path = $Path; viewport = $Viewport; viewportWidth = $Width; viewportHeight = $Height
+        capture = 'full-page'; fixedBackgroundProjection = [bool]$fixedBackgroundProjection
+        width = $dimensions.width; height = $dimensions.height
         filename = $filename; bytes = [long]$item.Length
         sha256 = (Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash.ToLowerInvariant()
-        status = [int]$state.status; consoleErrors = 0; pageErrors = 0; brokenImages = 0; overflow = $false
+        status = [int]$state.status; consoleErrors = 0; pageErrors = 0; brokenImages = 0; overflow = $false; productExternalRequests = 0
     })
 }
 
 try {
-    $requestedModes = @($RecoverStoppedSource, $RecoverGenerationDiagnostic, $DisposableCloneRemediation)
+    $requestedModes = @($RecoverStoppedSource, $RecoverGenerationDiagnostic, $DisposableCloneRemediation, $OwnerEvidenceRecapture, $OwnerInteractivePreview)
     if (@($requestedModes | Where-Object { $_ }).Count -gt 1) { Fail-Core20 'CORE20_RECOVERY_MODE_INVALID' }
     $recoveryRequested = $RecoverStoppedSource -or $RecoverGenerationDiagnostic -or $DisposableCloneRemediation
     $workParent = Join-Path $repo 'work'
@@ -1116,20 +1275,37 @@ try {
         $stoppedMatch = [regex]::Match($previousFailure, '^(?<run>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\r?\nfailure=CORE20_OWNER_ACCEPTANCE_UNAVAILABLE cleanup=clients,clients-post,bitmap\r?\n?$')
         $captureMatch = [regex]::Match($previousFailure, '^(?<run>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\r?\nrecovered-from=(?<parent>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\r?\nfailure=CORE20_OWNER_ACCEPTANCE_UNAVAILABLE cleanup=\r?\n?$')
         $diagnosticMatch = [regex]::Match($previousFailure, '^(?<run>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\r?\nrecovered-from=(?<parent>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\r?\nfailure=CORE20_CAPTURE_R7_LOCAL_GENERATION_UNAVAILABLE cleanup=\r?\n?$')
-        $cloneMatch = [regex]::Match($previousFailure, '^(?<run>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\nrecovered-from=(?<parent>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\nfailure=CORE20_RECOVERY_BITMAP_INVALID cleanup=\n$')
+        $cloneMatch = [regex]::Match($previousFailure, '^(?<run>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\nrecovered-from=(?<parent>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\nfailure=CORE20_BROWSER_TIMEOUT cleanup=\n$')
         if ($DisposableCloneRemediation) {
-            if (!$cloneMatch.Success -or $cloneMatch.Groups['run'].Value -cne $expectedCloneStoppedDbFailureRun -or
-                $cloneMatch.Groups['parent'].Value -cne $expectedClonePolicyFailureRun) {
+            if (!$cloneMatch.Success -or $cloneMatch.Groups['run'].Value -cne $expectedCloneBrowserTimeoutRun -or
+                $cloneMatch.Groups['parent'].Value -cne $expectedCloneLatestBrokenImagesFailureRun) {
                 Fail-Core20 'CORE20_RECOVERY_LOCK_INVALID'
             }
             $recoveredFailureRun = $cloneMatch.Groups['run'].Value
-            $recoveryNeedsDbStart = $true
-            $expectedCloneBytes = [Text.Encoding]::ASCII.GetBytes("$expectedCloneStoppedDbFailureRun`nrecovered-from=$expectedClonePolicyFailureRun`nfailure=CORE20_RECOVERY_BITMAP_INVALID cleanup=`n")
+            $recoveryNeedsDbStart = $false
+            $expectedCloneBytes = [Text.Encoding]::ASCII.GetBytes("$expectedCloneBrowserTimeoutRun`nrecovered-from=$expectedCloneLatestBrokenImagesFailureRun`nfailure=CORE20_BROWSER_TIMEOUT cleanup=`n")
             $actualCloneBytes = [Text.Encoding]::ASCII.GetBytes($previousFailure)
             if ($actualCloneBytes.Length -ne $expectedCloneBytes.Length) { Fail-Core20 'CORE20_RECOVERY_LOCK_INVALID' }
             for ($index = 0; $index -lt $expectedCloneBytes.Length; $index++) {
                 if ($actualCloneBytes[$index] -ne $expectedCloneBytes[$index]) { Fail-Core20 'CORE20_RECOVERY_LOCK_INVALID' }
             }
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneLatestBrokenImagesFailureRun.lock") "$expectedCloneLatestBrokenImagesFailureRun`nrecovered-from=$expectedCloneExternalKasperskyFailureRun`nfailure=CORE20_BROWSER_BROKEN_IMAGES_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalKasperskyFailureRun.lock") "$expectedCloneExternalKasperskyFailureRun`nrecovered-from=$expectedCloneExternalDomScriptFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_KASPERSKY_HOST_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalDomScriptFailureRun.lock") "$expectedCloneExternalDomScriptFailureRun`nrecovered-from=$expectedCloneExternalOtherHostFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_DOM_SCRIPT_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalOtherHostFailureRun.lock") "$expectedCloneExternalOtherHostFailureRun`nrecovered-from=$expectedCloneExternalScriptFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_OTHER_HOST_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalScriptFailureRun.lock") "$expectedCloneExternalScriptFailureRun`nrecovered-from=$expectedCloneExternalActiveFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_SCRIPT_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalActiveFailureRun.lock") "$expectedCloneExternalActiveFailureRun`nrecovered-from=$expectedCloneExternalHostFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_ACTIVE_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalHostFailureRun.lock") "$expectedCloneExternalHostFailureRun`nrecovered-from=$expectedCloneExternalFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_HOST_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneExternalFailureRun.lock") "$expectedCloneExternalFailureRun`nrecovered-from=$expectedCloneAssertionFailureRun`nfailure=CORE20_BROWSER_EXTERNAL_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneAssertionFailureRun.lock") "$expectedCloneAssertionFailureRun`nrecovered-from=$expectedCloneHeaderSocialsFailureRun`nfailure=CORE20_BROWSER_ASSERTION_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneHeaderSocialsFailureRun.lock") "$expectedCloneHeaderSocialsFailureRun`nrecovered-from=$expectedCloneBrokenImagesFailureRun`nfailure=CORE20_BROWSER_BROKEN_HEADER_SOCIALS_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneBrokenImagesFailureRun.lock") "$expectedCloneBrokenImagesFailureRun`nrecovered-from=$expectedCloneVisualFailureRun`nfailure=CORE20_BROWSER_BROKEN_IMAGES_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneVisualFailureRun.lock") "$expectedCloneVisualFailureRun`nrecovered-from=$expectedCloneNavigationFailureRun`nfailure=CORE20_BROWSER_VISUAL_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneNavigationFailureRun.lock") "$expectedCloneNavigationFailureRun`nrecovered-from=$expectedCloneBrowserResultFailureRun`nfailure=CORE20_BROWSER_NAVIGATION_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneBrowserResultFailureRun.lock") "$expectedCloneBrowserResultFailureRun`nrecovered-from=$expectedClonePolicyStateFailureRun`nfailure=CORE20_BROWSER_RESULT_INVALID cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedClonePolicyStateFailureRun.lock") "$expectedClonePolicyStateFailureRun`nrecovered-from=$expectedClonePolicyRepeatFailureRun`nfailure=CORE20_BROWSER_POLICY_STATE_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedClonePolicyRepeatFailureRun.lock") "$expectedClonePolicyRepeatFailureRun`nrecovered-from=$expectedCloneStoppedDbFailureRun`nfailure=CORE20_BROWSER_POLICY_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
+            Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneStoppedDbFailureRun.lock") "$expectedCloneStoppedDbFailureRun`nrecovered-from=$expectedClonePolicyFailureRun`nfailure=CORE20_RECOVERY_BITMAP_INVALID cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
             Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedClonePolicyFailureRun.lock") "$expectedClonePolicyFailureRun`nrecovered-from=$expectedCloneBrowserFailureRun`nfailure=CORE20_BROWSER_POLICY_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
             Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneBrowserFailureRun.lock") "$expectedCloneBrowserFailureRun`nrecovered-from=$expectedCloneHostTransportFailureRun`nfailure=CORE20_BROWSER_FAILED cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
             Assert-ExactAsciiFile (Join-Path $failureArchiveRoot "$expectedCloneHostTransportFailureRun.lock") "$expectedCloneHostTransportFailureRun`nrecovered-from=$expectedCloneIngressFailureRun`nfailure=CORE20_INGRESS_READINESS_STATUS_000 cleanup=`n" 'CORE20_RECOVERY_PARENT_ARCHIVE_INVALID'
@@ -1254,6 +1430,8 @@ try {
         $lockMarkerCommitted = $true
     }
 
+    if ($ownerAuthorityRequested) { Assert-OwnerEvidenceRecaptureAuthority }
+
     New-Item -ItemType Directory -Path $staging | Out-Null
     Assert-Contained $stagingRoot $staging
     foreach ($path in @($preCapture, $postCapture, $sourceGuardPrePath, $sourceGuardPostPath, $processRoot)) { New-Item -ItemType Directory -Path $path | Out-Null; Assert-Contained $staging $path }
@@ -1290,17 +1468,20 @@ try {
         if (!$pgReady) { Fail-Core20 'CORE20_SOURCE_DB_READINESS_FAILED' }
     }
 
-    Assert-PlainDirectory $tempRoot
-    if (!(Test-Path -LiteralPath $evidenceParent)) { New-Item -ItemType Directory -Path $evidenceParent | Out-Null }
-    Assert-Contained $tempRoot $evidenceParent
-    $currentOwner = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $parentAcl = Get-Acl -LiteralPath $evidenceParent
-    if ($parentAcl.Owner -cne $currentOwner -or !$parentAcl.AreAccessRulesCanonical) { Fail-Core20 'CORE20_EVIDENCE_OWNER_INVALID' }
-    if (Test-Path -LiteralPath $evidence) { Fail-Core20 'CORE20_EVIDENCE_EXISTS' }
-    New-Item -ItemType Directory -Path $evidence | Out-Null
-    Assert-Contained $evidenceParent $evidence
-    $evidenceAcl = Get-Acl -LiteralPath $evidence
-    if ($evidenceAcl.Owner -cne $currentOwner -or !$evidenceAcl.AreAccessRulesCanonical) { Fail-Core20 'CORE20_EVIDENCE_OWNER_INVALID' }
+    if (!$OwnerInteractivePreview) {
+        Assert-PlainDirectory $tempRoot
+        if (!(Test-Path -LiteralPath $evidenceParent)) { New-Item -ItemType Directory -Path $evidenceParent | Out-Null }
+        Assert-Contained $tempRoot $evidenceParent
+        $currentOwner = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+        $parentAcl = Get-Acl -LiteralPath $evidenceParent
+        if ($parentAcl.Owner -cne $currentOwner -or !$parentAcl.AreAccessRulesCanonical) { Fail-Core20 'CORE20_EVIDENCE_OWNER_INVALID' }
+        if ($runId -ceq $expectedOwnerEvidenceRun -or (Test-Path -LiteralPath $evidence)) { Fail-Core20 'CORE20_EVIDENCE_EXISTS' }
+        New-Item -ItemType Directory -Path $evidence | Out-Null
+        $evidenceCreated = $true
+        Assert-Contained $evidenceParent $evidence
+        $evidenceAcl = Get-Acl -LiteralPath $evidence
+        if ($evidenceAcl.Owner -cne $currentOwner -or !$evidenceAcl.AreAccessRulesCanonical) { Fail-Core20 'CORE20_EVIDENCE_OWNER_INVALID' }
+    }
 
     $boundary = Assert-PreviewBoundary $true
     $appConfigSha = Get-Sha256Text ($boundary.app | ConvertTo-Json -Depth 12 -Compress)
@@ -1320,7 +1501,7 @@ try {
     $preClients = $true
     $boundaryAdmitted = $true
 
-    if ($DisposableCloneRemediation) {
+    if ($disposableCloneRequested) {
         $sourceGuardPre = Invoke-SourceGuard $sourceGuardPreContainer $sourceGuardPrePath
         Assert-ZeroClients $sourceDatabase
         New-DisposableCloneDatabase
@@ -1357,6 +1538,14 @@ try {
     if (!$ready) { Fail-Core20 "CORE20_INGRESS_READINESS_STATUS_$lastIngressStatus" }
     $readinessPassed = $true
 
+    if ($OwnerInteractivePreview) {
+        Write-Output 'CORE20_OWNER_PREVIEW_READY url=http://127.0.0.1:18085 timeoutMinutes=30 stopToken=STOP'
+        [Console]::Out.Flush()
+        $stopTask = [Console]::In.ReadLineAsync()
+        if (!$stopTask.Wait([TimeSpan]::FromMinutes(30))) { Fail-Core20 'CORE20_OWNER_PREVIEW_TIMEOUT' }
+        if ([string]$stopTask.Result -cne 'STOP') { Fail-Core20 'CORE20_OWNER_PREVIEW_STOP_INVALID' }
+        $walkthroughComplete = $true
+    } else {
     $browserDeadline = New-MonotonicDeadline 600000
     if (Test-PlaywrightSessionPresent) { Fail-Core20 'CORE20_BROWSER_SESSION_COLLISION' }
     $openOutput = @(Invoke-Playwright @('open', 'about:blank', '--browser', 'chrome', '--idle-timeout', '650000') $false $false 'CORE20_BROWSER_OPEN_FAILED')
@@ -1367,22 +1556,88 @@ try {
     $browserSessionPid = [int]$openPidMatch.Groups['pid'].Value
     Assert-ExactPlaywrightSessionPid $browserSessionPid | Out-Null
     $browserOpened = $true
-    $policyCode = @"
+    $policyFunctionCode = 'async page => undefined'
+    Invoke-Playwright @('run-code', $policyFunctionCode) $true $false 'CORE20_BROWSER_POLICY_FUNCTION_FAILED' | Out-Null
+    $policyRouteCode = @"
 async page => {
-page.__core20External = [];
-await page.context().route('**/*', async route => {
+page.__core20ExternalDetected = false;
+page.__core20ExternalSchemeDetected = false;
+page.__core20ExternalHostDetected = false;
+page.__core20ExternalPortDetected = false;
+page.__core20ExternalLocalhostDetected = false;
+page.__core20ExternalIpv6LoopbackDetected = false;
+page.__core20ExternalOtherHostDetected = false;
+page.__core20ExternalKasperskyHostDetected = false;
+page.__core20ExternalNonKasperskyHostDetected = false;
+page.__core20EnvironmentalKasperskyScriptBlocked = false;
+page.__core20EnvironmentalKasperskyConsoleError = false;
+page.__core20ExternalDocumentDetected = false;
+page.__core20ExternalActiveDetected = false;
+page.__core20ExternalScriptDetected = false;
+page.__core20ExternalXhrDetected = false;
+page.__core20ExternalFetchDetected = false;
+page.__core20ExternalWebsocketDetected = false;
+page.__core20ExternalEventsourceDetected = false;
+page.__core20ExternalVisualDetected = false;
+page.__core20ExternalMetadataDetected = false;
+page.__core20ConsoleErrorDetected = false;
+page.__core20PageErrorDetected = false;
+page.on('request', request => {
+  const url = new URL(request.url());
+  const type = request.resourceType();
+  const kasperskyScript = type === 'script' && url.protocol === 'http:' && url.port === '' &&
+    (url.hostname === 'kaspersky-labs.com' || url.hostname.endsWith('.kaspersky-labs.com'));
+  if (kasperskyScript) {
+    page.__core20ExternalKasperskyHostDetected = true;
+    page.__core20EnvironmentalKasperskyScriptBlocked = true;
+  } else if (!(url.protocol === 'http:' && url.hostname === '127.0.0.1' && url.port === '18085')) {
+    page.__core20ExternalDetected = true;
+    if (type === 'document') page.__core20ExternalDocumentDetected = true;
+    else if (['script', 'xhr', 'fetch', 'websocket', 'eventsource'].includes(type)) {
+      page.__core20ExternalActiveDetected = true;
+      if (type === 'script') page.__core20ExternalScriptDetected = true;
+      else if (type === 'xhr') page.__core20ExternalXhrDetected = true;
+      else if (type === 'fetch') page.__core20ExternalFetchDetected = true;
+      else if (type === 'websocket') page.__core20ExternalWebsocketDetected = true;
+      else page.__core20ExternalEventsourceDetected = true;
+    }
+    else if (['stylesheet', 'image', 'media', 'font'].includes(type)) page.__core20ExternalVisualDetected = true;
+    else page.__core20ExternalMetadataDetected = true;
+    if (url.protocol !== 'http:') page.__core20ExternalSchemeDetected = true;
+    else if (url.hostname !== '127.0.0.1') {
+      page.__core20ExternalHostDetected = true;
+      if (url.hostname === 'localhost') page.__core20ExternalLocalhostDetected = true;
+      else if (url.hostname === '[::1]') page.__core20ExternalIpv6LoopbackDetected = true;
+      else {
+        page.__core20ExternalOtherHostDetected = true;
+        if (url.hostname === 'kaspersky-labs.com' || url.hostname.endsWith('.kaspersky-labs.com')) {
+          page.__core20ExternalKasperskyHostDetected = true;
+        } else page.__core20ExternalNonKasperskyHostDetected = true;
+      }
+    }
+    else if (url.port !== '18085') page.__core20ExternalPortDetected = true;
+  }
+});
+page.on('console', message => {
+  if (message.type() !== 'error') return;
+  let kaspersky = false;
+  try {
+    const url = new URL(message.location().url);
+    kaspersky = url.protocol === 'http:' && url.port === '' &&
+      (url.hostname === 'kaspersky-labs.com' || url.hostname.endsWith('.kaspersky-labs.com'));
+  } catch {}
+  if (page.__core20EnvironmentalKasperskyScriptBlocked && kaspersky) page.__core20EnvironmentalKasperskyConsoleError = true;
+  else page.__core20ConsoleErrorDetected = true;
+});
+page.on('pageerror', () => { page.__core20PageErrorDetected = true; });
+await page.route('**/*', async route => {
   const url = new URL(route.request().url());
   if (url.protocol === 'http:' && url.hostname === '127.0.0.1' && url.port === '18085') await route.continue();
-  else { page.__core20External.push(route.request().url()); await route.abort('blockedbyclient'); }
+  else await route.abort('blockedbyclient');
 });
-return JSON.stringify({ ready: 'CORE20_BROWSER_POLICY_READY' });
 }
 "@
-    $policy = @(Invoke-Playwright @('run-code', $policyCode) $true $false 'CORE20_BROWSER_POLICY_FAILED')
-    $policyLine = @($policy | Where-Object { [string]$_ -match '^\{.*\}$' })
-    if ($policyLine.Count -ne 1) { Fail-Core20 'CORE20_BROWSER_POLICY_FAILED' }
-    $policyResult = [string]$policyLine[0] | ConvertFrom-Json
-    if ([string]$policyResult.ready -cne 'CORE20_BROWSER_POLICY_READY') { Fail-Core20 'CORE20_BROWSER_POLICY_FAILED' }
+    Invoke-Playwright @('run-code', $policyRouteCode) $true $false 'CORE20_BROWSER_POLICY_ROUTE_FAILED' | Out-Null
     Assert-ExactPlaywrightSessionPid $browserSessionPid | Out-Null
 
     $desktop = @(
@@ -1396,12 +1651,11 @@ return JSON.stringify({ ready: 'CORE20_BROWSER_POLICY_READY' });
     )
     foreach ($target in $mobile) { Add-Screenshot $target[0] $target[1] 'mobile' 390 844 }
     if ($screenshots.Count -ne 11) { Fail-Core20 'CORE20_EVIDENCE_INVALID' }
-    $externalCode = "async page => JSON.stringify(page.__core20External || [])"
-    $external = @(Invoke-Playwright @('run-code', $externalCode) $true $false 'CORE20_BROWSER_EXTERNAL_FAILED')
-    if (@($external | Where-Object { [string]$_ -ceq '[]' }).Count -ne 1) { Fail-Core20 'CORE20_EXTERNAL_REQUEST_DETECTED' }
+    Complete-BrowserPolicy
     Close-ExactPlaywrightSession
     $browserOpened = $false
     $walkthroughComplete = $true
+    }
 }
 catch {
     $failure = [string]$_.Exception.Message
@@ -1410,9 +1664,11 @@ catch {
 finally {
     if ($lockOwned) {
         if ($boundaryAdmitted) {
-            try { Close-ExactPlaywrightSession; $browserOpened = $false }
-            catch { $cleanupErrors.Add('browser') }
-            if ($DisposableCloneRemediation) {
+            if (!$OwnerInteractivePreview) {
+                try { Close-ExactPlaywrightSession; $browserOpened = $false }
+                catch { $cleanupErrors.Add('browser') }
+            }
+            if ($disposableCloneRequested) {
                 try {
                     if ($cloneNginxConfigSha -ne '') {
                         if (!(Test-Path -LiteralPath $cloneNginxConfig) -or
@@ -1438,13 +1694,13 @@ finally {
             try { Remove-OwnedCaptureContainer $preCaptureContainer }
             catch { $cleanupErrors.Add('pre-container') }
             try {
-                if ($DisposableCloneRemediation -and $cloneDatabaseCreated) { Wait-ZeroClients $cloneDatabase }
+                if ($disposableCloneRequested -and $cloneDatabaseCreated) { Wait-ZeroClients $cloneDatabase }
                 Wait-ZeroClients $sourceDatabase
                 $postClients = $true
             } catch { $cleanupErrors.Add('clients') }
             try {
                 if ($null -ne $preProjection) {
-                    $projectionDatabase = if ($DisposableCloneRemediation) { $cloneDatabase } else { $sourceDatabase }
+                    $projectionDatabase = if ($disposableCloneRequested) { $cloneDatabase } else { $sourceDatabase }
                     $postProjection = Invoke-Capture $postCaptureContainer $postCapture $projectionDatabase
                     Wait-ZeroClients $projectionDatabase
                     foreach ($name in @('release-manifest.json', 'capture-facts.json', 'media-inventory.json')) {
@@ -1454,7 +1710,7 @@ finally {
             } catch { $cleanupErrors.Add('projection') }
             try { Remove-OwnedCaptureContainer $postCaptureContainer }
             catch { $cleanupErrors.Add('post-container') }
-            if ($DisposableCloneRemediation) {
+            if ($disposableCloneRequested) {
                 try { Remove-DisposableCloneDatabase }
                 catch { $cleanupErrors.Add('clone-database') }
                 try { Remove-OwnedSourceGuardContainer $sourceGuardPreContainer }
@@ -1489,20 +1745,23 @@ finally {
         catch { $cleanupErrors.Add('staging') }
         if (Test-Path -LiteralPath $staging) { $cleanupErrors.Add('staging-present') }
 
-        if ($walkthroughComplete -and $cleanupErrors.Count -eq 0 -and $null -eq $failure) {
+        if (!$OwnerInteractivePreview -and $walkthroughComplete -and $cleanupErrors.Count -eq 0 -and $null -eq $failure) {
             try {
                 $manifest = [ordered]@{
-                    schema = 'estakada.core20-owner-evidence-v1'; runId = $runId
-                    recovery = [ordered]@{ sourceDbStarted = $dbStartedByRecovery; archivedFailureRun = $recoveredFailureRun; disposableClone = [bool]$DisposableCloneRemediation }
+                    schema = 'estakada.core20-owner-evidence-v2'; runId = $runId
+                    recovery = [ordered]@{ sourceDbStarted = $dbStartedByRecovery; archivedFailureRun = $recoveredFailureRun; disposableClone = [bool]$disposableCloneRequested; ownerEvidenceRecapture = [bool]$OwnerEvidenceRecapture; authorityRun = if ($OwnerEvidenceRecapture) { $expectedOwnerEvidenceRun } else { '' } }
                     readiness = [ordered]@{ path = '/'; status = 200; timeoutSeconds = 90; passed = $readinessPassed }
-                    browser = [ordered]@{ externalRequests = 0; session = 'fresh'; loopbackOnly = $true }
+                    browser = [ordered]@{
+                        productExternalRequests = 0; session = 'fresh'; loopbackOnly = $true
+                        environmentalKasperskyScriptPolicy = 'exact-http-default-port-script-host-family-abort'
+                    }
                     acceptanceProjection = [ordered]@{ before = $preProjection; after = $postProjection; equal = $true }
-                    sourceGuard = [ordered]@{ before = $sourceGuardPre; after = $sourceGuardPost; equal = if ($DisposableCloneRemediation) { $sourceGuardPre -ceq $sourceGuardPost } else { $true } }
+                    sourceGuard = [ordered]@{ before = $sourceGuardPre; after = $sourceGuardPost; equal = if ($disposableCloneRequested) { $sourceGuardPre -ceq $sourceGuardPost } else { $true } }
                     sourceClients = [ordered]@{ before = if ($preClients) { 0 } else { -1 }; after = if ($postClients) { 0 } else { -1 } }
                     preview = [ordered]@{
                         before = [ordered]@{ db = 'running'; app = 'stopped'; ingress = 'stopped'; appProjectionSha256 = $appConfigSha; ingressProjectionSha256 = $ingressConfigSha }
                         after = [ordered]@{ db = 'running'; app = 'stopped'; ingress = 'stopped'; appProjectionSha256 = $postAppConfigSha; ingressProjectionSha256 = $postIngressConfigSha }
-                        disposable = [ordered]@{ appProjectionSha256 = $cloneAppConfigSha; ingressProjectionSha256 = $cloneIngressConfigSha; nginxConfigSha256 = $cloneNginxConfigSha; databaseRemoved = [bool]$DisposableCloneRemediation }
+                        disposable = [ordered]@{ appProjectionSha256 = $cloneAppConfigSha; ingressProjectionSha256 = $cloneIngressConfigSha; nginxConfigSha256 = $cloneNginxConfigSha; databaseRemoved = [bool]$disposableCloneRequested }
                     }
                     resources = [ordered]@{ before = $preResourceAudit; after = $postResourceAudit; networkBeforeSha256 = $preNetworkProjectionSha; networkAfterSha256 = $postNetworkProjectionSha; previewNetworkSha256 = $previewNetworkReceiptSha; staging = 0; lock = 'held-until-evidence-commit' }
                     screenshots = @($screenshots)
@@ -1527,11 +1786,31 @@ finally {
             } catch { $cleanupErrors.Add('evidence') }
         }
 
-        if (!$evidencePrepared -or $cleanupErrors.Count -ne 0 -or $null -ne $failure) {
-            try { Remove-ExactRunDirectory $evidenceParent $evidence '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' }
-            catch { $cleanupErrors.Add('owner-evidence') }
+        if ($ownerAuthorityRequested) {
+            try {
+                $authority = [IO.Path]::GetFullPath((Join-Path $evidenceParent $expectedOwnerEvidenceRun))
+                $authorityFiles = @(Get-ChildItem -Force -File -LiteralPath $authority)
+                $authorityDirectories = @(Get-ChildItem -Force -Directory -LiteralPath $authority)
+                if ($authorityFiles.Count -ne 12 -or $authorityDirectories.Count -ne 0 -or
+                    @($authorityFiles | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }).Count -ne 0 -or
+                    @(Compare-Object $expectedOwnerEvidenceNames @($authorityFiles.Name | Sort-Object) -CaseSensitive).Count -ne 0) {
+                    Fail-Core20 'CORE20_RECAPTURE_AUTHORITY_DRIFT'
+                }
+            } catch { $cleanupErrors.Add('authority-drift') }
         }
-        if ($evidencePrepared -and $cleanupErrors.Count -eq 0 -and $null -eq $failure) {
+        foreach ($handle in @($authorityHandles)) {
+            try { $handle.Dispose() } catch { $cleanupErrors.Add('authority-handle') }
+        }
+        $authorityHandles.Clear()
+
+        $resultPrepared = if ($OwnerInteractivePreview) { $walkthroughComplete } else { $evidencePrepared }
+        if (!$resultPrepared -or $cleanupErrors.Count -ne 0 -or $null -ne $failure) {
+            if ($evidenceCreated) {
+                try { Remove-ExactRunDirectory $evidenceParent $evidence '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; $evidenceCreated = $false }
+                catch { $cleanupErrors.Add('owner-evidence') }
+            }
+        }
+        if ($resultPrepared -and $cleanupErrors.Count -eq 0 -and $null -eq $failure) {
             try {
                 $commitMarker = [Text.Encoding]::ASCII.GetBytes("commit-pending=$runId`n")
                 $lock.Write($commitMarker, 0, $commitMarker.Length)
@@ -1544,8 +1823,10 @@ finally {
                 $evidenceComplete = $true
             } catch {
                 $cleanupErrors.Add('lock')
-                try { Remove-ExactRunDirectory $evidenceParent $evidence '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' }
-                catch { $cleanupErrors.Add('owner-evidence') }
+                if ($evidenceCreated) {
+                    try { Remove-ExactRunDirectory $evidenceParent $evidence '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'; $evidenceCreated = $false }
+                    catch { $cleanupErrors.Add('owner-evidence') }
+                }
             }
         } else {
             if ($lockMarkerCommitted) {
@@ -1566,7 +1847,12 @@ if ($null -ne $failure -or $cleanupErrors.Count -ne 0 -or !$evidenceComplete) {
     exit 1
 }
 
-$evidenceBytes = [long]((Get-ChildItem -Force -File -LiteralPath $evidence | Measure-Object -Property Length -Sum).Sum)
-Write-Output "CORE20_OWNER_CAPTURE_OK run=$runId owner_evidence=screenshots11,manifest1,files12,bytes=$evidenceBytes"
-Write-Output 'CORE20_OWNER_CLEANUP_OK containers=0 networks=0 volumes=0 staging=0 lock=0 bitmap=exact'
-Write-Output "CORE20_OWNER_EVIDENCE_PATH=$evidence"
+if ($OwnerInteractivePreview) {
+    Write-Output "CORE20_OWNER_PREVIEW_CLOSED run=$runId"
+    Write-Output 'CORE20_OWNER_CLEANUP_OK containers=0 networks=0 volumes=0 staging=0 lock=0 bitmap=exact'
+} else {
+    $evidenceBytes = [long]((Get-ChildItem -Force -File -LiteralPath $evidence | Measure-Object -Property Length -Sum).Sum)
+    Write-Output "CORE20_OWNER_CAPTURE_OK run=$runId owner_evidence=screenshots11,manifest1,files12,bytes=$evidenceBytes"
+    Write-Output 'CORE20_OWNER_CLEANUP_OK containers=0 networks=0 volumes=0 staging=0 lock=0 bitmap=exact'
+    Write-Output "CORE20_OWNER_EVIDENCE_PATH=$evidence"
+}

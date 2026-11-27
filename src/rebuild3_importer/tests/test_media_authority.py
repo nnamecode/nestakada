@@ -27,6 +27,7 @@ from rebuild3_importer.media_authority import (
     compose_freeze_package,
     compose_run_authority,
 )
+from rebuild3_importer.service_media import service_media_rows
 
 
 def _digest(value):
@@ -157,7 +158,7 @@ class MediaAuthorityTests(TestCase):
             EXACT_PACKAGE_MEDIA,
         )
         self.assertEqual(sum(row.resolved_unmatched for row in package.media_bindings), 1)
-        self.assertEqual(len(package.usages), 30)
+        self.assertEqual(len(package.usages), 53)
         self.assertEqual(package.site_settings["legal_name"], None)
         self.assertEqual(package.site_settings["max_url"], None)
         self.assertEqual(package.site_settings["telegram_url"], None)
@@ -165,7 +166,35 @@ class MediaAuthorityTests(TestCase):
             str(row.target_asset_id) for row in package.media_bindings
             if row.origin == "APPROVED_PACKAGE"
         }
-        self.assertTrue(all(uuid.UUID(value).version == 4 for value in package_only_ids))
+        service_asset_ids = {row["asset_id"] for row in service_media_rows()}
+        self.assertTrue(service_asset_ids <= package_only_ids)
+        self.assertTrue(all(uuid.UUID(value).version == 5 for value in service_asset_ids))
+        self.assertTrue(all(
+            uuid.UUID(value).version == 4
+            for value in package_only_ids - service_asset_ids
+        ))
+        service_usages = [
+            row for row in package.usages if row["asset_id"] in service_asset_ids
+        ]
+        self.assertEqual(len(service_usages), 23)
+        self.assertEqual(
+            {row["target_uuid"] for row in service_usages},
+            {row["page_id"] for row in service_media_rows()},
+        )
+        self.assertEqual({row["slot"] for row in service_usages}, {"hero"})
+        files_by_asset = {row["asset_id"]: row for row in package.files}
+        for row in service_media_rows():
+            file = files_by_asset[row["asset_id"]]
+            self.assertEqual(
+                (
+                    file["id"], file["kind"], file["source_path"],
+                    file["byte_size"], file["sha256"], file["mime_type"],
+                ),
+                (
+                    row["file_id"], "MAIN", row["source_path"],
+                    row["byte_size"], row["sha256"], "image/webp",
+                ),
+            )
         _validate_media_projection(package.source_media, package)
 
     def test_run_authority_closes_exact_limits_and_package_digest(self):
@@ -174,7 +203,7 @@ class MediaAuthorityTests(TestCase):
         self.assertEqual(
             (limits.routes, limits.pages, limits.assets, limits.files,
              limits.usages, limits.gallery_albums, limits.gallery_photos),
-            (114, 112, 303, 303, 30, 17, 214),
+            (114, 112, 303, 303, 53, 17, 214),
         )
         self.assertEqual(
             (limits.total_file_bytes, limits.gallery_file_bytes),

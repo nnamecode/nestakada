@@ -23,6 +23,7 @@ from rebuild3_importer.freeze_authority import (
     compose_page_route_authority,
     freeze_capture_digest,
 )
+from rebuild3_importer.service_media import service_media_rows
 from rebuild3_importer.content import validate_payload
 from rebuild3_importer.errors import ManifestError
 from rebuild3_importer.source import SourceSession
@@ -310,6 +311,25 @@ class PageRouteAuthorityTests(TestCase):
         ))
         wash = next(row for row in pages if row["kind"] == "service_wash_legacy_alias")
         self.assertEqual(wash["current_payload"]["kind"], "service_detail")
+        self.assertIsNone(wash["current_payload"]["fields"]["media"]["hero"])
+        service_rows = {row["page_id"]: row for row in service_media_rows()}
+        service_pages = [row for row in pages if row["id"] in service_rows]
+        self.assertEqual(len(service_pages), 23)
+        for page in service_pages:
+            self.assertEqual(
+                page["current_payload"]["fields"]["media"]["hero"],
+                service_rows[page["id"]]["asset_id"],
+            )
+            if page["previous_payload"] is not None:
+                self.assertNotEqual(
+                    page["previous_payload"]["fields"]["media"].get("hero"),
+                    service_rows[page["id"]]["asset_id"],
+                )
+        map019 = next(row for row in service_pages if row["id"] == "080d64ee-4ce1-5399-b672-83dc22f9f8bf")
+        self.assertEqual(
+            map019["current_payload"]["fields"]["media"]["body"],
+            ["6fa5cdd8-dabd-52ab-b994-4e10ef2cb2c8"],
+        )
 
         for target, name in (
             ("/nash-servisnyij-czentr", "Наш сервисный центр"),

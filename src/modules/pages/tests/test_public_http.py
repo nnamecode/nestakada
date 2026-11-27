@@ -1046,6 +1046,16 @@ class PublicHttpTests(PublicHttpFixture, TestCase):
             direct_html.index(albums[0][1][0]),
             direct_html.index(albums[0][1][1]),
         )
+        self.assertIn('data-gallery-grid', direct_html)
+        self.assertEqual(direct_html.count('data-gallery-open='), 2)
+        self.assertEqual(direct_html.count('data-gallery-photo'), 2)
+        self.assertEqual(direct_html.count('data-gallery-thumb='), 2)
+        self.assertIn('data-gallery-dialog', direct_html)
+        self.assertIn('data-gallery-prev', direct_html)
+        self.assertIn('data-gallery-next', direct_html)
+        self.assertIn('data-gallery-close', direct_html)
+        self.assertIn('src="/static/pages/public_gallery.js"', direct_html)
+        self.assertNotIn('src="/static/pages/public_gallery.js"', root_html)
         self.assertIn('href="/gallery-of-works/"', direct_html)
         self.assertNotIn("sessionid", direct_response.cookies)
 

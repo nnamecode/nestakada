@@ -24,12 +24,22 @@
     </div>
     {% if document.is_second_page %}<nav class="es-gallery-pagination" aria-label="Страницы галереи"><a href="/gallery-of-works/">← Все работы</a></nav>{% endif %}
   {% else %}
-    <div class="es-gallery-photos">
+    <div class="es-gallery-photos" data-gallery-grid>
       {% for photo in document.photos %}
-        <figure><img src="{{ photo.url }}" alt="{{ photo.alt }}"{% if photo.width %} width="{{ photo.width }}" height="{{ photo.height }}"{% endif %}{% if not forloop.first %} loading="lazy"{% endif %}></figure>
+        <figure><button type="button" data-gallery-open="{{ forloop.counter0 }}" aria-label="Открыть фото {{ forloop.counter }} из {{ forloop.revcounter|add:forloop.counter0 }}"><img src="{{ photo.url }}" alt="{{ photo.alt }}"{% if photo.width %} width="{{ photo.width }}" height="{{ photo.height }}"{% endif %}{% if not forloop.first %} loading="lazy"{% endif %}></button></figure>
       {% endfor %}
     </div>
+    <dialog class="es-gallery-dialog" aria-labelledby="es-gallery-dialog-title" data-gallery-dialog>
+      <header><div><p>ФОТОГАЛЕРЕЯ РАБОТ</p><h2 id="es-gallery-dialog-title">{{ document.h1 }}</h2></div><button type="button" class="es-gallery-close" data-gallery-close aria-label="Закрыть галерею">×</button></header>
+      <div class="es-gallery-stage">
+        {% for photo in document.photos %}<img src="{{ photo.url }}" alt="{{ photo.alt }}"{% if photo.width %} width="{{ photo.width }}" height="{{ photo.height }}"{% endif %}{% if not forloop.first %} hidden loading="lazy"{% endif %} data-gallery-photo>{% endfor %}
+        <button type="button" class="es-gallery-arrow es-gallery-prev" data-gallery-prev aria-label="Предыдущее фото">←</button>
+        <button type="button" class="es-gallery-arrow es-gallery-next" data-gallery-next aria-label="Следующее фото">→</button>
+      </div>
+      <footer><span class="es-gallery-counter" aria-live="polite"><b>01</b> / {{ document.photos|length|stringformat:"02d" }}</span><div class="es-gallery-thumbs" aria-label="Выбор фотографии">{% for photo in document.photos %}<button type="button" data-gallery-thumb="{{ forloop.counter0 }}" aria-label="Показать фото {{ forloop.counter }}" aria-current="{% if forloop.first %}true{% else %}false{% endif %}"><img src="{{ photo.url }}" alt="" loading="lazy"></button>{% endfor %}</div></footer>
+    </dialog>
     <p class="es-gallery-back"><a href="/gallery-of-works/">← Все работы</a></p>
   {% endif %}
 </section>
 {% endblock %}
+{% block extra_body %}{% if is_gallery_album %}<script defer src="{% static 'pages/public_gallery.js' %}"></script>{% endif %}{% endblock %}
