@@ -1,0 +1,5 @@
+.es-content-body{display:flow-root;margin-top:42px}
+.es-content-body h2{margin:42px 0 18px}
+.es-content-body h3{margin:32px 0 12px}
+.es-content-body h2:first-child,.es-content-body h3:first-child{margin-top:0}
+.es-content-body>p{margin:0 0 18px}

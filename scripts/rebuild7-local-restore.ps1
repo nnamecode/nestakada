@@ -1,6 +1,11 @@
 [CmdletBinding()]
 param(
-    [switch]$OwnerInteractivePreview
+    [switch]$OwnerInteractivePreview,
+    [ValidatePattern('^[0-9a-f]{32}$')][string]$RecoverPreviewRunId = '',
+    [ValidatePattern('^[0-9a-f]{64}$')][string]$RecoverPreviewNetworkId = '',
+    [ValidatePattern('^[0-9a-f]{64}$')][string]$RecoverDbId = '',
+    [ValidatePattern('^[0-9a-f]{64}$')][string]$RecoverAppId = '',
+    [ValidatePattern('^[0-9a-f]{64}$')][string]$RecoverIngressId = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -22,7 +27,13 @@ $sourceDatabase = 'estakada_rb5_home_preview'
 $previewApp = 'nestakada-rb5-home-app'
 $previewIngress = 'nestakada-rb5-home-ingress'
 $appImage = ''
-$runId = [guid]::NewGuid().ToString('N')
+$recoveryValues = @($RecoverPreviewRunId, $RecoverPreviewNetworkId, $RecoverDbId, $RecoverAppId, $RecoverIngressId)
+$recoveryRequested = @($recoveryValues | Where-Object { $_ }).Count -gt 0
+if ($recoveryRequested -and @($recoveryValues | Where-Object { $_ }).Count -ne 5) {
+    throw 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+}
+if ($recoveryRequested -and $OwnerInteractivePreview) { throw 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+$runId = if ($recoveryRequested) { $RecoverPreviewRunId } else { [guid]::NewGuid().ToString('N') }
 $restoreDatabase = "estakada_r7_$runId"
 $captureCloneDatabase = "estakada_r7_capture_$runId"
 $captureCloneMarker = "estakada.r7-owner-capture:$runId"
@@ -64,6 +75,9 @@ $previewAppWasRunning = $false
 $previewIngressWasRunning = $false
 $previewAppId = ''
 $previewIngressId = ''
+$dbId = ''
+$dbWasRunning = $false
+$dbStartMayHaveOccurred = $false
 $postgresImage = ''
 $ingressImage = ''
 $coordinatorLockPath = Join-Path $workRoot 'coordinator.lock'
@@ -84,6 +98,85 @@ function Invoke-Docker([string[]]$Arguments) {
         Fail-R7
     }
     return $result
+}
+
+function Invoke-DockerBounded([string[]]$Arguments, [int]$TimeoutMilliseconds) {
+    if ($TimeoutMilliseconds -lt 1000 -or $TimeoutMilliseconds -gt 60000) { Fail-R7 }
+    $start = [Diagnostics.ProcessStartInfo]::new()
+    $start.FileName = 'docker.exe'
+    $start.UseShellExecute = $false
+    $start.CreateNoWindow = $true
+    $start.RedirectStandardOutput = $true
+    $start.RedirectStandardError = $true
+    foreach ($argument in $Arguments) { $start.ArgumentList.Add($argument) }
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $start
+    try {
+        if (!$process.Start()) { Fail-R7 }
+        $stdout = $process.StandardOutput.ReadToEndAsync()
+        $stderr = $process.StandardError.ReadToEndAsync()
+        if (!$process.WaitForExit($TimeoutMilliseconds)) {
+            try { $process.Kill($true) } catch {}
+            try { $process.WaitForExit(5000) | Out-Null } catch {}
+            return [pscustomobject]@{ TimedOut = $true; ExitCode = -1; Output = ''; Error = '' }
+        }
+        if (![Threading.Tasks.Task]::WaitAll([Threading.Tasks.Task[]]@($stdout, $stderr), 5000)) {
+            return [pscustomobject]@{ TimedOut = $true; ExitCode = -1; Output = ''; Error = '' }
+        }
+        return [pscustomobject]@{
+            TimedOut = $false
+            ExitCode = [int]$process.ExitCode
+            Output = ([string]$stdout.Result).Trim()
+            Error = ([string]$stderr.Result).Trim()
+        }
+    } finally {
+        $process.Dispose()
+    }
+}
+
+function Invoke-RecoveryDocker([string[]]$Arguments, [int]$TimeoutMilliseconds = 30000) {
+    $result = Invoke-DockerBounded $Arguments $TimeoutMilliseconds
+    if ($result.TimedOut -or $result.ExitCode -ne 0) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+    if ([string]::IsNullOrEmpty([string]$result.Output)) { return @() }
+    return @([string]$result.Output -split '\r?\n')
+}
+
+function Read-RecoveryContainer([string]$Reference) {
+    $rows = @(Invoke-RecoveryDocker @('inspect', $Reference) | ConvertFrom-Json)
+    if ($rows.Count -ne 1) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+    return $rows[0]
+}
+
+function Get-BaseRunningStateBounded([string]$ExpectedId, [string]$ExpectedName) {
+    if ($ExpectedId -notmatch '^[0-9a-f]{64}$') { Fail-R7 'R7_OWNER_PREVIEW_BITMAP_UNCERTAIN' }
+    $result = Invoke-DockerBounded @('inspect', '--format', '{{.Id}}|{{.Name}}|{{.State.Running}}', $ExpectedId) 10000
+    if ($result.TimedOut -or $result.ExitCode -ne 0 -or
+        [string]$result.Output -notmatch '^(?<id>[0-9a-f]{64})\|/(?<name>[A-Za-z0-9_.-]+)\|(?<running>true|false)$' -or
+        [string]$Matches.id -cne $ExpectedId -or [string]$Matches.name -cne $ExpectedName) {
+        Fail-R7 'R7_OWNER_PREVIEW_BITMAP_UNCERTAIN'
+    }
+    return ([string]$Matches.running -ceq 'true')
+}
+
+function Wait-DatabaseReady {
+    $timer = [Diagnostics.Stopwatch]::StartNew()
+    while ($timer.ElapsedMilliseconds -lt 60000) {
+        $probe = Invoke-DockerBounded @('exec', $dbId, 'pg_isready', '-q', '-U', 'postgres') 2000
+        if (!$probe.TimedOut -and $probe.ExitCode -eq 0) { return }
+        Start-Sleep -Milliseconds 250
+    }
+    Fail-R7 'R7_OWNER_PREVIEW_DATABASE_NOT_READY'
+}
+
+function Restore-DatabaseBitmap {
+    if (!$dbStartMayHaveOccurred) { return }
+    if (Get-BaseRunningStateBounded $dbId $dbContainer) {
+        Invoke-DockerBounded @('stop', '--time', '10', $dbId) 30000 | Out-Null
+    }
+    if (Get-BaseRunningStateBounded $dbId $dbContainer) {
+        Fail-R7 'R7_OWNER_PREVIEW_BITMAP_UNCERTAIN'
+    }
+    $script:dbStartMayHaveOccurred = $false
 }
 
 function Read-Container([string]$Name) {
@@ -118,15 +211,24 @@ function Assert-OwnedRestoreContainer([string]$Id, [string]$Name, [string]$Role,
 
 function Assert-OwnedPreviewNetwork([int]$ExpectedMembers) {
     if ($previewNetworkId -notmatch '^[0-9a-f]{64}$') { Fail-R7 'R7_OWNER_PREVIEW_OWNERSHIP_UNCERTAIN' }
-    $rows = @(Invoke-Docker @('network', 'inspect', $previewNetworkId) | ConvertFrom-Json)
+    $networkRead = Invoke-DockerBounded @('network', 'inspect', $previewNetworkId) 30000
+    if ($networkRead.TimedOut -or $networkRead.ExitCode -ne 0) { Fail-R7 'R7_OWNER_PREVIEW_OWNERSHIP_UNCERTAIN' }
+    $rows = @([string]$networkRead.Output | ConvertFrom-Json)
     if ($rows.Count -ne 1) { Fail-R7 'R7_OWNER_PREVIEW_OWNERSHIP_UNCERTAIN' }
     $item = $rows[0]
     $labels = @($item.Labels.PSObject.Properties)
+    $options = @($item.Options.PSObject.Properties)
+    $optionsMatch = $options.Count -eq 0 -or (
+        $options.Count -eq 2 -and
+        [string]$item.Options.'com.docker.network.enable_ipv4' -ceq 'true' -and
+        [string]$item.Options.'com.docker.network.enable_ipv6' -ceq 'false'
+    )
     if (
         [string]$item.Id -cne $previewNetworkId -or [string]$item.Name -cne $previewNetwork -or
-        [string]$item.Driver -cne 'bridge' -or [bool]$item.Internal -or [bool]$item.Attachable -or [bool]$item.Ingress -or
+        [string]$item.Driver -cne 'bridge' -or [string]$item.Scope -cne 'local' -or
+        [bool]$item.Internal -or [bool]$item.Attachable -or [bool]$item.Ingress -or [bool]$item.EnableIPv6 -or
         $labels.Count -ne 2 -or [string]$item.Labels.'estakada.scope' -cne 'r7-owner-preview' -or
-        [string]$item.Labels.'estakada.run' -cne $runId -or @($item.Options.PSObject.Properties).Count -ne 0 -or
+        [string]$item.Labels.'estakada.run' -cne $runId -or !$optionsMatch -or
         @($item.Containers.PSObject.Properties).Count -ne $ExpectedMembers
     ) { Fail-R7 'R7_OWNER_PREVIEW_OWNERSHIP_UNCERTAIN' }
     return $item
@@ -586,7 +688,7 @@ function Invoke-OwnerProjectionHelper([string]$Mode) {
         }
         return [ordered]@{ probe = 'PASS' }
     }
-    $pattern = "^R7_OWNER_PROJECTION_$($Mode.ToUpperInvariant())_OK assets=23 files=23 usages=23 media_files=(?<files>[1-9][0-9]*) media_bytes=(?<bytes>[1-9][0-9]*) media_sha256=(?<sha>[0-9a-f]{64})$"
+    $pattern = "^R7_OWNER_PROJECTION_$($Mode.ToUpperInvariant())_OK assets=58 files=58 usages=58 media_files=(?<files>[1-9][0-9]*) media_bytes=(?<bytes>[1-9][0-9]*) media_sha256=(?<sha>[0-9a-f]{64})$"
     $match = if ($result.Count -eq 1) { [regex]::Match([string]$result[0], $pattern) } else { $null }
     if ($null -eq $match -or !$match.Success) {
         Fail-R7 'R7_OWNER_PROJECTION_UNAVAILABLE'
@@ -596,7 +698,7 @@ function Invoke-OwnerProjectionHelper([string]$Mode) {
         bytes = [long]$match.Groups['bytes'].Value
         sha256 = [string]$match.Groups['sha'].Value
     }
-    if ($projection.files -ne 288 -or $projection.bytes -ne 52751698) { Fail-R7 'R7_OWNER_PROJECTION_UNAVAILABLE' }
+    if ($projection.files -ne 323 -or $projection.bytes -ne 59198510) { Fail-R7 'R7_OWNER_PROJECTION_UNAVAILABLE' }
     return $projection
 }
 
@@ -678,6 +780,119 @@ function Assert-FileEqual([string]$First, [string]$Second) {
     if ($left -cne $right) { Fail-R7 'R7_SOURCE_DRIFT' }
 }
 
+function Invoke-RetainedPreviewRecovery {
+    try {
+        $workParent = Join-Path $repo 'work'
+        foreach ($path in @($repo, $workParent, $workRoot, $stagingRoot)) {
+            $item = Get-Item -Force -LiteralPath $path
+            if (!$item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+                Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+            }
+        }
+        $repoFull = [IO.Path]::GetFullPath($repo).TrimEnd([IO.Path]::DirectorySeparatorChar)
+        $workParentFull = [IO.Path]::GetFullPath($workParent)
+        $workRootFull = [IO.Path]::GetFullPath($workRoot)
+        $stagingRootFull = [IO.Path]::GetFullPath($stagingRoot)
+        if (!$workParentFull.StartsWith($repoFull + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+            !$workRootFull.StartsWith($workParentFull.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+            !$stagingRootFull.StartsWith($workRootFull.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+        $lockItem = Get-Item -Force -LiteralPath $coordinatorLockPath
+        if ($lockItem.PSIsContainer -or ($lockItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            [long]$lockItem.Length -ne 33 -or
+            ![string]::Equals([IO.Path]::GetDirectoryName($lockItem.FullName), [IO.Path]::GetFullPath($workRoot), [StringComparison]::OrdinalIgnoreCase)) {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+        try {
+            $script:coordinatorLock = [IO.File]::Open($coordinatorLockPath, [IO.FileMode]::Open, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+        } catch { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+        $script:coordinatorLockOwned = $true
+        $buffer = [byte[]]::new(33)
+        $offset = 0
+        while ($offset -lt $buffer.Length) {
+            $read = $coordinatorLock.Read($buffer, $offset, $buffer.Length - $offset)
+            if ($read -lt 1) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+            $offset += $read
+        }
+        if ([Text.Encoding]::ASCII.GetString($buffer) -cne "$runId`n" -or $coordinatorLock.ReadByte() -ne -1) {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+
+        $db = Read-RecoveryContainer $dbContainer
+        $app = Read-RecoveryContainer $previewApp
+        $ingress = Read-RecoveryContainer $previewIngress
+        $script:dbId = [string]$db.Id
+        $script:dbWasRunning = $false
+        if (
+            $dbId -cne $RecoverDbId -or [string]$db.Name -cne "/$dbContainer" -or [bool]$db.State.Running -or
+            [string]$app.Id -cne $RecoverAppId -or [string]$app.Name -cne "/$previewApp" -or [bool]$app.State.Running -or
+            [string]$ingress.Id -cne $RecoverIngressId -or [string]$ingress.Name -cne "/$previewIngress" -or [bool]$ingress.State.Running
+        ) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+        if (@(Invoke-RecoveryDocker @('ps', '-a', '--filter', "label=estakada.run=$runId", '--format', '{{.ID}}')).Count -ne 0 -or
+            @(Invoke-RecoveryDocker @('ps', '-a', '--filter', 'name=nestakada-r7-', '--format', '{{.ID}}')).Count -ne 0 -or
+            @(Get-ChildItem -Force -LiteralPath $stagingRoot).Count -ne 0) {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+
+        $script:previewNetworkId = $RecoverPreviewNetworkId
+        Assert-OwnedPreviewNetwork 0 | Out-Null
+
+        $script:dbStartMayHaveOccurred = $true
+        Invoke-DockerBounded @('start', $dbId) 30000 | Out-Null
+        if (!(Get-BaseRunningStateBounded $dbId $dbContainer)) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+        Wait-DatabaseReady
+        $databaseAudit = Invoke-DockerBounded @(
+            'exec', '--user', 'postgres', $dbId, 'psql', '-d', 'postgres', '-AtX', '-c',
+            "SELECT datname FROM pg_database WHERE datname ~ '^estakada_r7_([0-9a-f]{32}|capture_[0-9a-f]{32})$' ORDER BY datname"
+        ) 30000
+        if ($databaseAudit.TimedOut -or $databaseAudit.ExitCode -ne 0 -or ![string]::IsNullOrEmpty([string]$databaseAudit.Output)) {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+        Restore-DatabaseBitmap
+
+        Assert-OwnedPreviewNetwork 0 | Out-Null
+        Invoke-DockerBounded @('network', 'rm', $previewNetworkId) 30000 | Out-Null
+        $after = Invoke-DockerBounded @('network', 'inspect', $previewNetworkId) 10000
+        if ($after.TimedOut -or $after.ExitCode -eq 0) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+        if (@(Invoke-RecoveryDocker @('network', 'ls', '--filter', "label=estakada.run=$runId", '--format', '{{.ID}}')).Count -ne 0 -or
+            @(Invoke-RecoveryDocker @('network', 'ls', '--filter', 'name=^nestakada-r7-preview-', '--format', '{{.ID}}')).Count -ne 0 -or
+            (Get-BaseRunningStateBounded $dbId $dbContainer) -or
+            (Get-BaseRunningStateBounded $RecoverAppId $previewApp) -or
+            (Get-BaseRunningStateBounded $RecoverIngressId $previewIngress)) {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+
+        $coordinatorLock.Dispose()
+        $script:coordinatorLock = $null
+        $postLock = Get-Item -Force -LiteralPath $coordinatorLockPath
+        if ($postLock.PSIsContainer -or ($postLock.Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+            [long]$postLock.Length -ne 33 -or
+            ![string]::Equals([IO.Path]::GetDirectoryName($postLock.FullName), $workRootFull, [StringComparison]::OrdinalIgnoreCase) -or
+            [IO.File]::ReadAllText($coordinatorLockPath, [Text.Encoding]::ASCII) -cne "$runId`n") {
+            Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+        }
+        Remove-Item -Force -LiteralPath $coordinatorLockPath
+        if (Test-Path -LiteralPath $coordinatorLockPath) { Fail-R7 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE' }
+        $script:coordinatorLockOwned = $false
+        Write-Output 'R7_OWNER_PREVIEW_RECOVERY_PASS containers=0 networks=0 database=0 staging=0 lock=0 bitmap=exact'
+    } catch {
+        if ($dbStartMayHaveOccurred) {
+            try { Restore-DatabaseBitmap } catch {}
+        }
+        if ($null -ne $coordinatorLock) {
+            try { $coordinatorLock.Dispose() } catch {}
+            $script:coordinatorLock = $null
+        }
+        throw 'R7_OWNER_PREVIEW_RECOVERY_UNAVAILABLE'
+    }
+}
+
+if ($recoveryRequested) {
+    Invoke-RetainedPreviewRecovery
+    exit 0
+}
+
 try {
     foreach ($path in @($repo, $private, $preview, $mediaSource, $serviceMediaSource, $ownerProjectionTool, $ownerProjectionTestTool, (Join-Path $repo 'src'), (Join-Path $repo 'docs\analytics-route-map.csv'))) {
         if (!(Test-Path -LiteralPath $path)) { Fail-R7 }
@@ -708,7 +923,9 @@ try {
     Assert-RestoreDatabaseName $restoreDatabase
 
     $db = Read-Container $dbContainer
-    if (![bool]$db.State.Running -or [string]$db.Name -cne "/$dbContainer") { Fail-R7 }
+    $dbId = [string]$db.Id
+    if ($dbId -notmatch '^[0-9a-f]{64}$' -or [string]$db.Name -cne "/$dbContainer") { Fail-R7 }
+    $dbWasRunning = [bool]$db.State.Running
     $postgresImage = [string]$db.Image
     if ($postgresImage -notmatch '^sha256:[0-9a-f]{64}$') { Fail-R7 }
     $networks = @(Invoke-Docker @('network', 'inspect', $dbNetwork) | ConvertFrom-Json)
@@ -726,6 +943,18 @@ try {
     $previewAppWasRunning = [bool]$app.State.Running
     $previewIngressWasRunning = [bool]$ingress.State.Running
     if ($previewIngressWasRunning -and !$previewAppWasRunning) { Fail-R7 }
+    if (!$dbWasRunning) {
+        if (
+            !$OwnerInteractivePreview -or [string]$db.State.Status -cne 'exited' -or
+            $previewAppWasRunning -or $previewIngressWasRunning
+        ) { Fail-R7 }
+        $dbStartMayHaveOccurred = $true
+        Invoke-DockerBounded @('start', $dbId) 30000 | Out-Null
+        if (!(Get-BaseRunningStateBounded $dbId $dbContainer)) {
+            Fail-R7 'R7_OWNER_PREVIEW_DATABASE_START_UNCERTAIN'
+        }
+        Wait-DatabaseReady
+    }
     $existingTemp = @(Invoke-Docker @('ps', '-a', '--filter', 'name=nestakada-r7-', '--format', '{{.Names}}'))
     if ($existingTemp.Count -ne 0) { Fail-R7 }
     $existingNetworks = @(Invoke-Docker @('network', 'ls', '--filter', 'name=^nestakada-r7-preview-', '--format', '{{.Name}}'))
@@ -1024,7 +1253,7 @@ try {
             databaseNetworkInternal = 'PASS'
             ownerPreviewLoopbackOnly = 'PASS'
             ownerPreviewBridgeInternal = 'NO'
-            ownerPreviewProjection = 'exact23-assets-files-usages'
+            ownerPreviewProjection = 'exact58-assets-files-usages'
             sourcePostAudit = 'PASS'
         }
     } else {
@@ -1139,6 +1368,16 @@ finally {
                     throw 'post-audit'
                 }
             } catch { $cleanupFailures.Add('post-audit') }
+        }
+
+        if ($dbStartMayHaveOccurred) {
+            try { Restore-DatabaseBitmap }
+            catch { $cleanupFailures.Add('database-bitmap') }
+        }
+        if (!$dbStartMayHaveOccurred -and $dbId -match '^[0-9a-f]{64}$') {
+            try {
+                if ((Get-BaseRunningStateBounded $dbId $dbContainer) -ne $dbWasRunning) { throw 'database-bitmap' }
+            } catch { $cleanupFailures.Add('database-bitmap') }
         }
 
         try {

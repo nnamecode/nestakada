@@ -314,7 +314,7 @@ class PageRouteAuthorityTests(TestCase):
         self.assertIsNone(wash["current_payload"]["fields"]["media"]["hero"])
         service_rows = {row["page_id"]: row for row in service_media_rows()}
         service_pages = [row for row in pages if row["id"] in service_rows]
-        self.assertEqual(len(service_pages), 23)
+        self.assertEqual(len(service_pages), 58)
         for page in service_pages:
             self.assertEqual(
                 page["current_payload"]["fields"]["media"]["hero"],

@@ -8,7 +8,7 @@
     {% for crumb in document.breadcrumbs %}{% if not forloop.last %}<a href="{{ crumb.target }}">{{ crumb.label }}</a><span aria-hidden="true">/</span>{% else %}<span aria-current="page">{{ crumb.label }}</span>{% endif %}{% endfor %}
   </nav>
   <h1>{{ document.h1 }}</h1>
-  {% if intro_html %}<div class="es-catalog-intro">{{ intro_html }}</div>{% endif %}
+  {% if document.is_master and intro_html %}<div class="es-catalog-intro">{{ intro_html }}</div>{% endif %}
   <div class="es-catalog{% if not document.is_master %} es-catalog-section-only{% endif %}">
     {% for section in document.sections %}
       <section class="es-catalog-section" aria-labelledby="es-catalog-{{ forloop.counter }}">

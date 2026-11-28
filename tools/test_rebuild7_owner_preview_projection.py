@@ -41,7 +41,7 @@ class ProjectionFilesystemTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def test_exact23_copy_and_full_inventory_drift(self) -> None:
+    def test_exact58_copy_and_full_inventory_drift(self) -> None:
         base_payload = b"base"
         base_path = self.restore / "img" / str(uuid.uuid4()) / "main.webp"
         base_path.parent.mkdir()
@@ -56,7 +56,7 @@ class ProjectionFilesystemTests(unittest.TestCase):
         )
         rows = []
         added_bytes = 0
-        for index in range(23):
+        for index in range(58):
             payload = f"payload-{index}".encode()
             item = row(index, payload)
             path = self.source.joinpath(*Path(str(item["source_path"])).parts)
@@ -73,7 +73,7 @@ class ProjectionFilesystemTests(unittest.TestCase):
         ):
             projection.copy_files(tuple(rows))
             files, byte_count, digest = projection.verify_files(tuple(rows))
-            self.assertEqual((files, byte_count), (24, len(base_payload) + added_bytes))
+            self.assertEqual((files, byte_count), (59, len(base_payload) + added_bytes))
             self.assertRegex(digest, r"^[0-9a-f]{64}$")
             base_path.write_bytes(b"drift")
             with self.assertRaisesRegex(RuntimeError, "R7_OWNER_PROJECTION_UNAVAILABLE"):
@@ -99,14 +99,15 @@ class ProjectionFilesystemTests(unittest.TestCase):
 
     def test_baseline_is_canonical_exclusive_and_drift_visible(self) -> None:
         value = {
-            "schema": "estakada.r7-owner-projection-baseline-v1",
+            "schema": "estakada.r7-owner-projection-baseline-v2",
+            "map019_infographic_preserved": False,
             "pages": {
                 str(uuid.uuid4()): {
                     "kind": "service_detail",
                     "untouched_sha256": "a" * 64,
                     "projected_current_sha256": "b" * 64,
                 }
-                for _ in range(23)
+                for _ in range(58)
             },
         }
         with patch.object(projection, "BASELINE", self.baseline):
@@ -135,10 +136,16 @@ class ProjectionFilesystemTests(unittest.TestCase):
             "transaction.atomic()",
             'content.save(update_fields=("current_payload", "current_hash"))',
             "select_for_update()",
+            'content_queryset = PageContent.objects.select_related("page")',
+            "if apply:\n            content_queryset = content_queryset.select_for_update()",
             "write_baseline",
             "untouched_digest",
             'baseline_row["projected_current_sha256"] != content.current_hash',
             "INFOGRAPHIC_ASSET_ID",
+            '"map019_infographic_preserved": map019_infographic_preserved',
+            'if baseline["map019_infographic_preserved"]:',
+            "elif infographic_usage.exists():",
+            "expected_map019_body",
             "database_rollback_probe",
         ):
             self.assertIn(token, helper)
@@ -177,6 +184,14 @@ class ProjectionFilesystemTests(unittest.TestCase):
             "Wait-CaptureCloneZeroClients\n    Assert-CaptureCloneOwned\n    Invoke-Docker @('exec', '--user', 'postgres', $dbContainer, 'dropdb'",
             "if ($captureMigrationMayExist)",
             "if ($captureCloneMayExist)",
+            "$dbStartMayHaveOccurred",
+            "Invoke-DockerBounded",
+            "Wait-DatabaseReady",
+            "Restore-DatabaseBitmap",
+            "[string]$db.State.Status -cne 'exited'",
+            "Invoke-RetainedPreviewRecovery",
+            "RecoverPreviewNetworkId",
+            "R7_OWNER_PREVIEW_RECOVERY_PASS containers=0 networks=0 database=0 staging=0 lock=0 bitmap=exact",
         ):
             self.assertIn(token, harness)
 

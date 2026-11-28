@@ -158,7 +158,7 @@ class MediaAuthorityTests(TestCase):
             EXACT_PACKAGE_MEDIA,
         )
         self.assertEqual(sum(row.resolved_unmatched for row in package.media_bindings), 1)
-        self.assertEqual(len(package.usages), 53)
+        self.assertEqual(len(package.usages), 88)
         self.assertEqual(package.site_settings["legal_name"], None)
         self.assertEqual(package.site_settings["max_url"], None)
         self.assertEqual(package.site_settings["telegram_url"], None)
@@ -176,7 +176,7 @@ class MediaAuthorityTests(TestCase):
         service_usages = [
             row for row in package.usages if row["asset_id"] in service_asset_ids
         ]
-        self.assertEqual(len(service_usages), 23)
+        self.assertEqual(len(service_usages), 58)
         self.assertEqual(
             {row["target_uuid"] for row in service_usages},
             {row["page_id"] for row in service_media_rows()},
@@ -203,7 +203,7 @@ class MediaAuthorityTests(TestCase):
         self.assertEqual(
             (limits.routes, limits.pages, limits.assets, limits.files,
              limits.usages, limits.gallery_albums, limits.gallery_photos),
-            (114, 112, 303, 303, 53, 17, 214),
+            (114, 112, 303, 303, 88, 17, 214),
         )
         self.assertEqual(
             (limits.total_file_bytes, limits.gallery_file_bytes),

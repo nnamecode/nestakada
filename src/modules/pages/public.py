@@ -153,6 +153,7 @@ class PublicServiceContentDocument:
     intro: str
     body: str
     breadcrumbs: tuple[PublicServiceLink, ...]
+    children: tuple[PublicServiceLink, ...]
     hero: PublicImage | None
     body_images: tuple[PublicImage, ...]
     works: tuple[PublicImage, ...]
@@ -1763,6 +1764,14 @@ def project_service_content(
             breadcrumbs=tuple(
                 PublicServiceLink(ancestor.name, ancestor.primary_target)
                 for ancestor in found_path
+            ),
+            children=(
+                tuple(
+                    PublicServiceLink(child.name, child.primary_target)
+                    for child in found_path[-1].children
+                )
+                if current.kind == PageKind.SERVICE_SECTION_OVERVIEW
+                else ()
             ),
             hero=_public_image(hero_files[0], h1) if hero_files else None,
             body_images=tuple(

@@ -17,7 +17,7 @@ BASE_INVENTORY = Path("/base-authority/media-inventory.json")
 USAGE_NAMESPACE = uuid.UUID("df7dbf40-c9f7-5e92-bb52-03bdb835bf93")
 EXPECTED_BASE_FILES = 265
 EXPECTED_BASE_BYTES = 48_667_032
-EXPECTED_ADDED_BYTES = 4_084_666
+EXPECTED_ADDED_BYTES = 10_531_478
 FAILURE_STAGES = frozenset({
     "UNAVAILABLE",
     "SERVICE_AUTHORITY",
@@ -138,12 +138,17 @@ def read_baseline() -> dict[str, object]:
         fail()
     if canonical(value) + b"\n" != raw:
         fail()
-    if type(value) is not dict or set(value) != {"schema", "pages"}:
+    if type(value) is not dict or set(value) != {
+        "schema", "pages", "map019_infographic_preserved"
+    }:
         fail()
-    if value["schema"] != "estakada.r7-owner-projection-baseline-v1":
+    if (
+        value["schema"] != "estakada.r7-owner-projection-baseline-v2"
+        or type(value["map019_infographic_preserved"]) is not bool
+    ):
         fail()
     pages = value["pages"]
-    if type(pages) is not dict or len(pages) != 23:
+    if type(pages) is not dict or len(pages) != 58:
         fail()
     for key, row in pages.items():
         if (
@@ -373,7 +378,7 @@ def verify_files(rows: tuple[dict[str, object], ...]) -> tuple[int, int, str]:
         if key in expected:
             fail()
         expected[key] = (row["byte_size"], row["sha256"])
-    if len(expected) != EXPECTED_BASE_FILES + 23:
+    if len(expected) != EXPECTED_BASE_FILES + 58:
         fail()
     restore_fd = open_root(RESTORED_MEDIA)
     try:
@@ -455,13 +460,14 @@ def database_projection(rows: tuple[dict[str, object], ...], *, apply: bool) -> 
 
     set_stage("DB_CONTENT_LOAD")
     with transaction.atomic():
+        content_queryset = PageContent.objects.select_related("page")
+        if apply:
+            content_queryset = content_queryset.select_for_update()
         contents = {
             str(content.page_id): content
-            for content in PageContent.objects.select_for_update().select_related("page").filter(
-                page_id__in=page_ids
-            )
+            for content in content_queryset.filter(page_id__in=page_ids)
         }
-        if len(contents) != 23:
+        if len(contents) != 58:
             fail()
 
         if apply:
@@ -517,8 +523,13 @@ def database_projection(rows: tuple[dict[str, object], ...], *, apply: bool) -> 
                 )
 
             set_stage("DB_BASELINE_WRITE")
+            map019_body = candidates[MAP019_PAGE_ID][1]["fields"]["media"]["body"]
+            if map019_body not in ([], [INFOGRAPHIC_ASSET_ID]):
+                fail()
+            map019_infographic_preserved = map019_body == [INFOGRAPHIC_ASSET_ID]
             write_baseline({
-                "schema": "estakada.r7-owner-projection-baseline-v1",
+                "schema": "estakada.r7-owner-projection-baseline-v2",
+                "map019_infographic_preserved": map019_infographic_preserved,
                 "pages": {
                     page_id: {
                         "kind": str(candidates[page_id][0].page.kind),
@@ -558,14 +569,20 @@ def database_projection(rows: tuple[dict[str, object], ...], *, apply: bool) -> 
                 slot="hero",
                 position=0,
             )
-            if infographic_usage.count() != 1 or AssetUsage.objects.filter(
+            infographic_body_usage = AssetUsage.objects.filter(
                 scope=UsageScope.PAGE_CURRENT,
                 target_uuid=uuid.UUID(MAP019_PAGE_ID),
                 slot="body",
                 position=0,
-            ).exists():
+            )
+            if infographic_body_usage.exists():
                 fail()
-            infographic_usage.update(slot="body")
+            if baseline["map019_infographic_preserved"]:
+                if infographic_usage.count() != 1:
+                    fail()
+                infographic_usage.update(slot="body")
+            elif infographic_usage.exists():
+                fail()
 
             set_stage("DB_USAGE_BIND")
             for row in rows:
@@ -621,7 +638,7 @@ def database_projection(rows: tuple[dict[str, object], ...], *, apply: bool) -> 
             str(item.id): item
             for item in AssetFile.objects.filter(id__in=file_ids)
         }
-        if len(assets) != 23 or len(files) != 23:
+        if len(assets) != 58 or len(files) != 58:
             fail()
         for row in rows:
             content = contents[str(row["page_id"])]
@@ -629,9 +646,14 @@ def database_projection(rows: tuple[dict[str, object], ...], *, apply: bool) -> 
                 media = content.current_payload["fields"]["media"]
             except (KeyError, TypeError):
                 fail()
+            expected_map019_body = (
+                [INFOGRAPHIC_ASSET_ID]
+                if baseline["map019_infographic_preserved"]
+                else []
+            )
             if media["hero"] != row["asset_id"] or (
                 str(content.page_id) == MAP019_PAGE_ID
-                and media["body"] != [INFOGRAPHIC_ASSET_ID]
+                and media["body"] != expected_map019_body
             ):
                 fail()
             if (
@@ -669,7 +691,7 @@ def database_projection(rows: tuple[dict[str, object], ...], *, apply: bool) -> 
                 or file.height is not None
             ):
                 fail()
-        if AssetUsage.objects.filter(id__in=projected_usage_ids).count() != 23:
+        if AssetUsage.objects.filter(id__in=projected_usage_ids).count() != 58:
             fail()
         for row in rows:
             projected = AssetUsage.objects.filter(id=usage_id(row)).values_list(
@@ -752,14 +774,14 @@ def main() -> None:
         database_projection(rows, apply=True)
         files, byte_count, digest = verify_files(rows)
         print(
-            "R7_OWNER_PROJECTION_APPLY_OK assets=23 files=23 usages=23 "
+            "R7_OWNER_PROJECTION_APPLY_OK assets=58 files=58 usages=58 "
             f"media_files={files} media_bytes={byte_count} media_sha256={digest}"
         )
     else:
         database_projection(rows, apply=False)
         files, byte_count, digest = verify_files(rows)
         print(
-            "R7_OWNER_PROJECTION_VERIFY_OK assets=23 files=23 usages=23 "
+            "R7_OWNER_PROJECTION_VERIFY_OK assets=58 files=58 usages=58 "
             f"media_files={files} media_bytes={byte_count} media_sha256={digest}"
         )
 

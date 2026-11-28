@@ -623,6 +623,7 @@ class PublicHttpTests(PublicHttpFixture, TestCase):
             r'class="[^"]*\bes-service-catalog\b[^"]*"',
         )
         self.assertContains(master_response, 'href="/services/remont/"', html=False)
+        self.assertContains(master_response, "Все услуги автотехцентра")
         self.assertContains(
             master_response,
             'href="/services/remont/remont-podveski"',
@@ -636,6 +637,7 @@ class PublicHttpTests(PublicHttpFixture, TestCase):
         self.assertContains(section_response, "Главная")
         self.assertContains(section_response, "Услуги и цены")
         self.assertContains(section_response, "Ремонт подвески")
+        self.assertNotContains(section_response, "Услуги раздела")
         self.assertNotIn("sessionid", section_response.cookies)
 
     def test_service_overview_and_detail_render_hero_body_price_and_breadcrumbs(self) -> None:
@@ -683,6 +685,10 @@ class PublicHttpTests(PublicHttpFixture, TestCase):
         )
         overview_content = PageContent.objects.get(page=overview)
         overview_payload = _payload(PageKind.SERVICE_SECTION_OVERVIEW)
+        overview_payload["fields"]["body"] = (
+            "<h2>Кузовной ремонт</h2><ul><li>Ремонт кузова</li></ul>"
+            "<p>Описание раздела</p>"
+        )
         overview_payload["fields"]["media"]["hero"] = str(hero.id)
         overview_content.current_payload = overview_payload
         overview_content.current_hash = canonical_payload_hash(overview_payload)
@@ -730,10 +736,31 @@ class PublicHttpTests(PublicHttpFixture, TestCase):
             html=False,
         )
         self.assertContains(overview_response, "Вступление раздела")
+        self.assertContains(
+            overview_response,
+            'class="es-subservice-card" href="/services/kuzovnoj-remont/remont-kuzova"',
+            html=False,
+        )
+        self.assertContains(overview_response, ">01<", html=False)
         self.assertContains(overview_response, "Описание раздела")
+        self.assertContains(overview_response, "Кузовной ремонт</h2>", html=False)
+        self.assertContains(overview_response, "<li>Ремонт кузова</li>", html=False)
+        self.assertContains(overview_response, 'class="es-content-body"', html=False)
+        self.assertContains(overview_response, '/static/pages/public_service_children_v1.css', html=False)
+        self.assertContains(
+            overview_response,
+            '/static/pages/public_service_content_rhythm_v2.css',
+            html=False,
+        )
+        overview_html = overview_response.content.decode("utf-8")
+        self.assertLess(
+            overview_html.index('class="es-subservice-grid"'),
+            overview_html.index('class="es-content-hero"'),
+        )
         self.assertContains(detail_response, "Услуги и цены")
         self.assertContains(detail_response, "Кузовной ремонт")
         self.assertContains(detail_response, "Ремонт кузова")
+        self.assertContains(detail_response, "Описание услуги")
         self.assertContains(detail_response, "Ремонт элемента")
         self.assertContains(detail_response, "12 345.50 ₽")
         self.assertNotIn("sessionid", detail_response.cookies)

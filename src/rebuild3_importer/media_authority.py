@@ -506,7 +506,7 @@ def compose_run_authority(
     )
     if (
         len(maximum_snapshot_id) != 200
-        or len(package.usages) != 53
+        or len(package.usages) != 88
         or total_bytes != 56_440_807
         or gallery_bytes != 41_176_391
         or len(trusted_svg) != 3
